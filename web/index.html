@@ -234,15 +234,15 @@
   drumPivot.position.set(100, 60, -30);
   root.add(drumPivot);
 
-  // Hopper at OpenSCAD (100, 30, 4) -> Three.js (100, 4, -30)
-  var hopperPivot = new THREE.Group();
-  hopperPivot.position.set(100, 60, -30);
-  root.add(hopperPivot);
+    // Hopper at OpenSCAD (100, 30, 4) -> root-local (100, 4, -30)
+    var hopperPivot = new THREE.Group();
+    hopperPivot.position.set(100, 4, -30);
+    root.add(hopperPivot);
 
-  // Shroud at OpenSCAD (100, 30, 60) + zoffset (0,0,18.7) -> Three.js (100, 78.7, -30)
-  var shroudPivot = new THREE.Group();
-  shroudPivot.position.set(100, 78.7, -30);
-  root.add(shroudPivot);
+   // Shroud at OpenSCAD (100, 30, 60) -> root-local (100, 60, -30)
+   var shroudPivot = new THREE.Group();
+   shroudPivot.position.set(100, 60, -30);
+   root.add(shroudPivot);
 
   // Spool cones at OpenSCAD (10, 4, 65) and (10, 56, 65)
   // spoolGroup midpoint at OpenSCAD (10, 30, 65) -> Three.js (10, 65, -30)
@@ -270,13 +270,13 @@
   upperPivot.position.set(160, 81.2, -30);
   root.add(upperPivot);
 
-  // Crank mount at OpenSCAD (160, 30, 60) -> Three.js (160, 60, -68)
-  var crankMount = new THREE.Group();
-  crankMount.position.set(160, 60, -68);
-  root.add(crankMount);
-var crankSpinner = new THREE.Group();
-    crankSpinner.position.set(-5, 0, 0);
-    crankMount.add(crankSpinner);
+   // Crank mount at OpenSCAD (160, 38, 60) -> root-local (160, 60, -38)
+   var crankMount = new THREE.Group();
+   crankMount.position.set(160, 60, -38);
+   root.add(crankMount);
+   var crankSpinner = new THREE.Group();
+   crankSpinner.position.set(0, 0, 0);
+   crankMount.add(crankSpinner);
 
   // ---------- tape ribbon (procedural) ----------
   var TAPE_LEN = 320;
@@ -321,39 +321,39 @@ var crankSpinner = new THREE.Group();
   window._lowerPivot = lowerPivot;
   window._upperPivot = upperPivot;
   window._drumPivot = drumPivot;
-  window._getPivotData = function() {
-    const data = {
-      crankSpinner: { pos: [crankSpinner.position.x, crankSpinner.position.y, crankSpinner.position.z], rot: [crankSpinner.rotation.x, crankSpinner.rotation.y, crankSpinner.rotation.z] },
-      lowerPivot: { pos: [lowerPivot.position.x, lowerPivot.position.y, lowerPivot.position.z], rot: [lowerPivot.rotation.x, lowerPivot.rotation.y, lowerPivot.rotation.z] },
-      upperPivot: { pos: [upperPivot.position.x, upperPivot.position.y, upperPivot.position.z], rot: [upperPivot.rotation.x, upperPivot.rotation.y, upperPivot.rotation.z] },
-      drumPivot: { pos: [drumPivot.position.x, drumPivot.position.y, drumPivot.position.z], rot: [drumPivot.rotation.x, drumPivot.rotation.y, drumPivot.rotation.z] },
-      crankGrips: []
+    window._getPivotData = function() {
+    	const data = {
+    		crankSpinner: { pos: [crankSpinner.position.x, crankSpinner.position.y, crankSpinner.position.z], rot: [crankSpinner.rotation.x, crankSpinner.rotation.y, crankSpinner.rotation.z] },
+    		lowerPivot: { pos: [lowerPivot.position.x, lowerPivot.position.y, lowerPivot.position.z], rot: [lowerPivot.rotation.x, lowerPivot.rotation.y, lowerPivot.rotation.z] },
+    		upperPivot: { pos: [upperPivot.position.x, upperPivot.position.y, upperPivot.position.z], rot: [upperPivot.rotation.x, upperPivot.rotation.y, upperPivot.rotation.z] },
+    		drumPivot: { pos: [drumPivot.position.x, drumPivot.position.y, drumPivot.position.z], rot: [drumPivot.rotation.x, drumPivot.rotation.y, drumPivot.rotation.z] },
+    		crankGrips: []
+    	};
+    	// Find crank grip meshes
+    	crankSpinner.traverse(function(n) {
+    		if (n.isMesh) {
+    			const pos = new THREE.Vector3();
+    			n.getWorldPosition(pos);
+    			// Convert world position to root-local
+    			const rootPos = new THREE.Vector3(-100, 0, 55);
+    			const localPos = pos.clone().sub(rootPos);
+    			const x = localPos.x;
+    			const y = -localPos.z;
+    			const z = localPos.y;
+    			data.crankGrips.push({ x: x, y: y, z: z });
+    		}
+    	});
+    	// Get axle directions
+    	[window._lowerPivot, window._upperPivot, window._drumPivot].forEach(function(pivot, idx) {
+    		const names = ['lower', 'upper', 'drum'];
+    		if (pivot) {
+    			const axis = new THREE.Vector3(0, 1, 0);
+    			axis.applyQuaternion(pivot.getWorldQuaternion(new THREE.Quaternion()));
+    			data[names[idx] + 'Axle'] = { x: axis.x, y: axis.y, z: axis.z };
+    		}
+    	});
+    	return data;
     };
-    // Find crank grip meshes
-    crankSpinner.traverse(function(n) {
-      if (n.isMesh) {
-        const pos = new THREE.Vector3();
-        n.getWorldPosition(pos);
-        // Convert world position to root-local for consistent coordinate system with shaft (160,60,-68)
-        const rootPos = new THREE.Vector3(-100, 0, 55);
-        const localPos = pos.clone().sub(rootPos);
-        const x = localPos.x;
-        const y = -localPos.z;
-        const z = localPos.y;
-        data.crankGrips.push({ x: x, y: y, z: z });
-      }
-    });
-    // Get axle directions
-    [window._lowerPivot, window._upperPivot, window._drumPivot].forEach(function(pivot, idx) {
-      const names = ['lower', 'upper', 'drum'];
-      if (pivot) {
-        const axis = new THREE.Vector3(0, 1, 0);
-        axis.applyQuaternion(pivot.getWorldQuaternion(new THREE.Quaternion()));
-        data[names[idx] + 'Axle'] = { x: axis.x, y: axis.y, z: axis.z };
-      }
-    });
-    return data;
-  };
   window._setRotations = function(crankAngle) {
     crankSpinner.rotation.z = crankAngle;
     lowerPivot.rotation.z = crankAngle;
@@ -368,31 +368,31 @@ var crankSpinner = new THREE.Group();
   var failures = [];
   var pending = 0;
 
-  // name, file, colour, parent, pos [x,y,z], rot [x,y,z], toggle id, metalness
-  var PART_DEFS = [
-    { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
-      parent: root, pos: [0, 0, 0], rot: [0, 0, 0], metalness: 0.4 },
-    { id: 'hopper', label: 'Hopper', file: 'stl/hopper.glb', color: 0xd9b23a,
-      parent: hopperPivot, pos: [0, -42, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.15 },
-    { id: 'shroud', label: 'Shroud', file: 'stl/shroud.glb', color: 0x4a5568,
-      parent: shroudPivot, pos: [0, 0, 0], rot: [0, 0, 0], metalness: 0.5 },
+   // name, file, colour, parent, pos [x,y,z], rot [x,y,z], toggle id, metalness
+   var PART_DEFS = [
+     { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
+       parent: root, pos: [0, 0, 0], rot: [0, 0, 0], metalness: 0.4 },
+     { id: 'hopper', label: 'Hopper', file: 'stl/hopper.glb', color: 0xd9b23a,
+       parent: hopperPivot, pos: [-1.15, 0, -49.91], rot: [0, 0, 0], metalness: 0.15 },
+     { id: 'shroud', label: 'Shroud', file: 'stl/shroud.glb', color: 0x4a5568,
+       parent: shroudPivot, pos: [7.12, 0, -7.8], rot: [0, 0, 0], metalness: 0.5 },
      { id: 'cartridge', label: 'Cartridge', file: 'stl/cartridge.glb', color: 0x4fa06a,
-      parent: drumPivot, pos: [0, -13.7, 0], rot: [-Math.PI / 2, 0, 0] },
-    { id: 'cones', label: 'Spool cones', file: 'stl/cone_a.glb', color: 0xc96a2b,
-      parent: spoolGroup, pos: [0, 0, 26], rot: [Math.PI, 0, 0] },
-    { id: 'cones', label: 'Spool cones', file: 'stl/cone_b.glb', color: 0xc96a2b,
-      parent: spoolGroup, pos: [0, 0, -26], rot: [0, 0, 0], skipToggle: true },
-    { id: 'plow', label: 'Plow', file: 'stl/plow.glb', color: 0x8a8f98,
-      parent: plowPivot, pos: [0, 0, 0], rot: [0, 0, 0], metalness: 0.6, roughness: 0.4 },
- { id: 'rollers', label: 'Rollers', file: 'stl/rollers_lower.glb', color: 0x9aa2ad,
-        parent: lowerPivot, pos: [0, -15, -10], rot: [-Math.PI / 2, 0, 0],
-        metalness: 0.8, roughness: 0.35 },
- { id: 'rollers', label: 'Rollers', file: 'stl/rollers_upper.glb', color: 0x9aa2ad,
-         parent: upperPivot, pos: [0, -15, -10], rot: [-Math.PI / 2, 0, 0],
-        metalness: 0.8, roughness: 0.35, skipToggle: true },
-{ id: 'crank', label: 'Crank', file: 'stl/crank.glb', color: 0xb03a2e,
-        parent: crankSpinner, pos: [0, 45, 0], rot: [0, 0, 0], metalness: 0.5 }
-  ];
+       parent: drumPivot, pos: [0, -7.02, -25], rot: [0, 0, 0] },
+     { id: 'cones', label: 'Spool cones', file: 'stl/cone_a.glb', color: 0xc96a2b,
+       parent: spoolGroup, pos: [0, 0, 26], rot: [-Math.PI / 2, 0, 0] },
+     { id: 'cones', label: 'Spool cones', file: 'stl/cone_b.glb', color: 0xc96a2b,
+       parent: spoolGroup, pos: [0, 0, -26], rot: [Math.PI / 2, 0, 0], skipToggle: true },
+     { id: 'plow', label: 'Plow', file: 'stl/plow.glb', color: 0x8a8f98,
+       parent: plowPivot, pos: [-16.95, -20, -8.7], rot: [0, 0, 0], metalness: 0.6, roughness: 0.4 },
+     { id: 'rollers', label: 'Rollers', file: 'stl/rollers_lower.glb', color: 0x9aa2ad,
+       parent: lowerPivot, pos: [-14.43, 0, -35.98], rot: [0, 0, 0],
+       metalness: 0.8, roughness: 0.35 },
+     { id: 'rollers', label: 'Rollers', file: 'stl/rollers_upper.glb', color: 0x9aa2ad,
+       parent: upperPivot, pos: [40, 0, -26.27], rot: [0, 0, 0],
+       metalness: 0.8, roughness: 0.35, skipToggle: true },
+     { id: 'crank', label: 'Crank', file: 'stl/crank.glb', color: 0xb03a2e,
+       parent: crankSpinner, pos: [-22.5, -17.97, -8.23], rot: [0, 0, 0], metalness: 0.5 }
+   ];
 
   var toggleGroups = {};
   var togglesDiv = document.getElementById('toggles');
