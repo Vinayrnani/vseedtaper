@@ -1148,6 +1148,8 @@ module animated_assembly() {
 
     // Tape cover shroud (v22: enclosed tunnel WEST of drum, roller nip
     // -> drum exit, world x 58..84). Local frame x 0..len, y centred 0.
+    // v24 verified R->L: hopper(~128) > drum(100) > shroud(~71) > roller(40);
+    // wall 2.0>=1.2, min_z=0, spool(-6) clears r22 gear (X gap 1.5).
     translate([shroud_x0, chassis_width/2, 0])
         u_channel_shroud();
 

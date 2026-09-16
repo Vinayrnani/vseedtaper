@@ -1,6 +1,34 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v23**
+**Version: v24**
+
+Authoritative record of requirements, standing rules, and current state.
+If context is ever lost, read this file first.
+
+## v24 Step 3 R->L Order Proof (hopper > drum > shroud > roller) - 2026-09-16
+
+1. **Goal**: R->L (+X=right tape dir): hopper wedge (right, world
+   ~71-185, mouth ~183) > drum (100) > shroud tunnel (58-84, centroid
+   ~71) > roller+crank (40). Spool stays far west (-6, outside the
+   4-part proof); plow stays east of drum (126->159, v1 precedent).
+2. **Shroud verified printable solid** (v22 `u_channel_shroud()` as built,
+   not a stub): enclosed channel/cover tunnel, wall 2.0 >= 1.2, top plate
+   2.0, sole flanges 4x3 on the base, parts fused (no floating), export
+   `part_to_render == "shroud"` standalone with min_z=0, ends open 0..32
+   (tape at ~30), top 34 below roller-gear bottom 38 and hopper lip
+   ~36.4, d10 side view-ports; `$fn=60`, `tol=0.3`. Only change vs v23 is
+   a comment line (geometry untouched).
+3. **Spool vs roller-gear graze verified clear, no move**: spool cone A
+   at x=-6 (r_big 22.5 -> east face 16.5) vs roller back gear at x=40
+   r22 (west face 18, Y 9-15): box-level X gap 1.5, real tapered gap
+   ~4.5. Minimal-move rule: keep -6.
+4. **Viewer**: shroud PART_DEF + `shroudPivot` (58,0,-30) unchanged and
+   correct; `ASSET_V` 11->12; all 12 GLBs rebuilt. Order proof asserts
+   hopper_x > drum_x > shroud_x > roller_x in `verify_v24.js`.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears; crank back wall
+   `[40,-8,60]`; port 9099 only. Step 4 (tape bend) / Step 5 (mobile
+   panel) NOT started.
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
