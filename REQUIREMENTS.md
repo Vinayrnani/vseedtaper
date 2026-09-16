@@ -1,9 +1,30 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v18**
+**Version: v19**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## v19 Hopper Triangular-Gap Seal - 2026-09-16
+
+1. **Gaps found** (trimesh wall-march probes + OpenSCAD intersection
+   markers + Playwright closeups, pre-fix STL): GAP-A — cheek-bottom edge
+   (~18deg hull slope) diverged from 8deg floor top, leaving a triangular
+   through-slot both sides x45-78, 0-6mm tall (light shone through under
+   the nose in viewer); GAP-B — 1mm sliver x14-21 between drum-carve upper
+   edge and BLUE fin underside above the cheek-root top (z73); coplanar
+   nose/cheek outer faces (y=+-10.3) z-fighting as false seam.
+2. **Fix (hopper_body only)**: cheeks deepened (root bottom 53->49, tip
+   70.5->59, nub to x84.5) so plates swallow floor sides with 4-6mm
+   overlap; floor widened (+-8.3->+-8.8) and lengthened (to x84.5);
+   nose enlarged (x78-85, y+-(y_out+0.6), z58-73.5) capping all; new
+   root-top gussets (x13-25, z70-79, proud/sunk faces) fusing cheek roots
+   to fin band (carve trims r<26, mouth gap 1.0 kept).
+3. **Sealed spec**: hopper = ONE solid, open ONLY at top fill + drum mouth
+   (gap 1.0) + drop bore. Proof: 24 OpenSCAD intersection markers
+   (19 wall + 5 gusset all solid; mouth/void/bore markers all air).
+4. **Frozen**: top edge horizontal z73, void ends x70, cover 120-270deg,
+   tube/window/bore unchanged; `$fn=60`, `tol=0.3`; port 9099 only.
 
 ## v18 Regen speedups + OpenSCAD upgrade - 2026-09-16
 

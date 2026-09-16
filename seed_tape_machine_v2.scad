@@ -484,10 +484,12 @@ module hopper_body() {
     // Wedge side profile (v12: top edge EXACTLY horizontal at z=73).
     x0 = 14; x_tip = 83;
     cheek_top0 = 73;                       // cheek top edge at mouth (upper wall line)
-    cheek_bot0 = 53;                       // cheek bottom edge at mouth (chin)
-    apex_top = 73; apex_bot = 70.5;        // level tip: top edge horizontal 73->73
+    cheek_bot_root = 49;                   // v19 SEAL (was 53): skirt below floor top
+    apex_top = 73; cheek_bot_tip = 59;     // v19 SEAL (was 70.5): tip skirt below floor
     LOW_TILT = 8;                          // lower floor rises a little to the right
     tilt_pivot = [25, 0, 56];              // 3-o'clock mouth point on drum
+    floor_half = cheek_in + 1.0;           // v19 SEAL (was +0.5): floor sides bury into cheeks
+    floor_lx1 = (84.5 - tilt_pivot[0])/cos(LOW_TILT);  // v19 SEAL: floor local-x end = world x84.5
     // BOTTOM-CENTER drop tube (v14: 6-o'clock, x=0 = drum centre, bore 9
     // fits 8mm seeds): outer x -9..9 (thick walls saddle-fuse to cover
     // lips after carve trim), bore 9 (-4.5..4.5, 8mm-compatible: v14
@@ -500,23 +502,27 @@ module hopper_body() {
 
     difference() {
         union() {
-            // Triangular cheek plates (v17 BLUE: root widened x14..24 to
-            // meet the side-closure fin; tip block 2-wide overlapping nose).
+            // Triangular cheek plates (v19 SEAL: bottom edge deepened to
+            // overlap the floor top along the whole wedge — root 49, tip
+            // 59: bottom slope ~0.17 tracks the 8deg floor so the plates
+            // swallow the floor sides x16..83 with 4-6mm vertical overlap;
+            // drum carve trims the mouth reach. Tip nub 3.5-long ending
+            // x84.5, buried in the nose).
             for (s = [-1, 1])
                 hull() {
-                    translate([x0, s > 0 ? cheek_in : -y_out, cheek_bot0])
-                        cube([10, wall, cheek_top0 - cheek_bot0]);
-                    translate([x_tip - 6, s > 0 ? cheek_in : -y_out, apex_bot])
-                        cube([5, wall, apex_top - apex_bot]);
-                    translate([x_tip - 2, s > 0 ? cheek_in : -y_out, (apex_top + apex_bot)/2 - 1])
-                        cube([2, wall, 2]);
+                    translate([x0, s > 0 ? cheek_in : -y_out, cheek_bot_root])
+                        cube([10, wall, cheek_top0 - cheek_bot_root]);
+                    translate([x_tip - 6, s > 0 ? cheek_in : -y_out, cheek_bot_tip])
+                        cube([5, wall, apex_top - cheek_bot_tip]);
+                    translate([x_tip - 2, s > 0 ? cheek_in : -y_out, (apex_top + cheek_bot_tip)/2 - 1])
+                        cube([3.5, wall, 2]);
                 }
-            // Lower floor slab (v17 PINK: runs x16..84 into the nose so the
-            // tip is one watertight bowl; full inner width, tilted +8deg).
+            // Lower floor slab (v19 SEAL: runs to x84.5 deep into the nose,
+            // half-width floor_half buries 1.0 into the cheek band).
             translate(tilt_pivot)
                 rotate([0, -LOW_TILT, 0])
-                    translate([-9, -(cheek_in + 0.5), -floor_thick])
-                        cube([(x_tip + 1) - 16, 2*(cheek_in + 0.5), floor_thick]);
+                    translate([-9, -floor_half, -floor_thick])
+                        cube([floor_lx1 + 9, 2*floor_half, floor_thick]);
             // v17 BLUE side-closure fins (the ONLY cover<->trough joint):
             // arc band r[26.5,28.5] sweeping 30..122deg at each cheek strip,
             // saddle-fusing wedge root (x14..24) to the 11-o'clock cover lip
@@ -532,11 +538,21 @@ module hopper_body() {
                             rotate_extrude(angle=92, convexity=10)
                                 translate([27.5, -s*(cheek_in + wall/2), 0])
                                     square([2, wall], center=true);
-            // Closed nose (v17 PINK: 6 thick x78..84, foot 60, top flush 73
-            // — overlaps floor (to x84), cheeks (to x83) and fin band into
-            // one watertight bowl. Fill via open top, mouth via drum).
-            translate([78, -y_out, 60])
-                cube([6, 2*y_out, 13]);
+            // Closed nose (v19 SEAL: 7 thick x78..85, half-width y_out+0.6
+            // swallowing cheek ends + floor sides (kills coplanar outer
+            // faces), foot 58 below floor bottom, cap 73.5 above cheek tops
+            // — overlaps floor (to x84.5), cheeks (tip nub to x84.5) and fin
+            // band into one sealed bowl. Fill via open top, mouth via drum).
+            translate([78, -(y_out + 0.6), 58])
+                cube([7, 2*(y_out + 0.6), 15.5]);
+            // Root-top gussets (v19 SEAL: fill the carve-edge/fin-underside
+            // triangle x13..25 z70..79 each side; drum carve trims r<26 so
+            // the mouth stays open with 1.0 gap, remainder fuses cheek root
+            // tops to the BLUE fin band; outer face proud +0.3, inner sunk
+            // -0.5 to avoid coplanar faces).
+            for (s = [-1, 1])
+                translate([13, s > 0 ? cheek_in - 0.5 : -(y_out + 0.3), 70])
+                    cube([12, (y_out + 0.3) - (cheek_in - 0.5), 9]);
             // Retention cover (v12: smooth annular channel, NO ribs).
             // v14 RED: blocking rib removed — seed path clear from pickup
             // mouth (120deg) all along rotation to 6-o'clock drop (270deg).
