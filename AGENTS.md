@@ -17,3 +17,5 @@
 8. **Commit & push before change.** Before editing requirements, commit and push the current state so history is safe.
 
 9. **Use maximum CPU.** Run tasks in parallel wherever possible. Manage them properly — handle errors, track all results, ensure completion.
+
+10. **No Playwright screenshots in git.** Never commit Playwright screenshots — ensure they are gitignored.

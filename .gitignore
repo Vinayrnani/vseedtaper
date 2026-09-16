@@ -1,2 +1,8 @@
 node_modules/
 .playwright-mcp/
+
+# Playwright screenshots
+playwright-screenshots/
+screenshots/
+test-results/
+playwright-report/
