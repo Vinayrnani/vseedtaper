@@ -1,9 +1,19 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v4**
+**Version: v5**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## Parts Panel (Isolation) - 2026-09-16 - Agreed with User
+
+1. **Parts panel** in web/index.html with per-part checkbox + solo button for:
+   chassis, hopper, shroud, cartridge/drum, cones_a, cones_b, plow,
+   rollers lower, rollers upper, crank (+ tape/seeds extras).
+2. **All on / All off** buttons; **solo** isolates one part (click again restores all).
+3. **Visibility only**: toggles set `.visible`, never touch pivots/animation;
+   crank grip orbit radius 45 and rotation signs preserved.
+4. **Styling** matches existing dark panel (same buttons, swatches, rows).
 
 ## Fit-fix Update - 2026-09-16 - Agreed with User
 

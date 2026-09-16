@@ -57,6 +57,18 @@
     cursor: pointer; padding: 2px 0; user-select: none; }
   .toggles input { accent-color: var(--accent2); }
   .swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+  .parts-tools { display: flex; gap: 6px; margin: 0 0 6px; }
+  .parts-tools button { flex: 1; font-size: 11.5px; padding: 5px 4px; }
+  .parts { display: flex; flex-direction: column; gap: 1px; }
+  .part-row { display: flex; align-items: center; gap: 6px; font-size: 12.5px;
+    padding: 2px 4px; border-radius: 6px; cursor: pointer; user-select: none; }
+  .part-row:hover { background: rgba(255,255,255,0.05); }
+  .part-row input { accent-color: var(--accent2); margin: 0; }
+  .part-row .nm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .part-row .solo { flex: none; width: auto; font-size: 10.5px; padding: 2px 7px;
+    border-radius: 6px; background: #242a36; }
+  .part-row .solo[aria-pressed="true"] { background: #2c4a34;
+    border-color: rgba(63,217,124,0.55); }
   .legend { font-size: 11.5px; color: var(--muted); line-height: 1.55; margin-top: 10px;
     border-top: 1px solid var(--line); padding-top: 8px; }
   .legend kbd { background: rgba(255,255,255,0.08); border-radius: 4px; padding: 0 5px;
@@ -100,7 +112,11 @@
   </div>
 
   <div class="sect">Parts</div>
-  <div class="toggles" id="toggles"></div>
+  <div class="parts-tools">
+    <button id="btnAllOn" title="Show every part">All on</button>
+    <button id="btnAllOff" title="Hide every part">All off</button>
+  </div>
+  <div class="parts" id="toggles"></div>
 
   <div class="sect">View</div>
   <div class="toggles">
@@ -389,30 +405,33 @@
    // A/B = assembly outer/inner translates, Q = export->assembly orientation,
    // d = export->assembly branch offset, M_R = Rx(-90): (x,y,z)->(x,z,-y).
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
-   var PART_DEFS = [
-     { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
-       parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
-     { id: 'hopper', label: 'Hopper', file: 'stl/hopper.glb', color: 0xd9b23a,
-       parent: hopperPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.15 },
-     { id: 'shroud', label: 'Shroud', file: 'stl/shroud.glb', color: 0x4a5568,
-       parent: shroudPivot, pos: [0, 18.7, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5 },
-     { id: 'cartridge', label: 'Cartridge', file: 'stl/cartridge.glb', color: 0x4fa06a,
-       parent: drumPivot, pos: [0, -25, 0], rot: [-Math.PI / 2, 0, 0] },
-     { id: 'cones', label: 'Spool cones', file: 'stl/cone_a.glb', color: 0xc96a2b,
-       parent: spoolGroup, pos: [0, 0, 26], rot: [Math.PI, 0, 0] },
-     { id: 'cones', label: 'Spool cones', file: 'stl/cone_b.glb', color: 0xc96a2b,
-       parent: spoolGroup, pos: [-50, 0, -26], rot: [0, 0, 0], skipToggle: true },
-     { id: 'plow', label: 'Plow', file: 'stl/plow.glb', color: 0x8a8f98,
-       parent: plowPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4 },
-     { id: 'rollers', label: 'Rollers', file: 'stl/rollers_lower.glb', color: 0x9aa2ad,
-       parent: lowerPivot, pos: [0, 0, 26], rot: [Math.PI, 0, 0],
-       metalness: 0.8, roughness: 0.35 },
-     { id: 'rollers', label: 'Rollers', file: 'stl/rollers_upper.glb', color: 0x9aa2ad,
-       parent: upperPivot, pos: [0, 0, 26], rot: [Math.PI, 0, 0],
-       metalness: 0.8, roughness: 0.35, skipToggle: true },
-     { id: 'crank', label: 'Crank', file: 'stl/crank.glb', color: 0xb03a2e,
-       parent: crankSpinner, pos: [-5, -8.47, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5 }
-   ];
+  var PART_DEFS = [
+      { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
+        parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
+      { id: 'hopper', label: 'Hopper', file: 'stl/hopper.glb', color: 0xd9b23a,
+        parent: hopperPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.15 },
+      { id: 'shroud', label: 'Shroud', file: 'stl/shroud.glb', color: 0x4a5568,
+        parent: shroudPivot, pos: [0, 18.7, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5 },
+      { id: 'cartridge', label: 'Cartridge/drum', file: 'stl/cartridge.glb', color: 0x4fa06a,
+        parent: drumPivot, pos: [0, -25, 0], rot: [-Math.PI / 2, 0, 0] },
+      { id: 'cones_a', label: 'Cones A', file: 'stl/cone_a.glb', color: 0xc96a2b,
+        parent: spoolGroup, pos: [0, 0, 26], rot: [Math.PI, 0, 0] },
+      { id: 'cones_b', label: 'Cones B', file: 'stl/cone_b.glb', color: 0xc96a2b,
+        parent: spoolGroup, pos: [-50, 0, -26], rot: [0, 0, 0] },
+      { id: 'plow', label: 'Plow', file: 'stl/plow.glb', color: 0x8a8f98,
+        parent: plowPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4 },
+      { id: 'rollers_lower', label: 'Rollers lower', file: 'stl/rollers_lower.glb', color: 0x9aa2ad,
+        parent: lowerPivot, pos: [0, 0, 26], rot: [Math.PI, 0, 0],
+        metalness: 0.8, roughness: 0.35 },
+      { id: 'rollers_upper', label: 'Rollers upper', file: 'stl/rollers_upper.glb', color: 0x9aa2ad,
+        parent: upperPivot, pos: [0, 0, 26], rot: [Math.PI, 0, 0],
+        metalness: 0.8, roughness: 0.35 },
+      { id: 'crank', label: 'Crank', file: 'stl/crank.glb', color: 0xb03a2e,
+        parent: crankSpinner, pos: [-5, -8.47, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5 }
+    ];
+   // Display order for the parts panel (matches user checklist + tape/seeds extras).
+   var PART_ORDER = ['chassis', 'hopper', 'shroud', 'cartridge', 'cones_a',
+     'cones_b', 'plow', 'rollers_lower', 'rollers_upper', 'crank', 'tape', 'seeds'];
 
   var toggleGroups = {};
   var togglesDiv = document.getElementById('toggles');
@@ -431,22 +450,105 @@
 
   function refreshToggles() {
     togglesDiv.innerHTML = '';
+    var order = PART_ORDER.filter(function (id) { return toggleGroups[id]; });
     Object.keys(toggleGroups).forEach(function (id) {
+      if (order.indexOf(id) === -1) order.push(id);
+    });
+    order.forEach(function (id) {
       var g = toggleGroups[id];
-      var label = document.createElement('label');
+      var row = document.createElement('div');
+      row.className = 'part-row';
+      row.dataset.group = id;
       var cb = document.createElement('input');
       cb.type = 'checkbox'; cb.checked = true; cb.dataset.group = id;
+      cb.title = 'Show/hide ' + g.label;
       cb.addEventListener('change', function () {
-        g.objects.forEach(function (o) { if (o) o.visible = cb.checked; });
+        setGroupVisible(id, cb.checked);
       });
       var sw = document.createElement('span');
       sw.className = 'swatch';
       sw.style.background = '#' + g.color.toString(16).padStart(6, '0');
-      label.appendChild(cb); label.appendChild(sw);
-      label.appendChild(document.createTextNode(' ' + g.label));
-      togglesDiv.appendChild(label);
+      var nm = document.createElement('span');
+      nm.className = 'nm';
+      nm.textContent = g.label;
+      var solo = document.createElement('button');
+      solo.className = 'solo'; solo.type = 'button';
+      solo.textContent = 'solo'; solo.title = 'Isolate ' + g.label + ' (show only this)';
+      solo.dataset.group = id; solo.setAttribute('aria-pressed', 'false');
+      solo.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        isolateGroup(id);
+      });
+      row.appendChild(cb); row.appendChild(sw); row.appendChild(nm); row.appendChild(solo);
+      row.addEventListener('click', function (ev) {
+        if (ev.target === cb || ev.target === solo) return;
+        cb.checked = !cb.checked;
+        setGroupVisible(id, cb.checked);
+      });
+      togglesDiv.appendChild(row);
+    });
+    syncToggleUI();
+  }
+
+  function setGroupVisible(id, visible) {
+    var g = toggleGroups[id];
+    if (!g) return;
+    g.objects.forEach(function (o) { if (o) o.visible = visible; });
+    syncToggleUI();
+  }
+
+  function setOnlyVisible(ids) {
+    var want = {};
+    ids.forEach(function (id) { want[id] = true; });
+    Object.keys(toggleGroups).forEach(function (id) {
+      var vis = !!want[id];
+      toggleGroups[id].objects.forEach(function (o) { if (o) o.visible = vis; });
+    });
+    syncToggleUI();
+  }
+
+  function showAllVisible() { setOnlyVisible(Object.keys(toggleGroups)); }
+
+  function isolateGroup(id) {
+    var g = toggleGroups[id];
+    if (!g) return;
+    // If already soloed (only this group visible), restore everything.
+    var visibleIds = Object.keys(toggleGroups).filter(function (k) {
+      return toggleGroups[k].objects.some(function (o) { return o && o.visible; });
+    });
+    if (visibleIds.length === 1 && visibleIds[0] === id) showAllVisible();
+    else setOnlyVisible([id]);
+  }
+
+  function syncToggleUI() {
+    var boxes = togglesDiv.querySelectorAll('input[type="checkbox"]');
+    boxes.forEach(function (cb) {
+      var g = toggleGroups[cb.dataset.group];
+      if (!g) return;
+      var anyVisible = g.objects.some(function (o) { return o && o.visible; });
+      cb.checked = anyVisible;
+    });
+    var visibleIds = Object.keys(toggleGroups).filter(function (k) {
+      return toggleGroups[k].objects.some(function (o) { return o && o.visible; });
+    });
+    var solos = togglesDiv.querySelectorAll('.solo');
+    solos.forEach(function (b) {
+      var soloed = visibleIds.length === 1 && visibleIds[0] === b.dataset.group;
+      b.setAttribute('aria-pressed', soloed ? 'true' : 'false');
+      b.textContent = soloed ? 'unsolo' : 'solo';
     });
   }
+
+  // Programmatic hooks for automated isolation checks (visibility only —
+  // animation pivots and crank radius are never touched by these).
+  window._toggleGroups = toggleGroups;
+  window._setPartVisible = setGroupVisible;
+  window._isolatePart = isolateGroup;
+  window._showAllParts = showAllVisible;
+  window._setOnlyVisible = setOnlyVisible;
+
+  document.getElementById('btnAllOn').addEventListener('click', showAllVisible);
+  document.getElementById('btnAllOff').addEventListener('click', function () { setOnlyVisible([]); });
 
   pending = PART_DEFS.length;
   PART_DEFS.forEach(function (def) {
