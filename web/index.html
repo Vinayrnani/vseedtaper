@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Seed Tape Machine v2 — Interactive 3D Viewer</title>
+<style>
+  :root {
+    --bg: #1a1d24;
+    --panel: rgba(16, 19, 26, 0.86);
+    --ink: #e8eaf0;
+    --muted: #9aa3b2;
+    --accent: #e8b93e;
+    --accent2: #3fd97c;
+    --line: rgba(255, 255, 255, 0.09);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink); }
+  #view { position: fixed; inset: 0; display: block; }
+  #panel {
+    position: fixed; top: 14px; left: 14px; width: 292px;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px 16px 12px;
+    backdrop-filter: blur(8px); box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    max-height: calc(100vh - 28px); overflow-y: auto; z-index: 10;
+  }
+  #panel h1 { font-size: 16px; margin: 0 0 2px; letter-spacing: 0.2px; }
+  #panel h1 .dot { color: var(--accent2); }
+  #panel .sub { font-size: 11.5px; color: var(--muted); margin: 0 0 10px; line-height: 1.45; }
+  .row { display: flex; gap: 8px; margin: 8px 0; }
+  button {
+    flex: 1; cursor: pointer; border: 1px solid var(--line); border-radius: 8px;
+    background: #242a36; color: var(--ink); font-size: 12.5px; padding: 7px 6px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  button:hover { background: #2e3542; border-color: rgba(255,255,255,0.22); }
+  button.primary { background: #2c4a34; border-color: rgba(63,217,124,0.4); }
+  button.primary:hover { background: #365a40; }
+  .slider-row { margin: 10px 0 4px; }
+  .slider-row label { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+  .slider-row label b { color: var(--accent); font-weight: 600; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); margin: 4px 0 0; }
+  .stats {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 10px 0 4px;
+  }
+  .stat { background: rgba(255,255,255,0.045); border: 1px solid var(--line);
+    border-radius: 8px; padding: 6px 4px; text-align: center; }
+  .stat .v { font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .stat .k { font-size: 10px; color: var(--muted); margin-top: 1px; }
+  .sect { font-size: 11px; text-transform: uppercase; letter-spacing: 1.1px;
+    color: var(--muted); margin: 12px 0 6px; }
+  .toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; }
+  .toggles label { font-size: 12.5px; display: flex; align-items: center; gap: 6px;
+    cursor: pointer; padding: 2px 0; user-select: none; }
+  .toggles input { accent-color: var(--accent2); }
+  .swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+  .legend { font-size: 11.5px; color: var(--muted); line-height: 1.55; margin-top: 10px;
+    border-top: 1px solid var(--line); padding-top: 8px; }
+  .legend kbd { background: rgba(255,255,255,0.08); border-radius: 4px; padding: 0 5px;
+    font-size: 10.5px; font-family: inherit; }
+  #status {
+    position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; color: var(--muted); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; z-index: 10;
+    white-space: nowrap;
+  }
+  #errors {
+    position: fixed; top: 14px; right: 14px; max-width: 340px; z-index: 11;
+    background: rgba(80, 20, 20, 0.92); border: 1px solid rgba(255,120,120,0.5);
+    border-radius: 10px; padding: 10px 14px; font-size: 12.5px; display: none;
+  }
+</style>
+</head>
+<body>
+<canvas id="view"></canvas>
+
+<div id="panel">
+  <h1><span class="dot">●</span> Seed Tape Machine v2</h1>
+  <p class="sub">Hand-cranked PVA seed-tape maker · 200&nbsp;mm chassis · 20/40T gear mesh · live kinematic demo
+    (crank → 2:1 rollers → 1:2 drum reduction → tape feed).</p>
+
+  <div class="row">
+    <button id="btnPlay" class="primary">⏸ Pause</button>
+    <button id="btnReset">⟲ Reset</button>
+    <button id="btnRev" title="Advance the crank exactly one revolution">+1 rev</button>
+  </div>
+
+  <div class="slider-row">
+    <label>Crank speed <b id="rpmLabel">30 rpm</b></label>
+    <input id="speed" type="range" min="0" max="120" step="1" value="30">
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v" id="stCrank">0.00</div><div class="k">crank rev</div></div>
+    <div class="stat"><div class="v" id="stTape">0.0</div><div class="k">tape mm</div></div>
+    <div class="stat"><div class="v" id="stDrum">0.00</div><div class="k">drum rev</div></div>
+  </div>
+
+  <div class="sect">Parts</div>
+  <div class="toggles" id="toggles"></div>
+
+  <div class="sect">View</div>
+  <div class="toggles">
+    <label><input type="checkbox" id="ckSpin"> Turntable</label>
+    <label><input type="checkbox" id="ckGrid" checked> Grid</label>
+  </div>
+
+  <div class="legend">
+    <kbd>drag</kbd> orbit &nbsp;·&nbsp; <kbd>scroll</kbd> zoom &nbsp;·&nbsp;
+    <kbd>right-drag</kbd> pan<br>
+    Tape advances π·20 = 62.83&nbsp;mm / crank rev.
+    Drum turns at half crank speed (20:40 teeth).
+    Shroud drops seeds at 270° port.
+  </div>
+</div>
+
+<div id="errors"></div>
+<div id="status">loading parts…</div>
+
+<script src="js/three.min.js?v=2"></script>
+<script src="js/OrbitControls.js?v=2"></script>
+<script src="js/GLTFLoader.js?v=2"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ---------- constants (from seed_tape_machine_v2.scad) ----------
+  var TAPE_PER_CRANK_REV = Math.PI * 20;   // 62.8319 mm (PI * roller_dia)
+  var DRUM_RATIO = 0.5;                     // roller_teeth / drum_teeth = 20/40
+  var CRANK_ANGLE_PER_REV = Math.PI * 2;
+
+  // OpenSCAD axle positions (from .scad lines 73-79)
+  // drum_axle_x=100, drum_axle_z=60, roller_axle_x=160, roller_axle_z=60,
+  // spool_axle_x=10, spool_axle_z=65
+  // chassis_width=60, base_thick=4, drum_dia=50, roller_dia=20, crank_throw=45
+  // hopper_axis_z = drum_axle_z - base_thick = 56
+
+  // ---------- renderer / scene / camera ----------
+  var canvas = document.getElementById('view');
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.9;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1a1d24);
+  scene.fog = new THREE.Fog(0x1a1d24, 700, 1400);
+
+  var camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 1, 5000);
+  camera.position.set(300, 220, 300);
+
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.target.set(-20, 55, 40);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.autoRotate = false;
+  controls.autoRotateSpeed = 1.2;
+  controls.maxDistance = 900;
+  controls.minDistance = 40;
+
+  // ---------- lights ----------
+  scene.add(new THREE.HemisphereLight(0xcfd8e3, 0x14161c, 0.85));
+  var key = new THREE.DirectionalLight(0xffffff, 1.15);
+  key.position.set(120, 200, -90);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.left = -180; key.shadow.camera.right = 180;
+  key.shadow.camera.top = 180; key.shadow.camera.bottom = -180;
+  key.shadow.camera.far = 700;
+  key.shadow.bias = -0.0004;
+  scene.add(key);
+  var fill = new THREE.DirectionalLight(0x9fb4ff, 0.32);
+  fill.position.set(-120, 90, 130);
+  scene.add(fill);
+
+  // ---------- ground + grid ----------
+  var ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(1200, 1200),
+    new THREE.ShadowMaterial({ opacity: 0.35 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.1;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  var grid = new THREE.GridHelper(300, 30, 0x3a4150, 0x2a2f3a);
+  grid.position.y = 0;
+  scene.add(grid);
+
+  // ---------- assembly root ----------
+  // OpenSCAD models Z-up; three.js is Y-up. A single root rotation of -90°
+  // about X maps OpenSCAD (x,y,z) -> three.js (x, z, -y), so every part
+  // below can be positioned with the exact numbers from animated_assembly().
+  // Recentered: machine is 200 long (x 0-200), height 110 (z 0-110).
+  // root.position = (-100, 0, 55) as specified.
+  var root = new THREE.Group();
+  root.rotation.x = -Math.PI / 2;
+  root.position.set(-100, 0, 55);
+  scene.add(root);
+
+  function paint(obj, color, opts) {
+    opts = opts || {};
+    obj.traverse(function (n) {
+      if (n.isMesh) {
+        n.material = new THREE.MeshStandardMaterial({
+          color: color,
+          metalness: opts.metalness !== undefined ? opts.metalness : 0.35,
+          roughness: opts.roughness !== undefined ? opts.roughness : 0.55,
+          flatShading: true,
+          transparent: !!opts.transparent,
+          opacity: opts.opacity !== undefined ? opts.opacity : 1
+        });
+        n.castShadow = true;
+        n.receiveShadow = true;
+      }
+    });
+  }
+
+  // ---------- animated pivots ----------
+  // All positions in Three.js local coords (inside root).
+  // OpenSCAD (x,y,z) -> Three.js (x, z, -y) for position.
+  // root rotation.x=-PI/2 maps OpenSCAD (x,y,z) -> root-local (x,z,-y),
+  // so OpenSCAD Y (axle/rotation axis) -> root-local -Z -> animated rotations use rotation.z.
+
+  // Drum pivot at OpenSCAD (100, 30, 60) -> Three.js (100, 60, -30)
+  var drumPivot = new THREE.Group();
+  drumPivot.position.set(100, 60, -30);
+  root.add(drumPivot);
+
+  // Hopper at OpenSCAD (100, 30, 4) -> Three.js (100, 4, -30)
+  var hopperPivot = new THREE.Group();
+  hopperPivot.position.set(100, 60, -30);
+  root.add(hopperPivot);
+
+  // Shroud at OpenSCAD (100, 30, 60) + zoffset (0,0,18.7) -> Three.js (100, 78.7, -30)
+  var shroudPivot = new THREE.Group();
+  shroudPivot.position.set(100, 78.7, -30);
+  root.add(shroudPivot);
+
+  // Spool cones at OpenSCAD (10, 4, 65) and (10, 56, 65)
+  // spoolGroup midpoint at OpenSCAD (10, 30, 65) -> Three.js (10, 65, -30)
+  var spoolGroup = new THREE.Group();
+  spoolGroup.position.set(10, 65, -30);
+  root.add(spoolGroup);
+
+  // Seed cradle at OpenSCAD (126, 17.3, 4) -> Three.js (126, 4, -17.3)
+  var cradlePivot = new THREE.Group();
+  cradlePivot.position.set(126, 4, -17.3);
+  root.add(cradlePivot);
+
+  // Plow at OpenSCAD (126, 10, 4) -> Three.js (126, 4, -10)
+  var plowPivot = new THREE.Group();
+  plowPivot.position.set(126, 4, -10);
+  root.add(plowPivot);
+
+  // Lower roller pivot at OpenSCAD (160, 30, 60) -> Three.js (160, 60, -30)
+  var lowerPivot = new THREE.Group();
+  lowerPivot.position.set(160, 60, -30);
+  root.add(lowerPivot);
+
+  // Upper idler pivot at OpenSCAD (160, 30, 81.2) -> Three.js (160, 81.2, -30)
+  var upperPivot = new THREE.Group();
+  upperPivot.position.set(160, 81.2, -30);
+  root.add(upperPivot);
+
+  // Crank mount at OpenSCAD (160, 30, 60) -> Three.js (160, 60, -68)
+  var crankMount = new THREE.Group();
+  crankMount.position.set(160, 60, -68);
+  root.add(crankMount);
+var crankSpinner = new THREE.Group();
+    crankSpinner.position.set(-5, 0, 0);
+    crankMount.add(crankSpinner);
+
+  // ---------- tape ribbon (procedural) ----------
+  var TAPE_LEN = 320;
+  var tape = new THREE.Mesh(
+    new THREE.BoxGeometry(TAPE_LEN, 0.4, 25.4),
+    new THREE.MeshStandardMaterial({
+      color: 0x3fd97c, transparent: true, opacity: 0.55,
+      roughness: 0.4, metalness: 0.0,
+      emissive: 0x0d3a20, emissiveIntensity: 0.7
+    })
+  );
+  tape.castShadow = true;
+  var tapeGroup = new THREE.Group();
+  tapeGroup.add(tape);
+  root.add(tapeGroup);
+
+  // ---------- seed drop effect ----------
+  var dropSeed = new THREE.Mesh(
+    new THREE.SphereGeometry(1.6, 20, 14),
+    new THREE.MeshStandardMaterial({ color: 0xd4a017, roughness: 0.5, metalness: 0.1 })
+  );
+  dropSeed.castShadow = true;
+  root.add(dropSeed);
+
+  // ---------- drum seeds (rotate with drum) ----------
+  var drumSeeds = new THREE.Group();
+  var seedMat = new THREE.MeshStandardMaterial({ color: 0xd4a017, roughness: 0.55, metalness: 0.1 });
+  var numDrumSeeds = 5;
+  for (var s = 0; s < numDrumSeeds; s++) {
+    var a = s * Math.PI * 2 / numDrumSeeds;
+    var seed = new THREE.Mesh(new THREE.SphereGeometry(1.25, 18, 12), seedMat);
+    // Drum divots at radius 25 (drum_dia/2), z center at drum bottom + divot depth
+    // Drum bottom in Three.js y = 60 - 25 = 35; divots at y=35
+    seed.position.set(Math.cos(a) * 25, 0, Math.sin(a) * 25);
+    seed.castShadow = true;
+    drumSeeds.add(seed);
+  }
+  drumPivot.add(drumSeeds);
+
+  // ---------- debug helpers ----------
+  window._crankSpinner = crankSpinner;
+  window._lowerPivot = lowerPivot;
+  window._upperPivot = upperPivot;
+  window._drumPivot = drumPivot;
+  window._getPivotData = function() {
+    const data = {
+      crankSpinner: { pos: [crankSpinner.position.x, crankSpinner.position.y, crankSpinner.position.z], rot: [crankSpinner.rotation.x, crankSpinner.rotation.y, crankSpinner.rotation.z] },
+      lowerPivot: { pos: [lowerPivot.position.x, lowerPivot.position.y, lowerPivot.position.z], rot: [lowerPivot.rotation.x, lowerPivot.rotation.y, lowerPivot.rotation.z] },
+      upperPivot: { pos: [upperPivot.position.x, upperPivot.position.y, upperPivot.position.z], rot: [upperPivot.rotation.x, upperPivot.rotation.y, upperPivot.rotation.z] },
+      drumPivot: { pos: [drumPivot.position.x, drumPivot.position.y, drumPivot.position.z], rot: [drumPivot.rotation.x, drumPivot.rotation.y, drumPivot.rotation.z] },
+      crankGrips: []
+    };
+    // Find crank grip meshes
+    crankSpinner.traverse(function(n) {
+      if (n.isMesh) {
+        const pos = new THREE.Vector3();
+        n.getWorldPosition(pos);
+        // Convert world position to root-local for consistent coordinate system with shaft (160,60,-68)
+        const rootPos = new THREE.Vector3(-100, 0, 55);
+        const localPos = pos.clone().sub(rootPos);
+        const x = localPos.x;
+        const y = -localPos.z;
+        const z = localPos.y;
+        data.crankGrips.push({ x: x, y: y, z: z });
+      }
+    });
+    // Get axle directions
+    [window._lowerPivot, window._upperPivot, window._drumPivot].forEach(function(pivot, idx) {
+      const names = ['lower', 'upper', 'drum'];
+      if (pivot) {
+        const axis = new THREE.Vector3(0, 1, 0);
+        axis.applyQuaternion(pivot.getWorldQuaternion(new THREE.Quaternion()));
+        data[names[idx] + 'Axle'] = { x: axis.x, y: axis.y, z: axis.z };
+      }
+    });
+    return data;
+  };
+  window._setRotations = function(crankAngle) {
+    crankSpinner.rotation.z = crankAngle;
+    lowerPivot.rotation.z = crankAngle;
+    upperPivot.rotation.z = -crankAngle;
+    drumPivot.rotation.z = -crankAngle * DRUM_RATIO;
+  };
+
+  // ---------- part loading ----------
+  var loader = new THREE.GLTFLoader();
+  var statusEl = document.getElementById('status');
+  var errorsEl = document.getElementById('errors');
+  var failures = [];
+  var pending = 0;
+
+  // name, file, colour, parent, pos [x,y,z], rot [x,y,z], toggle id, metalness
+  var PART_DEFS = [
+    { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
+      parent: root, pos: [0, 0, 0], rot: [0, 0, 0], metalness: 0.4 },
+    { id: 'hopper', label: 'Hopper', file: 'stl/hopper.glb', color: 0xd9b23a,
+      parent: hopperPivot, pos: [0, -42, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.15 },
+    { id: 'shroud', label: 'Shroud', file: 'stl/shroud.glb', color: 0x4a5568,
+      parent: shroudPivot, pos: [0, 0, 0], rot: [0, 0, 0], metalness: 0.5 },
+     { id: 'cartridge', label: 'Cartridge', file: 'stl/cartridge.glb', color: 0x4fa06a,
+      parent: drumPivot, pos: [0, -13.7, 0], rot: [-Math.PI / 2, 0, 0] },
+    { id: 'cones', label: 'Spool cones', file: 'stl/cone_a.glb', color: 0xc96a2b,
+      parent: spoolGroup, pos: [0, 0, 26], rot: [Math.PI, 0, 0] },
+    { id: 'cones', label: 'Spool cones', file: 'stl/cone_b.glb', color: 0xc96a2b,
+      parent: spoolGroup, pos: [0, 0, -26], rot: [0, 0, 0], skipToggle: true },
+    { id: 'plow', label: 'Plow', file: 'stl/plow.glb', color: 0x8a8f98,
+      parent: plowPivot, pos: [0, 0, 0], rot: [0, 0, 0], metalness: 0.6, roughness: 0.4 },
+ { id: 'rollers', label: 'Rollers', file: 'stl/rollers_lower.glb', color: 0x9aa2ad,
+        parent: lowerPivot, pos: [0, -15, -10], rot: [-Math.PI / 2, 0, 0],
+        metalness: 0.8, roughness: 0.35 },
+ { id: 'rollers', label: 'Rollers', file: 'stl/rollers_upper.glb', color: 0x9aa2ad,
+         parent: upperPivot, pos: [0, -15, -10], rot: [-Math.PI / 2, 0, 0],
+        metalness: 0.8, roughness: 0.35, skipToggle: true },
+{ id: 'crank', label: 'Crank', file: 'stl/crank.glb', color: 0xb03a2e,
+        parent: crankSpinner, pos: [0, 45, 0], rot: [0, 0, 0], metalness: 0.5 }
+  ];
+
+  var toggleGroups = {};
+  var togglesDiv = document.getElementById('toggles');
+
+  function trackToggle(def, obj) {
+    if (!toggleGroups[def.id]) toggleGroups[def.id] = { label: def.label, color: def.color, objects: [] };
+    toggleGroups[def.id].objects.push(obj);
+  }
+  toggleGroups.tape = { label: 'Tape', color: 0x3fd97c, objects: [tapeGroup] };
+  toggleGroups.seeds = { label: 'Seeds', color: 0xd4a017, objects: [] };
+
+  drumSeeds.children.forEach(function(seed) { toggleGroups.seeds.objects.push(seed); });
+  toggleGroups.seeds.objects.push(dropSeed);
+
+  PART_DEFS.forEach(function (def) { trackToggle(def, null); });
+
+  function refreshToggles() {
+    togglesDiv.innerHTML = '';
+    Object.keys(toggleGroups).forEach(function (id) {
+      var g = toggleGroups[id];
+      var label = document.createElement('label');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.checked = true; cb.dataset.group = id;
+      cb.addEventListener('change', function () {
+        g.objects.forEach(function (o) { if (o) o.visible = cb.checked; });
+      });
+      var sw = document.createElement('span');
+      sw.className = 'swatch';
+      sw.style.background = '#' + g.color.toString(16).padStart(6, '0');
+      label.appendChild(cb); label.appendChild(sw);
+      label.appendChild(document.createTextNode(' ' + g.label));
+      togglesDiv.appendChild(label);
+    });
+  }
+
+  pending = PART_DEFS.length;
+  PART_DEFS.forEach(function (def) {
+    loader.load(def.file, function (gltf) {
+      paint(gltf.scene, def.color, def);
+      gltf.scene.position.set(def.pos[0], def.pos[1], def.pos[2]);
+      gltf.scene.rotation.set(def.rot[0], def.rot[1], def.rot[2]);
+      def.parent.add(gltf.scene);
+      if (toggleGroups[def.id]) toggleGroups[def.id].objects.push(gltf.scene);
+      done();
+    }, undefined, function (err) {
+      failures.push(def.file);
+      console.error('Failed to load ' + def.file, err);
+      done();
+    });
+  });
+
+  function done() {
+    pending--;
+    if (pending > 0) { statusEl.textContent = 'loading parts… (' + pending + ' left)'; return; }
+    if (failures.length) {
+      errorsEl.style.display = 'block';
+      errorsEl.innerHTML = '<b>Could not load:</b><br>' +
+        failures.map(function (f) { return '· ' + f; }).join('<br>');
+    }
+    refreshToggles();
+    statusEl.textContent = failures.length ? 'ready — some parts failed to load'
+                                           : 'ready — drag to orbit · scroll to zoom';
+    setTimeout(function () { statusEl.style.opacity = '0.55'; }, 4000);
+  }
+
+  // ---------- UI ----------
+  var crankAngle = 0;
+  var rpm = 30;
+  var playing = true;
+  window._overrideAngle = null;
+
+  var btnPlay = document.getElementById('btnPlay');
+  var btnReset = document.getElementById('btnReset');
+  var btnRev = document.getElementById('btnRev');
+  var speed = document.getElementById('speed');
+  var rpmLabel = document.getElementById('rpmLabel');
+  var stCrank = document.getElementById('stCrank');
+  var stTape = document.getElementById('stTape');
+  var stDrum = document.getElementById('stDrum');
+
+  btnPlay.addEventListener('click', function () {
+    playing = !playing;
+    btnPlay.textContent = playing ? '⏸ Pause' : '▶ Play';
+    btnPlay.classList.toggle('primary', playing);
+  });
+  btnReset.addEventListener('click', function () { crankAngle = 0; });
+  btnRev.addEventListener('click', function () { crankAngle += Math.PI * 2; });
+  speed.addEventListener('input', function () {
+    rpm = parseFloat(speed.value) || 0;
+    rpmLabel.textContent = rpm + ' rpm';
+  });
+  document.getElementById('ckSpin').addEventListener('change', function (e) {
+    controls.autoRotate = e.target.checked;
+  });
+  document.getElementById('ckGrid').addEventListener('change', function (e) {
+    grid.visible = e.target.checked;
+  });
+
+  // ---------- animation ----------
+  var clock = new THREE.Clock();
+  function mod(n, m) { return ((n % m) + m) % m; }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.05);
+    if (playing && rpm !== 0) crankAngle += (rpm / 60) * Math.PI * 2 * dt;
+    if (window._overrideAngle !== null) crankAngle = window._overrideAngle;
+
+    var revs = crankAngle / (Math.PI * 2);
+    var advance = revs * TAPE_PER_CRANK_REV;
+
+// root rotation.x=-PI/2 maps OpenSCAD (x,y,z) -> root-local (x,z,-y),
+// so OpenSCAD Y (axle/rotation axis) -> root-local -Z -> animated rotations use rotation.z.
+// crankSpinner.rotation.z = +crankAngle (matches +720*$t)
+// lowerPivot.rotation.z = +crankAngle    (matches +720*$t)
+// upperPivot.rotation.z = -crankAngle    (matches -720*$t)
+// drumPivot.rotation.z = -crankAngle*0.5 (matches -360*$t)
+
+    crankSpinner.rotation.z = crankAngle;
+    lowerPivot.rotation.z = crankAngle;
+    upperPivot.rotation.z = -crankAngle;
+    drumPivot.rotation.z = -crankAngle * DRUM_RATIO;
+
+    // Tape ribbon: advance per crank rev = PI*20 = 62.83mm
+    // Path: spool(x=10) -> under drum(x=100) -> plow(126-155) -> rollers(160)
+    // Cradle height: drum bottom = drum_axle_z - drum_dia/2 = 60-25 = 35 in OpenSCAD
+    // In Three.js: drum center y=60, cartridge offset (0,-25,0), so drum bottom y=35
+    var tapeX = 100 + mod(advance, TAPE_PER_CRANK_REV);
+    tapeGroup.position.set(tapeX, 35, -30);
+
+    // Seed drop at shroud drop port (bottom, x≈100 in OpenSCAD)
+    // Shroud pivot at Three.js (100, 78.7, -30); drop port at bottom (z=0 in OpenSCAD)
+    // In Three.js, drop port approximately at (100, 4, -30)
+    var phase = mod(revs * DRUM_RATIO, 1);
+    dropSeed.position.set(100, 4 + phase * 5, -30);
+
+    stCrank.textContent = revs.toFixed(2);
+    stTape.textContent = advance.toFixed(1);
+    stDrum.textContent = (revs * DRUM_RATIO).toFixed(2);
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
