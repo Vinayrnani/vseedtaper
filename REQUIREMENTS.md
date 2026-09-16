@@ -1,9 +1,38 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v14**
+**Version: v15**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## Actual changes.jpg Markups Fix - 2026-09-16 (OVERRIDES v14 doc guess)
+
+1. **Source of truth**: `/home/ubuntu/projects/vseedtaper/changes.jpg` read
+   directly (photo of slicer preview: green gear/drum left, tan V-wedge arm
+   right). Prior v14 doc interpretation was wrong — no red/yellow/pink/blue
+   fixes were visible in preview. Verified visually: NO yellow markup present.
+2. **What each markup asks (best functional interpretation)**:
+   - BLUE (2 strokes along drum<->tan-bracket junction, one over the cover
+     lip crown, one diagonal across the drum face) = interface fit: bracket
+     stands off the drum -> mouth radial gap tightened 1.0->0.7 (still
+     within 0.5-1.0 spec), step tab widened x16-20->x14-22 + side-joint
+     hulls widened to seat flush on the 11-o'clock cover lip.
+   - RED (small tight loop where the tan support tab lands on the drum) =
+     tab interference/pivot: tab sat ON the drum surface -> tab slimmed
+     (foot lifted z66->68, top z77->76) so the drum carve fully clears it.
+   - PINK/magenta (big loop around far-right V tip + lower wall) = tip
+     geometry/wall: apex read blunt/squared, lower wall thin -> apex
+     sharpened to top-biased knife edge (end wall 2.0->1.5 wide, foot
+     z63->66), lower floor slab thickened 2.5->3.5, folding-plow outlet top
+     edge chamfered 30° so tape exits cleanly.
+3. **Scope kept**: cover arc 120..270°, bottom-center drop tube, left crank,
+   drum, rollers, gears untouched. Only wedge root/tip/tab interface +
+   plow outlet tip changed (`seed_tape_machine_v2.scad` only).
+4. **Layman summary**: the photo's hand-drawn loops asked for three small
+   fit-and-finish fixes where the tan seed-trough arm meets the green seed
+   wheel — close the visible gap so the arm hugs the wheel, lift the little
+   tab so it can't rub the spinning wheel, and sharpen the far tip while
+   making the trough floor sturdier.
 
 ## Bottom-Center Drop / 11-to-6 Cover Rebuild - 2026-09-16 - Agreed with User (OVERRIDES v11 tube/cover clocking)
 

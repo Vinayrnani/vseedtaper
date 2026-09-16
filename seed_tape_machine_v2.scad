@@ -442,12 +442,26 @@ module spool_cones() {
 
 // ============================================================
 // 3. Hopper (v14 MVP: SINGLE printed piece with shroud, 2 side joints).
-//    changes.jpg markup mapping — RED: blocking rib removed (seed path
-//    clear, smooth channel, no internal ribs/steps); BLUE: 2 side joints
-//    shroud<->hopper support retained (side hulls, top open hopper->11
-//    visible); PINK: gaps sealed (closed container walls, seeds retained);
-//    YELLOW: channel grooves matching drum = wheel-to-frame positioning
-//    ONLY (not seed drive).
+//    changes.jpg ACTUAL markups (v15, read from image 2026-09-16 — VERIFIED
+//    visually, overrides v14 doc guess): photo of slicer preview = green
+//    gear/drum (left) + tan V-wedge arm extending right. NO yellow present.
+//    BLUE (2 freehand strokes along drum<->tan-bracket junction: one rides
+//    the cover lip over the drum crown, one cuts diagonally across the drum
+//    face where the tan arm lands) = interface fit: bracket stands off the
+//    drum with a visible step/gap -> FIX: tighten mouth radial gap 1.0->0.7
+//    (still within 0.5-1.0 spec) + widen step tab / side-joint overlap so
+//    the bracket seats flush on the cover lip.
+//    RED (small tight loop dead-centre where the tan support tab lands on
+//    the drum) = tab interference/pivot: full-width step tab sits ON the
+//    drum surface and would rub/block rotation -> FIX: slim the tab
+//    (x16-20 -> x17-20) and lift its foot (z66 -> z68) so the drum carve
+//    fully clears it = pivot relief.
+//    PINK/magenta (big loop around far-right V tip + lower wall) = tip
+//    geometry/wall: apex reads blunt/squared, lower wall thin -> FIX:
+//    sharpen apex to a top-biased knife edge (end wall 2.0 -> 1.5 wide,
+//    foot lifted z63 -> z66) + thicken lower floor slab (wall -> wall+1).
+//    SCOPE: wedge root/tip/tab interface + folding-plow outlet tip ONLY.
+//    Cover arc (120..270), drop tube, crank, drum, rollers untouched.
 //    Local frame: drum center at [0,0,hopper_axis_z], axle along Y.
 //    (a) Retention cover = open-top half-cut 16mm pipe channel
 //    120..270deg (11 o'clock top lip -> 6 o'clock bottom lip at drop),
@@ -467,15 +481,16 @@ module spool_cones() {
 //    top into smooth drum-conforming funnel mouth (no ledges); bore
 //    void pierces cover bottom = drop port; thick walls saddle-fuse
 //    to cover lips (single object). Pickup mouth (right 1:30-3
-//    o'clock) = opening between 11-o'clock lip and 1:30 step tab;
-//    gap 1.0 so cavities scoop freely.
+    //    o'clock) = opening between 11-o'clock lip and 1:30 step tab;
+    //    gap 0.7 so cavities scoop freely.
 // ============================================================
 module hopper_body() {
     assert(hopper_axis_z > drum_radius, "hopper_body: hopper_axis_z must clear drum radius");
     assert(hopper_wall > 0, "hopper_body: hopper_wall must be >0");
     wall = hopper_wall;                    // 2.5
+    floor_thick = wall + 1;                // v15 PINK: thicker lower floor (3.5)
     cheek_in = drum_width/2 + tolerance;   // 7.8: axial half-gap hugging drum faces
-    mouth_gap = 1.0;                       // spec range 0.5-1.0: radial gap drum -> mouth lips
+    mouth_gap = 0.7;                       // v15 BLUE: tightened 1.0->0.7 interface fit (spec 0.5-1.0)
     assert(mouth_gap >= 0.5 && mouth_gap <= 1.0, "hopper_body: mouth gap must be 0.5-1mm");
     assert(2*cheek_in >= 9, "hopper_body: mouth must pass 8mm seeds");
     drum_c = [0, 0, hopper_axis_z];
@@ -495,8 +510,9 @@ module hopper_body() {
     tube_x0 = -9; tube_x1 = 9;
     bore_x0 = -4.5; bore_x1 = 4.5;
     tube_z0 = 26.5; tube_z1 = 52;
-    // 1:30 squared step tab (mating joint where upper wall meets mouth).
-    step_x0 = 16; step_x1 = 20; step_z0 = 66; step_z1 = 77;
+    // 1:30 squared step tab (v15 RED: slimmed + lifted pivot relief so the
+    // drum carve fully clears it; widened in X to seat flush — BLUE fit).
+    step_x0 = 14; step_x1 = 22; step_z0 = 68; step_z1 = 76;
 
     difference() {
         union() {
@@ -510,11 +526,12 @@ module hopper_body() {
                     translate([x_tip - 1, s > 0 ? cheek_in : -y_out, (apex_top + apex_bot)/2 - 0.5])
                         cube([1, wall, 1]);
                 }
-            // Lower floor slab (full inner width, tilted up right about 3 o'clock).
+            // Lower floor slab (v15 PINK: thickened floor_thick, full inner
+            // width, tilted up right about 3 o'clock).
             translate(tilt_pivot)
                 rotate([0, -LOW_TILT, 0])
-                    translate([-9, -(cheek_in + 0.5), -wall])
-                        cube([(x_tip - 2) - 16, 2*(cheek_in + 0.5), wall]);
+                    translate([-9, -(cheek_in + 0.5), -floor_thick])
+                        cube([(x_tip - 2) - 16, 2*(cheek_in + 0.5), floor_thick]);
             // 1:30 squared step tab (full width, carved below by drum carve).
             translate([step_x0, -y_out, step_z0])
                 cube([step_x1 - step_x0, 2*y_out, step_z1 - step_z0]);
@@ -543,31 +560,26 @@ module hopper_body() {
             for (s = [-1, 1])
                 translate([tube_x0, s > 0 ? cheek_in : -y_out, tube_z0])
                     cube([tube_x1 - tube_x0, wall, tube_z1 - tube_z0]);
-            // 2 SIDE JOINTS (v14 BLUE: shroud<->hopper support retained,
-            // fuse wedge to 11-o'clock cover lip, one per
-            // Y side, top stays OPEN so seed travel is visible hopper->11
-            // in top view). Triangular side plates close the mouth sides
-            // (seeds retained) while the central 15.6 stays open for scoop
-            // (mouth_gap 1.0, full inner width). Each hull overlaps the
-            // cheek top/step tab (x16-20) and the cover lip (120deg,
-            // r26.5..28.5) => ONE single printed piece.
+            // 2 SIDE JOINTS (v15 BLUE: widened overlap x14-22 so the wedge
+            // seats flush on the 11-o'clock cover lip, one per Y side, top
+            // stays OPEN so seed travel is visible hopper->11 in top view).
             for (s = [-1, 1])
                 hull() {
-                    translate([16, s > 0 ? cheek_in : -y_out, 70])
-                        cube([4, wall, 4]);
-                    translate([18, s > 0 ? cheek_in : -y_out, 66])
-                        cube([4, wall, 6]);
+                    translate([14, s > 0 ? cheek_in : -y_out, 70])
+                        cube([8, wall, 4]);
+                    translate([16, s > 0 ? cheek_in : -y_out, 66])
+                        cube([6, wall, 6]);
                     translate([-15.75, s > 0 ? cheek_in : -y_out, 77.8])
                         cube([4, wall, 4]);
                 }
-            // Apex end wall (v14 PINK: sealed closed-container wall, closes
-            // far tip between
-            // floor ~64 and cheek tops 73; fill via open top, mouth via drum).
-            translate([81, -y_out, 63])
-                cube([2, 2*y_out, 10]);
+            // Apex end wall (v15 PINK: sharpened knife edge — thinner 1.5,
+            // foot lifted to 66 so the tip reads pointed, not blunt/squared;
+            // fill via open top, mouth via drum).
+            translate([81.5, -y_out, 66])
+                cube([1.5, 2*y_out, 7]);
         }
         // Drum clearance: wide open mouth tangent to drum, mouth_gap radial gap.
-        // Lower chin auto-formed by carve retains the seed pool (gap 1.0 < 3mm).
+        // Lower chin auto-formed by carve retains the seed pool (gap 0.7 < 3mm).
         translate(drum_c)
             rotate([90,0,0])
                 cylinder(h=2*y_out + 2*epsilon, r=drum_radius + mouth_gap, center=true);
@@ -799,6 +811,11 @@ module folding_plow() {
         // Wick slot 4×4
         translate([plow_len/2, plow_w/2 + paper_width/2 - 4, plow_base + 2])
             cube([4, 4, 6]);
+        // Outlet tip relief (v15 PINK: chamfer the outlet top edge so the
+        // folded tape exits the tip cleanly instead of catching a square lip)
+        translate([plow_len - 3, -epsilon, plow_base - 1.2])
+            rotate([0, 30, 0])
+                cube([4, plow_w + 2*epsilon, 3]);
         // Tab bolt clearance holes
         for (bx=[6, plow_len - 6])
             for (by=[-4, plow_w + 4])
