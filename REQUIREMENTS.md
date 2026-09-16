@@ -1,6 +1,38 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v21**
+**Version: v22**
+
+Authoritative record of requirements, standing rules, and current state.
+If context is ever lost, read this file first.
+
+## v22 R-to-L Order: Shroud Tunnel + Spool West (step 3 of 3) - 2026-09-16
+
+1. **R->L order** (+X=right tape dir): hopper wedge (right, mouth
+   ~100-183) > drum (100) > shroud tunnel (58-84, centroid ~71) >
+   roller+crank (40) > spool (-6, far west). Plow stays east of drum
+   (126->159, v1 precedent); center_distance 60, gear_mesh_phase 9°,
+   back-side gears all unchanged from v21.
+2. **Shroud is a real part again**: `u_channel_shroud()` rewritten from
+   the legacy annular stub into a parametric enclosed tape-cover tunnel
+   WEST of the drum (roller nip -> drum exit): local x 0..26 (= world
+   58..84), inner width paper+2*tol, walls + top plate + sole flanges on
+   the base (flat print base min_z=0), ends open 0..32 (tape at ~30),
+   top 34 (below roller gear bottom 38 and hopper cover lip ~36.4),
+   round d10 side view-ports; `$fn=60`, `tol=0.3`. Assembly mounts it at
+   `[shroud_x0, chassis_width/2, 0]`; export standalone.
+3. **Spool graze FIXED (was v21 known graze)**: `spool_axle_x` 10->-6 —
+   cone A (tapered ~r19.5 at the gear plane) now sits 46 off the roller
+   gear centre in X = ~4.5 real mesh gap, and even the conservative
+   full-envelope boxes clear by 1.5 in X, fixing the v21 graze with the
+   r22 back gear (Y 9..15). Chassis extended west (`chassis_x0`=-14,
+   `chassis_len` 200->214, east edge stays 200) so the spool bearing
+   block (-13..1) seats on the base; small cone overhang past the west
+   edge matches the v4-accepted precedent. `spool_axle_z`=65 kept.
+4. **Viewer**: new `shroudPivot` (58,0,-30) + shroud PART_DEF (child
+   [0,0,0]/Rx-90) in PART_ORDER after hopper; spoolGroup x 10->-6;
+   `ASSET_V` 9->10; legend notes the R->L layout. All 12 GLBs rebuilt.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   port 9099 only. Step 4 (tape bend) / Step 5 (mobile panel) NOT started.
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.

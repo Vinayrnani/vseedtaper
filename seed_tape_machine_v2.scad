@@ -76,22 +76,30 @@ target_spacing     = 152.4;                   // v14 MVP: fixed 6 inch spacing
 
 // ============================================================
 // Axle layout (X,Z in OpenSCAD coords: X=tape travel, Z=up)
-// v21: roller moved WEST of drum -> spool(10,65), roller(40,60), drum(100,60).
+// v22 R->L order: hopper wedge (mouth ~100-183) > drum (100) >
+//   shroud tunnel (58-84, centroid ~71) > roller/crank (40) >
+//   spool (-6, far west, clear of the roller back gear).
 // Gear mesh: |100-40|=60 = center_distance exact, same Z, same back-side plane.
 // Plow stays EAST of drum (126->159, v1 precedent); tape scroll unchanged.
+// v22 spool: x 10->-6 moves cone A (tapered r~19.5 at the gear plane)
+//   46 off the roller gear centre in X -> real mesh gap ~4.5, and even
+//   the conservative full-envelope boxes clear by 1.5 in X, fixing the
+//   v21 graze with the r22 back gear (Y 9-15); chassis extends west to
+//   seat the bearing block (-13..1 on the -14 edge).
 // ============================================================
 drum_axle_x  = 100;
 drum_axle_z  = 60;   // ≥ drum_radius + base_thick + clearance = 29.3 ✓
 roller_axle_x = 40;  // v21: 100-60, WEST of drum, coaxial mesh with drum gear
 roller_axle_z = 60;  // same Z as drum for gear mesh; ≥ roller_outer_dia/2+1=23 ✓
 // Gear mesh: drum(100,60) to roller(40,60) → distance=60mm ✓
-spool_axle_x  = 10;
+spool_axle_x  = -6;  // v22: 10->-6, clears roller back gear (box-level X gap 1.5)
 spool_axle_z  = 65;  // 120mm max roll OD, height 65mm above base
 
 // ============================================================
 // Chassis
 // ============================================================
-chassis_len   = 200;
+chassis_x0    = -14; // v22: west edge (was 0); east edge stays chassis_x0+chassis_len=200
+chassis_len   = 214; // v22: 200->214, west extension seats the spool bearing at x=-6
 chassis_width = 60;
 chassis_height = 110;  // > max(spool top=90, drum top=102) + 5 = 107 ✓
 base_thick    = 4;
@@ -146,6 +154,14 @@ shroud_wall     = 2;     // preserved v12 wall
 shroud_gap      = 1.5;   // preserved v12 gap (within 1.5-2 smooth channel, no ribs/steps)
 groove_w        = 7;     // inner-face groove width, matches drum cavity track (fits 6mm cavities d6.6)
 groove_d        = 0.8;   // groove depth (clears cavity protrusion 0.6)
+// v22 tape-cover shroud segment WEST of drum (roller nip -> drum exit).
+// World x shroud_x0..shroud_x1 = 58..84 (centroid ~71): drum(100) >
+// shroud(~71) > roller(40) R->L. Top (34) stays below the roller gear
+// bottom (60-22=38) and the hopper cover bottom lip (~36.4 at x=84).
+shroud_x0  = roller_axle_x + 18;  // 58: gear-X overlap <=4, z-separated (top 34 < 38)
+shroud_x1  = drum_axle_x - 16;    // 84: tucks to drum tangent, clears cover lip + drop tube (91+)
+shroud_len = shroud_x1 - shroud_x0; // 26
+shroud_h   = 34;                  // enclosed tunnel height (tape slot 0..32, tape at ~30)
 
 // ============================================================
 // Crank (v21: drives the ROLLER shaft, coaxial at roller_axle_x, outside wall)
@@ -347,9 +363,11 @@ module bearing_block(spec_x, spec_z, spec_height, is_drum=false) {
 module chassis() {
     difference() {
         union() {
-            cube([chassis_len, chassis_width, base_thick]);
-            cube([chassis_len, wall_thick, chassis_height]);
-            translate([0, chassis_width - wall_thick, 0])
+            translate([chassis_x0, 0, 0])
+                cube([chassis_len, chassis_width, base_thick]);
+            translate([chassis_x0, 0, 0])
+                cube([chassis_len, wall_thick, chassis_height]);
+            translate([chassis_x0, chassis_width - wall_thick, 0])
                 cube([chassis_len, wall_thick, chassis_height]);
             // Track rails
             rail_thick = 2;
@@ -374,12 +392,12 @@ module chassis() {
                 }
             // Corner gussets via hull() of cubes
             for (gy=[0, chassis_width - 6]) {
-                translate([4, gy, base_thick - 0.15])
+                translate([chassis_x0 + 4, gy, base_thick - 0.15])
                     hull() {
                         cube([12, 6, 1.15]);
                         translate([0, 0, 12]) cube([1.5, 6, 1]);
                     }
-                translate([chassis_len - 16, gy, base_thick - 0.15])
+                translate([chassis_x0 + chassis_len - 16, gy, base_thick - 0.15])
                     hull() {
                         cube([12, 6, 1.15]);
                         translate([10.5, 0, 12]) cube([1.5, 6, 1]);
@@ -403,10 +421,10 @@ module chassis() {
                     cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
         }
         // 45° chamfers on base edges
-        translate([0, chassis_width/2, base_thick])
+        translate([chassis_x0, chassis_width/2, base_thick])
             rotate([0,45,0])
                 cube([2.5, chassis_width + 2*epsilon, 2.5], center=true);
-        translate([chassis_len, chassis_width/2, base_thick])
+        translate([chassis_x0 + chassis_len, chassis_width/2, base_thick])
             rotate([0,45,0])
                 cube([2.5, chassis_width + 2*epsilon, 2.5], center=true);
         // Plow mounting holes
@@ -626,26 +644,52 @@ module hopper_body() {
 }
 
 // ============================================================
-// 4. Shroud — v14 LEGACY STUB (superseded): the cover is merged into
-//    hopper_body() above as the open-top half-cut 16mm pipe channel
-//    (120..270deg, wall 2, gap 1.5, bore fits 8mm, grooved inner face,
-//    2 side joints — single printed piece, part_to_render="hopper").
-//    Module kept compiling so part_to_render="shroud" still exports the
-//    legacy cover; viewer no longer loads it.
-//    (Original v9: left-only C shell 45..240deg, gap 1.75, wall 2.)
+// 4. Shroud — v22 REAL PART (was v14 legacy annular stub): enclosed tape
+//    cover tunnel WEST of the drum, roller nip -> drum exit (local x
+//    0..shroud_len = world 58..84, centroid ~71, Y centred on the track).
+//    Side walls stand on the base (flat print base min_z=0) + sole
+//    flanges; top plate clears the tape (ends open 0..32, tape at ~30);
+//    top (34) stays below the roller gear bottom (38) and the hopper
+//    cover bottom lip (~36.4 at x=84). Round side view-ports (d10) show
+//    the tape. Inner width = paper_width + 2*tol; curves use $fn=60.
+//    Local frame: x 0..len, y centred 0, z 0..shroud_h. Assembly places
+//    it at [shroud_x0, chassis_width/2, 0]; export is standalone min_z=0.
 // ============================================================
 module u_channel_shroud() {
-    assert(shroud_id > 0, "u_channel_shroud: shroud_id must be >0");
-    gap = 1.75;   // constant small gap hugging drum
-    wall = 2;     // thin cover
-    height = drum_width + 2*tolerance;
-    mid_r = drum_radius + gap + wall/2;
-
-    translate([0, 0, height/2]) // shift up so min_z=0
-        rotate([0, 0, 45])      // clock 0->195 sweep onto +45..+240deg (1:30 lip to 7 o'clock)
-            rotate_extrude(angle=195, convexity=10)
-                translate([mid_r, 0, 0])
-                    square([wall, height], center=true);
+    assert(shroud_len > 15, str("u_channel_shroud: shroud_len must exceed 15, got ", shroud_len));
+    assert(shroud_x1 <= drum_axle_x - 16,
+           str("u_channel_shroud: east end must stay clear of the hopper cover lip, got ", shroud_x1));
+    assert(shroud_x0 >= roller_axle_x + roller_outer_r - 4,
+           str("u_channel_shroud: west end must stay near the roller nip, got ", shroud_x0));
+    assert(shroud_h < roller_axle_z - roller_outer_r,
+           str("u_channel_shroud: top must stay below the roller gear bottom (38), got ", shroud_h));
+    wall = shroud_wall;                          // 2
+    inner_hw = (paper_width + 2*tolerance)/2;    // 13
+    outer_hw = inner_hw + wall;                  // 15
+    top_t = 2;                                   // top plate 32..34
+    port_d = 10;
+    port_z = 18;
+    difference() {
+        union() {
+            // Side walls (stand on base, full length/height)
+            for (s=[-1,1])
+                translate([0, s > 0 ? inner_hw : -outer_hw, 0])
+                    cube([shroud_len, wall, shroud_h]);
+            // Top plate (ends stay open 0..32 for the tape)
+            translate([0, -outer_hw, shroud_h - top_t])
+                cube([shroud_len, 2*outer_hw, top_t]);
+            // Sole flanges (mounting feet, solid, min_z=0)
+            for (s=[-1,1])
+                translate([0, s > 0 ? outer_hw : -outer_hw - 4, 0])
+                    cube([shroud_len, 4, 3]);
+        }
+        // Round side view-ports (d10) down each wall — tape stays visible
+        for (s=[-1,1])
+            for (px=[shroud_len/4, 3*shroud_len/4])
+                translate([px, s*(inner_hw + wall/2), port_z])
+                    rotate([90,0,0])
+                        cylinder(h=wall + 2*epsilon, d=port_d, center=true);
+    }
 }
 
 // ============================================================
@@ -1089,10 +1133,10 @@ module animated_assembly() {
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
 
-    // U-Channel Shroud (top ~180 deg) - zoffset=height/2 compensated
-    translate([drum_axle_x, chassis_width/2, drum_axle_z])
-        translate([0, 0, drum_radius + 1.75 - (drum_width + 2*tolerance)/2])
-            u_channel_shroud();
+    // Tape cover shroud (v22: enclosed tunnel WEST of drum, roller nip
+    // -> drum exit, world x 58..84). Local frame x 0..len, y centred 0.
+    translate([shroud_x0, chassis_width/2, 0])
+        u_channel_shroud();
 
     // Seed cradle
     translate([plow_start, chassis_width/2 - 12.7, base_thick])
