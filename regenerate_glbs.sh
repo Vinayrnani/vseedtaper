@@ -4,12 +4,51 @@ set -euo pipefail
 SCRIPT_DIR="/home/ubuntu/projects/vseedtaper"
 SCAD_SRC="$SCRIPT_DIR/seed_tape_machine_v2.scad"
 STL_DIR="$SCRIPT_DIR/web/stl"
+CACHE_DIR="$SCRIPT_DIR/.regen_cache"
 TMPDIR=$(mktemp -d /tmp/openscad_XXXXXX)
 
 cleanup() {
     rm -rf "$TMPDIR"
 }
 trap cleanup EXIT
+
+# Usage: ./regenerate_glbs.sh [--force] [part ...]
+#   --force   ignore skip-unchanged cache, regenerate everything selected
+#   part ...  optional subset of the 12 GLB names to (re)generate;
+#             default is all parts. Valid names:
+#             chassis hopper shroud cartridge plow crank cones rollers
+#             cone_a cone_b rollers_lower rollers_upper
+FORCE=0
+FILTER=()
+for arg in "$@"; do
+    if [ "$arg" = "--force" ]; then
+        FORCE=1
+    else
+        FILTER+=("$arg")
+    fi
+done
+
+ALL_GLB="chassis hopper shroud cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper"
+if [ "${#FILTER[@]}" -gt 0 ]; then
+    for p in "${FILTER[@]}"; do
+        case " $ALL_GLB " in
+            *" $p "*) ;;
+            *) echo "Unknown part: $p (valid: $ALL_GLB)" >&2; exit 1 ;;
+        esac
+    done
+    WANT="${FILTER[*]}"
+else
+    WANT="$ALL_GLB"
+fi
+
+# GLB name -> temp scad basename (rollers_lower/upper come from rlow_s/rup_s singles)
+scad_base_for() {
+    case "$1" in
+        rollers_lower) echo "rlow_s" ;;
+        rollers_upper) echo "rup_s" ;;
+        *) echo "$1" ;;
+    esac
+}
 
 echo "=== Regenerating all GLB files for seed tape machine v2 ==="
 
@@ -54,70 +93,95 @@ echo "knurled_roller(is_lower=false);" >> "$TMPDIR/rup_s.scad"
 
 echo "Temp files created in $TMPDIR"
 
+mkdir -p "$STL_DIR" "$CACHE_DIR"
+
+# --- Skip-unchanged cache: sha256 of each part's temp scad ---
+# Any shared-geometry edit changes every hash (conservative full regen);
+# untouched re-runs skip everything in seconds. Use --force to bypass.
+DIRTY=()
+SKIPPED=()
+for glb in $WANT; do
+    base="$(scad_base_for "$glb")"
+    cur="$(sha256sum "$TMPDIR/${base}.scad" | cut -d' ' -f1)"
+    echo "$cur" > "$TMPDIR/${base}.hash.new"
+    if [ "$FORCE" -eq 0 ] && [ -f "$CACHE_DIR/${glb}.sha256" ] && [ -f "$STL_DIR/${glb}.glb" ] \
+        && cmp -s "$CACHE_DIR/${glb}.sha256" "$TMPDIR/${base}.hash.new"; then
+        SKIPPED+=("$glb")
+    else
+        DIRTY+=("$glb")
+    fi
+done
+
 echo ""
-echo "=== Step 1: Exporting STL files with xvfb-run + openscad ==="
+echo "=== Cache: ${#DIRTY[@]} dirty, ${#SKIPPED[@]} up-to-date (use --force for full regen) ==="
+if [ "${#SKIPPED[@]}" -gt 0 ]; then
+    echo "  Skipped: ${SKIPPED[*]}"
+fi
+if [ "${#DIRTY[@]}" -eq 0 ]; then
+    echo "  Nothing to do - all requested parts up-to-date."
+    echo ""
+    echo "=== Verification ==="
+    ls -lh "$STL_DIR"/*.glb 2>/dev/null | awk '{print $5, $9}'
+    echo ""
+    echo "=== Done ==="
+    exit 0
+fi
+echo "  Dirty: ${DIRTY[*]}"
+
+JOBS="$(nproc)"
+
+echo ""
+echo "=== Step 1: Exporting STL files with xvfb-run + openscad (-P$JOBS) ==="
 
 export_part() {
-    local part="$1"
-    echo "  Exporting $part..."
-    xvfb-run -a openscad -o "$TMPDIR/${part}.stl" "$TMPDIR/${part}.scad" 2>&1 || echo "  WARNING: $part may have failed"
+    local base="$1"
+    echo "  Exporting $base..."
+    xvfb-run -a openscad -o "$TMPDIR/${base}.stl" "$TMPDIR/${base}.scad" 2>&1 || echo "  WARNING: $base may have failed"
 }
+export TMPDIR
+export -f export_part
 
-export_part "chassis"
-export_part "hopper"
-export_part "shroud"
-export_part "cartridge"
-export_part "plow"
-export_part "crank"
-export_part "cones"
-export_part "rollers"
-export_part "cone_a"
-export_part "cone_b"
-
-# single-roller STLs (temp names differ from GLB names on purpose)
-echo "  Exporting rlow_s (lower single)..."
-xvfb-run -a openscad -o "$TMPDIR/rlow_s.stl" "$TMPDIR/rlow_s.scad" 2>&1 || echo "  WARNING: rlow_s may have failed"
-echo "  Exporting rup_s (upper single)..."
-xvfb-run -a openscad -o "$TMPDIR/rup_s.stl" "$TMPDIR/rup_s.scad" 2>&1 || echo "  WARNING: rup_s may have failed"
+DIRTY_BASES=()
+for glb in "${DIRTY[@]}"; do
+    DIRTY_BASES+=("$(scad_base_for "$glb")")
+done
+printf "%s\n" "${DIRTY_BASES[@]}" | xargs -r -P "$JOBS" -I{} bash -c 'export_part "$@"' _ {}
 
 echo ""
-echo "=== Step 2: Converting STL to GLB with trimesh ==="
+echo "=== Step 2: Converting STL to GLB with trimesh (-P$JOBS) ==="
 
 convert_to_glb() {
-    local part="$1"
-    if [ -f "$TMPDIR/${part}.stl" ]; then
-        echo "  Converting $part.stl -> $STL_DIR/${part}.glb"
-        python3 -c "
-import trimesh
-m = trimesh.load('$TMPDIR/${part}.stl')
-m.export('$STL_DIR/${part}.glb')
-print('  Done: $STL_DIR/${part}.glb')
+    local glb="$1"
+    local base
+    case "$glb" in
+        rollers_lower) base="rlow_s" ;;
+        rollers_upper) base="rup_s" ;;
+        *) base="$glb" ;;
+    esac
+    if [ -f "$TMPDIR/${base}.stl" ]; then
+        echo "  Converting $base.stl -> $STL_DIR/${glb}.glb"
+        STL_IN="$TMPDIR/${base}.stl" GLB_OUT="$STL_DIR/${glb}.glb" python3 -c "
+import trimesh, os
+m = trimesh.load(os.environ['STL_IN'])
+m.export(os.environ['GLB_OUT'])
+print('  Done: ' + os.environ['GLB_OUT'])
 " 2>&1
     fi
 }
+export STL_DIR
+export -f convert_to_glb scad_base_for
 
-convert_to_glb "chassis"
-convert_to_glb "hopper"
-convert_to_glb "shroud"
-convert_to_glb "cartridge"
-convert_to_glb "plow"
-convert_to_glb "crank"
-convert_to_glb "cones"
-convert_to_glb "rollers"
-convert_to_glb "cone_a"
-convert_to_glb "cone_b"
-echo "  Converting rlow_s.stl -> $STL_DIR/rollers_lower.glb"
-python3 -c "
-import trimesh
-m = trimesh.load('$TMPDIR/rlow_s.stl')
-m.export('$STL_DIR/rollers_lower.glb')
-" 2>&1
-echo "  Converting rup_s.stl -> $STL_DIR/rollers_upper.glb"
-python3 -c "
-import trimesh
-m = trimesh.load('$TMPDIR/rup_s.stl')
-m.export('$STL_DIR/rollers_upper.glb')
-" 2>&1
+printf "%s\n" "${DIRTY[@]}" | xargs -r -P "$JOBS" -I{} bash -c 'convert_to_glb "$@"' _ {}
+
+# Refresh cache hashes for successfully regenerated parts only
+for glb in "${DIRTY[@]}"; do
+    base="$(scad_base_for "$glb")"
+    if [ -f "$STL_DIR/${glb}.glb" ]; then
+        cp "$TMPDIR/${base}.hash.new" "$CACHE_DIR/${glb}.sha256"
+    else
+        echo "  WARNING: $STL_DIR/${glb}.glb missing - cache not updated for $glb"
+    fi
+done
 
 echo ""
 echo "=== Verification ==="
