@@ -43,6 +43,15 @@ sed "s/part_to_render = \"all\"/part_to_render = \"cone_b\"/" "$SCAD_SRC" | \
     sed '/^if (part_to_render == "all") {$/,/^}$/d' > "$TMPDIR/cone_b.scad"
 echo "translate([50, 0, 0]) single_cone();" >> "$TMPDIR/cone_b.scad"
 
+# rollers_lower/upper: SINGLE vertical rollers for separate viewer pivots
+# (pull_rollers() exports both fused; the viewer mounts them independently)
+sed "s/part_to_render = \"all\"/part_to_render = \"rollers\"/" "$SCAD_SRC" | \
+    sed '/^if (part_to_render == "all") {$/,/^}$/d' > "$TMPDIR/rlow_s.scad"
+echo "knurled_roller(is_lower=true);" >> "$TMPDIR/rlow_s.scad"
+sed "s/part_to_render = \"all\"/part_to_render = \"rollers\"/" "$SCAD_SRC" | \
+    sed '/^if (part_to_render == "all") {$/,/^}$/d' > "$TMPDIR/rup_s.scad"
+echo "knurled_roller(is_lower=false);" >> "$TMPDIR/rup_s.scad"
+
 echo "Temp files created in $TMPDIR"
 
 echo ""
@@ -64,6 +73,12 @@ export_part "cones"
 export_part "rollers"
 export_part "cone_a"
 export_part "cone_b"
+
+# single-roller STLs (temp names differ from GLB names on purpose)
+echo "  Exporting rlow_s (lower single)..."
+xvfb-run -a openscad -o "$TMPDIR/rlow_s.stl" "$TMPDIR/rlow_s.scad" 2>&1 || echo "  WARNING: rlow_s may have failed"
+echo "  Exporting rup_s (upper single)..."
+xvfb-run -a openscad -o "$TMPDIR/rup_s.stl" "$TMPDIR/rup_s.scad" 2>&1 || echo "  WARNING: rup_s may have failed"
 
 echo ""
 echo "=== Step 2: Converting STL to GLB with trimesh ==="
@@ -91,6 +106,18 @@ convert_to_glb "cones"
 convert_to_glb "rollers"
 convert_to_glb "cone_a"
 convert_to_glb "cone_b"
+echo "  Converting rlow_s.stl -> $STL_DIR/rollers_lower.glb"
+python3 -c "
+import trimesh
+m = trimesh.load('$TMPDIR/rlow_s.stl')
+m.export('$STL_DIR/rollers_lower.glb')
+" 2>&1
+echo "  Converting rup_s.stl -> $STL_DIR/rollers_upper.glb"
+python3 -c "
+import trimesh
+m = trimesh.load('$TMPDIR/rup_s.stl')
+m.export('$STL_DIR/rollers_upper.glb')
+" 2>&1
 
 echo ""
 echo "=== Verification ==="

@@ -1,9 +1,43 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v3**
+**Version: v4**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## Fit-fix Update - 2026-09-16 - Agreed with User
+
+1. **All parts must sit inside the blue chassis interior** (root-local X[0,200], Y[0,110], Z[−60,0]) in live preview — no parts dangling below ground or outside walls; chassis must not render empty.
+2. **Fix derived from measurement, not hand-tweaking**: read animated_assembly() transforms + each GLB bounding box, then set PART_DEFS pos/rot.
+3. **Preserve proven crank orbit**: crank grip orbits radius 45 about the shaft axis (pos vector re-derived as [−5,−8.47,0]; old [0,45,0] measured only the crank node origin, true grip was at r=86).
+
+## Fit-fix Results - 2026-09-16 (v4, verified)
+
+- **Root cause**: mixed frames. GLBs are raw OpenSCAD coords; pivots used M-mapped
+  coords (x,z,−y) while root still applied rotation.x=−π/2 (double rotation ⇒ whole
+  machine rendered upside-down under the floor, chassis looking empty). Previous
+  PART_DEFS were centroid-centering hacks (part [−center] offsets), v3 "radius 45"
+  measured a node origin, not the grip. Fix (SCHEME M): root.rotation.x=0,
+  M baked into every part (rule: pivot at M(A), child rot=M_R·Q, pos=M_R·(B+d)).
+- **New PART_DEFS pos/rot**: chassis [0,0,0]/[−π/2,0,0]; hopper [0,0,0]/[−π/2,0,0]
+  (pivot→(100,4,−30)); shroud [0,18.7,0]/[−π/2,0,0]; cartridge [0,−25,0]/[−π/2,0,0];
+  cone_a [0,0,26]/[π,0,0]; cone_b [−50,0,−26]/[0,0,0] (cancels baked +50 print offset);
+  plow [0,0,0]/[−π/2,0,0]; rollers_lower/upper [0,0,26]/[π,0,0];
+  crank [−5,−8.47,0]/[−π/2,0,0] (mount→(160,60,−68)). Rotation signs unchanged.
+- **GLB findings**: cartridge.glb == horizontal assembly-branch geometry (exact bounds
+  match, no regen needed); rollers_lower.glb contained BOTH rollers + rollers_upper.glb
+  was unidentifiable → regenerated both as single vertical rollers from current .scad.
+- **scad fix**: knurled_roller vertical collars double-counted zoffset (upper collar
+  floated 8 mm in air) → removed inner zoffset; regenerate_glbs.sh now emits the
+  roller singles; seed_tape_machine_v2.scad newly tracked in git.
+- **Verification (Playwright, node verify_fix.js)**: ready, 0 console errors; grip
+  surface-centroid orbit r=44.964 at t=0/0.25/0.5/0.75 (spread 0, n=109 verts);
+  all axles horizontal (y=0.000000); pinion gear plane y=47.95 = drum gear plane.
+  Fit (root-local): hopper/shroud/cartridge/plow inside=true, belowGround=false
+  everywhere. Known by-design exceptions: crank outside (external handle), spool cones
+  X overhang −12.5 (axle x=10 < cone r 22.5, open end), lower shaft tip Z −64.95
+  (through-wall axle to crank), chassis envelope itself (gussets x→210).
+  Screenshots: /tmp/fit_t0.png, /tmp/fit_top.png, /tmp/fit_side.png.
 
 ## MVP Update - 2026-09-16 - Agreed with User
 
