@@ -127,9 +127,9 @@
   <div class="legend">
     <kbd>drag</kbd> orbit &nbsp;·&nbsp; <kbd>scroll</kbd> zoom &nbsp;·&nbsp;
     <kbd>right-drag</kbd> pan<br>
-    Tape advances π·20 = 62.83&nbsp;mm / crank rev.
-    Drum turns at half crank speed (20:40 teeth).
-    Single wrap-around hopper: left cover + right wedge, corner tube drops seeds at x=133 port.
+    Tape advances 2·π·20 = 125.66&nbsp;mm / crank rev (crank direct-drives drum, rollers 2× via 40:20 mesh).
+    Crank on drum axle left end; drum CCW picks up right, drops left.
+    Single wrap-around hopper: right wedge pickup, left tube drops seeds at x=67 port.
   </div>
 </div>
 
@@ -152,6 +152,7 @@
   // drum_axle_x=100, drum_axle_z=60, roller_axle_x=160, roller_axle_z=60,
   // spool_axle_x=10, spool_axle_z=65
   // chassis_width=60, base_thick=4, drum_dia=50, roller_dia=20, crank_throw=45
+  // crank_mount_x=77.5 (drum_axle_x - drum_width/2 - 15, drum left end direct-drive)
   // hopper_axis_z = drum_axle_z - base_thick = 56
 
   // ---------- renderer / scene / camera ----------
@@ -284,10 +285,11 @@
   upperPivot.position.set(160, 81.2, -30);
   root.add(upperPivot);
 
-   // Crank mount at OpenSCAD (160, 68, 60) = roller axle outside wall
-   // (y = chassis_width + 8) -> root-local (160, 60, -68)
+   // Crank mount at OpenSCAD (77.5, 68, 60) = drum axle LEFT end
+   // (x = drum_axle_x - drum_width/2 - 15, y = chassis_width + 8 outside
+   // wall) -> root-local (77.5, 60, -68). Direct-drive: spins WITH the drum.
    var crankMount = new THREE.Group();
-   crankMount.position.set(160, 60, -68);
+   crankMount.position.set(77.5, 60, -68);
    root.add(crankMount);
    var crankSpinner = new THREE.Group();
    crankSpinner.position.set(0, 0, 0);
@@ -381,7 +383,7 @@
     	return data;
     };
   window._setRotations = function(crankAngle) {
-    crankSpinner.rotation.z = -crankAngle;
+    crankSpinner.rotation.z = crankAngle * DRUM_RATIO;
     lowerPivot.rotation.z = -crankAngle;
     upperPivot.rotation.z = crankAngle;
     drumPivot.rotation.z = crankAngle * DRUM_RATIO;
@@ -404,7 +406,7 @@
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
-      { id: 'hopper', label: 'Hopper (wrap-around)', file: 'stl/hopper.glb', color: 0xd9b23a,
+      { id: 'hopper', label: 'Hopper (wrap-around, L-drop)', file: 'stl/hopper.glb', color: 0xd9b23a,
         parent: hopperPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.15 },
       { id: 'cartridge', label: 'Cartridge/drum', file: 'stl/cartridge.glb', color: 0x4fa06a,
         parent: drumPivot, pos: [0, 0, 7.5], rot: [Math.PI, 0, 0] }, // v8: GLB is axle-Z vertical export; Rx(180) lays axle onto root-local -Z (coaxial drum). Was [0,-25,0]/[-PI/2,0,0] which stood the drum vertical, 17.5 off-axis (visible in hop11 screenshots: floating gear, hopper gap).
@@ -420,7 +422,7 @@
       { id: 'rollers_upper', label: 'Rollers upper', file: 'stl/rollers_upper.glb', color: 0x9aa2ad,
         parent: upperPivot, pos: [0, 0, 26], rot: [Math.PI, 0, 0],
         metalness: 0.8, roughness: 0.35 },
-      { id: 'crank', label: 'Crank', file: 'stl/crank.glb', color: 0xb03a2e,
+      { id: 'crank', label: 'Crank (drum direct, left)', file: 'stl/crank.glb', color: 0xb03a2e,
         parent: crankSpinner, pos: [-5, -8.47, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5 }
     ];
    // Display order for the parts panel (matches user checklist + tape/seeds extras).
@@ -624,12 +626,14 @@
 
 // Root-local IS the Y-up machine frame, so OpenSCAD +Y (axle axis) is
 // root-local -Z -> animated rotations use rotation.z with negated angles:
-// crankSpinner.rotation.z = -crankAngle (scad lower roller + crank = +720*$t, CW)
-// lowerPivot.rotation.z = -crankAngle    (scad +720*$t, CW via external mesh)
+// crankSpinner.rotation.z = +crankAngle*0.5 (v11: direct-drive on drum axle
+//   left end, CCW locked to drum)
+// lowerPivot.rotation.z = -crankAngle    (scad +720*$t, CW via drum mesh 2:1)
 // upperPivot.rotation.z = +crankAngle    (scad idler = -720*$t, CCW)
-// drumPivot.rotation.z = +crankAngle*0.5 (scad drum = -360*$t, CCW top-moves-left)
+// drumPivot.rotation.z = +crankAngle*0.5 (scad drum = -360*$t, CCW top-moves-left:
+//   picks up RIGHT wedge, carries over top, drops LEFT tube)
 
-    crankSpinner.rotation.z = -crankAngle;
+    crankSpinner.rotation.z = crankAngle * DRUM_RATIO;
     lowerPivot.rotation.z = -crankAngle;
     upperPivot.rotation.z = crankAngle;
     drumPivot.rotation.z = crankAngle * DRUM_RATIO;
@@ -640,14 +644,15 @@
     var tapeX = 100 + mod(advance, TAPE_PER_CRANK_REV);
     tapeGroup.position.set(tapeX, 35, -30);
 
-    // Seed drop at hopper corner-tube exit (v9: tube centre world x=133,
+    // Seed drop at hopper LEFT-tube exit (v11: bore centre world x=67,
     // bottom y=38): falls onto the tape at y=35, centered z=-30.
     var phase = mod(revs * DRUM_RATIO, 1);
-    dropSeed.position.set(133, 38 - phase * 3, -30);
+    dropSeed.position.set(67, 38 - phase * 3, -30);
 
-    stCrank.textContent = revs.toFixed(2);
+    var crankRevs = revs * DRUM_RATIO; // direct-drive: crank turns with drum
+    stCrank.textContent = crankRevs.toFixed(2);
     stTape.textContent = advance.toFixed(1);
-    stDrum.textContent = (revs * DRUM_RATIO).toFixed(2);
+    stDrum.textContent = crankRevs.toFixed(2);
 
     controls.update();
     renderer.render(scene, camera);

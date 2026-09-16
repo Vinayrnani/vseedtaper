@@ -1,6 +1,43 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v10**
+**Version: v11**
+
+Authoritative record of requirements, standing rules, and current state.
+If context is ever lost, read this file first.
+
+## Right-Pickup / Left-Drop / Left-Crank Rebuild - 2026-09-16 - Agreed with User (OVERRIDES v10 tube/crank sides)
+
+1. **Source of truth**: user rebuild spec 2026-09-16 (authoritative, overrides
+   prior): RIGHT = hopper pickup, LEFT = seed drop, CRANK on LEFT.
+2. **PICKUP (RIGHT, unchanged v10)**: sharp-point wedge trough on +X (1:30 step
+   tab to 3-o'clock mouth, floor +8° to apex local x=83 / world 183). Mouth
+   radial gap 1.0 (carve r26 vs R25), full inner width — cavities scoop freely.
+3. **DROP (LEFT, moved from right corner)**: vertical drop tube on LEFT of drum
+   (~9 o'clock side, x < drum centre: outer local x −39..−27, bore
+   −36.5..−29.5, centre local −33 / world x=67), 4 box walls straight down,
+   bore 7 (X) x 15.6 (Y) for 3mm seeds, bottom local z=34 (world 38, just
+   above tape at 35). Fed by cavities (not by trough void): drop window cut
+   (local x −36..−22, z 48..60, full inner width) connects drum surface
+   through the cover arc into the bore top. Old right bore slot removed.
+4. **HOPPER still ONE single wrap-around object**: left retention cover arc
+   45..240° (wall 2, gap 1.5, fused at 1:30 step tab) + right wedge + left
+   drop tube all fused in hopper_body() (tube intersects cover arc
+   ~180-200°, union-fused; part_to_render="hopper" unchanged).
+5. **CRANK on LEFT (moved from roller axle x=160)**: direct-drive handle on
+   drum axle left end: scad crank_mount_x = drum_axle_x − drum_width/2 − 15
+   (= 77.5), same Y (chassis_width+8, outside wall) and Z (60) as before;
+   rotates WITH the drum (drum_angle, CCW). L-grip, orbit r=45 preserved
+   (crank_assembly module untouched; only the assembly mount moved).
+   Viewer: crankMount root-local (77.5, 60, −68); crankSpinner.rotation.z =
+   +angle*0.5 (CCW, locked to drum); drum/lower/upper unchanged
+   (+angle*0.5 / −angle / +angle). Readouts: crank rev = drum rev (direct),
+   tape per crank rev = 2·π·20 = 125.66 (drum 1 rev → roller 2 rev).
+6. **DRUM rotation unchanged**: CCW (−360*$t, top moves −X/left): picks up on
+   the right, carries covered over the top, drops on the left. Viewer keeps
+   drumPivot.rotation.z = +angle*0.5.
+7. **Preserved**: part_to_render names, drum axle [100,60] R25 W15,
+   tape/rollers/plow/chassis geometry, hopper viewer mount (geometry still
+   symmetric about drum centre; mount unchanged).
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.

@@ -128,9 +128,10 @@ hopper_axis_z   = drum_axle_z - base_thick;       // 56
 wiper_slot      = 1.2;
 
 // ============================================================
-// Crank
+// Crank (v11: direct-drive on drum axle LEFT end)
 // ============================================================
 crank_throw     = 45;
+crank_mount_x   = drum_axle_x - drum_width/2 - 15; // 77.5: LEFT of drum (-X), direct-drive
 crank_arm_t     = 4;
 crank_arm_w     = 10;
 grip_len        = 30;
@@ -179,6 +180,7 @@ assert(chassis_height > max(spool_axle_z + cone_h + bb_height_spool, drum_axle_z
 assert(hopper_inner_r > drum_radius, "hopper_inner_r must exceed drum_radius (clearance >0)");
 assert(plow_len > 15, str("plow_len must exceed 15, got ", plow_len));
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
+assert(crank_mount_x < drum_axle_x, str("crank_mount_x must sit LEFT of drum axle: ", crank_mount_x));
 assert(roller_axle_z + bb_height_roller <= chassis_height, "roller bearing block must fit below wall top");
 assert(drum_axle_z + bb_height_drum <= chassis_height, "drum bearing block must fit below wall top");
 assert(spool_axle_z + bb_height_spool <= chassis_height, "spool bearing block must fit below wall top");
@@ -428,7 +430,7 @@ module spool_cones() {
 }
 
 // ============================================================
-// 3. Hopper (v10: SINGLE wrap-around part per user rebuild — NO separate
+// 3. Hopper (v11: SINGLE wrap-around part per user rebuild — NO separate
 //    shroud). Local frame: drum center at [0,0,hopper_axis_z], axle along Y.
 //    (a) LEFT retention cover = merged shroud function: annular arc 45..240deg
 //    (covers 11->7 o'clock over top/left), wall 2, gap 1.5, full width 15.6.
@@ -436,12 +438,14 @@ module spool_cones() {
 //    o'clock. (b) RIGHT sharp-point wedge trough: UPPER wall ~horizontal from
 //    the 1:30 step tab extending right; LOWER wall (floor) from the 3-o'clock
 //    mouth corner angling LITTLE UPWARD (+8 deg tilt about the 3-o'clock
-//    point) to a sharp point far right (apex x=83, toward +X crank side).
+//    point) to a sharp point far right (apex x=83, toward +X).
 //    Open-top trough between triangular cheeks (width = drum width 15.6) for
-//    seed fill. (c) Corner DROP TUBE at the 3-o'clock L-step (~4-5 o'clock
-//    corner, offset right of centre): 90deg L-step, 4 box walls straight down,
-//    bore 7 x 15.6 for 3mm seeds, bottom local z=34 (world 38, above tape).
-//    Mouth gap 1.0 so cavities scoop freely.
+//    seed fill. (c) LEFT DROP TUBE at the 9-o'clock side (offset LEFT of
+//    centre, x<0): 4 box walls straight down, bore 7 x 15.6 for 3mm seeds,
+//    bottom local z=34 (world 38, above tape). Fed by cavities carried over
+//    the top (not by the trough void): a drop window (x -36..-22, z 48..58,
+//    full inner width) connects the drum surface through the cover arc into
+//    the bore top. Mouth gap 1.0 so cavities scoop freely on the right.
 // ============================================================
 module hopper_body() {
     assert(hopper_axis_z > drum_radius, "hopper_body: hopper_axis_z must clear drum radius");
@@ -461,9 +465,10 @@ module hopper_body() {
     apex_top = 64.5; apex_bot = 62;        // thin apex edge (sharp point in side view)
     LOW_TILT = 8;                          // lower floor rises a little to the right
     tilt_pivot = [25, 0, 56];              // 3-o'clock mouth point on drum
-    // Corner drop tube (3-o'clock L-step): outer x 27..39, bore ~7 for 3mm seeds.
-    tube_x0 = 27; tube_x1 = 39;
-    bore_x0 = 29.5; bore_x1 = 36.5;
+    // LEFT drop tube (v11: 9-o'clock side, x < drum centre): outer x -39..-27,
+    // bore ~7 for 3mm seeds, fed by cavities via the drop window below.
+    tube_x0 = -39; tube_x1 = -27;
+    bore_x0 = -36.5; bore_x1 = -29.5;
     tube_z0 = 34; tube_z1 = 57;
     // 1:30 squared step tab (mating joint where upper wall meets shroud lip).
     step_x0 = 16; step_x1 = 20; step_z0 = 66; step_z1 = 77;
@@ -521,9 +526,11 @@ module hopper_body() {
             rotate([0, -LOW_TILT, 0])
                 translate([-3, -(cheek_in + 0.5), -0.5])
                     cube([54, 2*(cheek_in + 0.5), 30.5]);
-        // Bore slot through the floor (connects trough void to drop tube).
-        translate([bore_x0 + 0.05, -(cheek_in + 0.5), 50])
-            cube([(bore_x1 - 0.05) - (bore_x0 + 0.05), 2*(cheek_in + 0.5), 12]);
+        // Drop window (v11: connects drum surface through the cover arc into
+        // the LEFT bore top; fed by cavities carried over the top, not by the
+        // trough void). Overlaps bore (-36.5..-29.5) and drum carve (to -26).
+        translate([-36, -(cheek_in + 0.5), 48])
+            cube([14, 2*(cheek_in + 0.5), 10]);
     }
 }
 
@@ -928,9 +935,11 @@ module crank_assembly() {
 
 // ============================================================
 // Animated assembly
-// Sign convention (v8 per crank.jpg): drum_angle = -360*$t ANTI-CLOCKWISE
-//   about +Y (top surface moves -X/left, viewed +X right, +Z up)
-//   lower roller + crank = +720*$t CLOCKWISE (opposite via external mesh, 2:1)
+// Sign convention (v11: drum CCW, crank direct-drive LEFT per user spec):
+//   drum_angle = -360*$t ANTI-CLOCKWISE about +Y (top surface moves -X/left,
+//   viewed +X right, +Z up): picks up RIGHT, carries over top, drops LEFT
+//   crank = drum_angle (direct-drive on drum axle left end, CCW with drum)
+//   lower roller = +720*$t CLOCKWISE (driven by drum via 40:20 mesh, 2:1)
 //   upper idler = -720*$t (counter-rotates via tape contact)
 // At $t=0 geometry equals static layout.
 // ============================================================
@@ -954,7 +963,7 @@ module animated_assembly() {
             translate([0, 0, -drum_dia/2])
                 seed_cartridge(seed_dia, seed_depth);
 
-    // Hopper (v9: sharp-point wedge on RIGHT, corner drop tube at 3 o'clock L-step)
+    // Hopper (v11: ONE wrap-around part — right wedge pickup, left drop tube)
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
 
@@ -981,9 +990,10 @@ module animated_assembly() {
             translate([0, 0, -roller_dia/2])
                 knurled_roller(is_lower=false);
 
-    // Crank orbiting lower roller axle (grip center traces circle of radius crank_throw)
-    translate([roller_axle_x, chassis_width+8, roller_axle_z])
-        rotate([0, crank_angle, 0])
+    // Crank direct-drive on drum axle LEFT end (grip traces circle of radius
+    // crank_throw about the drum axis at crank_mount_x=77.5, CCW with drum)
+    translate([crank_mount_x, chassis_width+8, drum_axle_z])
+        rotate([0, drum_angle, 0])
             translate([-crank_pivot_x, 0, -crank_pivot_z])
                 crank_assembly();
 }
