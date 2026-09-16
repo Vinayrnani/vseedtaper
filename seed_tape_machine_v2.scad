@@ -13,7 +13,7 @@ tolerance     = 0.3;
 paper_width   = 25.4;
 seed_dia      = 3.0;
 seed_depth    = 2.0;
-seed_spacing  = 152;
+seed_spacing  = 152.4;   // v13 MVP fixed: 6 inch (152.4mm), driven by pull roller + gear ratio, 6 cavities
 drum_radius   = 25;
 drum_dia      = 2 * drum_radius;   // 50
 drum_width    = 15;
@@ -57,12 +57,15 @@ drum_circ_pitch   = PI * gear_module;
 tooth_arc_roller = tooth_arc_frac * roller_circ_pitch;
 tooth_arc_drum   = tooth_arc_frac * drum_circ_pitch;
 
-// Kinematics
-tape_per_crank_rev = PI * roller_dia;         // ~62.83
+// Kinematics (v13 MVP: 6 cavities fixed, spacing 6 inch = 152.4 fixed;
+// tape driven by pull roller via 40:20 mesh, drum geared slower vs roller)
+tape_per_crank_rev = PI * roller_dia;         // ~62.83 (roller 1 rev)
 drum_rot_per_crank = 0.5;
-tape_per_drum_rev  = PI * drum_dia;           // ~157.08
-num_divots         = max(1, round(tape_per_drum_rev / seed_spacing)); // =1
-achieved_spacing   = tape_per_drum_rev / num_divots;
+tape_per_drum_rev  = PI * drum_dia;           // ~157.08 (drum circumference, reference only)
+tape_per_drum_rev_roller = PI * roller_dia * (drum_teeth / roller_teeth); // 125.66 actual tape/drum rev via pull roller
+num_divots         = 6;                       // v13 MVP fixed: 6 cavities (wheels interchangeable by hand 1-6mm, count stays 6)
+achieved_spacing   = tape_per_drum_rev_roller / num_divots; // ~20.94 with stock 20/40 gears; target 152.4 via future swap-gears (see GEAR_RATIO.md)
+target_spacing     = 152.4;                   // v13 MVP: fixed 6 inch spacing
 
 // ============================================================
 // Axle layout (X,Z in OpenSCAD coords: X=tape travel, Z=up)
@@ -117,7 +120,8 @@ bb_height_drum   = 13;
 bb_height_spool  = 10;
 
 // ============================================================
-// Hopper (v7: box trough at 10:30-11 o'clock, -X of drum)
+// Hopper (v13 MVP: closed seed box at 9 o'clock, max volume to 10:30;
+// single printed piece with shroud via 2 side joints; horizontal top z=73)
 // ============================================================
 hopper_wall     = 2.5;
 hopper_flange_thick = 3;
@@ -126,6 +130,13 @@ hopper_inner_r  = drum_radius + hopper_clearance; // 25.3
 hopper_outer_r  = hopper_inner_r + seed_dia + 3;  // 30.8
 hopper_axis_z   = drum_axle_z - base_thick;       // 56
 wiper_slot      = 1.2;
+// v13 shroud/half-pipe + groove params (cover merged into hopper_body)
+shroud_pipe_od  = 16;    // open-top half-cut 16mm pipe channel, 11 o'clock (120) -> 6 o'clock (270)
+shroud_bore     = 8;     // bore fits 8mm seed (drop bore 9 = 8 + 2*tol clearance)
+shroud_wall     = 2;     // preserved v12 wall
+shroud_gap      = 1.5;   // preserved v12 gap (within 1.5-2 smooth channel, no ribs/steps)
+groove_w        = 7;     // inner-face groove width, matches drum cavity track (fits 6mm cavities d6.6)
+groove_d        = 0.8;   // groove depth (clears cavity protrusion 0.6)
 
 // ============================================================
 // Crank (v11: direct-drive on drum axle LEFT end)
@@ -163,13 +174,13 @@ epsilon = 0.05;
 // ============================================================
 assert(tolerance >= 0 && tolerance < 1, "tolerance must be in [0,1)");
 assert(paper_width > 0, "paper_width must be >0");
-assert(seed_dia > 0 && seed_dia <= 5.0, "seed_dia must be (0,5.0]");
+assert(seed_dia > 0 && seed_dia <= 6.0, "seed_dia must be (0,6.0] (v13: interchangeable wheels 1-6mm)");
 assert(seed_depth > 0 && seed_depth < drum_radius, "seed_depth must be >0 and < drum_radius");
-assert(seed_spacing > 10 && seed_spacing < 500, "seed_spacing out of plausible range");
+assert(seed_spacing == 152.4, "v13 MVP: seed_spacing fixed at 6 inch (152.4mm)");
 assert(gear_module > 0, "gear_module must be >0");
 assert(center_distance == (roller_teeth + drum_teeth) * gear_module / 2,
        str("center_distance must be 60 for 20T/40T module=2, got ", center_distance));
-assert(num_divots >= 1 && num_divots <= 20, "num_divots out of range");
+assert(num_divots == 6, "v13 MVP: num_divots fixed at 6 cavities");
 assert(roller_axle_z >= roller_outer_dia/2 + 1, str("roller_axle_z must clear base: need >= ", roller_outer_dia/2+1, " got ", roller_axle_z));
 assert(drum_axle_z >= drum_radius + base_thick + tolerance, str("drum_axle_z must clear cradle+tape: need >= ", drum_radius+base_thick+tolerance, " got ", drum_axle_z));
 assert(abs(sqrt(pow(roller_axle_x - drum_axle_x,2)+pow(roller_axle_z - drum_axle_z,2)) - center_distance) < 0.5,
@@ -430,24 +441,28 @@ module spool_cones() {
 }
 
 // ============================================================
-// 3. Hopper (v12: SINGLE wrap-around part per user feedback — NO separate
-//    shroud). Local frame: drum center at [0,0,hopper_axis_z], axle along Y.
-//    (a) Retention cover: smooth annular arc 120..270deg (11 o'clock top
-//    lip -> 6 o'clock bottom lip where the drop tube starts), wall 2, gap
-//    1.5, full width 15.6. Constant-gap rounded channel, NO internal ribs.
+// 3. Hopper (v13 MVP: SINGLE printed piece with shroud, 2 side joints).
+//    Local frame: drum center at [0,0,hopper_axis_z], axle along Y.
+//    (a) Retention cover = open-top half-cut 16mm pipe channel
+//    120..270deg (11 o'clock top lip -> 6 o'clock bottom lip at drop),
+//    wall 2, gap 1.5 (smooth 1.5-2 channel, no ribs/steps), bore fits
+//    8mm seed, inner-face groove (w7 x d0.8) matching drum cavity track.
+//    Top open: seed travel visible hopper->11 o'clock in top view.
 //    (b) RIGHT sharp-point wedge trough: UPPER edge EXACTLY HORIZONTAL
-//    (cheek tops level, mouth z=73 to apex z=73); LOWER wall (floor) from
-//    the 3-o'clock mouth corner angling LITTLE UPWARD (+8 deg tilt about
-//    the 3-o'clock point) to a sharp point far right (apex x=83, +X).
-//    Open-top trough between triangular cheeks (width = drum width 15.6).
-//    (c) BOTTOM-CENTER DROP TUBE at 6 o'clock (x=0 = drum center): 4 box
-//    walls straight down, bore 7 x 15.6 for 3mm seeds, bottom local z=26.5
-//    (world 30.5, 0.5 above tape at 30). Drum carve trims the tube top
-//    into a smooth drum-conforming funnel mouth (rounded seed travel, no
-//    ledges); the bore void pierces the cover bottom = drop port; thick
-//    walls saddle-fuse to the cover lips (single object).
-//    Pickup mouth (right 1:30-3 o'clock) = opening between the 11-o'clock
-//    cover lip and the 1:30 step tab; gap 1.0 so cavities scoop freely.
+//    (cheek tops level, mouth z=73 to apex z=73); LOWER floor +8 deg
+//    about the 3-o'clock point to sharp apex (x=83, +X). Closed seed
+//    box (seeds retained, no open gap): apex end wall + 2 side joints
+//    close the mouth sides, top stays open for fill/visibility.
+//    Volume sits at 9 o'clock, max around wheel up to 10:30.
+//    Inner-face floor groove (w7 x d0.8) matches drum.
+//    (c) BOTTOM-CENTER DROP TUBE at 6 o'clock (x=0): 4 box walls
+//    straight down, bore 9 x 15.6 (fits 8mm seeds), bottom local
+//    z=26.5 (world 30.5, 0.5 above tape at 30). Drum carve trims tube
+//    top into smooth drum-conforming funnel mouth (no ledges); bore
+//    void pierces cover bottom = drop port; thick walls saddle-fuse
+//    to cover lips (single object). Pickup mouth (right 1:30-3
+//    o'clock) = opening between 11-o'clock lip and 1:30 step tab;
+//    gap 1.0 so cavities scoop freely.
 // ============================================================
 module hopper_body() {
     assert(hopper_axis_z > drum_radius, "hopper_body: hopper_axis_z must clear drum radius");
@@ -467,11 +482,11 @@ module hopper_body() {
     apex_top = 73; apex_bot = 70.5;        // level tip: top edge horizontal 73->73
     LOW_TILT = 8;                          // lower floor rises a little to the right
     tilt_pivot = [25, 0, 56];              // 3-o'clock mouth point on drum
-    // BOTTOM-CENTER drop tube (v12: 6-o'clock, x=0 = drum centre): outer
-    // x -9..9 (thick walls saddle-fuse to cover lips after carve trim),
-    // bore 7 (-3.5..3.5) for 3mm seeds, straight down onto tape.
-    tube_x0 = -9; tube_x1 = 9;
-    bore_x0 = -3.5; bore_x1 = 3.5;
+    // BOTTOM-CENTER drop tube (v13: 6-o'clock, x=0 = drum centre, bore 9
+    // fits 8mm seeds): outer x -10..10 (thick walls saddle-fuse to cover
+    // lips after carve trim), bore 9 (-4.5..4.5), straight down onto tape.
+    tube_x0 = -10; tube_x1 = 10;
+    bore_x0 = -4.5; bore_x1 = 4.5;
     tube_z0 = 26.5; tube_z1 = 52;
     // 1:30 squared step tab (mating joint where upper wall meets mouth).
     step_x0 = 16; step_x1 = 20; step_z0 = 66; step_z1 = 77;
@@ -519,18 +534,26 @@ module hopper_body() {
             for (s = [-1, 1])
                 translate([tube_x0, s > 0 ? cheek_in : -y_out, tube_z0])
                     cube([tube_x1 - tube_x0, wall, tube_z1 - tube_z0]);
-            // Eyebrow bridge (v12: keeps ONE single object while the
-            // 11-o'clock mouth stays open). Full-width arc band r27.5..30
-            // spanning 30..125deg: overlaps the cover top lip (120..125)
-            // and embeds into the cheek tops (~30deg end). Scoop zone
-            // (0..30deg, pool meets drum ~9deg) stays fully open; cavity
-            // seeds (protrude <=1.5) ride freely under the 2.5 clearance.
-            translate(drum_c)
-                rotate([90, 0, 0])
-                    rotate([0, 0, 30])
-                        rotate_extrude(angle=95, convexity=10)
-                            translate([27.5 + 1.25, 0, 0])
-                                square([2.5, 2*y_out], center=true);
+            // 2 SIDE JOINTS (v13: fuse wedge to 11-o'clock cover lip, one per
+            // Y side, top stays OPEN so seed travel is visible hopper->11
+            // in top view). Triangular side plates close the mouth sides
+            // (seeds retained) while the central 15.6 stays open for scoop
+            // (mouth_gap 1.0, full inner width). Each hull overlaps the
+            // cheek top/step tab (x16-20) and the cover lip (120deg,
+            // r26.5..28.5) => ONE single printed piece.
+            for (s = [-1, 1])
+                hull() {
+                    translate([16, s > 0 ? cheek_in : -y_out, 70])
+                        cube([4, wall, 4]);
+                    translate([18, s > 0 ? cheek_in : -y_out, 66])
+                        cube([4, wall, 6]);
+                    translate([-15.75, s > 0 ? cheek_in : -y_out, 77.8])
+                        cube([4, wall, 4]);
+                }
+            // Apex end wall (v13 closed container: closes far tip between
+            // floor ~64 and cheek tops 73; fill via open top, mouth via drum).
+            translate([81, -y_out, 63])
+                cube([2, 2*y_out, 10]);
         }
         // Drum clearance: wide open mouth tangent to drum, mouth_gap radial gap.
         // Lower chin auto-formed by carve retains the seed pool (gap 1.0 < 3mm).
@@ -544,21 +567,37 @@ module hopper_body() {
             rotate([0, -LOW_TILT, 0])
                 translate([-3, -(cheek_in + 0.5), -0.5])
                     cube([54, 2*(cheek_in + 0.5), 30.5]);
-        // Drop window (v12: connects drum surface at 6 o'clock through the
-        // cover arc bottom into the CENTER bore top; fed by cavities
+        // Drop window (v13: connects drum surface at 6 o'clock through the
+        // cover arc bottom into the CENTER bore top; fed by 6 cavities
         // carried over the top, not by the trough void). Overlaps bore
-        // (-3.5..3.5) and drum carve. The drum carve trims the tube top
+        // (-4.5..4.5) and drum carve. The drum carve trims the tube top
         // into a smooth drum-conforming funnel mouth (no steps/ledges).
-        translate([-4, -(cheek_in + 0.5), 29])
-            cube([8, 2*(cheek_in + 0.5), 13]);
+        translate([-4.5, -(cheek_in + 0.5), 29])
+            cube([9, 2*(cheek_in + 0.5), 13]);
+        // Cover inner-face groove (v13: w7 x d0.8 along 120..270 arc,
+        // matches drum 6-cavity track; shallow guide, channel stays smooth).
+        translate(drum_c)
+            rotate([90, 0, 0])
+                rotate([0, 0, 120])
+                    rotate_extrude(angle=150, convexity=10)
+                        translate([drum_radius + shroud_gap + groove_d/2, 0, 0])
+                            square([groove_d + epsilon, groove_w], center=true);
+        // Floor inner-face groove (v13: central longitudinal guide w7 x
+        // d0.8 along tilted floor, matches drum cavity track).
+        translate(tilt_pivot)
+            rotate([0, -LOW_TILT, 0])
+                translate([-9, -groove_w/2, -groove_d])
+                    cube([(x_tip - 2) - 16, groove_w, groove_d + epsilon]);
     }
 }
 
 // ============================================================
-// 4. Shroud — v10 LEGACY STUB (superseded): the cover arc is merged into
-//    hopper_body() above as the left retention cover (single part, no separate
-//    shroud GLB in the viewer). Module kept compiling so part_to_render="shroud"
-//    still exports the legacy cover; viewer no longer loads it.
+// 4. Shroud — v13 LEGACY STUB (superseded): the cover is merged into
+//    hopper_body() above as the open-top half-cut 16mm pipe channel
+//    (120..270deg, wall 2, gap 1.5, bore fits 8mm, grooved inner face,
+//    2 side joints — single printed piece, part_to_render="hopper").
+//    Module kept compiling so part_to_render="shroud" still exports the
+//    legacy cover; viewer no longer loads it.
 //    (Original v9: left-only C shell 45..240deg, gap 1.75, wall 2.)
 // ============================================================
 module u_channel_shroud() {
@@ -577,9 +616,13 @@ module u_channel_shroud() {
 
 // ============================================================
 // 5. Seed cartridge (drum) with chamfered divot mouths + end flange rings
+//    v13 MVP: 6 cavities FIXED (num_divots=6). Wheels interchangeable BY
+//    HAND (no tools): slip-fit hex bore (tolerance clearance, no set
+//    screw) slides off the drum hex shaft; cavity size varies via sdia
+//    (1-6mm seeds), count stays 6.
 // ============================================================
 module seed_cartridge(sdia = seed_dia, sdepth = seed_depth) {
-    assert(sdia > 0 && sdia <= 5.0, "seed_cartridge: seed_dia out of range (0,5]");
+    assert(sdia > 0 && sdia <= 6.0, "seed_cartridge: seed_dia out of range (0,6] (v13: 1-6mm wheels)");
     assert(sdepth > 0 && sdepth < drum_radius, "seed_cartridge: seed_depth invalid");
     drum_len = drum_width;
     gear_thick = 6;
@@ -983,8 +1026,9 @@ module animated_assembly() {
             translate([0, 0, -drum_dia/2])
                 seed_cartridge(seed_dia, seed_depth);
 
-    // Hopper (v12: ONE wrap-around part — right wedge pickup, 11->6 cover,
-    // bottom-center drop tube at drum x)
+    // Hopper (v13: ONE printed piece — right wedge pickup level top z=73,
+    // open-top half-pipe 16mm/8mm cover 11->6 with grooves, 2 side joints,
+    // closed box, bottom-center drop tube at drum x)
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
 
@@ -1026,13 +1070,16 @@ module assemble_all() {
 // ============================================================
 // Diagnostics + part selection (fail-loud else)
 // ============================================================
-echo(str("Params: roller_dia=", roller_dia, " drum_dia=", drum_dia,
-         " center_distance=", center_distance,
-         " tape_per_rev=", tape_per_drum_rev,
-         " num_divots=", num_divots,
-         " achieved_spacing=", achieved_spacing));
-if (num_divots == 1) {
-    echo(str("NOTE: seed_spacing (", seed_spacing, "mm) ≈ tape_per_drum_rev (", tape_per_drum_rev, "mm) so num_divots=1."));
+echo(str("v13 MVP: cavities=", num_divots, " roller_dia=", roller_dia,
+         " gears=", roller_teeth, "/", drum_teeth,
+         " tape/drum_rev(via roller)=", tape_per_drum_rev_roller,
+         " spacing(6 cav)=", achieved_spacing,
+         " target_spacing=", target_spacing));
+echo(str("GEAR CALC: spacing = PI * roller_dia * (drum_teeth/roller_teeth) / cavities = ",
+         PI * roller_dia * (drum_teeth / roller_teeth) / num_divots,
+         "mm; target 152.4 (6 inch) needs future swap-gears (see GEAR_RATIO.md)."));
+if (num_divots == 6) {
+    echo(str("NOTE: v13 MVP fixed 6 cavities; wheels interchangeable by hand 1-6mm (cavity size varies, count stays 6)."));
 }
 
 if (part_to_render == "all") {

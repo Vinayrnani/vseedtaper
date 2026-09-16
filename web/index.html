@@ -321,7 +321,7 @@
   // ---------- drum seeds (rotate with drum) ----------
   var drumSeeds = new THREE.Group();
   var seedMat = new THREE.MeshStandardMaterial({ color: 0xd4a017, roughness: 0.55, metalness: 0.1 });
-  var numDrumSeeds = 5;
+  var numDrumSeeds = 6; // v13 MVP: 6 cavities fixed
   for (var s = 0; s < numDrumSeeds; s++) {
     var a = s * Math.PI * 2 / numDrumSeeds;
     var seed = new THREE.Mesh(new THREE.SphereGeometry(1.25, 18, 12), seedMat);
@@ -647,7 +647,7 @@
 
     // Seed drop at hopper BOTTOM-CENTER tube exit (v12: bore centre world
     // x=100, bottom y=30.5): falls onto the tape at y=30, centered z=-30.
-    var phase = mod(revs * DRUM_RATIO, 1);
+    var phase = mod(revs * DRUM_RATIO * 6, 1); // v13: 6 drops per drum rev (6 cavities)
     dropSeed.position.set(100, 30.5 - phase * 0.5, -30);
 
     var crankRevs = revs * DRUM_RATIO; // direct-drive: crank turns with drum
