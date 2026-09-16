@@ -651,10 +651,17 @@ module seed_cartridge(sdia = seed_dia, sdepth = seed_depth) {
     assert(sdepth > 0 && sdepth < drum_radius, "seed_cartridge: seed_depth invalid");
     drum_len = drum_width;
     gear_thick = 6;
+    // v20: drum gear sits on BACK side of drum (-gear_off, world Y~12).
+    // gear_off shared by both branches so export matches assembly.
+    gear_off = roller_len/2 + gear_thick/2 - epsilon;  // 17.95
+    gear_z = gear_thick/2 + 0.6;  // 3.6: web center (tip chamfer dips 0.6 below web, base keeps min_z=0)
+    drum_base = gear_z + gear_off - drum_len/2;  // 14.05: export drum lift
 
     if (part_to_render == "cartridge" || part_to_render == "drum") {
         // VERTICAL orientation for STL export (base at Z=0)
+        // v20: gear web on print base hub-up, drum raised (fused via hub).
         union() {
+            translate([0, 0, drum_base])
             difference() {
                 cylinder(h=drum_len, d=drum_dia, center=false);
                 translate([0,0,-epsilon])
@@ -678,15 +685,15 @@ module seed_cartridge(sdia = seed_dia, sdepth = seed_depth) {
                     cylinder(h=1+epsilon, d1=drum_dia-1, d2=drum_dia+1, center=false);
             }
             // End flange rings
-            for (fz=[0.15, drum_len - 3.25])
+            for (fz=[drum_base+0.15, drum_base+drum_len - 3.25])
                 translate([0, 0, fz])
                     difference() {
                         cylinder(h=1.5, d=drum_dia + 3, center=false);
                         translate([0, 0, -epsilon])
                             cylinder(h=1.5 + 2*epsilon, d=drum_dia - 6, center=false);
                     }
-            // Drum gear (lightened, 40T)
-            translate([0,0, drum_len + gear_thick/2 + drum_len/2 - epsilon])
+            // Drum gear (lightened, 40T) — v20 BACK/BOTTOM side, chamfer-aware base
+            translate([0,0, gear_z])
                 spur_gear(teeth=drum_teeth, module_mm=gear_module, thickness=gear_thick,
                           bore_flat=hex_axle_flat, is_hex=true,
                           hub_dia=20, hub_len=8, lightened=true);
@@ -725,8 +732,10 @@ module seed_cartridge(sdia = seed_dia, sdepth = seed_depth) {
                                 cylinder(h=1.5, d=drum_dia + 3, center=true);
                                 cylinder(h=1.5 + 2*epsilon, d=drum_dia - 6, center=true);
                             }
-                translate([0, roller_len/2 + gear_thick/2 - epsilon, 0])
-                    rotate([90,0,0])
+                // v20: gear on BACK side (-gear_off); mirrored rotation so hub
+                // still points AT the drum (else gear floats un-fused).
+                translate([0, -gear_off, 0])
+                    rotate([-90,0,0])
                         spur_gear(teeth=drum_teeth, module_mm=gear_module, thickness=gear_thick,
                                   bore_flat=hex_axle_flat, is_hex=true,
                                   hub_dia=20, hub_len=8, lightened=true);

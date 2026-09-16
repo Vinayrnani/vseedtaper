@@ -1,9 +1,22 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v19**
+**Version: v20**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## v20 Drum Gear to Back Side (step 1 of 3) - 2026-09-16
+
+1. **Change**: seed drum gear moved FRONT (+18, world Y~48) -> BACK
+   (-18, world Y~12) in `seed_cartridge()`, both branches: assembly
+   (offset sign flip + gear rotation re-mirrored so hub still fuses into
+   drum face) and vertical STL export (gear web on print base hub-up,
+   drum raised, min_z=0 kept). `roller_axle_x`, `crank_mount_x`, hopper
+   untouched; `$fn=60`, `tol=0.3`.
+2. **Expected**: gear temporarily unmeshed from roller pinion until step 2
+   (roller-side move). Viewer: cartridge mount recentered on raised drum,
+   `ASSET_V` 7->8.
+3. **Frozen**: v1 scad + web/backup/ untouched; port 9099 only.
 
 ## v19 Hopper Triangular-Gap Seal - 2026-09-16
 
