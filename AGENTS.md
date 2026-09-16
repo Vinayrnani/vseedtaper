@@ -1,21 +1,31 @@
-## Standard Workflow - MANDATORY
+# AGENTS.md — vseedtaper
 
-1. **Requirements first.** Write and tune the requirements file before any implementation. Never skip this step.
+## What this repo is
+- OpenSCAD CAD + static three.js viewer. No build, no tests, no CI, no README.
+- `seed_tape_machine_v2.scad` (1136 lines) is current. `seed_tape_machine.scad` is v1 — DO NOT MODIFY.
+- `web/` = v2 viewer, `web/backup/` = v1 viewer. Only dep: `playwright` (see `package.json`).
 
-2. **Layman communication.** Ask questions in plain, non-technical terms. The user does not know underlying tech — discuss functionally, not architecturally.
+## Commands (exact)
+- Serve v2: `python3 -m http.server 9099 --directory web`
+- Check: `curl -s -o /dev/null -w "%{http_code}" http://localhost:9099/index.html` and `.../backup/index.html`
+- Codegen GLBs: `./regenerate_glbs.sh` — needs `xvfb-run -a` + openscad 2021.01 + `python3 trimesh` (STL→GLB).
+- Verify viewer: `node verify_*.js` — Playwright headless with `--no-sandbox`.
 
-3. **Live preview always.** Maintain an animating live preview updated for every requirement and code change. Visually inspect it and take multiple snapshots while animating to assess product-to-requirement match.
+## Architecture
+- CAD: `part_to_render` var selects part; `regenerate_glbs.sh` sed-swaps it per part, exports STL via openscad, converts to GLB via trimesh.
+- Special exports: `cone_a`/`cone_b` (single_cone ± offset), `rollers_lower`/`rollers_upper` (split from fused `pull_rollers()` for independent pivots).
+- Viewer (`web/index.html`): `PART_DEFS` list + per-part pivots + `SCHEME` color mapping loads `stl/*.glb`.
+- `web/js/three.min.js`, `GLTFLoader.js`, `OrbitControls.js` are vendored — never CDN-swap.
+- Cache bust via `?v=2` on GLB/script URLs — bump when regenerating.
+- `web/stl/*.glb` (+ some `.stl`) are generated artifacts — rebuild, don't hand-edit.
 
-4. **Fix loop: max 3 iterations.** Present findings and fixes for each iteration. After 3 iterations, ask the user whether to continue or add anything.
+## Gotchas — do not violate
+- Never edit v1 scad or `web/backup/` except to restore.
+- 10. **Playwright screenshots: `screenshots/` only, never in git, max 25.** Keep all Playwright screenshots in `screenshots/` folder, ensure it is gitignored, and auto-delete oldest files when count exceeds 25.
+- Kill chromium after every Playwright run: `pkill -f chromium` (also `chrome`); check before starting new session.
+- Serve on port 9099 only (iptables rule); don't change port.
+- CAD conventions: `$fn=60` for curves, `tol=0.3` (`tolerance`, clearances derive from it) — keep both.
 
-5. **Keep CPU free — MANDATORY Playwright cleanup.** After every task/step, check for and kill stale Playwright browsers (`pkill -f chromium` / `pkill -f chrome` or playwright close). Before starting any new Playwright session, ensure none are left running. Never let Playwright processes accumulate. No exceptions.
-
-6. **Short messages.** Communicate in concise, understandable statements. Never overload with large text. Expand only when the user explicitly asks for detail.
-
-7. **Requirements versioning.** Every requirements file change must bump the version (v1→v2→etc.) and maintain a small changelog (e.g. REQUIREMENTS_CHANGELOG.md) with date and short description per version.
-
-8. **Commit & push before change.** Before editing requirements, commit and push the current state so history is safe.
-
-9. **Use maximum CPU.** Run tasks in parallel wherever possible. Manage them properly — handle errors, track all results, ensure completion.
-
-10. **No Playwright screenshots in git.** Never commit Playwright screenshots — ensure they are gitignored.
+## Workflow (mandatory, condensed from prior AGENTS.md)
+- Requirements-first: tune REQUIREMENTS.md before code; every edit bumps version (vN→vN+1) + changelog entry; commit & push before editing requirements.
+- Live animating preview for every change + snapshot checks while animating; layman wording to user; short messages; fix loop max 3 iterations then ask; max parallelism, never let browsers pile up.
