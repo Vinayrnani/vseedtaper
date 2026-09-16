@@ -153,7 +153,7 @@ shroud_bore     = 8;     // bore fits 8mm seed (drop bore 9 = 8 + 2*tol clearanc
 shroud_wall     = 2;     // preserved v12 wall
 shroud_gap      = 1.5;   // preserved v12 gap (within 1.5-2 smooth channel, no ribs/steps)
 groove_w        = 7;     // inner-face groove width, matches drum cavity track (fits 6mm cavities d6.6)
-groove_d        = 0.8;   // groove depth (clears cavity protrusion 0.6)
+groove_d        = 0.7;   // v27 printable: 0.8 left only 1.175 wall (<1.2); 0.7 leaves ~1.275, still clears cavity protrusion 0.6
 // v22 tape-cover shroud segment WEST of drum (roller nip -> drum exit).
 // World x shroud_x0..shroud_x1 = 58..84 (centroid ~71): drum(100) >
 // shroud(~71) > roller(40) R->L. Top (34) stays below the roller gear
@@ -375,25 +375,25 @@ module hex_bolt(shank_len) {
 // ============================================================
 // Bearing block (pillow-block style): base + cap + 2× hex bolts + nut traps
 // ============================================================
-module bearing_block(spec_x, spec_z, spec_height, is_drum=false) {
+module bearing_block(spec_x, spec_z, spec_height, is_drum=false, y_off=0) {
     bore_r = is_drum ? hex_clearance_r : axle_clearance_dia/2;
     difference() {
         union() {
-            translate([spec_x - bb_len/2, -bb_wall/2, spec_z - spec_height])
+            translate([spec_x - bb_len/2, y_off - bb_wall/2, spec_z - spec_height])
                 cube([bb_len, bb_wall, spec_height]);
-            translate([spec_x - bb_len/2, -bb_wall/2, spec_z])
+            translate([spec_x - bb_len/2, y_off - bb_wall/2, spec_z])
                 cube([bb_len, bb_wall, 2]);
             for (sx=[-1,1])
-                translate([spec_x + sx*4, -bb_wall/2 - 0.1, spec_z + 1])
+                translate([spec_x + sx*4, y_off - bb_wall/2 - 0.1, spec_z + 1])
                     cylinder(h=2+epsilon, d=bolt_dia+2*tolerance, center=false);
         }
         // Axle bore
-        translate([spec_x, -bb_wall/2, spec_z])
+        translate([spec_x, y_off - bb_wall/2, spec_z])
             rotate([90,0,0])
                 cylinder(h=bb_len+2*epsilon, r=bore_r, center=true);
         // Nut traps
         for (sx=[-1,1])
-            translate([spec_x + sx*4, -bb_wall/2 - 1, spec_z + 1])
+            translate([spec_x + sx*4, y_off - bb_wall/2 - 1, spec_z + 1])
                 cylinder(h=2+epsilon, r=(bolt_head_across+2*tolerance)/sqrt(3), $fn=6, center=false);
     }
 }
@@ -428,8 +428,12 @@ module chassis() {
                        [drum_axle_x,   drum_axle_z,   bb_height_drum,   1],
                        [spool_axle_x,  spool_axle_z,  bb_height_spool,  0]])
                 for (side=[0,1]) {
-                    byc = side == 0 ? -3 : chassis_width + 3;
-                    bearing_block(spec[0], spec[1], spec[2], spec[3]==1);
+                    // v27 printable: fuse blocks to BOTH walls (front y_off=0
+                    // -> Y -2..2 overlaps wall 0..3; back y_off=60 -> 58..62
+                    // overlaps wall 57..60). Old code ignored side (all at
+                    // front, back blocks floated unfused).
+                    bearing_block(spec[0], spec[1], spec[2], spec[3]==1,
+                                  side == 0 ? 0 : chassis_width);
                 }
             // Corner gussets via hull() of cubes
             for (gy=[0, chassis_width - 6]) {
@@ -730,6 +734,12 @@ module u_channel_shroud() {
                 translate([px, s*(inner_hw + wall/2), port_z])
                     rotate([90,0,0])
                         cylinder(h=wall + 2*epsilon, d=port_d, center=true);
+        // v27 printable: M3 mounting holes in sole flanges (were solid with
+        // no fasteners). Flange centre Y = s*(outer_hw+2), 2 holes per side.
+        for (s=[-1,1])
+            for (px=[6, shroud_len - 6])
+                translate([px, s*(outer_hw + 2), -epsilon])
+                    cylinder(h=3 + 2*epsilon, d=bolt_dia + 2*tolerance, center=false);
     }
 }
 
@@ -992,7 +1002,7 @@ module knurled_roller(is_lower=true) {
     // the viewer mount ([0,0,34.95]/Rx180) lands the gear on the BACK plane
     // (world Y~12, same as the v20 drum gear). Shaft bottom sits at Z=0, so
     // the lower stack needs a taller lift (19.95 vs 11).
-    zoffset = is_lower ? 19.95 : 11; // shift up so min_z=0
+    zoffset = is_lower ? 19.95 : 0; // v27 printable: upper was 11 (floated 11mm, min_z=11); 0 puts body/caps/collars on base min_z=0. Lower keeps 19.95 (gear-down stack bottoms at 0).
 
     if (part_to_render == "rollers") {
         // VERTICAL orientation for STL export (base at Z=0)
@@ -1301,7 +1311,9 @@ if (part_to_render == "all") {
 } else if (part_to_render == "chassis") {
     chassis();
 } else if (part_to_render == "hopper") {
-    hopper_body();
+    // v27 printable: standalone export drops to print base min_z=0
+    // (local tube bottom 26.5 -> 0); assembly branch above unaffected.
+    translate([0, 0, -26.5]) hopper_body();
 } else if (part_to_render == "shroud") {
     u_channel_shroud();
 } else if (part_to_render == "cartridge") {

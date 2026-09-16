@@ -1,6 +1,33 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v26**
+**Version: v27**
+
+## v27 Final Pass: Readily Printable Audit - 2026-09-16
+
+1. **Goal**: every exported part prints flat (min_z=0), walls >=1.2mm,
+   single watertight solid per printable (trimesh proof), stress
+   fillets/chamfers kept, tol=0.3 + $fn=60 + 9° gear phase + back crank
+   + R->L order untouched. Minimal CAD changes only.
+2. **Fixes** (`seed_tape_machine_v2.scad` only): (a) chassis bearing
+   blocks fused to BOTH walls — `bearing_block()` takes `y_off`, back
+   pair at +60 (old code ignored side, back trio floated unfused);
+   (b) shroud sole flanges gain 4× M3 (3.6 clear) mounting holes (were
+   solid, no fasteners); (c) upper roller export `zoffset` 11->0
+   (floated 11mm, min_z=11 -> 0; lower keeps 19.95 gear-down stack);
+   (d) hopper export drops 26.5 to print base (tube bottom 26.5 -> 0,
+   assembly branch untouched); (e) cover groove `groove_d` 0.8->0.7
+   (wall remainder 1.175 -> ~1.275 >= 1.2, still clears 0.6 cavity
+   nub). Tape 0.4 film exempt (consumable, not printed);
+   cones/rollers multi-body files are print SETS (singles cone_a/b,
+   rollers_lower/upper are the watertight printables).
+3. **Viewer** (`web/index.html` only): collapsible panel kept;
+   hopper child pos -> [0,26.5,0] re-seats drum centre (compensates
+   -26.5 export drop); rollers_upper child -> [0,0,15] (body centre
+   15, was 26); part toggles/labels unchanged; `ASSET_V` 13->14, all
+   13 GLBs rebuilt, vendored js local, port 9099 only.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L hopper > drum > shroud > roller+crank kept.
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.

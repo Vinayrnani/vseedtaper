@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v27 — 2026-09-16
+- Final printable pass: chassis back bearing blocks fused (y_off, was floating), shroud flanges gain 4xM3 holes, upper roller zoffset 11->0 (min_z=0), hopper export -26.5 to base (viewer +26.5 Y recomp), cover groove 0.8->0.7 (wall >=1.2); tape 0.4 film exempt, cones/rollers sets vs watertight singles noted; viewer collapsible kept, ASSET_V 14, 13 GLBs rebuilt
+
 ## v26 — 2026-09-16
 - Step 5 collapsible left panel (mobile): single hamburger/close toggle collapses entire panel (CSS slide, body.panel-collapsed); mobile <=768px defaults collapsed, canvas full-width; animation + part-toggle state preserved; localStorage persists choice; no CAD/GLB change (ASSET_V 13, vendored JS local, ?v= untouched)
 
