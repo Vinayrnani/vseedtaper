@@ -20,12 +20,27 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: var(--ink); }
   #view { position: fixed; inset: 0; display: block; }
+  #panelToggle {
+    position: fixed; top: 14px; left: 14px; width: 40px; height: 40px;
+    flex: none; z-index: 12; font-size: 17px; line-height: 1; padding: 0;
+    border-radius: 10px; background: var(--panel);
+    backdrop-filter: blur(8px); box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  }
+  #panelToggle:hover { border-color: var(--accent); }
   #panel {
-    position: fixed; top: 14px; left: 14px; width: 292px;
+    position: fixed; top: 62px; left: 14px; width: 292px;
     background: var(--panel); border: 1px solid var(--line);
     border-radius: 12px; padding: 14px 16px 12px;
     backdrop-filter: blur(8px); box-shadow: 0 8px 32px rgba(0,0,0,0.45);
-    max-height: calc(100vh - 28px); overflow-y: auto; z-index: 10;
+    max-height: calc(100vh - 76px); overflow-y: auto; z-index: 10;
+    transition: transform 0.28s ease, opacity 0.28s ease;
+  }
+  body.panel-collapsed #panel {
+    transform: translateX(calc(-100% - 20px));
+    opacity: 0; pointer-events: none;
+  }
+  @media (max-width: 768px) {
+    #panel { width: min(84vw, 300px); }
   }
   #panel h1 { font-size: 16px; margin: 0 0 2px; letter-spacing: 0.2px; }
   #panel h1 .dot { color: var(--accent2); }
@@ -89,6 +104,7 @@
 <body>
 <canvas id="view"></canvas>
 
+<button id="panelToggle" title="Show/hide the control panel" aria-expanded="true" aria-controls="panel">✕</button>
 <div id="panel">
   <h1><span class="dot">●</span> Seed Tape Machine v2</h1>
   <p class="sub">Hand-cranked PVA seed-tape maker · 200&nbsp;mm chassis · 20/40T gear mesh · live kinematic demo
@@ -686,6 +702,28 @@
   document.getElementById('ckGrid').addEventListener('change', function (e) {
     grid.visible = e.target.checked;
   });
+
+  // ---------- collapsible left panel (v26 Step 5) ----------
+  // Single toggle flips body.panel-collapsed (CSS slide only) — pivots,
+  // animation loop and part visibility state are never touched.
+  var panelToggle = document.getElementById('panelToggle');
+  function setPanelCollapsed(collapsed) {
+    document.body.classList.toggle('panel-collapsed', !!collapsed);
+    panelToggle.textContent = collapsed ? '☰' : '✕';
+    panelToggle.setAttribute('aria-expanded', String(!collapsed));
+    panelToggle.title = collapsed ? 'Show the control panel' : 'Hide the control panel';
+    window._panelCollapsed = !!collapsed;
+    try { localStorage.setItem('vseed_panel_collapsed', collapsed ? '1' : '0'); } catch (e) {}
+  }
+  panelToggle.addEventListener('click', function () {
+    setPanelCollapsed(!document.body.classList.contains('panel-collapsed'));
+  });
+  // Mobile (<=768px) starts collapsed so the canvas is full-width;
+  // desktop restores the persisted choice (default open).
+  var storedPanel = null;
+  try { storedPanel = localStorage.getItem('vseed_panel_collapsed'); } catch (e) {}
+  setPanelCollapsed(window.innerWidth <= 768 ? true : storedPanel === '1');
+  window._setPanelCollapsed = setPanelCollapsed;
 
   // ---------- animation ----------
   var clock = new THREE.Clock();

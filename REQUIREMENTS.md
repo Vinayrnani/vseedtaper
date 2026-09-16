@@ -1,9 +1,34 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v25**
+**Version: v26**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## v26 Step 5 Collapsible Left Panel (mobile) - 2026-09-16
+
+1. **Goal**: preview page left selection panel collapses altogether via a
+   single toggle button (hamburger ☰ / close ✕); on mobile (<=768px)
+   default collapsed so the canvas is full-width; desktop default open.
+   Smooth CSS slide transition, no layout break (canvas is fixed inset-0
+   under the overlay panel, so collapse just frees the view).
+2. **Scope (viewer UX only)**: `web/index.html` CSS + inline JS only. No
+   CAD change, no GLB regen (`ASSET_V` stays 13), vendored
+   `js/three.min.js` / `GLTFLoader.js` / `OrbitControls.js` stay local
+   (never CDN), their `?v=3` untouched. Inline JS ships with the HTML so
+   no cache-bust bump needed.
+3. **Behavior**: toggle flips `body.panel-collapsed` only — never touches
+   pivots/animation loop; part checkboxes/solo + play/rpm state preserved
+   while hidden. Choice persisted in localStorage (desktop); mobile
+   (<=768px) starts collapsed. Exposes `window._panelCollapsed` +
+   `window._setPanelCollapsed(c)` for automated proof.
+4. **Design (frontend-philosophy)**: keep the established dark glass panel
+   (committed theme, blur+shadow depth, existing type) — no redesign, no
+   AI-slop restyle. One purposeful motion only: the panel slide
+   (transform 0.28s ease). Toggle is a small square button reusing panel
+   vars (accent border on hover).
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   port 9099 only. Printable polish NOT started.
 
 ## v25 Step 4 Tape U-Bend (mimic tapeubend.png) - 2026-09-16
 
