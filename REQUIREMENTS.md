@@ -1,9 +1,39 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v24**
+**Version: v25**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## v25 Step 4 Tape U-Bend (mimic tapeubend.png) - 2026-09-16
+
+1. **Image status**: `tapeubend.png` NOT FOUND — glob `**/tapeubend.png`
+   empty in repo and /tmp (searched 2026-09-16). Bend inferred from the
+   name + v14 MVP spec ("Tape: 1 inch wide, center-fold with seed in
+   middle") + plow 25.4->12.7 convergence. Read: flat 25.4 ribbon runs
+   under the drum at z=30 (drop tube exit 30.5), folds into a center U
+   through the plow zone (world x 126..159, east of drum/shroud, clear
+   of hopper floor ~62 and drum face 125): bottom = fold_width 12.7,
+   sides = quarter arcs, walls rise to ~39. If the real image shows a
+   different fold (over-edge / through-shroud), re-tune these params.
+2. **Bend params (CAD + viewer, mirrored)**: `tape_thick` 0.4,
+   `tape_bend_radius` 3.0, `tape_fold_angle` 90 (vertical walls = full
+   U), `tape_fold_wall` 2.0, `tape_n_arc` 12 facets/side, `tape_len`
+   180 (world -14..166, spool->plow end), `tape_z` 30. Guards: thick
+   >= 0.3 (no zero-thickness), R in [1,6], angle in (0,180], fold
+   half-width 9.55 fits shroud inner 13, fold segment 140+33 <= 180.
+3. **CAD** (`seed_tape_machine_v2.scad` only): new `seed_tape_bend()`
+   (flat ribbon min_z=0 + epsilon-fused fold slab/arcs/walls, allowed
+   modules only) + `seg_ribbon()` helper; static instance in
+   `animated_assembly` at `[tape_x0, chassis_width/2, tape_z]`; new
+   `part_to_render == "tape"` export branch (min_z=0). `$fn=60`,
+   `tol=0.3`, center 60, back gears, crank back wall, R->L order kept.
+4. **Viewer**: flat ribbon scrolls per crank rev (62.83mm); U-fold
+   channel static at plow (142.5,30,-30), tape slides through; both in
+   `tape` toggle group; `window._tapeFold` exposes arc meshes + R/hw/cz
+   for proof. `ASSET_V` 12->13; tape GLB added (13 parts rebuilt).
+5. **Frozen**: v1 scad + web/backup/ untouched; port 9099 only. Step 5
+   (mobile panel) NOT started.
 
 ## v24 Step 3 R->L Order Proof (hopper > drum > shroud > roller) - 2026-09-16
 

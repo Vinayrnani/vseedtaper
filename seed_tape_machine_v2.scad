@@ -190,6 +190,28 @@ cradle_u_depth  = 3;
 cradle_u_radius = 4;
 
 // ============================================================
+// Seed tape with center U-fold bend (v25 Step 4: mimic tapeubend.png)
+// NOTE: tapeubend.png was NOT found in repo or /tmp (glob
+// **/tapeubend.png empty); bend inferred from the name + v14 MVP
+// spec ("1 inch wide, center-fold with seed in middle") + the plow
+// 25.4->12.7 convergence: flat 25.4 ribbon full length, U-fold
+// channel (bottom = fold_width 12.7 + r3 quarter arcs + 2 walls)
+// riding on top through the plow zone (world x 126..159) where the
+// plow converges the tape. tape_bend_radius = arc R, tape_fold_angle
+// = arc sweep per side (90 = vertical walls = full U). tape_thick 0.4
+// keeps printables solid (no zero-thickness). Assembly: static tape
+// (viewer scrolls it); export standalone min_z=0.
+// ============================================================
+tape_thick       = 0.4;
+tape_bend_radius = 3.0;
+tape_fold_angle  = 90;
+tape_fold_wall   = 2.0;
+tape_len         = 180;
+tape_x0          = chassis_x0;   // -14: spans spool(-6)..plow end(159)+margin
+tape_z           = 30;           // ride height under drum (drop tube exit 30.5)
+tape_n_arc       = 12;           // arc facets per side (smooth like $fn=60 curves)
+
+// ============================================================
 // Spool cones
 // ============================================================
 cone_h = 25;
@@ -222,6 +244,16 @@ assert(chassis_height > max(spool_axle_z + cone_h + bb_height_spool, drum_axle_z
        str("chassis_height must hold tallest axle + clearance: need > ", max(spool_axle_z+cone_h+bb_height_spool, drum_axle_z+drum_outer_r)+5, " got ", chassis_height));
 assert(hopper_inner_r > drum_radius, "hopper_inner_r must exceed drum_radius (clearance >0)");
 assert(plow_len > 15, str("plow_len must exceed 15, got ", plow_len));
+assert(tape_thick >= 0.3, str("tape_thick must stay printable (>=0.3, no zero-thickness), got ", tape_thick));
+assert(tape_bend_radius >= 1 && tape_bend_radius <= 6,
+       str("tape_bend_radius out of envelope [1,6]: ", tape_bend_radius));
+assert(tape_fold_angle > 0 && tape_fold_angle <= 180,
+       str("tape_fold_angle out of envelope (0,180]: ", tape_fold_angle));
+assert(fold_width/2 + tape_bend_radius + tape_thick <= (paper_width + 2*tolerance)/2,
+       str("tape fold must fit the shroud inner half-width 13: ", fold_width/2 + tape_bend_radius + tape_thick));
+assert((plow_start - tape_x0) + plow_len <= tape_len,
+       str("tape fold segment must fit on the ribbon: need ", (plow_start - tape_x0) + plow_len, " <= ", tape_len));
+assert(tape_x0 + tape_len >= plow_end, str("tape ribbon must reach the plow end: ", tape_x0 + tape_len));
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
 assert(crank_mount_x == roller_axle_x, str("crank_mount_x must be coaxial with roller axle: ", crank_mount_x));
 assert(crank_mount_y == -8, str("crank_mount_y must sit outside the back wall (-8): ", crank_mount_y));
@@ -891,6 +923,65 @@ module folding_plow() {
 }
 
 // ============================================================
+// 7b. Seed tape with center U-fold bend (v25 Step 4).
+// Local frame: x 0..tape_len, y centred 0, z 0..fold-top, min_z=0.
+// Flat paper_width ribbon full length + U-fold channel (bottom =
+// fold_width, quarter-arc sides R=tape_bend_radius sweeping
+// tape_fold_angle, straight walls tape_fold_wall) fused on top over
+// the plow zone (local x plow_start-tape_x0, length plow_len).
+// Ribbon boxes are centered ON the fold path (thickness +-0.2) with
+// epsilon overlap so the union stays manifold, never zero-thickness.
+// Allowed modules only: union/cube/for/if/translate/rotate.
+// ============================================================
+module seed_tape_bend() {
+    hw = fold_width/2;                 // 6.35 flat bottom half-width
+    r = tape_bend_radius;              // 3
+    a = tape_fold_angle;               // 90 = vertical walls (full U)
+    fx0 = plow_start - tape_x0;        // 140: fold segment local x
+    slab_top = 2*tape_thick - epsilon; // 0.75: fold slab top (on ribbon)
+    cz = slab_top + r;                 // 3.75: arc center height
+    union() {
+        // Flat ribbon full length (base min_z=0)
+        translate([0, -paper_width/2, 0])
+            cube([tape_len, paper_width, tape_thick]);
+        // Fold bottom slab on the ribbon (epsilon-fused, plow zone)
+        translate([fx0, -hw, tape_thick - epsilon])
+            cube([plow_len, 2*hw, tape_thick]);
+        // Fold sides: arc (n facets) + tangent wall, mirrored.
+        // Arc starts at the slab edge (angle -90: [hw, slab_top]) and
+        // sweeps outward-up by tape_fold_angle (a=90 ends vertical).
+        for (s=[-1,1])
+            for (i=[0:tape_n_arc-1]) {
+                t0 = -90 + i*a/tape_n_arc;
+                t1 = -90 + (i+1)*a/tape_n_arc;
+                p0 = [s*(hw + r*cos(t0)), cz + r*sin(t0)];
+                p1 = [s*(hw + r*cos(t1)), cz + r*sin(t1)];
+                seg_ribbon(fx0, p0, p1);
+            }
+        for (s=[-1,1]) {
+            te = a - 90;  // arc end angle
+            pa = [s*(hw + r*cos(te)), cz + r*sin(te)];
+            wd = [-s*sin(te), cos(te)];  // tangent dir at arc end
+            pb = [pa[0] + wd[0]*tape_fold_wall, pa[1] + wd[1]*tape_fold_wall];
+            seg_ribbon(fx0, pa, pb);
+        }
+    }
+}
+
+// Ribbon segment between 2D path points p0/p1 ([y,z]), length plow_len
+// in X at fx0, centered on the path (thickness tape_thick).
+module seg_ribbon(fx0, p0, p1) {
+    dy = p1[0] - p0[0];
+    dz = p1[1] - p0[1];
+    seg = sqrt(dy*dy + dz*dz);
+    if (seg > 0) {
+        translate([fx0 + plow_len/2, (p0[0]+p1[0])/2, (p0[1]+p1[1])/2])
+            rotate([atan2(dz, dy), 0, 0])
+                cube([plow_len, seg + 2*epsilon, tape_thick], center=true);
+    }
+}
+
+// ============================================================
 // 8. Diamond-knurled pull roller (two helical notch families ±30°)
 // ============================================================
 module knurled_roller(is_lower=true) {
@@ -1157,6 +1248,12 @@ module animated_assembly() {
     translate([plow_start, chassis_width/2 - 12.7, base_thick])
         seed_cradle();
 
+    // Seed tape with center U-fold (v25 Step 4: flat ribbon + fold
+    // channel over the plow zone, world x tape_x0..+180 at z=30 under
+    // the drum; static in CAD, scrolls in the viewer).
+    translate([tape_x0, chassis_width/2, tape_z])
+        seed_tape_bend();
+
     // Folding plow
     translate([plow_start, chassis_width/2 - 20, base_thick])
         folding_plow();
@@ -1213,6 +1310,8 @@ if (part_to_render == "all") {
     spool_cones();
 } else if (part_to_render == "plow") {
     folding_plow();
+} else if (part_to_render == "tape") {
+    seed_tape_bend();
 } else if (part_to_render == "rollers") {
     pull_rollers();
 } else if (part_to_render == "crank") {

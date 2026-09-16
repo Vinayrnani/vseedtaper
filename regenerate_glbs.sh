@@ -59,7 +59,7 @@ fi
 #   part ...  optional subset of the 12 GLB names to (re)generate;
 #             default is all parts. Valid names:
 #             chassis hopper shroud cartridge plow crank cones rollers
-#             cone_a cone_b rollers_lower rollers_upper
+#             cone_a cone_b rollers_lower rollers_upper tape
 FORCE=0
 FILTER=()
 for arg in "$@"; do
@@ -70,7 +70,7 @@ for arg in "$@"; do
     fi
 done
 
-ALL_GLB="chassis hopper shroud cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper"
+ALL_GLB="chassis hopper shroud cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape"
 if [ "${#FILTER[@]}" -gt 0 ]; then
     for p in "${FILTER[@]}"; do
         case " $ALL_GLB " in
