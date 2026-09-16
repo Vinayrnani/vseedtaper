@@ -1,9 +1,49 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v8**
+**Version: v9**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## Hopper2 Wedge + Corner Drop Tube + Left-C Shroud - 2026-09-16 - Agreed with User (OVERRIDES v8 hopper/shroud/drop)
+
+1. **Source of truth**: `hopper2.jpg` (authoritative): drum CCW (top moves left),
+   side view, drum = center circle. Sharp-point wedge hopper on RIGHT, corner
+   drop tube, left-only C shroud, all reading as one continuous outline.
+2. **HOPPER**: sharp-point wedge/triangle in side view on RIGHT: UPPER wall
+   ~horizontal from 1:30 o'clock junction (small squared vertical step/notch
+   where it meets the shroud lip) extending right; LOWER wall (floor) from the
+   3-o'clock mouth corner angling LITTLE UPWARD (+8° about the 3-o'clock point)
+   to meet the upper wall at a sharp point far right (apex x=83 local, world
+   183). Open-top trough (no cover slab; side profile carried by triangular
+   cheek plates, trough width = drum width 15.6). Elongated horizontally
+   (~66 long) for volume.
+3. **DROP**: narrow vertical double-wall tube hanging from the 3-o'clock mouth
+   corner (offset RIGHT of drum centre, tube centre local x=33 / world x=133):
+   lower hopper wall makes a 90° L-step (floor runs horizontal-ish over the
+   bore, then 4 box walls drop straight down). Bore 7mm (X) x 15.6 (Y) for 3mm
+   seeds. Tube bottom local z=34 (world 38), just above tape (35). NOT at
+   6 o'clock. Fused into hopper_body() (feeds from hopper pool) — part_to_render
+   names unchanged (hopper/shroud), hopper.glb + shroud.glb stay separate for
+   viewer toggles. Viewer dropSeed animation moved to tube exit (133, 38→35).
+4. **SHROUD**: left-only C shell spanning +45°..+240° (195° sweep): top squared
+   (radial) face at 1:30 where the hopper step tab mates, wrapping over
+   top/left down to ~7 o'clock bottom. Thin (wall 2, gap 1.75, width 15.6),
+   constant small gap. Print frame axle-Z min_z=0 unchanged; viewer
+   shroudPivot/child transform unchanged.
+5. **MOUTH**: cavities scoop freely at mouth (drum carve r26 vs R25 = gap 1.0,
+   full inner width, no throat/wiper). Pool retained by floor + cheek chin
+   (gap 1.0 < 3mm seeds). No shroud-trim boolean needed (wedge approaches drum
+   only through the 0..45° mouth window; shroud covers 45..240°).
+6. **DRIVE (assumption, noted per user)**: crank stays on RIGHT with gear mesh +
+   L-handle (crank.jpg kinematics preserved: drum -360*$t CCW, crank/lower
+   +720*$t CW, idler -720*$t). hopper2's left dashed crank circle is schematic
+   (behind-shroud direct-drive suggestion) — NOT adopted; moving the crank to
+   the spool side would break the roller gear drive.
+7. **Preserved**: part_to_render names, drum axle [100,60] R25 W15, crank
+   L-handle (orbit r=45), tape/rollers/plow/chassis geometry, hopper/shroud
+   viewer mounts (new geometry still symmetric about drum centre; mounts
+   unchanged).
 
 ## CCW Drum + Right Hopper Rebuild - 2026-09-16 - Agreed with User (OVERRIDES v7 hopper/shroud/direction)
 

@@ -129,7 +129,7 @@
     <kbd>right-drag</kbd> pan<br>
     Tape advances π·20 = 62.83&nbsp;mm / crank rev.
     Drum turns at half crank speed (20:40 teeth).
-    Shroud drops seeds at 270° port.
+    Hopper corner tube drops seeds at x=133 port.
   </div>
 </div>
 
@@ -648,10 +648,10 @@
     var tapeX = 100 + mod(advance, TAPE_PER_CRANK_REV);
     tapeGroup.position.set(tapeX, 35, -30);
 
-    // Seed drop at shroud drop port (6 o'clock, drum bottom, x=100):
-    // falls from y=41 onto the tape at y=35, centered z=-30.
+    // Seed drop at hopper corner-tube exit (v9: tube centre world x=133,
+    // bottom y=38): falls onto the tape at y=35, centered z=-30.
     var phase = mod(revs * DRUM_RATIO, 1);
-    dropSeed.position.set(100, 41 - phase * 6, -30);
+    dropSeed.position.set(133, 38 - phase * 3, -30);
 
     stCrank.textContent = revs.toFixed(2);
     stTape.textContent = advance.toFixed(1);

@@ -428,13 +428,19 @@ module spool_cones() {
 }
 
 // ============================================================
-// 3. Hopper (v8 rebuild per crank.jpg+hopper.jpg): elongated OPEN wedge/box
-//    trough on RIGHT (+X, crank side). Local frame: drum center at
-//    [0,0,hopper_axis_z], axle along Y. Open top, no lid/cone/chute/wiper.
-//    Upper wall meets drum ~1:30 (45deg), lower wall at ~3 o'clock (0deg)
-//    tilted slightly UPWARD to +X (rigid TILT about the 3-o'clock mouth point).
-//    Wide mouth tangent to drum (carve r = R + 1.0), full inner width,
-//    so cavities (d3.6 recess + 0.6 chamfer) scoop seeds directly.
+// 3. Hopper (v9 rebuild per hopper2.jpg): sharp-point wedge/triangle in
+//    side view on RIGHT (+X, crank side). Local frame: drum center at
+//    [0,0,hopper_axis_z], axle along Y. Open-top trough (no cover slab;
+//    side profile carried by triangular cheek plates, trough width = drum
+//    width). UPPER wall = cheek top edge ~horizontal from the 1:30 junction
+//    (small squared vertical step tab mating the shroud lip) extending right.
+//    LOWER wall (floor) from the 3-o'clock mouth corner angling LITTLE UPWARD
+//    (+8 deg rigid tilt about the 3-o'clock point) to meet the upper wall at
+//    a sharp point far right (apex x=83). Corner DROP TUBE hangs from the
+//    3-o'clock L-step: floor runs horizontal-ish over the bore, then 4 box
+//    walls drop straight down (90 deg L). Bore 7 x 15.6 for 3mm seeds, tube
+//    bottom local z=34 (world 38, just above tape). Wide mouth tangent to
+//    drum (carve r = R + 1.0), full inner width, so cavities scoop freely.
 // ============================================================
 module hopper_body() {
     assert(hopper_axis_z > drum_radius, "hopper_body: hopper_axis_z must clear drum radius");
@@ -445,58 +451,74 @@ module hopper_body() {
     assert(mouth_gap >= 0.5 && mouth_gap <= 1.0, "hopper_body: mouth gap must be 0.5-1mm");
     assert(2*cheek_in >= 9, "hopper_body: mouth must pass 8mm seeds");
     drum_c = [0, 0, hopper_axis_z];
-    // Trough extents: mirrored to +X (crank side), stretched for volume
-    x0 = 8; x1 = 74;                       // outer X range (66 long, right side)
     y_out = cheek_in + wall;               // 10.3 outer half-width
-    z0 = 58; z1 = 100;                     // outer Z range (tilted far-top world ~109.6 < chassis 110)
-    ix0 = x0 + wall;                       // inner -X face (10.5)
-    // Upward tilt: lower wall rises toward +X (right). Rigid rotation about
-    // the 3-o'clock mouth point keeps the mouth tangent while far end lifts.
-    TILT = 7;                              // degrees, upward to the right
-    tilt_pivot = [drum_radius, 0, hopper_axis_z]; // 3-o'clock point on drum
+
+    // Wedge side profile (hopper2.jpg): mouth posts at x0, sharp apex tip.
+    x0 = 14; x_tip = 83;
+    cheek_top0 = 73;                       // cheek top edge at mouth (upper wall line)
+    cheek_bot0 = 53;                       // cheek bottom edge at mouth (chin)
+    apex_top = 64.5; apex_bot = 62;        // thin apex edge (sharp point in side view)
+    LOW_TILT = 8;                          // lower floor rises a little to the right
+    tilt_pivot = [25, 0, 56];              // 3-o'clock mouth point on drum
+    // Corner drop tube (3-o'clock L-step): outer x 27..39, bore ~7 for 3mm seeds.
+    tube_x0 = 27; tube_x1 = 39;
+    bore_x0 = 29.5; bore_x1 = 36.5;
+    tube_z0 = 34; tube_z1 = 57;
+    // 1:30 squared step tab (mating joint where upper wall meets shroud lip).
+    step_x0 = 16; step_x1 = 20; step_z0 = 66; step_z1 = 77;
 
     difference() {
-        // Plain wedge trough exterior + inner void, tilted up to the right
-        // (no cone/funnel protrusion). Void pokes past z1 => open top.
-        translate(tilt_pivot)
-            rotate([0, -TILT, 0])
-                translate([-tilt_pivot[0], -tilt_pivot[1], -tilt_pivot[2]])
-                    union() {
-                        translate([x0, -y_out, z0])
-                            cube([x1 - x0, 2*y_out, z1 - z0]);
-                    }
-        translate(tilt_pivot)
-            rotate([0, -TILT, 0])
-                translate([-tilt_pivot[0], -tilt_pivot[1], -tilt_pivot[2]])
-                    translate([ix0, -cheek_in, z0 + 8])
-                        cube([(x1 - wall) - ix0, 2*cheek_in, (z1 + 2) - (z0 + 8)]);
+        union() {
+            // Triangular cheek plates (carry the side-view wedge outline).
+            for (s = [-1, 1])
+                hull() {
+                    translate([x0, s > 0 ? cheek_in : -y_out, cheek_bot0])
+                        cube([6, wall, cheek_top0 - cheek_bot0]);
+                    translate([x_tip - 6, s > 0 ? cheek_in : -y_out, apex_bot])
+                        cube([5, wall, apex_top - apex_bot]);
+                    translate([x_tip - 1, s > 0 ? cheek_in : -y_out, (apex_top + apex_bot)/2 - 0.5])
+                        cube([1, wall, 1]);
+                }
+            // Lower floor slab (full inner width, tilted up right about 3 o'clock).
+            translate(tilt_pivot)
+                rotate([0, -LOW_TILT, 0])
+                    translate([-9, -(cheek_in + 0.5), -wall])
+                        cube([(x_tip - 2) - 16, 2*(cheek_in + 0.5), wall]);
+            // 1:30 squared step tab (full width, carved below by drum carve).
+            translate([step_x0, -y_out, step_z0])
+                cube([step_x1 - step_x0, 2*y_out, step_z1 - step_z0]);
+            // Drop tube: 4 box walls (double-wall tube, bore = gap between them).
+            translate([tube_x0, -(cheek_in + 0.5), tube_z0])
+                cube([bore_x0 - tube_x0, 2*(cheek_in + 0.5), tube_z1 - tube_z0]);
+            translate([bore_x1, -(cheek_in + 0.5), tube_z0])
+                cube([tube_x1 - bore_x1, 2*(cheek_in + 0.5), tube_z1 - tube_z0]);
+            for (s = [-1, 1])
+                translate([tube_x0, s > 0 ? cheek_in : -y_out, tube_z0])
+                    cube([tube_x1 - tube_x0, wall, tube_z1 - tube_z0]);
+        }
         // Drum clearance: wide open mouth tangent to drum, mouth_gap radial gap.
-        // Full cylinder also leaves a lower chin that retains the seed pool
-        // (gap 1.0 < 3mm seeds) while recessed cavities pass freely.
+        // Lower chin auto-formed by carve retains the seed pool (gap 1.0 < 3mm).
         translate(drum_c)
             rotate([90,0,0])
                 cylinder(h=2*y_out + 2*epsilon, r=drum_radius + mouth_gap, center=true);
-        // Shroud clearance: trim trough inside r29.2 over LEFT shroud span
-        // 60..240deg (shell outer 28.75 + 0.45). Wedge = half-plane x'<=0
-        // after -30deg clock (mirror of v7 +30deg/x'>=0 right-side trim).
-        intersection() {
-            translate(drum_c)
-                rotate([90,0,0])
-                    cylinder(h=2*y_out + 2*epsilon, r=drum_radius + 1.75 + 2 + 0.45, center=true);
-            translate(drum_c)
-                rotate([0,-30,0])
-                    translate([-60, -(y_out + epsilon), -30])
-                        cube([60, 2*(y_out + epsilon), 60]);
-        }
+        // Open-top trough void: tilted box riding on the floor, poking above
+        // the cheeks (open along full length). Starts right of the step tab
+        // so the tab stays a solid full-width mating joint.
+        translate(tilt_pivot)
+            rotate([0, -LOW_TILT, 0])
+                translate([-3, -(cheek_in + 0.5), -0.5])
+                    cube([54, 2*(cheek_in + 0.5), 30.5]);
+        // Bore slot through the floor (connects trough void to drop tube).
+        translate([bore_x0 + 0.05, -(cheek_in + 0.5), 50])
+            cube([(bore_x1 - 0.05) - (bore_x0 + 0.05), 2*(cheek_in + 0.5), 12]);
     }
 }
 
 // ============================================================
-// 4. Shroud (v8 per hopper.jpg): plain thin 180-deg shell MIRRORED to the
-//    LEFT, spanning +60..+240deg. Lip at 60deg (~2 o'clock, near 1:30) meets
-//    the hopper pool on the right; shell wraps over top/left down to the
-//    lower-left near the 6-o'clock drop. Cavities exit the shroud into the
-//    pool, scoop, and carry covered over top/left.
+// 4. Shroud (v9 per hopper2.jpg): left-only C shell spanning +45..+240deg
+//    (195deg sweep). Top squared (radial) lip at 1:30 mates the hopper step
+//    tab; shell wraps over top/left down to ~7 o'clock bottom. Cavities exit
+//    the shroud into the pool, scoop, and carry covered over top/left.
 //    Print orientation = axle-Z, min_z=0 (viewer mount unchanged).
 //    No tabs, no feet, no bore, no shell bolts: cover only.
 // ============================================================
@@ -508,8 +530,8 @@ module u_channel_shroud() {
     mid_r = drum_radius + gap + wall/2;
 
     translate([0, 0, height/2]) // shift up so min_z=0
-        rotate([0, 0, 60])      // clock 0->180 sweep onto +60..+240deg (left bulge)
-            rotate_extrude(angle=180, convexity=10)
+        rotate([0, 0, 45])      // clock 0->195 sweep onto +45..+240deg (1:30 lip to 7 o'clock)
+            rotate_extrude(angle=195, convexity=10)
                 translate([mid_r, 0, 0])
                     square([wall, height], center=true);
 }
@@ -920,7 +942,7 @@ module animated_assembly() {
             translate([0, 0, -drum_dia/2])
                 seed_cartridge(seed_dia, seed_depth);
 
-    // Hopper (v8: open wedge trough on RIGHT, mouth 0..45deg, lower lip tilted up)
+    // Hopper (v9: sharp-point wedge on RIGHT, corner drop tube at 3 o'clock L-step)
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
 
