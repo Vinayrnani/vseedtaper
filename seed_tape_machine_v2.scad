@@ -164,10 +164,17 @@ shroud_len = shroud_x1 - shroud_x0; // 26
 shroud_h   = 34;                  // enclosed tunnel height (tape slot 0..32, tape at ~30)
 
 // ============================================================
-// Crank (v21: drives the ROLLER shaft, coaxial at roller_axle_x, outside wall)
+// Crank (v23: drives the ROLLER shaft, coaxial at roller_axle_x, outside BACK wall)
+// v23 side fix: crank was outside the FRONT wall (Y=chassis_width+8=68, grip +Y);
+// user moved it to the OTHER side -> outside the BACK wall (Y=-8, grip mirrored -Y).
+// Coaxial kept: [roller_axle_x=40, axle z=60], grip orbit r=crank_throw=45.
+// Back gears (drum Y~12 + roller pinion Y~12) untouched; center_distance 60,
+// gear_mesh_phase 9deg, $fn=60, tol=0.3 all kept.
 // ============================================================
 crank_throw     = 45;
 crank_mount_x   = roller_axle_x; // 40: coaxial with roller axle (was 77.5 drum-left)
+crank_mount_y   = -8; // v23: outside BACK wall (0-8); was chassis_width+8=68 front
+crank_side      = -1; // v23: grip/arm mirror sign (-1 = extends -Y outward back; was +1 front)
 crank_arm_t     = 4;
 crank_arm_w     = 10;
 grip_len        = 30;
@@ -217,6 +224,8 @@ assert(hopper_inner_r > drum_radius, "hopper_inner_r must exceed drum_radius (cl
 assert(plow_len > 15, str("plow_len must exceed 15, got ", plow_len));
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
 assert(crank_mount_x == roller_axle_x, str("crank_mount_x must be coaxial with roller axle: ", crank_mount_x));
+assert(crank_mount_y == -8, str("crank_mount_y must sit outside the back wall (-8): ", crank_mount_y));
+assert(crank_side == -1, "crank_side must be -1 (grip extends -Y outward back)");
 assert(roller_axle_z + bb_height_roller <= chassis_height, "roller bearing block must fit below wall top");
 assert(drum_axle_z + bb_height_drum <= chassis_height, "drum bearing block must fit below wall top");
 assert(spool_axle_z + bb_height_spool <= chassis_height, "spool bearing block must fit below wall top");
@@ -989,23 +998,25 @@ module knurled_roller(is_lower=true) {
                 }
             }
             if (is_lower) {
-                // v21: gear on BACK side (-Y, world Y~12, same plane as drum
-                // gear). Mirrored rotation so the hub still points away from
-                // the body and the collar fuses into it. Shaft stays FRONT
-                // (+Y, toward the crank outside the front wall).
+                // v23: gear stays on BACK side (-Y, world Y~12, same plane as
+                // drum gear). Shaft moved to the BACK too (outboard of the gear,
+                // toward the crank now outside the back wall at Y=-8): hex shaft
+                // tip at -(len/2+gear_thick-epsilon)-14 meets the gear outer face,
+                // passing through the gear hex bore into the body. Mirrors the
+                // vertical export stack (shaft below gear). Front (+Y) has no shaft.
                 translate([0, -(len/2 + gear_thick/2 - epsilon), 0])
                     rotate([-90,0,0])
                         spur_gear(teeth=roller_teeth, module_mm=gear_module, thickness=gear_thick,
                                   bore_flat=hex_axle_flat, is_hex=true,
                                   hub_dia=16, hub_len=10, collar_dia=14, collar_len=3);
-                translate([0, len/2 + gear_thick - epsilon, 0])
-                    rotate([90,0,0])
+                translate([0, -(len/2 + gear_thick - epsilon) - 14, 0])
+                    rotate([-90,0,0])
                         cylinder(h=14, r=hex_axle_r, $fn=6, center=false);
-                translate([0, len/2 + gear_thick - epsilon - 1, 0])
-                    rotate([90,0,0])
+                translate([0, -(len/2 + gear_thick - epsilon) - 1.2, 0])
+                    rotate([-90,0,0])
                         cylinder(h=1.2, r=6, center=false);
-                translate([0, len/2 + gear_thick + 4, 0])
-                    rotate([90,0,0])
+                translate([0, -(len/2 + gear_thick + 4) - 3, 0])
+                    rotate([-90,0,0])
                         difference() {
                             cylinder(h=3, d=12, center=false);
                             cylinder(h=3 + 2*epsilon, r=hex_clearance_r, $fn=6, center=false);
@@ -1042,44 +1053,46 @@ module crank_assembly() {
     pivot_x = crank_pivot_x;
     pivot_z = crank_pivot_z;
     handle_x = pivot_x + crank_throw;
-    grip_y0 = arm_w;
-    grip_y1 = grip_y0 + grip_len;
+    s = crank_side; // v23: -1 = arm/grip extend -Y outward from the back wall (was +1 front)
+    arm_yc = s * arm_w/2;
+    grip_y0 = s * arm_w;
+    grip_y1 = grip_y0 + s * grip_len;
     grip_yc = (grip_y0 + grip_y1)/2;
 
     difference() {
         union() {
             // Tapered arm via hull(boss, end)
             hull() {
-                translate([pivot_x - 11, arm_w/2, 0])
+                translate([pivot_x - 11, arm_yc, 0])
                     cylinder(h=arm_t, r=7, center=false);
-                translate([pivot_x, arm_w/2, 0])
+                translate([pivot_x, arm_yc, 0])
                     cylinder(h=arm_t, r=9, center=false);
-                translate([handle_x, arm_w/2, 0])
+                translate([handle_x, arm_yc, 0])
                     cylinder(h=arm_t, r=6, center=false);
             }
             // Counterweight stub opposite handle
-            translate([pivot_x - 5, -arm_w/2, 0])
+            translate([pivot_x - 5, -arm_yc, 0])
                 cylinder(h=arm_t, r=5, center=false);
             // Hub boss around shaft
-            translate([pivot_x, arm_w/2, pivot_z])
+            translate([pivot_x, arm_yc, pivot_z])
                 rotate([90,0,0])
                     cylinder(h=16, r=7, center=true);
             // Pivot hex shaft
-            translate([pivot_x, arm_w/2, pivot_z])
+            translate([pivot_x, arm_yc, pivot_z])
                 rotate([90,0,0])
                     cylinder(h=hex_shaft_len, r=hex_axle_r, $fn=6, center=true);
             // Handle riser
-            translate([handle_x, arm_w/2, 0])
+            translate([handle_x, arm_yc, 0])
                 cylinder(h=pivot_z + 5.5, r=5.5, center=false);
             // Grip (free-spinning, tapered, parallel to shaft axis Y)
             hull() {
-                translate([handle_x, grip_y0 + 3, pivot_z])
+                translate([handle_x, grip_y0 + s*3, pivot_z])
                     rotate([90,0,0])
                         cylinder(h=10, d=grip_dia, center=true);
                 translate([handle_x, grip_yc, pivot_z])
                     rotate([90,0,0])
                         cylinder(h=12, d=grip_dia - 2, center=true);
-                translate([handle_x, grip_y1 - 3, pivot_z])
+                translate([handle_x, grip_y1 - s*3, pivot_z])
                     rotate([90,0,0])
                         cylinder(h=10, d=grip_dia - 4, center=true);
             }
@@ -1090,14 +1103,14 @@ module crank_assembly() {
                 sphere(r=(grip_dia - 4)/2, $fn=24);
         }
         // Lightening hole
-        translate([pivot_x + crank_throw/2, arm_w/2, -epsilon])
+        translate([pivot_x + crank_throw/2, arm_yc, -epsilon])
             cylinder(h=arm_t + 2*epsilon, d=6, center=false);
     }
 }
 
 // ============================================================
 // Animated assembly
-// Sign convention (v21: crank drives the ROLLER shaft from the back-mesh side):
+// Sign convention (v23: crank drives the ROLLER shaft from the back wall side):
 //   drum_angle = -360*$t ANTI-CLOCKWISE about +Y (top surface moves -X/left,
 //   viewed +X right, +Z up): picks up RIGHT, carries over top, drops bottom-center
 //   roller_angle = +720*$t + gear_mesh_phase CLOCKWISE (driven by drum via
@@ -1156,10 +1169,10 @@ module animated_assembly() {
             translate([0, 0, -roller_dia/2])
                 knurled_roller(is_lower=false);
 
-    // Crank drives the ROLLER shaft (v21): coaxial at roller_axle_x=40 outside
-    // the front wall, rigid with the lower roller (grip orbits r=crank_throw
-    // about the roller axis at [40,68,60]).
-    translate([crank_mount_x, chassis_width+8, roller_axle_z])
+    // Crank drives the ROLLER shaft (v23): coaxial at roller_axle_x=40 outside
+    // the BACK wall (Y=crank_mount_y=-8, grip mirrored -Y), rigid with the lower
+    // roller (grip orbits r=crank_throw about the roller axis at [40,-8,60]).
+    translate([crank_mount_x, crank_mount_y, roller_axle_z])
         rotate([0, roller_angle, 0])
             translate([-crank_pivot_x, 0, -crank_pivot_z])
                 crank_assembly();

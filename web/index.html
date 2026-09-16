@@ -128,7 +128,7 @@
     <kbd>drag</kbd> orbit &nbsp;·&nbsp; <kbd>scroll</kbd> zoom &nbsp;·&nbsp;
     <kbd>right-drag</kbd> pan<br>
     Tape advances 2·π·20 = 125.66&nbsp;mm / crank rev (crank drives roller; drum 0.5× via 40:20 mesh).
-    Crank on roller axle (x=40, outside wall); drum CCW picks up right, drops bottom-center.
+    Crank on roller axle (x=40, outside back wall); drum CCW picks up right, drops bottom-center.
     R→L layout: hopper wedge (right, mouth ~183) → drum (100) → shroud tunnel (58-84) → roller/crank (40) → spool (-6, west).
     Single wrap-around hopper: right wedge pickup (level top), 11→6 cover, tube drops seeds at x=100 port.
   </div>
@@ -156,6 +156,7 @@
   // roller_axle_z=60, spool_axle_x=-6 (v22: west, clear of roller back gear), spool_axle_z=65
   // chassis_width=60, base_thick=4, drum_dia=50, roller_dia=20, crank_throw=45
   // crank_mount_x=roller_axle_x=40 (v21: coaxial with roller axle, drives roller)
+  // crank_mount_y=-8 (v23: outside BACK wall; was chassis_width+8=68 front)
   // gear_mesh_phase=9deg (v21: 20T half-pitch tooth-into-gap) as GEAR_PHASE below
   // hopper_axis_z = drum_axle_z - base_thick = 56
   // v22 R->L order: hopper wedge (mouth ~100-183) > drum (100) >
@@ -300,11 +301,13 @@
   upperPivot.position.set(40, 81.2, -30);
   root.add(upperPivot);
 
-   // Crank mount at OpenSCAD (40, 68, 60) = roller axle, outside front wall
-   // (x = crank_mount_x = roller_axle_x, y = chassis_width + 8) ->
-   // root-local (40, 60, -68). v21: drives the roller (rigid with lowerPivot).
+   // Crank mount at OpenSCAD (40, -8, 60) = roller axle, outside BACK wall
+   // (x = crank_mount_x = roller_axle_x, y = crank_mount_y = -8) ->
+   // root-local (40, 60, 8). v23: moved from front wall (68) to back wall
+   // (-8); drives the roller (rigid with lowerPivot). Crank child pos
+   // [-5,-8.47,0] unchanged (stays symmetric about the mount).
    var crankMount = new THREE.Group();
-   crankMount.position.set(40, 60, -68);
+   crankMount.position.set(40, 60, 8);
    root.add(crankMount);
    var crankSpinner = new THREE.Group();
    crankSpinner.position.set(0, 0, 0);
@@ -420,7 +423,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 10;
+  var ASSET_V = 11;
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },

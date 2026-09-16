@@ -1,6 +1,30 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v22**
+**Version: v23**
+
+Authoritative record of requirements, standing rules, and current state.
+If context is ever lost, read this file first.
+
+## v23 Crank to Back Wall (Step 2 miss fix) - 2026-09-16
+
+1. **Miss**: v21 put the crank outside the FRONT wall
+   (`[40, chassis_width+8=68, 60]`, grip +Y 78..108); user moved it to the
+   OTHER side of the chassis -> outside the BACK wall (`[40,-8,60]`,
+   grip mirrored -Y to -18..-48 outward). Coaxial kept
+   (`crank_mount_x` = `roller_axle_x` = 40, axle z = 60, orbit r = 45).
+2. **CAD** (`seed_tape_machine_v2.scad` only): new `crank_mount_y` = -8 +
+   `crank_side` = -1 with fail-loud asserts; `crank_assembly()` mirrors
+   arm/grip/counterweight/hub/riser Y by `crank_side` (fusing preserved);
+   lower-roller hex shaft moved FRONT (+Y) -> BACK outboard of the pinion
+   (tip -34.95 meets the gear outer face through the hex bore, mirrors the
+   vertical print stack); gear stays BACK (world Y~12, 9° mesh phase kept).
+3. **Viewer**: `crankMount` (40,60,-68) -> (40,60,8) [M(40,-8,60)];
+   crank child pos unchanged ([-5,-8.47,0] stays symmetric); rotation signs
+   + `GEAR_PHASE` untouched (rigid with lower); `ASSET_V` 10->11.
+   Crank + rollers_lower + rollers_upper GLBs rebuilt.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears; port 9099 only.
+   Step 4 (tape bend) / Step 5 (mobile panel) NOT started.
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
