@@ -1,9 +1,44 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v7**
+**Version: v8**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## CCW Drum + Right Hopper Rebuild - 2026-09-16 - Agreed with User (OVERRIDES v7 hopper/shroud/direction)
+
+1. **Source of truth**: `crank.jpg` (drum CCW / crank CW external mesh, drum gear
+   large ~1.5x, lower small gear + L-handle = radial arm + 90° grip) and
+   `hopper.jpg` (right-side open wedge hopper, left shroud, bottom seed drop).
+2. **DIRECTION**: drum ANTI-CLOCKWISE (top surface moves -X/left). Crank + lower
+   roller CLOCKWISE (opposite via external gear mesh). Upper idler CCW (opposite
+   crank via tape contact). scad: drum_angle=-360*$t, crank=+720*$t,
+   idler=-720*$t. Viewer rotation.z signs flipped to match (+drum*0.5 CCW,
+   -crank/lower CW, +upper CCW). Gear ratio 2:1 unchanged (20T/40T module 2).
+3. **HOPPER position/shape**: open V/wedge box trough on RIGHT side (+X, crank
+   side), elongated horizontally for volume (~66 long x 15.6 wide x 46 tall,
+   open top, no lid/cone). Upper wall meets drum at ~1:30 (45°), lower wall at
+   ~3 o'clock (0°) tilted slightly UPWARD to the right (rigid -7° tilt about the
+   3-o'clock mouth point, far end rises ~6mm). Mouth WIDE OPEN tangent to drum
+   (radial gap 1.0, full inner width 15.6, no throat/wiper) so cavities scoop
+   freely. Lower chin retains pool (gap 1.0 < 3mm seeds).
+4. **SHROUD**: SAME plain thin 180° shell (gap 1.75, wall 2, width 15.6, no
+   tabs/feet/bore/bolts) MIRRORED to the LEFT: spans +60..+240° (2 o'clock lip
+   near hopper pool, over top/left, to lower-left near drop). Print frame
+   axle-Z min_z=0 unchanged; viewer shroudPivot/child transform unchanged.
+5. **SEED DROP**: vertical fall at 6 o'clock (drum bottom x=100) through open
+   shroud exit onto tape centerline (cradle + dropSeed animation unchanged).
+6. **Preserved**: part_to_render names, drum axle [100,60] R25 W15, crank
+   L-handle (radial tapered arm + Y-parallel grip, orbit r=45), tape/rollers/
+   plow/chassis geometry, hopper/shroud viewer mounts (mirror bakes into GLB,
+   mounts symmetric about drum centre).
+7. **Viewer mount fix (found during v8 verify, iteration 1)**: cartridge
+   PART_DEFS was [0,-25,0]/[-PI/2,0,0], standing the axle-Z drum GLB vertical
+   with centre 17.5 off the drum axle (hop11 screenshots show floating gear +
+   hopper gap — pre-existing, v7 "verified" claim was wrong). Restored
+   [0,0,7.5]/[PI,0,0] (Rx(180) lays axle onto root-local -Z, drum coaxial with
+   drumPivot, bottom at y=35 = tape height, gear plane ≈ roller pinion plane).
+   Viewer-only change, no geometry touched.
 
 ## Hopper 10:30-11 Rebuild - 2026-09-16 - Agreed with User (OVERRIDES v6 hopper/shroud)
 

@@ -428,9 +428,11 @@ module spool_cones() {
 }
 
 // ============================================================
-// 3. Hopper (v7 rebuild): elongated OPEN box trough at 10:30-11 o'clock.
-//    Local frame: drum center at [0,0,hopper_axis_z], axle along Y.
-//    -X = left side, away from crank. Open top, no lid/cone/chute/wiper.
+// 3. Hopper (v8 rebuild per crank.jpg+hopper.jpg): elongated OPEN wedge/box
+//    trough on RIGHT (+X, crank side). Local frame: drum center at
+//    [0,0,hopper_axis_z], axle along Y. Open top, no lid/cone/chute/wiper.
+//    Upper wall meets drum ~1:30 (45deg), lower wall at ~3 o'clock (0deg)
+//    tilted slightly UPWARD to +X (rigid TILT about the 3-o'clock mouth point).
 //    Wide mouth tangent to drum (carve r = R + 1.0), full inner width,
 //    so cavities (d3.6 recess + 0.6 chamfer) scoop seeds directly.
 // ============================================================
@@ -443,43 +445,58 @@ module hopper_body() {
     assert(mouth_gap >= 0.5 && mouth_gap <= 1.0, "hopper_body: mouth gap must be 0.5-1mm");
     assert(2*cheek_in >= 9, "hopper_body: mouth must pass 8mm seeds");
     drum_c = [0, 0, hopper_axis_z];
-    // Trough extents: stretched in -X for volume, height ~46 like sketch
-    x0 = -74; x1 = -8;                     // outer X range (66 long)
+    // Trough extents: mirrored to +X (crank side), stretched for volume
+    x0 = 8; x1 = 74;                       // outer X range (66 long, right side)
     y_out = cheek_in + wall;               // 10.3 outer half-width
-    z0 = 58; z1 = 104;                     // outer Z range (top world 108 < chassis 110)
-    ix1 = x1 - wall;                       // inner +X face (-10.5)
+    z0 = 58; z1 = 100;                     // outer Z range (tilted far-top world ~109.6 < chassis 110)
+    ix0 = x0 + wall;                       // inner -X face (10.5)
+    // Upward tilt: lower wall rises toward +X (right). Rigid rotation about
+    // the 3-o'clock mouth point keeps the mouth tangent while far end lifts.
+    TILT = 7;                              // degrees, upward to the right
+    tilt_pivot = [drum_radius, 0, hopper_axis_z]; // 3-o'clock point on drum
 
     difference() {
-        // Plain box trough exterior (no cone/funnel protrusion)
-        translate([x0, -y_out, z0])
-            cube([x1 - x0, 2*y_out, z1 - z0]);
-        // Inner seed void, open top (pokes past z1)
-        translate([x0 + wall, -cheek_in, z0 + 8])
-            cube([ix1 - (x0 + wall), 2*cheek_in, (z1 + 2) - (z0 + 8)]);
+        // Plain wedge trough exterior + inner void, tilted up to the right
+        // (no cone/funnel protrusion). Void pokes past z1 => open top.
+        translate(tilt_pivot)
+            rotate([0, -TILT, 0])
+                translate([-tilt_pivot[0], -tilt_pivot[1], -tilt_pivot[2]])
+                    union() {
+                        translate([x0, -y_out, z0])
+                            cube([x1 - x0, 2*y_out, z1 - z0]);
+                    }
+        translate(tilt_pivot)
+            rotate([0, -TILT, 0])
+                translate([-tilt_pivot[0], -tilt_pivot[1], -tilt_pivot[2]])
+                    translate([ix0, -cheek_in, z0 + 8])
+                        cube([(x1 - wall) - ix0, 2*cheek_in, (z1 + 2) - (z0 + 8)]);
         // Drum clearance: wide open mouth tangent to drum, mouth_gap radial gap.
         // Full cylinder also leaves a lower chin that retains the seed pool
         // (gap 1.0 < 3mm seeds) while recessed cavities pass freely.
         translate(drum_c)
             rotate([90,0,0])
                 cylinder(h=2*y_out + 2*epsilon, r=drum_radius + mouth_gap, center=true);
-        // Shroud clearance: trim trough inside r29.2 over shroud span -60..120deg
-        // (shell outer 28.75 + 0.45). Wedge = half-plane x'>=0 after +30deg clock.
+        // Shroud clearance: trim trough inside r29.2 over LEFT shroud span
+        // 60..240deg (shell outer 28.75 + 0.45). Wedge = half-plane x'<=0
+        // after -30deg clock (mirror of v7 +30deg/x'>=0 right-side trim).
         intersection() {
             translate(drum_c)
                 rotate([90,0,0])
                     cylinder(h=2*y_out + 2*epsilon, r=drum_radius + 1.75 + 2 + 0.45, center=true);
             translate(drum_c)
-                rotate([0,30,0])
-                    translate([0, -(y_out + epsilon), -30])
+                rotate([0,-30,0])
+                    translate([-60, -(y_out + epsilon), -30])
                         cube([60, 2*(y_out + epsilon), 60]);
         }
     }
 }
 
 // ============================================================
-// 4. Shroud (v7): plain thin 180-deg shell clocked to span -60..+120deg.
-//    Lip at 120deg (11 o'clock) meets the hopper pool; cavities exit the
-//    shroud into the pool, scoop, and carry covered over top/right.
+// 4. Shroud (v8 per hopper.jpg): plain thin 180-deg shell MIRRORED to the
+//    LEFT, spanning +60..+240deg. Lip at 60deg (~2 o'clock, near 1:30) meets
+//    the hopper pool on the right; shell wraps over top/left down to the
+//    lower-left near the 6-o'clock drop. Cavities exit the shroud into the
+//    pool, scoop, and carry covered over top/left.
 //    Print orientation = axle-Z, min_z=0 (viewer mount unchanged).
 //    No tabs, no feet, no bore, no shell bolts: cover only.
 // ============================================================
@@ -491,7 +508,7 @@ module u_channel_shroud() {
     mid_r = drum_radius + gap + wall/2;
 
     translate([0, 0, height/2]) // shift up so min_z=0
-        rotate([0, 0, -60])     // clock 0->180 sweep onto -60..120deg
+        rotate([0, 0, 60])      // clock 0->180 sweep onto +60..+240deg (left bulge)
             rotate_extrude(angle=180, convexity=10)
                 translate([mid_r, 0, 0])
                     square([wall, height], center=true);
@@ -877,15 +894,16 @@ module crank_assembly() {
 
 // ============================================================
 // Animated assembly
-// Sign convention: drum_angle = 360*$t CLOCKWISE about +Y (viewed +X right, +Z up)
-//   lower roller + crank = −720*$t (driven by crank, 2:1 gear ratio from drum)
-//   upper idler = +720*$t (counter-rotate via tape contact)
+// Sign convention (v8 per crank.jpg): drum_angle = -360*$t ANTI-CLOCKWISE
+//   about +Y (top surface moves -X/left, viewed +X right, +Z up)
+//   lower roller + crank = +720*$t CLOCKWISE (opposite via external mesh, 2:1)
+//   upper idler = -720*$t (counter-rotates via tape contact)
 // At $t=0 geometry equals static layout.
 // ============================================================
 module animated_assembly() {
-    drum_angle = 360*$t;     // CLOCKWISE about +Y
-    crank_angle = -720*$t;   // lower roller + crank orbit
-    idler_angle = 720*$t;    // upper idler counter-rotates
+    drum_angle = -360*$t;    // ANTI-CLOCKWISE about +Y
+    crank_angle = 720*$t;    // lower roller + crank orbit (CW, opposite drum)
+    idler_angle = -720*$t;   // upper idler counter-rotates
 
     // Chassis
     chassis();
@@ -902,7 +920,7 @@ module animated_assembly() {
             translate([0, 0, -drum_dia/2])
                 seed_cartridge(seed_dia, seed_depth);
 
-    // Hopper (v7: open box trough, mouth at 10:30-11 o'clock)
+    // Hopper (v8: open wedge trough on RIGHT, mouth 0..45deg, lower lip tilted up)
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
 

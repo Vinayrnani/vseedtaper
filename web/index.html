@@ -387,10 +387,10 @@
     	return data;
     };
   window._setRotations = function(crankAngle) {
-    crankSpinner.rotation.z = crankAngle;
-    lowerPivot.rotation.z = crankAngle;
-    upperPivot.rotation.z = -crankAngle;
-    drumPivot.rotation.z = -crankAngle * DRUM_RATIO;
+    crankSpinner.rotation.z = -crankAngle;
+    lowerPivot.rotation.z = -crankAngle;
+    upperPivot.rotation.z = crankAngle;
+    drumPivot.rotation.z = crankAngle * DRUM_RATIO;
   };
 
   // ---------- part loading ----------
@@ -415,7 +415,7 @@
       { id: 'shroud', label: 'Shroud', file: 'stl/shroud.glb', color: 0x4a5568,
         parent: shroudPivot, pos: [0, 0, -7.8], rot: [0, 0, 0], metalness: 0.5 },
       { id: 'cartridge', label: 'Cartridge/drum', file: 'stl/cartridge.glb', color: 0x4fa06a,
-        parent: drumPivot, pos: [0, -25, 0], rot: [-Math.PI / 2, 0, 0] },
+        parent: drumPivot, pos: [0, 0, 7.5], rot: [Math.PI, 0, 0] }, // v8: GLB is axle-Z vertical export; Rx(180) lays axle onto root-local -Z (coaxial drum). Was [0,-25,0]/[-PI/2,0,0] which stood the drum vertical, 17.5 off-axis (visible in hop11 screenshots: floating gear, hopper gap).
       { id: 'cones_a', label: 'Cones A', file: 'stl/cone_a.glb', color: 0xc96a2b,
         parent: spoolGroup, pos: [0, 0, 26], rot: [Math.PI, 0, 0] },
       { id: 'cones_b', label: 'Cones B', file: 'stl/cone_b.glb', color: 0xc96a2b,
@@ -632,15 +632,15 @@
 
 // Root-local IS the Y-up machine frame, so OpenSCAD +Y (axle axis) is
 // root-local -Z -> animated rotations use rotation.z with negated angles:
-// crankSpinner.rotation.z = +crankAngle (scad lower roller + crank = -720*$t)
-// lowerPivot.rotation.z = +crankAngle    (scad -720*$t)
-// upperPivot.rotation.z = -crankAngle    (scad idler = +720*$t)
-// drumPivot.rotation.z = -crankAngle*0.5 (scad drum = +360*$t)
+// crankSpinner.rotation.z = -crankAngle (scad lower roller + crank = +720*$t, CW)
+// lowerPivot.rotation.z = -crankAngle    (scad +720*$t, CW via external mesh)
+// upperPivot.rotation.z = +crankAngle    (scad idler = -720*$t, CCW)
+// drumPivot.rotation.z = +crankAngle*0.5 (scad drum = -360*$t, CCW top-moves-left)
 
-    crankSpinner.rotation.z = crankAngle;
-    lowerPivot.rotation.z = crankAngle;
-    upperPivot.rotation.z = -crankAngle;
-    drumPivot.rotation.z = -crankAngle * DRUM_RATIO;
+    crankSpinner.rotation.z = -crankAngle;
+    lowerPivot.rotation.z = -crankAngle;
+    upperPivot.rotation.z = crankAngle;
+    drumPivot.rotation.z = crankAngle * DRUM_RATIO;
 
     // Tape ribbon: advance per crank rev = PI*20 = 62.83mm
     // Path: spool(x=10) -> under drum(x=100) -> plow(126-155) -> rollers(160)
