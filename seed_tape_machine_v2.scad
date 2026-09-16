@@ -453,9 +453,9 @@ module spool_cones() {
 //    the bracket seats flush on the cover lip.
 //    RED (small tight loop dead-centre where the tan support tab lands on
 //    the drum) = tab interference/pivot: full-width step tab sits ON the
-//    drum surface and would rub/block rotation -> FIX: slim the tab
-//    (x16-20 -> x17-20) and lift its foot (z66 -> z68) so the drum carve
-//    fully clears it = pivot relief.
+//    drum surface and would rub/block rotation -> FIX: widened X 14-22
+//    BLUE seat-flush, relieved Z foot 68/top 76 RED relief so the drum
+//    carve fully clears it = pivot relief.
 //    PINK/magenta (big loop around far-right V tip + lower wall) = tip
 //    geometry/wall: apex reads blunt/squared, lower wall thin -> FIX:
 //    sharpen apex to a top-biased knife edge (end wall 2.0 -> 1.5 wide,
