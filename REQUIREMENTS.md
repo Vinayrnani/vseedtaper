@@ -1,6 +1,6 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v12**
+**Version: v13**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
@@ -285,15 +285,15 @@ If context is ever lost, read this file first.
   (through-wall axle to crank), chassis envelope itself (gussets x→210).
   Screenshots: /tmp/fit_t0.png, /tmp/fit_top.png, /tmp/fit_side.png.
 
-## MVP Update - 2026-09-16 - Agreed with User
+## MVP Update - 2026-09-16 - Agreed with User (v13 refinements)
 
-1. **Browser preview stays as is** (no UI change), but must be a logically working model: parts mounted in true fit positions (no floating/random mounting), motions synced (crank -> seed wheel -> drop -> tape pull, no random spinning).
-2. **Round cover/shroud**: acts like half-cut 16mm pipe channel, must pass up to 8mm seeds, guides seed to 6 o'clock drop onto tape.
-3. **Seed wheel/cartridge**: interchangeable by hand (no tools) to support 1mm to 6mm seed sizes. Cavity count = as many as fit per wheel diameter.
-4. **Hopper/seed box**: sits at 9 o'clock, max volume extended up to 10:30 position around seed wheel. Picks from left, rotates clockwise, drops into shroud, guided to 6 o'clock onto tape.
-5. **Hopper + shroud = single printed piece**.
+1. **Browser preview stays as is** (no UI change), but must be a logically working model: parts mounted in true fit positions (no floating), motions synced (crank -> seed wheel -> drop -> tape pull, no random spinning).
+2. **Round cover/shroud**: open-top half-cut 16mm pipe channel running 11 o'clock to 6 o'clock along the drum undershot path, guides seed to the 6 o'clock drop onto tape. Top open so seed travel is visible from the hopper to 11 o'clock in top view. Bore fits 8mm seed, inner face has grooves matching the drum. Joints to the hopper on both sides.
+3. **Seed wheel/cartridge (drum)**: 6 cavities, fixed for MVP. Wheels still interchangeable by hand (no tools) to support 1mm to 6mm seed sizes (cavity size varies, count stays 6).
+4. **Hopper/seed box**: closed container (seeds retained, no open gap). Keeps the horizontal top edge (z=73) but the open gap is filled with walls. Sits at 9 o'clock, max volume extended up to 10:30 around the seed wheel. Inner face has grooves matching the drum.
+5. **Hopper + shroud = single printed piece** (with 2 side joints).
 6. **Tape**: 1 inch wide, same for all seed sizes, center-fold with seed in middle.
-7. **Seed spacing**: fixed 6 inch in MVP. Spacing driven by pull roller + gear ratio linked to cavity count. Future enhancement (post-MVP): swap-gears for adjustable spacing (e.g. 3/6/9 inch).
+7. **Seed spacing**: fixed 6 inch in MVP. Spacing driven by pull roller + gear ratio linked to 6 cavities (drum geared slower vs roller to keep 6 inch). Future enhancement (post-MVP): swap-gears for adjustable spacing (e.g. 3/6/9 inch).
 8. **Gear-ratio calculator/chart**: cavities count + roller + gears = spacing. Include as future helper.
 
 ## Project Location
