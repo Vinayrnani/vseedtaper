@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v14 — 2026-09-16
+- changes.jpg markup: red blocking rib removed (seed path clear), blue side joints retained (shroud↔hopper support), pink gaps sealed (closed walls), yellow channel grooves matching drum for wheel-to-frame positioning (not seed drive)
+
 ## v13 — 2026-09-16
 - Refine hopper to closed container, shroud to open 11-6 half-pipe 16mm/8mm, drum 6 cavities, matching grooves, joints
 
