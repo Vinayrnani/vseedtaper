@@ -117,7 +117,7 @@ bb_height_drum   = 13;
 bb_height_spool  = 10;
 
 // ============================================================
-// Hopper (LEFT 135°→225°)
+// Hopper (v7: box trough at 10:30-11 o'clock, -X of drum)
 // ============================================================
 hopper_wall     = 2.5;
 hopper_flange_thick = 3;
@@ -428,75 +428,60 @@ module spool_cones() {
 }
 
 // ============================================================
-// 3. Hopper (sketch rebuild v6): OPEN funnel (top-right) + tapered chute (bottom)
+// 3. Hopper (v7 rebuild): elongated OPEN box trough at 10:30-11 o'clock.
 //    Local frame: drum center at [0,0,hopper_axis_z], axle along Y.
-//    No lid/knob, no legs/feet, no wiper slot, no square drop-tube.
+//    -X = left side, away from crank. Open top, no lid/cone/chute/wiper.
+//    Wide mouth tangent to drum (carve r = R + 1.0), full inner width,
+//    so cavities (d3.6 recess + 0.6 chamfer) scoop seeds directly.
 // ============================================================
 module hopper_body() {
     assert(hopper_axis_z > drum_radius, "hopper_body: hopper_axis_z must clear drum radius");
     assert(hopper_wall > 0, "hopper_body: hopper_wall must be >0");
     wall = hopper_wall;                    // 2.5
     cheek_in = drum_width/2 + tolerance;   // 7.8: axial half-gap hugging drum faces
-    bolt_clear = bolt_dia + 2*tolerance;   // 3.6: M3 flange holes
-    // Open funnel: wide pour inlet (top) -> narrow outlet (right of drum)
-    fun_in_c = [38, 0, 100];  fun_in_s = [44, 26, 4];   // x[16,60] y[+-13] z[98,102]
-    fun_out_c = [32, 0, 70];  fun_out_s = [14, 15, 4];  // x[25,39] y[+-7.5] z[68,72]
-    // Tapered chute: tangent inlet (drum bottom) -> narrow mouth (tape centerline)
-    chu_in_c = [0, 0, 29];    chu_in_s = [26, 15, 4];   // x[+-13] y[+-7.5] z[27,31]
-    chu_out_c = [0, 0, 3];    chu_out_s = [14, 14, 6];  // x[+-7] y[+-7] z[0,6]
-    assert(fun_out_s[0] - 2*wall >= 9, "hopper_body: funnel mouth must pass 8mm seeds");
-    assert(chu_out_s[0] - 2*wall >= 9, "hopper_body: chute mouth must pass 8mm seeds");
+    mouth_gap = 1.0;                       // spec range 0.5-1.0: radial gap drum -> mouth lips
+    assert(mouth_gap >= 0.5 && mouth_gap <= 1.0, "hopper_body: mouth gap must be 0.5-1mm");
+    assert(2*cheek_in >= 9, "hopper_body: mouth must pass 8mm seeds");
+    drum_c = [0, 0, hopper_axis_z];
+    // Trough extents: stretched in -X for volume, height ~46 like sketch
+    x0 = -74; x1 = -8;                     // outer X range (66 long)
+    y_out = cheek_in + wall;               // 10.3 outer half-width
+    z0 = 58; z1 = 104;                     // outer Z range (top world 108 < chassis 110)
+    ix1 = x1 - wall;                       // inner +X face (-10.5)
 
     difference() {
-        union() {
-            // Funnel outer tapered tube (open ends cut by inner below)
-            hull() {
-                translate(fun_in_c - fun_in_s/2) cube(fun_in_s);
-                translate(fun_out_c - fun_out_s/2) cube(fun_out_s);
-            }
-            // Left guide wall: outlet mouth down to drum tangent (~0 deg)
-            translate([24.8, -7, 62]) cube([2.5, 14, 8]);
-            // Chute outer tapered tube (mouth rim lands at z=0 over tape)
-            hull() {
-                translate(chu_in_c - chu_in_s/2) cube(chu_in_s);
-                translate(chu_out_c - chu_out_s/2) cube(chu_out_s);
-            }
-            // Cheek plates hugging drum faces
-            for (s=[-1,1])
-                translate([-28, s > 0 ? cheek_in : -cheek_in - wall, 27])
-                    cube([70, wall, 47]);
-            // Joint flange tab (funnel right, meets shroud end tab)
-            translate([36, -6, 68]) cube([14, 12, 3]);
-        }
-        // Funnel inner hollow (opened past both ends by epsilon)
-        hull() {
-            translate([fun_in_c[0] - (fun_in_s[0]-2*wall)/2, -(fun_in_s[1]-2*wall)/2, fun_in_c[2] - fun_in_s[2]/2 - epsilon])
-                cube([fun_in_s[0]-2*wall, fun_in_s[1]-2*wall, fun_in_s[2]+2*epsilon]);
-            translate([fun_out_c[0] - (fun_out_s[0]-2*wall)/2, -(fun_out_s[1]-2*wall)/2, fun_out_c[2] - fun_out_s[2]/2 - epsilon])
-                cube([fun_out_s[0]-2*wall, fun_out_s[1]-2*wall, fun_out_s[2]+2*epsilon]);
-        }
-        // Chute inner hollow (mouth open at drum tangent top and base plane)
-        hull() {
-            translate([chu_in_c[0] - (chu_in_s[0]-2*wall)/2, -(chu_in_s[1]-2*wall)/2, chu_in_c[2] - chu_in_s[2]/2 - epsilon])
-                cube([chu_in_s[0]-2*wall, chu_in_s[1]-2*wall, chu_in_s[2]+2*epsilon]);
-            translate([chu_out_c[0] - (chu_out_s[0]-2*wall)/2, -(chu_out_s[1]-2*wall)/2, chu_out_c[2] - chu_out_s[2]/2 - epsilon])
-                cube([chu_out_s[0]-2*wall, chu_out_s[1]-2*wall, chu_out_s[2]+2*epsilon]);
-        }
-        // Hex axle clearance through cheeks
-        for (s=[-1,1])
-            translate([0, s*(cheek_in + wall/2), hopper_axis_z])
+        // Plain box trough exterior (no cone/funnel protrusion)
+        translate([x0, -y_out, z0])
+            cube([x1 - x0, 2*y_out, z1 - z0]);
+        // Inner seed void, open top (pokes past z1)
+        translate([x0 + wall, -cheek_in, z0 + 8])
+            cube([ix1 - (x0 + wall), 2*cheek_in, (z1 + 2) - (z0 + 8)]);
+        // Drum clearance: wide open mouth tangent to drum, mouth_gap radial gap.
+        // Full cylinder also leaves a lower chin that retains the seed pool
+        // (gap 1.0 < 3mm seeds) while recessed cavities pass freely.
+        translate(drum_c)
+            rotate([90,0,0])
+                cylinder(h=2*y_out + 2*epsilon, r=drum_radius + mouth_gap, center=true);
+        // Shroud clearance: trim trough inside r29.2 over shroud span -60..120deg
+        // (shell outer 28.75 + 0.45). Wedge = half-plane x'>=0 after +30deg clock.
+        intersection() {
+            translate(drum_c)
                 rotate([90,0,0])
-                    cylinder(h=wall + 2*epsilon, r=hex_clearance_r, $fn=6, center=true);
-        // Joint flange M3 hole (vertical)
-        translate([44, 0, 68 - epsilon])
-            cylinder(h=3 + 2*epsilon, d=bolt_clear, center=false);
+                    cylinder(h=2*y_out + 2*epsilon, r=drum_radius + 1.75 + 2 + 0.45, center=true);
+            translate(drum_c)
+                rotate([0,30,0])
+                    translate([0, -(y_out + epsilon), -30])
+                        cube([60, 2*(y_out + epsilon), 60]);
+        }
     }
 }
 
 // ============================================================
-// 4. Shroud (sketch rebuild v6): thin curved cover, top ~180 deg, gap 1.75
-//    Print orientation = axle-Z (viewer Rx(-90) maps sweep onto drum top).
-//    No feet, no bore, no shell bolts; M3 flange tabs at both shell ends.
+// 4. Shroud (v7): plain thin 180-deg shell clocked to span -60..+120deg.
+//    Lip at 120deg (11 o'clock) meets the hopper pool; cavities exit the
+//    shroud into the pool, scoop, and carry covered over top/right.
+//    Print orientation = axle-Z, min_z=0 (viewer mount unchanged).
+//    No tabs, no feet, no bore, no shell bolts: cover only.
 // ============================================================
 module u_channel_shroud() {
     assert(shroud_id > 0, "u_channel_shroud: shroud_id must be >0");
@@ -504,28 +489,12 @@ module u_channel_shroud() {
     wall = 2;     // thin cover
     height = drum_width + 2*tolerance;
     mid_r = drum_radius + gap + wall/2;
-    bolt_clear = bolt_dia + 2*tolerance;
 
     translate([0, 0, height/2]) // shift up so min_z=0
-    difference() {
-        union() {
-            // Plain thin shell, swept 0->180 deg. Print frame (axle-Z);
-            // viewer mounts it rotation-free so axle-Z -> drum axle, y>=0 -> drum top.
+        rotate([0, 0, -60])     // clock 0->180 sweep onto -60..120deg
             rotate_extrude(angle=180, convexity=10)
                 translate([mid_r, 0, 0])
                     square([wall, height], center=true);
-            // Joint flange tabs at both shell ends
-            translate([mid_r - wall - 2, -6, -height/2 + 1.3])
-                cube([14, 12, 3]);
-            translate([-(mid_r + 10), -6, -height/2 + 1.3])
-                cube([14, 12, 3]);
-        }
-        // M3 joint holes (vertical)
-        translate([mid_r + 5, 0, -height/2 + 1.3 - epsilon])
-            cylinder(h=3 + 2*epsilon, d=bolt_clear, center=false);
-        translate([-(mid_r + 5), 0, -height/2 + 1.3 - epsilon])
-            cylinder(h=3 + 2*epsilon, d=bolt_clear, center=false);
-    }
 }
 
 // ============================================================
@@ -933,7 +902,7 @@ module animated_assembly() {
             translate([0, 0, -drum_dia/2])
                 seed_cartridge(seed_dia, seed_depth);
 
-    // Hopper (sketch: open funnel top-right + taper chute bottom)
+    // Hopper (v7: open box trough, mouth at 10:30-11 o'clock)
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
 

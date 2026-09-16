@@ -1,9 +1,35 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v6**
+**Version: v7**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## Hopper 10:30-11 Rebuild - 2026-09-16 - Agreed with User (OVERRIDES v6 hopper/shroud)
+
+1. **HOPPER position**: sits at 10:30-11 o'clock on drum (top-left, away from
+   crank at X=160). Height like Hoppershroud.jpg sketch (~46mm Z extent).
+2. **HOPPER shape**: simple elongated BOX TROUGH, stretched horizontally (-X)
+   for seed volume (~66 long x 15.6 wide x 46 tall, inner ~61x15.6x38 ≈ 38cm³),
+   OPEN TOP (no lid). NO cone/funnel outward protrusion, no tapered chute, no
+   lid/knob, no legs, no joint flange, no hex holes (axle at x=0 sits outside
+   trough, xMax=-8).
+3. **HOPPER mouth**: WIDE OPEN mouth tangent to drum surface (contact zone
+   ~114-157°, centre ~135° = 10:30), full inner width 15.6mm, NO narrow throat,
+   NO wiper, NO constriction. Radial gap 1.0mm (carve r26 vs drum R25) clears
+   cavity chamfer protrusion 0.6mm; cavities (d3.6 = seed_dia+2*tol, depth 2mm)
+   scoop seeds directly from pool. Lower chin auto-formed by carve retains pool
+   (min gap 1.0 < 3mm seeds).
+4. **SHROUD**: SAME plain thin 180° shell (gap 1.75, wall 2, width 15.6, no
+   feet/bore) MINUS flange tabs + M3 holes (removed per "cover only"), clocked
+   -60° about axle to span -60..+120° (5 o'clock over top to 11 o'clock lip).
+   Lip at 120° meets hopper pool; cavities exit shroud into pool, scoop, carry
+   covered over top/right, exit at -60° dropping toward tape. No viewer
+   PART_DEFS change (rotation baked about module axle, min_z=0 kept).
+5. **Preserved**: drum clockwise (top moves +X), part_to_render names,
+   drum axle [100,60] R25 W15, hopper local frame (drum centre [0,0,56]).
+6. Viewer verified: drum+hopper+shroud isolated, mouth at 10:30-11, no cone,
+   0 console errors, screenshots /tmp/hop11_*.png.
 
 ## Hopper/Shroud Rebuild (Sketch) - 2026-09-16 - Agreed with User
 
