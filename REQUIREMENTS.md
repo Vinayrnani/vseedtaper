@@ -1,9 +1,37 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v5**
+**Version: v6**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## Hopper/Shroud Rebuild (Sketch) - 2026-09-16 - Agreed with User
+
+1. **Source of truth**: user's hand sketch `Hoppershroud.jpg` (drum circle, top
+   curved shroud, right-side hopper-shroud connection joint, tapered bottom hopper
+   chute). Sketch photo is rotated; text below is authoritative.
+2. **SHROUD**: plain thin curved cover hugging drum over ~180 deg top, constant
+   small gap 1.75mm, wall 2, width = drum_width + 2*tolerance. No feet, no bore,
+   no bolts in shell. Flange tabs with M3 holes at both shell ends (joint side
+   mates hopper flange). Print orientation = axle-Z (as before); viewer
+   Rx(-90) maps the 180-360 deg sweep onto the drum top.
+3. **HOPPER** (one part, drum center local [0,0,hopper_axis_z], axle Y):
+   a. Top = OPEN funnel, no lid/knob: wide inlet (top) tapering to narrow outlet
+      right of drum (9mm+ mouth passes 8mm seeds) + thin left guide wall feeding
+      the drum tangent point at ~0-15 deg under the shroud start.
+   b. Bottom = tapered box chute tangent to drum bottom (top face at drum
+      bottom tangent plane), wide inlet narrowing to mouth over tape centerline
+      (world z ~4-10, under drum bottom world z=35). Mouth >=9mm for 8mm seeds.
+   c. Slim cheek plates hug drum faces (axial gap = tolerance) with hex axle
+      clearance; funnel outlet + chute pass between cheeks.
+4. **CONNECTION JOINT**: hopper funnel-right tab + shroud end tabs, all with M3
+   (3.6 clearance) vertical holes, meeting at drum 3-o-clock region.
+5. **Removed**: legs, foot pads + bolts, rim flange, lid + knob, square
+   drop-tube + bore, wiper slot. Hex axle clearance kept (axle passes through).
+6. **Interfaces intact**: part_to_render names (hopper/shroud), drum axle
+   [100,60], drum R25 W15, tape under drum bottom (world z~35->track).
+   Hopper local drum center still maps onto drumPivot in viewer (pos [0,0,0] /
+   rot [-PI/2,0,0] unchanged); shroud child pos [0,18.7,0] unchanged.
 
 ## Parts Panel (Isolation) - 2026-09-16 - Agreed with User
 

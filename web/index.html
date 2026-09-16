@@ -256,8 +256,10 @@
     hopperPivot.position.set(100, 4, -30);
     root.add(hopperPivot);
 
-   // Shroud mount at OpenSCAD A=(100, 30, 60) -> root-local (100, 60, -30)
-   // (inner +18.7 z-offset lives on the shroud child, see PART_DEFS)
+   // Shroud mount at OpenSCAD A=(100, 30, 60) -> root-local (100, 60, -30).
+   // Shroud GLB is print-frame (axle-Z, y>=0 half = drum-top half); child rot
+   // is identity so GLB-Z maps onto the drum axle (root-local -Z) and the ring
+   // sits coaxial with the drum (gap 1.75). pos z=-7.8 centers GLB height.
    var shroudPivot = new THREE.Group();
    shroudPivot.position.set(100, 60, -30);
    root.add(shroudPivot);
@@ -411,7 +413,7 @@
       { id: 'hopper', label: 'Hopper', file: 'stl/hopper.glb', color: 0xd9b23a,
         parent: hopperPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.15 },
       { id: 'shroud', label: 'Shroud', file: 'stl/shroud.glb', color: 0x4a5568,
-        parent: shroudPivot, pos: [0, 18.7, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5 },
+        parent: shroudPivot, pos: [0, 0, -7.8], rot: [0, 0, 0], metalness: 0.5 },
       { id: 'cartridge', label: 'Cartridge/drum', file: 'stl/cartridge.glb', color: 0x4fa06a,
         parent: drumPivot, pos: [0, -25, 0], rot: [-Math.PI / 2, 0, 0] },
       { id: 'cones_a', label: 'Cones A', file: 'stl/cone_a.glb', color: 0xc96a2b,
