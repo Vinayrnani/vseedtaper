@@ -1,9 +1,23 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v17**
+**Version: v18**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## v18 Regen speedups + OpenSCAD upgrade - 2026-09-16
+
+1. **Speedups (output-identical)**: persistent Xvfb :99 + plain `openscad`
+   in workers (no per-part `xvfb-run`); `--export-format binstl -q` on STL
+   exports; single persistent Python (trimesh once, concurrent.futures)
+   for STL→GLB; temp .scad files only for DIRTY/FILTER subset.
+2. **Upgrade**: try OBS `openscad-nightly` (home:t-paul xUbuntu_24.04,
+   has arm64) for manifold backend (`--backend=manifold`, EGL headless
+   no-X); fallback `--backend=cgal`; fail fast loud + fallback to 2021.01
+   path if nightly missing. Document upgrade command.
+3. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   port 9099 only; vendored web/js; `?v=` bump on regen; Playwright
+   screenshots/ max 25 + kill chromium after.
 
 ## v17 Hopper Mouth Fixes - 2026-09-16 (RED/BLUE/PINK from changes.jpg)
 
