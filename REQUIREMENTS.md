@@ -1,6 +1,37 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v20**
+**Version: v21**
+
+Authoritative record of requirements, standing rules, and current state.
+If context is ever lost, read this file first.
+
+## v21 Crank + Roller to West Side, Gears Meshed (step 2 of 3) - 2026-09-16
+
+1. **Change**: `roller_axle_x` 160->40 (west of drum, |100-40|=60 exact);
+   crank coaxial with roller axle (`crank_mount_x` = 40, outside front wall,
+   drives roller not drum). Roller pinion flipped to BACK (-Y, world Y~12,
+   same plane as v20 drum gear) in both branches: horizontal assembly
+   (mirrored rotation, hub still fuses away from body, shaft stays front
+   toward crank) and vertical STL export (gear-down mirror, hub down,
+   shaft bottom at min_z=0, taller lift 19.95). Mesh phase
+   `gear_mesh_phase` = 9° (20T half-pitch, tooth-into-gap: drum has a tooth
+   centered on the line of centers at $t=0) applied to the roller shaft
+   (lower + crank) in `animated_assembly`; viewer mirrors it as GEAR_PHASE.
+   Signs kept: drum -360*$t, lower +720*$t, upper -720*$t.
+2. **Plow fix (was fail-loud broken)**: old `plow_end` = roller-1 went
+   39-126 negative and tripped the `plow_len>15` assert, so plow is now a
+   fixed 33 long east of the drum (126->159, v1 precedent); cradle/chassis
+   holes follow `plow_len` unchanged. Bearing blocks follow `roller_axle_x`
+   parametrically. `crank_mount_x` assert is now == roller_axle_x.
+3. **Viewer**: lowerPivot/upperPivot x 160->40, crankMount (40,60,-68),
+   rollers_lower child pos [0,0,34.95] (gear-down export recenter),
+   crankSpinner rigid with lower (`-crankAngle-GEAR_PHASE`), readouts crank
+   = roller revs, `ASSET_V` 8->9. No shroud (#3 not started).
+4. **Known graze (NOT fixed, later layout pass)**: roller back gear
+   (Y 9..15, r22 at x40) vs spool cone A (Y 4..29) overlap in XYZ — check
+   closeups; moving the spool is out of scope for #2.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   port 9099 only.
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.

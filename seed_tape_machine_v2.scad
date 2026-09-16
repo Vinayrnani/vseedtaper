@@ -51,6 +51,13 @@ drum_root_r    = drum_root_dia/2;
 roller_dia = 20;
 roller_body_r = roller_dia/2;
 
+// Gear mesh phase (v21): half-pitch of the 20T roller pinion (360/20/2 = 9°).
+// The drum (40T) has a tooth centered on the line of centers at $t=0, so the
+// roller needs a half-pitch offset for tooth-into-gap mesh. Applied to the
+// roller shaft rotation (lower roller + crank, one rigid shaft) in
+// animated_assembly; mirrored in the viewer as GEAR_PHASE.
+gear_mesh_phase = 360/roller_teeth/2;   // 9
+
 // Circumference for tooth angular spacing
 roller_circ_pitch = PI * gear_module;
 drum_circ_pitch   = PI * gear_module;
@@ -69,15 +76,15 @@ target_spacing     = 152.4;                   // v14 MVP: fixed 6 inch spacing
 
 // ============================================================
 // Axle layout (X,Z in OpenSCAD coords: X=tape travel, Z=up)
-// Layout: spool(10,65) → drum(100,60) → plow(126+) → roller(160,30)
-// Tape path: spool → under drum (cradle) → plow → pull rollers
-// Gear mesh: drum_axle_x=100, roller_axle_x=160 → distance=60mm ✓
+// v21: roller moved WEST of drum -> spool(10,65), roller(40,60), drum(100,60).
+// Gear mesh: |100-40|=60 = center_distance exact, same Z, same back-side plane.
+// Plow stays EAST of drum (126->159, v1 precedent); tape scroll unchanged.
 // ============================================================
 drum_axle_x  = 100;
 drum_axle_z  = 60;   // ≥ drum_radius + base_thick + clearance = 29.3 ✓
-roller_axle_x = 160; // center_distance=60 from drum ✓
+roller_axle_x = 40;  // v21: 100-60, WEST of drum, coaxial mesh with drum gear
 roller_axle_z = 60;  // same Z as drum for gear mesh; ≥ roller_outer_dia/2+1=23 ✓
-// Gear mesh: drum(100,60) to roller(160,60) → distance=60mm ✓
+// Gear mesh: drum(100,60) to roller(40,60) → distance=60mm ✓
 spool_axle_x  = 10;
 spool_axle_z  = 65;  // 120mm max roll OD, height 65mm above base
 
@@ -93,9 +100,11 @@ wall_thick    = 3;
 // ============================================================
 // Plow
 // ============================================================
-plow_start    = drum_axle_x + drum_radius + 1; // 126
-plow_end      = roller_axle_x - 1;
-plow_len      = plow_end - plow_start;
+plow_start    = drum_axle_x + drum_radius + 1; // 126 (east of drum, unchanged)
+plow_len      = 33; // v21 FIXED: decoupled from roller_axle_x (roller moved west
+                    // of drum, so the old roller-based end 39-126 went negative
+                    // and tripped the plow_len assert). Plow stays east (v1 precedent).
+plow_end      = plow_start + plow_len; // 159
 fold_width    = 12.7;
 track_depth   = 3;
 
@@ -139,10 +148,10 @@ groove_w        = 7;     // inner-face groove width, matches drum cavity track (
 groove_d        = 0.8;   // groove depth (clears cavity protrusion 0.6)
 
 // ============================================================
-// Crank (v11: direct-drive on drum axle LEFT end)
+// Crank (v21: drives the ROLLER shaft, coaxial at roller_axle_x, outside wall)
 // ============================================================
 crank_throw     = 45;
-crank_mount_x   = drum_axle_x - drum_width/2 - 15; // 77.5: LEFT of drum (-X), direct-drive
+crank_mount_x   = roller_axle_x; // 40: coaxial with roller axle (was 77.5 drum-left)
 crank_arm_t     = 4;
 crank_arm_w     = 10;
 grip_len        = 30;
@@ -191,7 +200,7 @@ assert(chassis_height > max(spool_axle_z + cone_h + bb_height_spool, drum_axle_z
 assert(hopper_inner_r > drum_radius, "hopper_inner_r must exceed drum_radius (clearance >0)");
 assert(plow_len > 15, str("plow_len must exceed 15, got ", plow_len));
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
-assert(crank_mount_x < drum_axle_x, str("crank_mount_x must sit LEFT of drum axle: ", crank_mount_x));
+assert(crank_mount_x == roller_axle_x, str("crank_mount_x must be coaxial with roller axle: ", crank_mount_x));
 assert(roller_axle_z + bb_height_roller <= chassis_height, "roller bearing block must fit below wall top");
 assert(drum_axle_z + bb_height_drum <= chassis_height, "drum bearing block must fit below wall top");
 assert(spool_axle_z + bb_height_spool <= chassis_height, "spool bearing block must fit below wall top");
@@ -835,7 +844,11 @@ module knurled_roller(is_lower=true) {
     len = roller_len;
     dia = roller_dia;
     gear_thick = 6;
-    zoffset = 11; // shift up so min_z=0
+    // v21: lower roller prints gear-DOWN (hub points down, away from body) so
+    // the viewer mount ([0,0,34.95]/Rx180) lands the gear on the BACK plane
+    // (world Y~12, same as the v20 drum gear). Shaft bottom sits at Z=0, so
+    // the lower stack needs a taller lift (19.95 vs 11).
+    zoffset = is_lower ? 19.95 : 11; // shift up so min_z=0
 
     if (part_to_render == "rollers") {
         // VERTICAL orientation for STL export (base at Z=0)
@@ -861,16 +874,19 @@ module knurled_roller(is_lower=true) {
                 }
             }
             if (is_lower) {
-                // Lower: driven gear + hex shaft + collar
-                translate([0,0, len - epsilon + gear_thick/2])
-                    spur_gear(teeth=roller_teeth, module_mm=gear_module, thickness=gear_thick,
-                              bore_flat=hex_axle_flat, is_hex=true,
-                              hub_dia=16, hub_len=10, collar_dia=14, collar_len=3);
-                translate([0,0, len + gear_thick - epsilon])
+                // Lower: driven gear BELOW body (exact mirror of the old
+                // gear-up stack about the body mid-plane z=len/2): hub points
+                // down/away, collar fuses up into the body, shaft hangs below.
+                translate([0,0, -(gear_thick/2 - epsilon)])
+                    rotate([180,0,0])
+                        spur_gear(teeth=roller_teeth, module_mm=gear_module, thickness=gear_thick,
+                                  bore_flat=hex_axle_flat, is_hex=true,
+                                  hub_dia=16, hub_len=10, collar_dia=14, collar_len=3);
+                translate([0,0, len - (len + gear_thick - epsilon) - 14])
                     cylinder(h=14, r=hex_axle_r, $fn=6, center=false);
-                translate([0,0, len + gear_thick - epsilon - 1])
+                translate([0,0, len - (len + gear_thick - epsilon - 1) - 1.2])
                     cylinder(h=1.2, r=6, center=false);
-                translate([0,0, len + gear_thick + 4])
+                translate([0,0, len - (len + gear_thick + 4) - 3])
                     difference() {
                         cylinder(h=3, d=12, center=false);
                         cylinder(h=3 + 2*epsilon, r=hex_clearance_r, $fn=6, center=false);
@@ -884,8 +900,9 @@ module knurled_roller(is_lower=true) {
                             cylinder(h=3 + 2*epsilon, d=axle_clearance_dia, center=false);
                         }
             }
+            // Lower end cap mirrored to the TOP (gear now occupies the bottom).
             if (is_lower)
-                translate([0,0, 0.15])
+                translate([0,0, len - 3.15])
                     difference() {
                         cylinder(h=3, d=22, center=false);
                         cylinder(h=3 + 2*epsilon, r=hex_clearance_r, $fn=6, center=false);
@@ -928,8 +945,12 @@ module knurled_roller(is_lower=true) {
                 }
             }
             if (is_lower) {
-                translate([0, len/2 + gear_thick/2 - epsilon, 0])
-                    rotate([90,0,0])
+                // v21: gear on BACK side (-Y, world Y~12, same plane as drum
+                // gear). Mirrored rotation so the hub still points away from
+                // the body and the collar fuses into it. Shaft stays FRONT
+                // (+Y, toward the crank outside the front wall).
+                translate([0, -(len/2 + gear_thick/2 - epsilon), 0])
+                    rotate([-90,0,0])
                         spur_gear(teeth=roller_teeth, module_mm=gear_module, thickness=gear_thick,
                                   bore_flat=hex_axle_flat, is_hex=true,
                                   hub_dia=16, hub_len=10, collar_dia=14, collar_len=3);
@@ -1032,18 +1053,20 @@ module crank_assembly() {
 
 // ============================================================
 // Animated assembly
-// Sign convention (v11: drum CCW, crank direct-drive LEFT per user spec):
+// Sign convention (v21: crank drives the ROLLER shaft from the back-mesh side):
 //   drum_angle = -360*$t ANTI-CLOCKWISE about +Y (top surface moves -X/left,
-//   viewed +X right, +Z up): picks up RIGHT, carries over top, drops LEFT
-//   crank = drum_angle (direct-drive on drum axle left end, CCW with drum)
-//   lower roller = +720*$t CLOCKWISE (driven by drum via 40:20 mesh, 2:1)
+//   viewed +X right, +Z up): picks up RIGHT, carries over top, drops bottom-center
+//   roller_angle = +720*$t + gear_mesh_phase CLOCKWISE (driven by drum via
+//   40:20 mesh, 2:1; +9° half-pitch so the pinion tooth falls into the drum gap)
+//   crank = roller_angle (rigid on the roller shaft, coaxial at roller_axle_x)
 //   upper idler = -720*$t (counter-rotates via tape contact)
-// At $t=0 geometry equals static layout.
+// At $t=0 geometry equals static layout (plus the 9° mesh phase on the roller).
 // ============================================================
 module animated_assembly() {
     drum_angle = -360*$t;    // ANTI-CLOCKWISE about +Y
     crank_angle = 720*$t;    // lower roller + crank orbit (CW, opposite drum)
     idler_angle = -720*$t;   // upper idler counter-rotates
+    roller_angle = crank_angle + gear_mesh_phase; // mesh-phased roller shaft
 
     // Chassis
     chassis();
@@ -1081,7 +1104,7 @@ module animated_assembly() {
 
     // Pull rollers (zoffset=11 compensated in assembly)
     translate([roller_axle_x, chassis_width/2, roller_axle_z])
-        rotate([0, crank_angle, 0])
+        rotate([0, roller_angle, 0])
             translate([0, 0, -roller_dia/2])
                 knurled_roller(is_lower=true);
     translate([roller_axle_x, chassis_width/2, roller_axle_z + roller_dia + 1.2])
@@ -1089,10 +1112,11 @@ module animated_assembly() {
             translate([0, 0, -roller_dia/2])
                 knurled_roller(is_lower=false);
 
-    // Crank direct-drive on drum axle LEFT end (grip traces circle of radius
-    // crank_throw about the drum axis at crank_mount_x=77.5, CCW with drum)
-    translate([crank_mount_x, chassis_width+8, drum_axle_z])
-        rotate([0, drum_angle, 0])
+    // Crank drives the ROLLER shaft (v21): coaxial at roller_axle_x=40 outside
+    // the front wall, rigid with the lower roller (grip orbits r=crank_throw
+    // about the roller axis at [40,68,60]).
+    translate([crank_mount_x, chassis_width+8, roller_axle_z])
+        rotate([0, roller_angle, 0])
             translate([-crank_pivot_x, 0, -crank_pivot_z])
                 crank_assembly();
 }
