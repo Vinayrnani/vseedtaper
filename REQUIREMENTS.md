@@ -1,9 +1,34 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v15**
+**Version: v17**
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
+
+## v17 Hopper Mouth Fixes - 2026-09-16 (RED/BLUE/PINK from changes.jpg)
+
+1. **Source of truth**: user mapping spec 2026-09-16 for
+   `/home/ubuntu/projects/vseedtaper/changes.jpg` (overrides v15/v16 joint
+   approach): RED/BLUE/PINK loops on the hopper pickup mouth + wedge tip.
+2. **RED (remove)**: the 2 diagonal side-joint pads (cheek root x14-22 up to
+   the 11-o'clock cover lip) are DELETED — their hull chord crossed the
+   cavity sweep annulus (r 25-26.5 at the cheek Y strips) and stopped/sheared
+   seeds. Nothing spans the mouth middle.
+3. **BLUE (extend/connect)**: wedge cheek roots widened x14-20 -> x14-24 and
+   new arc side-closure fins per side (r 26.5-28.5, sweep 30->122deg, cheek
+   Y strip) saddle-fuse root to cover lip (2deg overlap, same radii).
+   Mouth lateral sides closed (seeds hopper->mouth enclosed, can't fall out
+   sideways); middle stays open with radial gap 1.0 so 6 cavities + 3mm seeds
+   sweep freely; drum OD clears fins by 1.5 (cover-channel spec).
+   Structural strength now via BLUE fins + drop-tube saddle fuse (single
+   fused hopper object preserved).
+4. **PINK (seal)**: apex tip watertight — floor slab runs x16->84 into a
+   6-thick nose (x78-84, foot z60, top flush z73); trough void shortened to
+   end x70 (8mm solid nose dam); 1mm tip pillar -> 2-wide tip blocks
+   overlapping nose. One closed bowl, top open for fill only.
+5. **Kept**: top edge horizontal z=73, cover 120->270deg (11->6 o'clock),
+   bottom-center drop tube bore 7mm at x=100, CCW drum, left crank r=45,
+   open-top trough, single fused hopper.
 
 ## Actual changes.jpg Markups Fix - 2026-09-16 (OVERRIDES v14 doc guess)
 

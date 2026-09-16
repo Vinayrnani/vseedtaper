@@ -441,11 +441,12 @@ module spool_cones() {
 }
 
 // ============================================================
-// 3. Hopper (v16: SINGLE printed piece — cover + trough joined at SIDES).
-//    v16 user clarification (2026-09-16, SIMPLE words): tip = CLOSED bowl
-//    (far-right end shut so seeds stay in, one solid nose); joint = SIDES
-//    ONLY (cover lip fused to wedge cheeks left+right, NO bar across the
-//    drum so drum spins free in the middle); drop tube + 11->6 cover as-is.
+// 3. Hopper (v17: SINGLE printed piece — cover + trough joined at SIDES).
+//    v17 changes.jpg fixes (2026-09-16): RED = diagonal side pads DELETED
+//    (they crossed the cavity sweep annulus); BLUE = arc side-closure fins
+//    r[26.5,28.5] 30..122deg saddle-fuse wedge root to cover lip, mouth
+//    sides closed, middle open (gap 1.0); PINK = tip sealed watertight
+//    (floor runs into 6-thick nose, void ends x70, 2-wide tip blocks).
 //    Local frame: drum center at [0,0,hopper_axis_z], axle along Y.
 //    (a) Retention cover = open-top half-cut 16mm pipe channel
 //    120..270deg (11 o'clock top lip -> 6 o'clock bottom lip at drop),
@@ -499,24 +500,43 @@ module hopper_body() {
 
     difference() {
         union() {
-            // Triangular cheek plates (carry the side-view wedge outline).
+            // Triangular cheek plates (v17 BLUE: root widened x14..24 to
+            // meet the side-closure fin; tip block 2-wide overlapping nose).
             for (s = [-1, 1])
                 hull() {
                     translate([x0, s > 0 ? cheek_in : -y_out, cheek_bot0])
-                        cube([6, wall, cheek_top0 - cheek_bot0]);
+                        cube([10, wall, cheek_top0 - cheek_bot0]);
                     translate([x_tip - 6, s > 0 ? cheek_in : -y_out, apex_bot])
                         cube([5, wall, apex_top - apex_bot]);
-                    translate([x_tip - 1, s > 0 ? cheek_in : -y_out, (apex_top + apex_bot)/2 - 0.5])
-                        cube([1, wall, 1]);
+                    translate([x_tip - 2, s > 0 ? cheek_in : -y_out, (apex_top + apex_bot)/2 - 1])
+                        cube([2, wall, 2]);
                 }
-            // Lower floor slab (v15 PINK: thickened floor_thick, full inner
-            // width, tilted up right about 3 o'clock).
+            // Lower floor slab (v17 PINK: runs x16..84 into the nose so the
+            // tip is one watertight bowl; full inner width, tilted +8deg).
             translate(tilt_pivot)
                 rotate([0, -LOW_TILT, 0])
                     translate([-9, -(cheek_in + 0.5), -floor_thick])
-                        cube([(x_tip - 2) - 16, 2*(cheek_in + 0.5), floor_thick]);
-            // v16: SIDES-ONLY joint (no full-width bar). Two side pads join
-            // cover lip to wedge cheeks; middle open so drum spins free.
+                        cube([(x_tip + 1) - 16, 2*(cheek_in + 0.5), floor_thick]);
+            // v17 BLUE side-closure fins (the ONLY cover<->trough joint):
+            // arc band r[26.5,28.5] sweeping 30..122deg at each cheek strip,
+            // saddle-fusing wedge root (x14..24) to the 11-o'clock cover lip
+            // (overlap 120..122 same radii). Mouth sides closed (seeds can't
+            // fall out sideways); middle stays open, drum OD clears 1.5,
+            // cavities sweep centrally — seed path unblocked.
+            // (v17 RED: old diagonal side pads DELETED — they crossed the
+            // cavity sweep annulus and stopped/sheared seeds.)
+            for (s = [-1, 1])
+                translate(drum_c)
+                    rotate([90, 0, 0])
+                        rotate([0, 0, 30])
+                            rotate_extrude(angle=92, convexity=10)
+                                translate([27.5, -s*(cheek_in + wall/2), 0])
+                                    square([2, wall], center=true);
+            // Closed nose (v17 PINK: 6 thick x78..84, foot 60, top flush 73
+            // — overlaps floor (to x84), cheeks (to x83) and fin band into
+            // one watertight bowl. Fill via open top, mouth via drum).
+            translate([78, -y_out, 60])
+                cube([6, 2*y_out, 13]);
             // Retention cover (v12: smooth annular channel, NO ribs).
             // v14 RED: blocking rib removed — seed path clear from pickup
             // mouth (120deg) all along rotation to 6-o'clock drop (270deg).
@@ -542,35 +562,18 @@ module hopper_body() {
             for (s = [-1, 1])
                 translate([tube_x0, s > 0 ? cheek_in : -y_out, tube_z0])
                     cube([tube_x1 - tube_x0, wall, tube_z1 - tube_z0]);
-            // 2 SIDE JOINTS (v16: the ONLY cover<->trough joint — one pad per
-            // Y side fusing wedge cheek to 11-o'clock cover lip, middle OPEN
-            // for drum; cover + trough print as one solid piece).
-            for (s = [-1, 1])
-                hull() {
-                    translate([14, s > 0 ? cheek_in : -y_out, 70])
-                        cube([8, wall, 4]);
-                    translate([16, s > 0 ? cheek_in : -y_out, 66])
-                        cube([6, wall, 6]);
-                    translate([-15.75, s > 0 ? cheek_in : -y_out, 77.8])
-                        cube([4, wall, 4]);
-                }
-            // Closed nose (v16: single solid tip — 4 thick, foot down to 62
-            // so it fuses with the solid floor; whole trough holds seeds
-            // as one closed bowl. Fill via open top, mouth via drum).
-            translate([79, -y_out, 62])
-                cube([4, 2*y_out, 11]);
         }
         // Drum clearance: wide open mouth tangent to drum, mouth_gap radial gap.
         // Lower chin auto-formed by carve retains the seed pool (gap 1.0 < 3mm).
         translate(drum_c)
             rotate([90,0,0])
                 cylinder(h=2*y_out + 2*epsilon, r=drum_radius + mouth_gap, center=true);
-        // Open-top trough void: tilted box riding on the floor, poking above
-        // the cheeks (open along full length).
+        // Open-top trough void (v17 PINK: ends x70, stops 8 short of the
+        // nose inner face so the tip stays a solid watertight bowl).
         translate(tilt_pivot)
             rotate([0, -LOW_TILT, 0])
                 translate([-3, -(cheek_in + 0.5), -0.5])
-                    cube([54, 2*(cheek_in + 0.5), 30.5]);
+                    cube([48, 2*(cheek_in + 0.5), 30.5]);
         // Drop window (v14: connects drum surface at 6 o'clock through the
         // cover arc bottom into the CENTER bore top; fed by 6 cavities
         // carried over the top, not by the trough void). Overlaps bore
@@ -593,7 +596,7 @@ module hopper_body() {
         translate(tilt_pivot)
             rotate([0, -LOW_TILT, 0])
                 translate([-9, -groove_w/2, -groove_d])
-                    cube([(x_tip - 2) - 16, groove_w, groove_d + epsilon]);
+                    cube([(x_tip + 1) - 16, groove_w, groove_d + epsilon]);
     }
 }
 
