@@ -428,19 +428,20 @@ module spool_cones() {
 }
 
 // ============================================================
-// 3. Hopper (v9 rebuild per hopper2.jpg): sharp-point wedge/triangle in
-//    side view on RIGHT (+X, crank side). Local frame: drum center at
-//    [0,0,hopper_axis_z], axle along Y. Open-top trough (no cover slab;
-//    side profile carried by triangular cheek plates, trough width = drum
-//    width). UPPER wall = cheek top edge ~horizontal from the 1:30 junction
-//    (small squared vertical step tab mating the shroud lip) extending right.
-//    LOWER wall (floor) from the 3-o'clock mouth corner angling LITTLE UPWARD
-//    (+8 deg rigid tilt about the 3-o'clock point) to meet the upper wall at
-//    a sharp point far right (apex x=83). Corner DROP TUBE hangs from the
-//    3-o'clock L-step: floor runs horizontal-ish over the bore, then 4 box
-//    walls drop straight down (90 deg L). Bore 7 x 15.6 for 3mm seeds, tube
-//    bottom local z=34 (world 38, just above tape). Wide mouth tangent to
-//    drum (carve r = R + 1.0), full inner width, so cavities scoop freely.
+// 3. Hopper (v10: SINGLE wrap-around part per user rebuild — NO separate
+//    shroud). Local frame: drum center at [0,0,hopper_axis_z], axle along Y.
+//    (a) LEFT retention cover = merged shroud function: annular arc 45..240deg
+//    (covers 11->7 o'clock over top/left), wall 2, gap 1.5, full width 15.6.
+//    Top squared end at 1:30 fuses into the step tab; bottom end free near 7
+//    o'clock. (b) RIGHT sharp-point wedge trough: UPPER wall ~horizontal from
+//    the 1:30 step tab extending right; LOWER wall (floor) from the 3-o'clock
+//    mouth corner angling LITTLE UPWARD (+8 deg tilt about the 3-o'clock
+//    point) to a sharp point far right (apex x=83, toward +X crank side).
+//    Open-top trough between triangular cheeks (width = drum width 15.6) for
+//    seed fill. (c) Corner DROP TUBE at the 3-o'clock L-step (~4-5 o'clock
+//    corner, offset right of centre): 90deg L-step, 4 box walls straight down,
+//    bore 7 x 15.6 for 3mm seeds, bottom local z=34 (world 38, above tape).
+//    Mouth gap 1.0 so cavities scoop freely.
 // ============================================================
 module hopper_body() {
     assert(hopper_axis_z > drum_radius, "hopper_body: hopper_axis_z must clear drum radius");
@@ -487,6 +488,18 @@ module hopper_body() {
             // 1:30 squared step tab (full width, carved below by drum carve).
             translate([step_x0, -y_out, step_z0])
                 cube([step_x1 - step_x0, 2*y_out, step_z1 - step_z0]);
+            // LEFT retention cover (v10: merged shroud function, single object).
+            // Annular arc 45..240deg about the drum axle (Y): top end at 1:30
+            // overlaps the step tab (fused), wrapping over top/left down to
+            // ~7 o'clock. rotate_extrude rings about Z; Rx(90) maps its axis
+            // onto the drum axle (Y) and its sweep plane onto side-view XZ
+            // (start +X, CCW toward +Z/up). Gap 1.5, wall 2, full width.
+            translate(drum_c)
+                rotate([90, 0, 0])
+                    rotate([0, 0, 45])
+                        rotate_extrude(angle=195, convexity=10)
+                            translate([drum_radius + 1.5 + 1, 0, 0])
+                                square([2, 2*y_out], center=true);
             // Drop tube: 4 box walls (double-wall tube, bore = gap between them).
             translate([tube_x0, -(cheek_in + 0.5), tube_z0])
                 cube([bore_x0 - tube_x0, 2*(cheek_in + 0.5), tube_z1 - tube_z0]);
@@ -515,12 +528,11 @@ module hopper_body() {
 }
 
 // ============================================================
-// 4. Shroud (v9 per hopper2.jpg): left-only C shell spanning +45..+240deg
-//    (195deg sweep). Top squared (radial) lip at 1:30 mates the hopper step
-//    tab; shell wraps over top/left down to ~7 o'clock bottom. Cavities exit
-//    the shroud into the pool, scoop, and carry covered over top/left.
-//    Print orientation = axle-Z, min_z=0 (viewer mount unchanged).
-//    No tabs, no feet, no bore, no shell bolts: cover only.
+// 4. Shroud — v10 LEGACY STUB (superseded): the cover arc is merged into
+//    hopper_body() above as the left retention cover (single part, no separate
+//    shroud GLB in the viewer). Module kept compiling so part_to_render="shroud"
+//    still exports the legacy cover; viewer no longer loads it.
+//    (Original v9: left-only C shell 45..240deg, gap 1.75, wall 2.)
 // ============================================================
 module u_channel_shroud() {
     assert(shroud_id > 0, "u_channel_shroud: shroud_id must be >0");

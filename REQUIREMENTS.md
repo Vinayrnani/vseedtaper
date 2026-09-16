@@ -1,6 +1,44 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v9**
+**Version: v10**
+
+Authoritative record of requirements, standing rules, and current state.
+If context is ever lost, read this file first.
+
+## Single Wrap-Around Hopper (No Separate Shroud) - 2026-09-16 - Agreed with User (OVERRIDES v9 hopper/shroud split)
+
+1. **Source of truth**: user rebuild spec 2026-09-16 + `hopper2.jpg` side-view
+   outline (drum = center circle, CCW, top moves left). NO separate grey
+   shroud part — shroud GLB / viewer toggle removed.
+2. **HOPPER = ONE single object** wrapping all around the drum (local frame:
+   drum centre [0,0,56], axle along Y):
+   a. LEFT retention cover (merged shroud function): annular arc spanning
+      45..240° (covers 11→7 o'clock over top/left), wall 2, radial gap 1.5,
+      full width 15.6. Top squared end at 1:30 fuses into the step tab;
+      bottom end free near 7-8 o'clock. Cavities exit cover into pool, scoop,
+      carry covered over top/left.
+   b. RIGHT sharp-point wedge trough (unchanged v9): upper wall ~horizontal
+      from 1:30 step tab, lower floor +8° about the 3-o'clock point to sharp
+      apex (local x=83 / world 183, toward crank side +X). Open-top trough
+      between triangular cheeks (width 15.6) for seed fill.
+   c. Corner DROP TUBE (unchanged v9): 90° L-step at 3-o'clock mouth corner
+      (offset right of centre, ~4-5 o'clock L-corner, tube centre local x=33 /
+      world 133), 4 box walls straight down, bore 7 (X) x 15.6 (Y) for 3mm
+      seeds, bottom local z=34 (world 38, just above tape at 35).
+3. **MOUTH**: radial gap 1.0 (carve r26 vs R25), full inner width — cavities
+   scoop freely. Pool retained by floor + chin (gap 1.0 < 3mm seeds).
+4. **MIRROR CHECK (user: "thinking in reverse")**: wedge apex extends toward
+   +X (crank/roller side, world x 100→183); crank stays RIGHT at x=160 with
+   L-handle, grip orbit r=45. Root-local M-frame preserves X, so viewer shows
+   wedge on crank side. Verified with side-elevation screenshots from BOTH
+   sides (+Z and −Z): wedge+crank coincide on one side, mirrored on the
+   other as expected — viewer is NOT mirrored vs sketch.
+5. **DRIVE unchanged**: drum CCW (−360*$t, top moves −X/left), crank/lower
+   CW (+720*$t), upper idler CCW (−720*$t). Crank right, L-handle, r=45.
+6. **Interfaces**: part_to_render="hopper" exports the whole wrap-around part;
+   "shroud" branch kept as legacy stub (module untouched, GLB stale on disk,
+   NOT loaded by viewer). Drum axle [100,60] R25 W15, tape/rollers/plow/
+   chassis geometry untouched, hopper viewer mount unchanged.
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
