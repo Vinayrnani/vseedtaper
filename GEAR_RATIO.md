@@ -1,4 +1,4 @@
-# Gear-Ratio Calculator / Spacing Chart (v13 MVP helper)
+# Gear-Ratio Calculator / Spacing Chart (v14 MVP helper)
 
 MVP: spacing fixed **6 inch = 152.4 mm**, tape **1 inch = 25.4 mm** center-fold seed middle,
 drum **6 cavities fixed** (wheels interchangeable by hand 1-6 mm, count stays 6).
