@@ -430,22 +430,24 @@ module spool_cones() {
 }
 
 // ============================================================
-// 3. Hopper (v11: SINGLE wrap-around part per user rebuild — NO separate
+// 3. Hopper (v12: SINGLE wrap-around part per user feedback — NO separate
 //    shroud). Local frame: drum center at [0,0,hopper_axis_z], axle along Y.
-//    (a) LEFT retention cover = merged shroud function: annular arc 45..240deg
-//    (covers 11->7 o'clock over top/left), wall 2, gap 1.5, full width 15.6.
-//    Top squared end at 1:30 fuses into the step tab; bottom end free near 7
-//    o'clock. (b) RIGHT sharp-point wedge trough: UPPER wall ~horizontal from
-//    the 1:30 step tab extending right; LOWER wall (floor) from the 3-o'clock
-//    mouth corner angling LITTLE UPWARD (+8 deg tilt about the 3-o'clock
-//    point) to a sharp point far right (apex x=83, toward +X).
-//    Open-top trough between triangular cheeks (width = drum width 15.6) for
-//    seed fill. (c) LEFT DROP TUBE at the 9-o'clock side (offset LEFT of
-//    centre, x<0): 4 box walls straight down, bore 7 x 15.6 for 3mm seeds,
-//    bottom local z=34 (world 38, above tape). Fed by cavities carried over
-//    the top (not by the trough void): a drop window (x -36..-22, z 48..58,
-//    full inner width) connects the drum surface through the cover arc into
-//    the bore top. Mouth gap 1.0 so cavities scoop freely on the right.
+//    (a) Retention cover: smooth annular arc 120..270deg (11 o'clock top
+//    lip -> 6 o'clock bottom lip where the drop tube starts), wall 2, gap
+//    1.5, full width 15.6. Constant-gap rounded channel, NO internal ribs.
+//    (b) RIGHT sharp-point wedge trough: UPPER edge EXACTLY HORIZONTAL
+//    (cheek tops level, mouth z=73 to apex z=73); LOWER wall (floor) from
+//    the 3-o'clock mouth corner angling LITTLE UPWARD (+8 deg tilt about
+//    the 3-o'clock point) to a sharp point far right (apex x=83, +X).
+//    Open-top trough between triangular cheeks (width = drum width 15.6).
+//    (c) BOTTOM-CENTER DROP TUBE at 6 o'clock (x=0 = drum center): 4 box
+//    walls straight down, bore 7 x 15.6 for 3mm seeds, bottom local z=26.5
+//    (world 30.5, 0.5 above tape at 30). Drum carve trims the tube top
+//    into a smooth drum-conforming funnel mouth (rounded seed travel, no
+//    ledges); the bore void pierces the cover bottom = drop port; thick
+//    walls saddle-fuse to the cover lips (single object).
+//    Pickup mouth (right 1:30-3 o'clock) = opening between the 11-o'clock
+//    cover lip and the 1:30 step tab; gap 1.0 so cavities scoop freely.
 // ============================================================
 module hopper_body() {
     assert(hopper_axis_z > drum_radius, "hopper_body: hopper_axis_z must clear drum radius");
@@ -458,19 +460,20 @@ module hopper_body() {
     drum_c = [0, 0, hopper_axis_z];
     y_out = cheek_in + wall;               // 10.3 outer half-width
 
-    // Wedge side profile (hopper2.jpg): mouth posts at x0, sharp apex tip.
+    // Wedge side profile (v12: top edge EXACTLY horizontal at z=73).
     x0 = 14; x_tip = 83;
     cheek_top0 = 73;                       // cheek top edge at mouth (upper wall line)
     cheek_bot0 = 53;                       // cheek bottom edge at mouth (chin)
-    apex_top = 64.5; apex_bot = 62;        // thin apex edge (sharp point in side view)
+    apex_top = 73; apex_bot = 70.5;        // level tip: top edge horizontal 73->73
     LOW_TILT = 8;                          // lower floor rises a little to the right
     tilt_pivot = [25, 0, 56];              // 3-o'clock mouth point on drum
-    // LEFT drop tube (v11: 9-o'clock side, x < drum centre): outer x -39..-27,
-    // bore ~7 for 3mm seeds, fed by cavities via the drop window below.
-    tube_x0 = -39; tube_x1 = -27;
-    bore_x0 = -36.5; bore_x1 = -29.5;
-    tube_z0 = 34; tube_z1 = 57;
-    // 1:30 squared step tab (mating joint where upper wall meets shroud lip).
+    // BOTTOM-CENTER drop tube (v12: 6-o'clock, x=0 = drum centre): outer
+    // x -9..9 (thick walls saddle-fuse to cover lips after carve trim),
+    // bore 7 (-3.5..3.5) for 3mm seeds, straight down onto tape.
+    tube_x0 = -9; tube_x1 = 9;
+    bore_x0 = -3.5; bore_x1 = 3.5;
+    tube_z0 = 26.5; tube_z1 = 52;
+    // 1:30 squared step tab (mating joint where upper wall meets mouth).
     step_x0 = 16; step_x1 = 20; step_z0 = 66; step_z1 = 77;
 
     difference() {
@@ -493,16 +496,19 @@ module hopper_body() {
             // 1:30 squared step tab (full width, carved below by drum carve).
             translate([step_x0, -y_out, step_z0])
                 cube([step_x1 - step_x0, 2*y_out, step_z1 - step_z0]);
-            // LEFT retention cover (v10: merged shroud function, single object).
-            // Annular arc 45..240deg about the drum axle (Y): top end at 1:30
-            // overlaps the step tab (fused), wrapping over top/left down to
-            // ~7 o'clock. rotate_extrude rings about Z; Rx(90) maps its axis
-            // onto the drum axle (Y) and its sweep plane onto side-view XZ
-            // (start +X, CCW toward +Z/up). Gap 1.5, wall 2, full width.
+            // Retention cover (v12: smooth annular channel, NO ribs).
+            // Annular arc 120..270deg about the drum axle (Y): top lip at
+            // 11 o'clock, wrapping over top/left down to the 6-o'clock
+            // bottom lip where the drop tube starts. rotate_extrude rings
+            // about Z; Rx(90) maps its axis onto the drum axle (Y) and its
+            // sweep plane onto side-view XZ (start +X, CCW toward +Z/up).
+            // Gap 1.5 (spec 1.5-2), wall 2, full width. The bore void
+            // pierces the arc bottom = drop port; thick tube walls below
+            // saddle-fuse to the arc lips (single object).
             translate(drum_c)
                 rotate([90, 0, 0])
-                    rotate([0, 0, 45])
-                        rotate_extrude(angle=195, convexity=10)
+                    rotate([0, 0, 120])
+                        rotate_extrude(angle=150, convexity=10)
                             translate([drum_radius + 1.5 + 1, 0, 0])
                                 square([2, 2*y_out], center=true);
             // Drop tube: 4 box walls (double-wall tube, bore = gap between them).
@@ -513,6 +519,18 @@ module hopper_body() {
             for (s = [-1, 1])
                 translate([tube_x0, s > 0 ? cheek_in : -y_out, tube_z0])
                     cube([tube_x1 - tube_x0, wall, tube_z1 - tube_z0]);
+            // Eyebrow bridge (v12: keeps ONE single object while the
+            // 11-o'clock mouth stays open). Full-width arc band r27.5..30
+            // spanning 30..125deg: overlaps the cover top lip (120..125)
+            // and embeds into the cheek tops (~30deg end). Scoop zone
+            // (0..30deg, pool meets drum ~9deg) stays fully open; cavity
+            // seeds (protrude <=1.5) ride freely under the 2.5 clearance.
+            translate(drum_c)
+                rotate([90, 0, 0])
+                    rotate([0, 0, 30])
+                        rotate_extrude(angle=95, convexity=10)
+                            translate([27.5 + 1.25, 0, 0])
+                                square([2.5, 2*y_out], center=true);
         }
         // Drum clearance: wide open mouth tangent to drum, mouth_gap radial gap.
         // Lower chin auto-formed by carve retains the seed pool (gap 1.0 < 3mm).
@@ -526,11 +544,13 @@ module hopper_body() {
             rotate([0, -LOW_TILT, 0])
                 translate([-3, -(cheek_in + 0.5), -0.5])
                     cube([54, 2*(cheek_in + 0.5), 30.5]);
-        // Drop window (v11: connects drum surface through the cover arc into
-        // the LEFT bore top; fed by cavities carried over the top, not by the
-        // trough void). Overlaps bore (-36.5..-29.5) and drum carve (to -26).
-        translate([-36, -(cheek_in + 0.5), 48])
-            cube([14, 2*(cheek_in + 0.5), 10]);
+        // Drop window (v12: connects drum surface at 6 o'clock through the
+        // cover arc bottom into the CENTER bore top; fed by cavities
+        // carried over the top, not by the trough void). Overlaps bore
+        // (-3.5..3.5) and drum carve. The drum carve trims the tube top
+        // into a smooth drum-conforming funnel mouth (no steps/ledges).
+        translate([-4, -(cheek_in + 0.5), 29])
+            cube([8, 2*(cheek_in + 0.5), 13]);
     }
 }
 
@@ -963,7 +983,8 @@ module animated_assembly() {
             translate([0, 0, -drum_dia/2])
                 seed_cartridge(seed_dia, seed_depth);
 
-    // Hopper (v11: ONE wrap-around part — right wedge pickup, left drop tube)
+    // Hopper (v12: ONE wrap-around part — right wedge pickup, 11->6 cover,
+    // bottom-center drop tube at drum x)
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
 

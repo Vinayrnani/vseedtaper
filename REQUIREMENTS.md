@@ -1,6 +1,38 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v11**
+**Version: v12**
+
+Authoritative record of requirements, standing rules, and current state.
+If context is ever lost, read this file first.
+
+## Bottom-Center Drop / 11-to-6 Cover Rebuild - 2026-09-16 - Agreed with User (OVERRIDES v11 tube/cover clocking)
+
+1. **Source of truth**: user feedback spec 2026-09-16 (authoritative, overrides
+   v11 tube side + cover arc + wedge top tilt).
+2. **WEDGE TOP EDGE EXACTLY HORIZONTAL**: cheek top line level (mouth z=73 to
+   apex z=73, 2.5 thick tip) — not tilted. Lower floor keeps +8° tilt about
+   the 3-o'clock point to sharp apex (local x=83 / world 183); open-top
+   trough between cheeks elongated for volume.
+3. **RETENTION COVER 11 o'clock -> 6 o'clock**: annular arc 120..270° (sweep
+   150°) about drum axle, wall 2, radial gap 1.5 (within 1.5-2mm smooth
+   annular seed channel, no internal ribs/steps from pickup mouth all along
+   rotation path to 6-o'clock drop). Top lip free at 11 o'clock (120°);
+   bottom lip at 6 o'clock (270°) where drop tube starts. Pickup mouth =
+   opening between 11-o'clock lip and 1:30 step tab, right 1:30-3 o'clock,
+   radial gap 1.0 (carve r26 vs R25), full inner width.
+4. **DROP BOTTOM-CENTER**: vertical 4-wall tube at drum bottom center (local
+   x=0 / world x=100, outer x -9..9, bore -3.5..3.5 = 7mm for 3mm seeds,
+   full inner width in Y), straight down from 6 o'clock to 0.5 above tape
+   (local z0=26.5 / world 30.5; tape ribbon lowered world 35->30 under drum
+   for 5mm guided drop). Drum carve auto-trims tube top into smooth
+   drum-conforming funnel mouth (rounded seed travel, no ledges); bore void
+   pierces cover bottom = drop port; thick walls saddle-fuse to cover lips —
+   still ONE single wrap-around hopper object, part_to_render="hopper".
+5. **UNCHANGED**: drum CCW (right pickup → top → left → bottom drop at 6),
+   left crank direct-drive r=45 (x=77.5, locked to drum), drum axle [100,60]
+   R25 W15, tape/rollers/plow/chassis geometry, viewer rotation signs.
+   Viewer: dropSeed path at tube exit (100, 30.5→30); tape ribbon y=30;
+   legend "drops bottom-center".
 
 Authoritative record of requirements, standing rules, and current state.
 If context is ever lost, read this file first.
