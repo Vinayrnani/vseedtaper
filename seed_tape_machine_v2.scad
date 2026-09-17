@@ -345,12 +345,13 @@ drop_x = drum_axle_x;             // 100: seed drop point (hopper bore centre)
 turner_start = plow_start;        // 126: folder mouth (flat landing 100..126 first)
 turner_len = plow_len;            // 33
 turner_end = plow_end;            // 159
-// v54: the outer-shell params below are REFERENCE ONLY (shell deleted).
-// turner_curl_cz stays the live datum: the wing curl-axis height.
+// v56: turner_curl_cz is the live datum: the thin-shell bore-axis height
+// (local y20, z13: lane-centred so the 7.8 seeded pocket threads the
+// entry bore; was 12 pre-v56).
 turner_curl_r = 6.5;              // v54 reference only (no shell)
 turner_curl_bore = 4.2;           // v54 reference only (no bore)
 turner_curl_off = 1.2;            // v54 reference only (no bore offset)
-turner_curl_cz = 12;              // curl axis height above the turner base (v54 live datum)
+turner_curl_cz = 13;              // v56 bore-axis height (lane-centred; was 12)
 
 // ============================================================
 // v53 OVERHEAD twister drive (user: duplicate drum gear + bottom
@@ -1525,226 +1526,192 @@ module seed_cradle() {
 }
 
 // ============================================================
-// 7. 6-FOLDER HOLLOW, v55 (Front/Back/Top.jpg cardboard prototype:
-// bore must be HOLLOW see-through, no center post). Cross-section is
-// an OPEN "6", not a closed O: front = open C entry, back = 6/9
-// spiral exit (outer tail + inner free-edge hook). Asymmetric: left
-// (+Y) deep in-roll 30->270deg, right (-Y) shallow 20->180deg, tips
-// overlapped; narrow flat/pinched entry -> wide rolled exit. Side
-// walls ONLY, paper self-supports around air, CENTER EMPTY.
-// v54 center fin tongue + wedge nose + root rails DELETED (they
-// stabbed into the bore and blocked the tape). The part is a
-// SEPARATE open object screw-mounted to the chassis on the old
-// plow M3 holes: low flat base plate/blade + two outer side curl
-// wings, base-fused into ONE printable solid. Wing roots bed in
-// low OUTER root walls (outboard of the tape U, clear of the bore)
-// full length — nothing above the paper floor inside the center
-// except the side wings themselves.
+// 7. 6-FOLDER THIN-WALL TAPERED SHELL, v56 (Front/Back/Top.jpg
+// cardboard prototype forensics: single-wall ~1mm cardboard, outer
+// colorful / inner white; entry narrow pinched open-C, exit wide
+// 6-spiral flare; tapered length; lower flat blade full length one
+// side + upper rolled cone other side; dark slit gap; flat underside
+// gravity sit; bore hollow).
+// THIN-WALL SHELL ONLY: wall 0.8 (minimum printable single wall),
+// NO thick base plate. 7-station loft local x0..33 (world 126..159):
+// entry outer dia ~12.4 (pinched open-C) -> exit outer dia ~21
+// (wide open flare). Cross-section open-6 full length: outer wrap
+// 300->315deg (gap at TOP, tape shoulders feed through it) + inner
+// hook 20->160deg riding 2.5 off the shell ID (the dark slit,
+// 2-3 full length). Lower flat tail blade full length on the -Y
+// side; tapered skid wedge underneath = flat underside sit.
+// Bore hollow see-through full length. Two SMALL 6x6x1 screw ears
+// (diagonal pair to chassis M3 holes world (132,6)/(153,54)) on
+// thin ground straps + posts — minimal, not a base.
 // Local frame like the old plow: x 0..turner_len (33, world
-// 126..159), y 0..40 (tape centre cy=20), z 0..top, min_z=0.
-// Bore hollow see-through full length: NO center fin, NO nose,
-// NO rails in the bore (v54 parts deleted); above the paper floor
-// the center holds ONLY the two side wings.
-// 7 stations, per-side curl angle + radius interpolated to 17 fine
-// plates (~2.06 apart, hull-bridged; steps small so the walls stay
-// thin and read as curls, not domes):
-//   x:        0    5.5   11   16.5   22   27.5   33
-//   L span:  30    75  120   165   210   245   270 (deep in-curl)
-//   L r:    3.5   3.3   3.1   2.9   2.7   2.6   2.5
-//   R span:  20    45   75   105   135   160   180 (shallow)
-//   R r:    3.5   3.4   3.2   3.0   2.8   2.6   2.5
-// Left (+Y) starts as a small in-turned lip and winds to a 270deg
-// in-roll; right (-Y) starts near-flat and winds to 180deg; at the
-// exit the two roll tips nest (~2.7 apart) so the paper edges roll
-// TOGETHER overlapped. Wing roots bed in low OUTER root walls
-// (outboard of the tape U, clear of the bore) full length; the
-// low converging guides funnel the flat entry.
+// 126..159), y local (tape centre cy=20, world +10), z local
+// (world +4 in assembly), min_z=0. Bore axis (cy,cz)=(20,13).
+// 7 stations interpolated to 17 fine plates (1.9875 apart, 1.2
+// thick, hull-bridged; steps small so the wall stays a thin curl):
+//   x:     0    5.5   11   16.5   22   27.5   33
+//   R:    6.2   6.9   7.6   8.3   9.0   9.7   10.5 (outer radius)
+//   wrap: 300   304   307   310   312   314   315 (outer, deg)
+//   hook:  20    45    70    95   120   145   160 (inner, deg)
 // part_to_render "plow" (compat) and "turner" both render this.
 // ============================================================
-// Annular-sector strip for one curl plate, pre-mapped so
+// Annular-sector strip for one shell/hook/rib plate, pre-mapped so
 // rotate([0,90,0]) + linear_extrude lays it as a plate across X:
-// angle a gives y_part = r*cos(a), z_part = r*sin(a). Left (+Y)
-// sweeps a0=0 -> a1=span (up/in/down); right (-Y) sweeps
-// a0=180 -> a1=180-span (mirror). Spans stay < 300 (open).
+// angle a gives y_part = r*cos(a), z_part = r*sin(a). Shell spans
+// a0..a1 (gap centred at top 90); hook spans a1-H..a1 at Rh;
+// rib bridges hook root to shell at a1. Wraps stay <= 330 (open).
 function curl_strip_pts(r_in, r_out, a0, a1, n) = concat(
     [for (i=[0:n]) [-r_out*sin(a0+(a1-a0)*i/n), r_out*cos(a0+(a1-a0)*i/n)]],
     [for (i=[n:-1:0]) [-r_in*sin(a0+(a1-a0)*i/n), r_in*cos(a0+(a1-a0)*i/n)]]);
 
 module six_turner() {
-    tw = 40;                        // v1-precedent width kept (old plow_w)
-    cy = tw/2;                      // 20: tape centre
-    curl_cz = 12;                   // wing curl-axis height (v39 datum kept)
-    wall = 1.4;                     // wing/side-wall (printable 1.2-1.6 band)
-    wing_off = 1.8;                 // wing arc centres at cy+-1.8
-    // v55 HOLLOW: fin tongue + wedge nose + bore rails DELETED.
-    // Wing roots bed in low OUTER root walls (side walls only):
-    // left wall y 24.2..25.8, right wall y 14.2..15.8 (inner faces
-    // at cy+-4.2 = outside the tape U walls + tol, clear of the
-    // bore). Wall tops bed the root ribbons (z=12) with 0.3 embed.
-    rwall_in = 4.2;               // root-wall inner faces at cy+-4.2 (float-exact, like v54 rail_in)
-    rwallL0 = cy + rwall_in;        // left root-wall inner face
-    rwallL1 = cy + 5.8;             // left root-wall outer face
-    rwallR0 = cy - 5.8;             // right root-wall outer face
-    rwallR1 = cy - rwall_in;        // right root-wall inner face
-    rwall_top = 12.3;               // beds the wing roots
-    // THE station table: per-side curl span (deg) + radius.
+    cy = 20;                        // tape centre (local y)
+    curl_cz = 13;                   // bore-axis height (v56 datum == turner_curl_cz)
+    wall = 0.8;                     // THIN WALL: minimum printable single wall
+    hook_off = 3.3;                 // hook outer radius Rh = R - hook_off (slit = hook_off - wall = 2.5)
+    // THE station table: outer radius + outer wrap + inner hook span.
     st_x = [0, 5.5, 11, 16.5, 22, 27.5, 33];
-    st_spanL = [30, 75, 120, 165, 210, 245, 270];
-    st_rL = [3.5, 3.3, 3.1, 2.9, 2.7, 2.6, 2.5];
-    st_spanR = [20, 45, 75, 105, 135, 160, 180];
-    st_rR = [3.5, 3.4, 3.2, 3.0, 2.8, 2.6, 2.5];
+    st_R = [6.2, 6.9, 7.6, 8.3, 9.0, 9.7, 10.5];
+    st_W = [300, 304, 307, 310, 312, 314, 315];
+    st_H = [20, 45, 70, 95, 120, 145, 160];
     n_st = len(st_x);
-    // Fine wing plates: the 7-station table interpolated to 17
-    // plates (~2.06 apart, 1.2 thick, hull-bridged). Steps are small
-    // so the hull web stays thin — the wings read as curls, not domes.
-    fpx = [0, 2.0625, 4.125, 6.1875, 8.25, 10.3125, 12.375, 14.4375,
-        16.5, 18.5625, 20.625, 22.6875, 24.75, 26.8125, 28.875, 30.9375, 31.8];
-    fspanL = [30, 46.88, 63.75, 80.62, 97.5, 114.38, 131.25, 148.12,
-        165, 181.88, 198.75, 214.38, 227.5, 240.62, 251.25, 260.62, 270];
-    frL = [3.5, 3.425, 3.35, 3.275, 3.2, 3.125, 3.05, 2.975,
-        2.9, 2.825, 2.75, 2.688, 2.65, 2.613, 2.575, 2.538, 2.5];
-    fspanR = [20, 29.38, 38.75, 48.75, 60, 71.25, 82.5, 93.75,
-        105, 116.25, 127.5, 138.12, 147.5, 156.88, 165, 172.5, 180];
-    frR = [3.5, 3.462, 3.425, 3.375, 3.3, 3.225, 3.15, 3.075,
-        3.0, 2.925, 2.85, 2.775, 2.7, 2.625, 2.575, 2.538, 2.5];
+    // Fine shell/hook plates: 7-station table interpolated to 17
+    // plates (1.9875 apart, 1.2 thick, hull-bridged; steps small so
+    // the wall stays a thin curl, last plate ends 31.8+1.2 = 33).
+    fpx = [0.0000, 1.9875, 3.9750, 5.9625, 7.9500, 9.9375, 11.9250, 13.9125, 15.9000, 17.8875, 19.8750, 21.8625, 23.8500, 25.8375, 27.8250, 29.8125, 31.8000];
+    fR = [6.200, 6.453, 6.706, 6.959, 7.212, 7.465, 7.718, 7.971, 8.224, 8.477, 8.730, 8.982, 9.235, 9.488, 9.747, 10.036, 10.325];
+    fW = [300.00, 301.45, 302.89, 304.25, 305.34, 306.42, 307.50, 308.59, 309.67, 310.50, 311.23, 311.95, 312.67, 313.40, 314.06, 314.42, 314.78];
+    fH = [20.00, 29.03, 38.07, 47.10, 56.14, 65.17, 74.20, 83.24, 92.27, 101.31, 110.34, 119.38, 128.41, 137.44, 145.89, 151.31, 156.73];
     n_fp = len(fpx);
-    bx = [6, turner_len - 6];       // tab bolts (old plow pattern)
-    by = [-4, tw + 4];              // tab bolts across
-    plan_ang = atan(((paper_width - 8)/2)/turner_len);
+    plate_t = 1.2;                  // plate thickness along X
+    // Screw ears: 6x6x1 diagonal pair to chassis M3 holes.
+    // Ear A entry: local centre (6,-4) -> world (132,6).
+    // Ear B exit: local centre (27,44) -> world (153,54).
+    ear = 6;                        // ear edge length (6x6x1)
+    ear_t = 1;                      // ear thickness
+    earA = [3, -7];                 // ear A corner (x,y), centre (6,-4)
+    earB = [24, 41];                // ear B corner (x,y), centre (27,44)
+    hole_d = bolt_dia + 2*tolerance; // M3 clearance 3.6
     floor_local = tape_z + tape_thick - base_thick; // 9.4: paper floor in turner frame
     assert(turner_len > 15, str("six_turner: turner_len must exceed 15, got ", turner_len));
-    assert(curl_cz == turner_curl_cz, "six_turner: curl axis must keep the v39 datum (12)");
-    assert(wall >= 1.2 && wall <= 1.6, str("six_turner: walls must stay printable (1.2-1.6), got ", wall));
+    assert(curl_cz == turner_curl_cz, "six_turner: bore axis must keep the v56 datum (13)");
+    assert(wall >= 0.75 && wall <= 0.85, str("six_turner: wall must be minimum printable 0.8, got ", wall));
     assert(n_st == 7, str("six_turner: need 7 forming stations, got ", n_st));
     assert(st_x[0] == 0 && st_x[n_st-1] == turner_len,
         "six_turner: stations must span local x0..33 (world 126..159)");
-    assert(st_spanL[0] <= 40 && st_spanR[0] <= 40,
-        "six_turner: entry must start as small lip/flat (spans <=40deg)");
-    assert(st_spanL[0] < st_spanL[1] && st_spanL[1] < st_spanL[2] && st_spanL[2] < st_spanL[3]
-        && st_spanL[3] < st_spanL[4] && st_spanL[4] < st_spanL[5] && st_spanL[5] < st_spanL[6],
-        "six_turner: left curl must advance monotonically (gradual roll-together)");
-    assert(st_spanR[0] < st_spanR[1] && st_spanR[1] < st_spanR[2] && st_spanR[2] < st_spanR[3]
-        && st_spanR[3] < st_spanR[4] && st_spanR[4] < st_spanR[5] && st_spanR[5] < st_spanR[6],
-        "six_turner: right curl must advance monotonically (gradual roll-together)");
-    assert(st_rL[0] > st_rL[1] && st_rL[1] > st_rL[2] && st_rL[2] > st_rL[3]
-        && st_rL[3] > st_rL[4] && st_rL[4] > st_rL[5] && st_rL[5] > st_rL[6]
-        && st_rR[0] > st_rR[1] && st_rR[1] > st_rR[2] && st_rR[2] > st_rR[3]
-        && st_rR[3] > st_rR[4] && st_rR[4] > st_rR[5] && st_rR[5] > st_rR[6],
-        "six_turner: curl radii must tighten progressively toward the exit");
-    assert(st_spanL[n_st-1] >= 255 && st_spanL[n_st-1] <= 285,
-        "six_turner: left exit must be a ~270deg deep in-roll");
-    assert(st_spanR[n_st-1] >= 165 && st_spanR[n_st-1] <= 195,
-        "six_turner: right exit must be a ~180deg shallow in-roll");
-    assert(st_spanL[n_st-1] - st_spanR[n_st-1] >= 60,
-        "six_turner: curls must stay asymmetric (deep vs shallow differ >=60deg)");
-    assert(st_spanL[n_st-1] < 300 && st_spanR[n_st-1] < 300,
-        "six_turner: NO enclosing ring — spans stay open (<300deg, never a tube)");
-    assert(sqrt(pow(wing_off + st_rL[n_st-1]*cos(st_spanL[n_st-1]) + wing_off
-        - st_rR[n_st-1]*cos(180 - st_spanR[n_st-1]), 2)
-        + pow(st_rL[n_st-1]*sin(st_spanL[n_st-1])
-        - st_rR[n_st-1]*sin(180 - st_spanR[n_st-1]), 2)) < 4,
-        "six_turner: exit roll tips must nest (<4 apart) so edges roll together overlapped");
-    // v55 HOLLOW BORE (fail-loud): no center fin, no nose, no bore
-    // rails — the center holds ONLY air + the side wings. Root walls
-    // stand outboard of the tape U (|dy| >= sheet + tol).
-    assert(base_thick <= floor_local,
-        "six_turner: base plate must stay at/below the paper floor (bore airspace clear)");
-    assert(rwall_in - (fold_width/2 + tape_bend_radius + tape_thick) >= tolerance
-        && rwallL0 == cy + rwall_in && rwallR1 == cy - rwall_in,
-        "six_turner: root walls must clear the tape U walls (inner face outside sheet+tol)");
-    assert(rwallL1 - rwallL0 >= 1.2 && rwallR1 - rwallR0 >= 1.2,
-        "six_turner: root walls must stay printable (>=1.2 thick)");
-    assert(cy + wing_off + st_rL[0] >= rwallL0 && cy + wing_off + st_rL[0] <= rwallL1,
-        "six_turner: left entry root must bed in the left root wall");
-    assert(cy - wing_off - st_rR[0] >= rwallR0 && cy - wing_off - st_rR[0] <= rwallR1,
-        "six_turner: right entry root must bed in the right root wall");
-    assert(cy + wing_off + st_rL[n_st-1] >= rwallL0 && cy + wing_off + st_rL[n_st-1] <= rwallL1,
-        "six_turner: left exit root must stay bedded in the left root wall");
-    assert(cy - wing_off - st_rR[n_st-1] >= rwallR0 && cy - wing_off - st_rR[n_st-1] <= rwallR1,
-        "six_turner: right exit root must stay bedded in the right root wall");
-    assert(curl_cz - st_rL[n_st-1] >= floor_local - 0.1,
-        "six_turner: deep roll tip must not stab the trough floor");
-    assert(curl_cz + st_rL[0] <= 18,
-        "six_turner: entry lips must fit under the pocket walls");
-    assert(n_fp == 17, "six_turner: need 17 fine wing plates");
-    assert(fpx[0] >= 0 && fpx[n_fp-1] + 1.2 <= turner_len,
-        "six_turner: wing plates must stay in footprint");
-    assert(fspanL[0] == st_spanL[0] && fspanL[n_fp-1] == st_spanL[n_st-1]
-        && fspanR[0] == st_spanR[0] && fspanR[n_fp-1] == st_spanR[n_st-1]
-        && frL[0] == st_rL[0] && frL[n_fp-1] == st_rL[n_st-1]
-        && frR[0] == st_rR[0] && frR[n_fp-1] == st_rR[n_st-1],
-        "six_turner: fine plates must match the station table at both ends");
-    assert(bx[0] == 6 && bx[1] == turner_len - 6
-        && bx[0] + plow_start == 132 && bx[1] + plow_start == 153,
-        "six_turner: mount holes must hit the chassis M3 holes (world 132/153, old plow pattern)");
-    assert(chassis_width/2 - 20 == 10 && by[0] + 10 == 6 && by[1] + 10 == 54,
-        "six_turner: mount holes must hit the chassis M3 holes across (world 6/54)");
-    // v55 HOLLOW: the voids below are ONLY the M3 clearance
-    // holes. Base + guides + root walls + wings unite into one
-    // solid: wing plates share into consecutive hulls, roots bed
-    // in the outer root walls full length. Center holds only air.
+    assert(2*st_R[0] >= 10 && 2*st_R[0] <= 13,
+        str("six_turner: entry must be narrow pinched open-C (dia ~10-12), got ", 2*st_R[0]));
+    assert(2*st_R[n_st-1] >= 20 && 2*st_R[n_st-1] <= 22,
+        str("six_turner: exit must be wide open flare (dia ~20-22), got ", 2*st_R[n_st-1]));
+    assert(st_R[0] < st_R[1] && st_R[1] < st_R[2] && st_R[2] < st_R[3]
+        && st_R[3] < st_R[4] && st_R[4] < st_R[5] && st_R[5] < st_R[6],
+        "six_turner: radius must grow monotonically (Top.jpg taper)");
+    assert(st_W[0] >= 295 && st_W[n_st-1] <= 330,
+        "six_turner: outer wrap must stay open-6 (300-330, never a tube)");
+    assert(st_W[0] < st_W[1] && st_W[1] < st_W[2] && st_W[2] < st_W[3]
+        && st_W[3] < st_W[4] && st_W[4] < st_W[5] && st_W[5] < st_W[6],
+        "six_turner: outer wrap must advance monotonically");
+    assert(st_H[0] < st_H[1] && st_H[1] < st_H[2] && st_H[2] < st_H[3]
+        && st_H[3] < st_H[4] && st_H[4] < st_H[5] && st_H[5] < st_H[6],
+        "six_turner: inner hook must advance monotonically");
+    assert(st_H[n_st-1] >= 120 && st_H[n_st-1] <= 180,
+        "six_turner: exit hook must be 120-180deg (Back.jpg inner curl)");
+    assert(hook_off - wall >= 2 && hook_off - wall <= 3,
+        str("six_turner: slit gap must be 2-3 full length (dark slit), got ", hook_off - wall));
+    // Seeded pocket core (7.8 wide x ~7 tall U, corner r 5.17 about
+    // the bore axis) must clear the entry inner bore (5.4). Tape
+    // shoulders feed through the top opening (intended, not modelled).
+    assert(st_R[0] - wall - sqrt(pow(3.9, 2) + pow(3.4, 2)) >= 0.1,
+        "six_turner: seeded pocket core must thread the entry bore");
+    // Hook never reaches the bore axis (see-through ray stays clear).
+    assert(st_R[0] - hook_off - wall >= 1.5,
+        "six_turner: hook must stay clear of the bore axis (hollow see-through)");
+    assert(n_fp == 17, "six_turner: need 17 fine plates");
+    assert(fpx[0] == 0 && fpx[n_fp-1] + plate_t == turner_len,
+        "six_turner: plates must span the full footprint (0..33)");
+    assert(fR[0] == st_R[0] && fW[0] == st_W[0] && fH[0] == st_H[0],
+        "six_turner: fine plates must match the station table at entry");
+    assert(fH[n_fp-1] >= 120 && fH[n_fp-1] <= 180,
+        "six_turner: exit plate hook must stay 120-180deg");
+    // Screw ears: 6x6x1 diagonal pair on the chassis M3 holes.
+    assert(ear == 6 && ear_t == 1, "six_turner: ears must stay 6x6x1 (small, minimal)");
+    assert(earA[0] + ear/2 == 6 && earB[0] + ear/2 == turner_len - 6
+        && earA[0] + ear/2 + plow_start == 132 && earB[0] + ear/2 + plow_start == 153,
+        "six_turner: ear holes must hit chassis X (world 132/153)");
+    assert(earA[1] + ear/2 + 10 == 6 && earB[1] + ear/2 + 10 == 54,
+        "six_turner: ear holes must hit chassis rows (world 6/54)");
+    assert(hole_d == bolt_dia + 2*tolerance, "six_turner: ear holes must be M3 clearance");
+    // Skid tops stay below the bore inner bottom (see-through kept).
+    assert(7.0 <= curl_cz - (st_R[0] - wall) - 0.3
+        && 3.0 <= curl_cz - (st_R[n_st-1] - wall) - 0.3,
+        "six_turner: skid must stay below the bore (hollow kept)");
+    // v56 THIN SHELL: the voids below are ONLY the 2 M3 ear holes.
+    // Shell + hook + ribs + blade + skid + ears/straps/posts unite
+    // into one solid: plates hull-bridged consecutively, hook roots
+    // ribbed to the shell, blade/skid/straps/posts overlapped in.
+    // Center holds only air.
     union() {
         difference() {
             union() {
-                // Base plate/blade (bottom mount, min_z=0)
-                cube([turner_len, tw, base_thick]);
-                // Low converging entry guides (funnel 25.4 -> ~8)
-                translate([0, cy - paper_width/2 - 1, base_thick])
-                    rotate([0, 0, plan_ang])
-                        cube([turner_len + 2, 2, 6]);
-                translate([0, cy + paper_width/2 + 1 - 2, base_thick])
-                    rotate([0, 0, -plan_ang])
-                        cube([turner_len + 2, 2, 6]);
-                // Outer root walls (SIDE WALLS ONLY): bed the wing roots
-                // outboard of the tape U, clear of the bore (roots
-                // embed 0.1..1.1, fused full length). Center stays air.
-                translate([0, rwallL0, base_thick - epsilon])
-                    cube([turner_len, rwallL1 - rwallL0, rwall_top - base_thick + epsilon]);
-                translate([0, rwallR0, base_thick - epsilon])
-                    cube([turner_len, rwallR1 - rwallR0, rwall_top - base_thick + epsilon]);
-                // Curling wings: hull-loft between fine plates, per side.
-                // Left (+Y) sweeps 0->span (deep); right (-Y) sweeps
-                // 180->180-span (shallow mirror). Plates share into
-                // consecutive hulls; roots bed in the rails full length.
+                // Outer shell loft: hull-bridged annular-sector plates
+                // (gap centred at top 90: a0 = 90+(360-W)/2, a1 = a0+W).
+                // Inner hook loft: radius Rh = R-hook_off, span a1-H..a1
+                // (root at the shell a1 edge, 2.5 slit off the shell ID).
+                // Root rib: annular quad bridging hook root to shell.
                 for (k=[0:n_fp-2]) {
                     hull() {
-                        translate([fpx[k], cy + wing_off, curl_cz])
+                        translate([fpx[k], cy, curl_cz])
                             rotate([0, 90, 0])
-                                linear_extrude(height=1.2)
-                                    polygon(curl_strip_pts(frL[k] - wall, frL[k], 0, fspanL[k], 24));
-                        translate([fpx[k+1], cy + wing_off, curl_cz])
+                                linear_extrude(height=plate_t)
+                                    polygon(curl_strip_pts(fR[k]-wall, fR[k], 90+(360-fW[k])/2, 90+(360-fW[k])/2+fW[k], 30));
+                        translate([fpx[k+1], cy, curl_cz])
                             rotate([0, 90, 0])
-                                linear_extrude(height=1.2)
-                                    polygon(curl_strip_pts(frL[k+1] - wall, frL[k+1], 0, fspanL[k+1], 24));
+                                linear_extrude(height=plate_t)
+                                    polygon(curl_strip_pts(fR[k+1]-wall, fR[k+1], 90+(360-fW[k+1])/2, 90+(360-fW[k+1])/2+fW[k+1], 30));
                     }
                     hull() {
-                        translate([fpx[k], cy - wing_off, curl_cz])
+                        translate([fpx[k], cy, curl_cz])
                             rotate([0, 90, 0])
-                                linear_extrude(height=1.2)
-                                    polygon(curl_strip_pts(frR[k] - wall, frR[k], 180, 180 - fspanR[k], 24));
-                        translate([fpx[k+1], cy - wing_off, curl_cz])
+                                linear_extrude(height=plate_t)
+                                    polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k]-hook_off, 90+(360-fW[k])/2+fW[k]-fH[k], 90+(360-fW[k])/2+fW[k], 20));
+                        translate([fpx[k+1], cy, curl_cz])
                             rotate([0, 90, 0])
-                                linear_extrude(height=1.2)
-                                    polygon(curl_strip_pts(frR[k+1] - wall, frR[k+1], 180, 180 - fspanR[k+1], 24));
+                                linear_extrude(height=plate_t)
+                                    polygon(curl_strip_pts(fR[k+1]-hook_off-wall, fR[k+1]-hook_off, 90+(360-fW[k+1])/2+fW[k+1]-fH[k+1], 90+(360-fW[k+1])/2+fW[k+1], 20));
+                    }
+                    hull() {
+                        translate([fpx[k], cy, curl_cz])
+                            rotate([0, 90, 0])
+                                linear_extrude(height=plate_t)
+                                    polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k], 90+(360-fW[k])/2+fW[k]-4, 90+(360-fW[k])/2+fW[k]+4, 2));
+                        translate([fpx[k+1], cy, curl_cz])
+                            rotate([0, 90, 0])
+                                linear_extrude(height=plate_t)
+                                    polygon(curl_strip_pts(fR[k+1]-hook_off-wall, fR[k+1], 90+(360-fW[k+1])/2+fW[k+1]-4, 90+(360-fW[k+1])/2+fW[k+1]+4, 2));
                     }
                 }
-                // Mounting tabs (old plow pattern: chassis M3 holes line up)
-                for (tx=[2, turner_len - 10]) {
-                    translate([tx, -8, 0]) cube([8, 8.15, 3]);
-                    translate([tx, tw - 0.15, 0]) cube([8, 8.15, 3]);
+                // Lower flat tail blade (-Y side, full length, flat at z~8).
+                hull() {
+                    translate([0, 8, 7.2]) cube([3, 9.5, 1.2]);
+                    translate([turner_len-3, 3, 7.2]) cube([3, 9, 1.2]);
                 }
-                // Tab bolts visual
-                for (bxi=[0:1])
-                    for (byy=[by[0], by[1]]) {
-                        translate([bx[bxi], byy, 0]) cylinder(h=3, d=bolt_dia, center=false);
-                        translate([bx[bxi], byy, 3 - epsilon]) cylinder(h=2.5, r=bolt_head_across/sqrt(3), $fn=6, center=false);
-                    }
+                // Skid wedge (flat underside gravity sit, tops below bore).
+                hull() {
+                    translate([0, 17, 0]) cube([4, 6, 7.0]);
+                    translate([turner_len-4, 17, 0]) cube([4, 6, 3.0]);
+                }
+                // Screw ears + ground straps + posts (minimal mounts).
+                translate([earA[0], earA[1], 0]) cube([ear, ear, ear_t]);
+                translate([earB[0], earB[1], 0]) cube([ear, ear, ear_t]);
+                translate([4, -1, 0]) cube([4, 16, 1]);
+                translate([25, 28, 0]) cube([4, 19, 1]);
+                translate([5, 13, 0]) cube([2, 2, 10]);
+                translate([26, 28, 0]) cube([2, 2, 10]);
             }
-            // Tab bolt clearance holes (M3 + tol)
-            for (bxi=[0:1])
-                for (byy=[by[0], by[1]])
-                    translate([bx[bxi], byy, -epsilon])
-                        cylinder(h=3 + 2*epsilon, d=bolt_dia + 2*tolerance, center=false);
+            // Ear M3 clearance holes (only voids).
+            translate([earA[0]+ear/2, earA[1]+ear/2, -epsilon])
+                cylinder(h=ear_t+2*epsilon, d=hole_d, center=false);
+            translate([earB[0]+ear/2, earB[1]+ear/2, -epsilon])
+                cylinder(h=ear_t+2*epsilon, d=hole_d, center=false);
         }
     }
 }
