@@ -146,7 +146,7 @@
     Tape advances 2·π·20 = 125.66&nbsp;mm / crank rev (crank drives roller; drum 0.5× via 40:20 mesh).
     Crank on roller axle (x=40, outside back wall); drum CCW picks up right, drops bottom-center.
     R→L layout: hopper wedge (right, mouth ~183) → drum (100) → shroud tunnel (58-84) → roller/crank (40) → spool (-6, west).
-    Single wrap-around hopper: right wedge pickup (level top), 11→6 cover, hover pipe (ID10/OD14 L10, 10 gap) drops seeds at x=100 port.
+    Single wrap-around hopper: right wedge pickup (level top), 11→6 cover, hover pipe (ID6/OD10 L10, 10 gap) drops seeds at x=100 port.
   </div>
 </div>
 
@@ -332,7 +332,7 @@
   // ---------- tape ribbon with center U-fold bend (procedural, v28 true mimic, v31 west + transit, v33 lane 13) ----------
   // Mirrors seed_tape_bend()/fold_section() in seed_tape_machine_v2.scad:
   // flat 25.4 ribbon full length (scrolls with crank) + static FORMING
-  // taper (trough bottom 6.0/HW 3.0 + R1.75 quarter arcs + 5.5 walls +
+  // taper (trough bottom 4.0/HW 2.0 + R1.5 quarter arcs + 5.5 walls +
   // reverse S-shoulder kink + foot back to the wings, single-layer floor,
   // depth 0.15->1.0 W->E over 37..70) + straight full-U TRANSIT (same
   // section, no taper, 70..126 through the shroud slot, under the drum
@@ -347,9 +347,9 @@
   var TAPE_TRANSIT_END = 126; // v31: = transit_end = plow_start (straight full-U to plow mouth)
   var TAPE_Z = 13;           // v33: = tape_z (option B lane; ribbon top 13.4, pipe bottom 23.4 hover 10, transit top 21.4)
   var TAPE_LEN = 180; // v28: unified with CAD tape_len (was 320 viewer-only)
-  var TAPE_BEND_R = 1.75;    // = tape_bend_radius in .scad
+  var TAPE_BEND_R = 1.5;     // v34: = tape_bend_radius in .scad (outer 7.8<OD10)
   var TAPE_FOLD_ANG = Math.PI / 2; // = tape_fold_angle 90deg (full U)
-  var TAPE_FOLD_HW = 3.0;    // = fold_width/2 (fold bottom half-width)
+  var TAPE_FOLD_HW = 2.0;    // v34: = fold_width/2 (fold bottom half-width)
   var TAPE_FOLD_WALL = 5.5;  // = tape_fold_wall (straight wall length)
   var TAPE_SH_R = 1.5;       // = tape_shoulder_r (reverse S-kink)
   var TAPE_N_ARC = 20;       // = tape_n_arc (arc facets per side, up for smoothness)
@@ -377,7 +377,7 @@
   // the flat ribbon IS the trough bottom. Forming depth tapers W->E
   // (shallow entry to full-U exit); transit holds full-U; shoulders kick
   // outward (reverse S) with feet landing back on the wings. Arc centers
-  // (z=+-3.0, y=0.4+1.75=2.15) at full depth.
+  // (z=+-2.0, y=0.4+1.5=1.9) at full depth.
   var tapeFoldGroup = new THREE.Group();
   tapeFoldGroup.position.set(TAPE_FOLD_START + TAPE_FOLD_LEN / 2, TAPE_Z, -30);
   var tapeArcMeshes = [];
@@ -450,8 +450,8 @@
   collarGroup.position.set(TAPE_FOLD_LEN / 2 - 3, 0, 0); // forming exit end (v31: world 67)
   tapeFoldGroup.add(collarGroup);
   root.add(tapeFoldGroup);
-  // Bend proof hooks: arc mesh centres must sit R=1.75 from the arc
-  // centers (group-local z=+-3.0, y=2.15 at full depth) in the Z-Y plane.
+  // Bend proof hooks: arc mesh centres must sit R=1.5 from the arc
+  // centers (group-local z=+-2.0, y=1.9 at full depth) in the Z-Y plane.
   window._tapeFold = {
     group: tapeFoldGroup, flat: tapeGroup, arcMeshes: tapeArcMeshes,
     R: TAPE_BEND_R, hw: TAPE_FOLD_HW, cz: czF,
@@ -555,7 +555,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 20;
+  var ASSET_V = 21;
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -823,7 +823,7 @@
     // -> closer plow(126-159). Rollers v21 west(x=40).
     // Drum center root-local y=60, radius 25 -> tape runs at y=13 under
     // the drum (v33 option B lane: hover pipe exit at y=23.4, 10 above
-    // the ribbon top 13.4, bore 10 / outer 14, L10).
+    // the ribbon top 13.4, bore 6 / outer 10, L10).
     // v25: flat ribbon scrolls; U-fold channel stays static (v31: tape
     // slides through the forming taper, full-U transit holds the pocket
     // under the drum into the pipe; fold walls ride on the ribbon top).
@@ -831,13 +831,13 @@
     tapeGroup.position.set(tapeX, TAPE_Z, -30);
 
     // Seed drop at hopper BOTTOM-CENTER hover pipe exit (v33 option B:
-    // bore centre world x=100, round pipe ID10/OD14 L10, bottom y=23.4
+    // bore centre world x=100, round pipe ID6/OD10 L10, bottom y=23.4
     // hovering 10 above the tape ribbon top 13.4; folded transit pocket
     // top ~21.4 passes 2 under the pipe mouth with no touch — no spill
     // path sideways, seed falls 10 from the bore into the pocket,
     // centred z=-30).
     // Hover proof constants (mirror hopper_body() in .scad).
-    window._dropSeal = { bore: 10, outer: 14, tubeBottomWorld: 23.4, ribbonTop: 13.4, dropX: 100, pipeLen: 10, hoverGap: 10 };
+    window._dropSeal = { bore: 6, outer: 10, tubeBottomWorld: 23.4, ribbonTop: 13.4, dropX: 100, pipeLen: 10, hoverGap: 10 };
     var phase = mod(revs * DRUM_RATIO * 6, 1); // v13: 6 drops per drum rev (6 cavities)
     dropSeed.position.set(100, 30 - phase * 16, -30);
 

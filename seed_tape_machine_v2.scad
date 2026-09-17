@@ -125,7 +125,7 @@ fold_end      = 70;   // v31: forming exit 5 clear of the drum west face (75)
 fold_start    = fold_end - fold_len; // 37: shallow entry at the roller nip (40)
 transit_end   = plow_start; // 126: straight full-U transit ends at the plow mouth
 transit_len   = transit_end - fold_end; // 56: forming exit -> plow mouth via pipe
-fold_width    = 6.0;   // v28 true mimic (was 12.7): narrow U trough 5-7 to match tapeubend.png; plow plan_ang derives from it
+fold_width    = 4.0;   // v34 OD10 pipe (was 6.0): narrow U trough 3-5 so outer=fold+2*(R+thick)=7.8<10; plow plan_ang derives from it
 track_depth   = 3;
 
 // ============================================================
@@ -217,22 +217,25 @@ cradle_u_radius = 4;
 // stainless former collar (transverse shoe with U notch) rides over the
 // forming exit (world x ~67) as a visual.
 // Single-layer bottom (flat ribbon IS the trough floor, no double slab).
-// Tape lane (v33 option B: lowered 24->13 to fit a round ID10/OD14
-// L10 hover pipe + 10 gap under the wheel; flat ribbon top 13.4,
-// pipe bottom 23.4 (hover 10, no seal/slots), pipe top 33.4, flange
-// bottom 33.5 -> flange-to-tape 20.1, disc bottom 35 -> 21.6;
-// full-U transit top 21.4 clears the disc by 13.6).
+// Tape lane (v34 OD10 pipe: lowered lane 13 kept from v33; flat ribbon
+// top 13.4, pipe bottom 23.4 (hover 10, no seal/slots), pipe top 33.4,
+// flange bottom 33.5 -> flange-to-tape 20.1, disc bottom 35 -> 21.6;
+// full-U transit top 21.15 clears the disc by 13.85, passes 2.25 under
+// the pipe mouth with no touch).
 // Single-layer bottom (flat ribbon IS the trough floor, no double slab).
-// tape_bend_radius = inner arc R (1.75), fold_width = trough bottom width
-// (6.0, HW 3.0), tape_fold_wall = vertical wall length (5.5),
+// tape_bend_radius = inner arc R (1.5), fold_width = trough bottom width
+// (4.0, HW 2.0), tape_fold_wall = vertical wall length (5.5),
 // tape_shoulder_r/ang = reverse S-kink at shoulders (1.5/60), tape_n_arc
 // = 20 facets/side, tape_n_x = 12 taper steps (depth 0.15->1.0 W->E).
-// Full-U tape-local top = 0.4 + (1.75+5.5)*1.0 + 1.5*0.5 = 8.4
-// (shoulder apex); world top = tape_z + 8.4 = 21.4.
+// Full-U tape-local top = 0.4 + (1.5+5.5)*1.0 + 1.5*0.5 = 8.15
+// (shoulder apex); world top = tape_z + 8.15 = 21.15.
+// Fold outer = 4.0 + 2*(1.5+0.4) = 7.8 < OD10; pocket mouth inner
+// = 4.0 + 2*1.5 = 7.0 ~= ID6 (seed falls from the 6-bore into the
+// already-folded 7-mouth pocket).
 // Assembly: static tape (viewer scrolls it); export standalone min_z=0.
 // ============================================================
 tape_thick       = 0.4;
-tape_bend_radius = 1.75;
+tape_bend_radius = 1.5;   // v34 OD10 (was 1.75): outer=4+2*(1.5+0.4)=7.8<10, mouth inner=4+2*1.5=7~=ID6
 tape_fold_angle  = 90;
 tape_fold_wall   = 5.5;
 tape_shoulder_r  = 1.5;
@@ -296,8 +299,8 @@ assert((transit_end - tape_x0) <= tape_len,
        str("transit must fit on the ribbon: need ", (transit_end - tape_x0), " <= ", tape_len));
 assert(tape_z + tape_thick + tape_bend_radius + tape_fold_wall + tape_shoulder_r*0.5 + 1.0 <= drum_axle_z - drum_radius,
        str("full-U transit top + 1 must clear the drum bottom (35): ", tape_z + tape_thick + tape_bend_radius + tape_fold_wall + tape_shoulder_r*0.5 + 1.0));
-assert(fold_width/2 + tape_bend_radius + tape_thick <= 7.8,
-       str("fold outer half-width must fit the drop tube interior (7.8): ", fold_width/2 + tape_bend_radius + tape_thick));
+assert(fold_width/2 + tape_bend_radius + tape_thick <= 5.0,
+       str("fold outer half-width must fit under the OD10 pipe footprint (5.0): ", fold_width/2 + tape_bend_radius + tape_thick));
 assert(tape_x0 + tape_len >= plow_end, str("tape ribbon must reach the plow end: ", tape_x0 + tape_len));
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
 assert(crank_mount_x == roller_axle_x, str("crank_mount_x must be coaxial with roller axle: ", crank_mount_x));
@@ -609,10 +612,10 @@ module hopper_body() {
     tilt_pivot = [25, 0, 56];              // 3-o'clock mouth point on drum
     floor_half = cheek_in + 1.0;           // v19 SEAL (was +0.5): floor sides bury into cheeks
     floor_lx1 = (84.5 - tilt_pivot[0])/cos(LOW_TILT);  // v19 SEAL: floor local-x end = world x84.5
-    // BOTTOM-CENTER hover pipe (v33 option B: 6-o'clock, x=0 = drum
-    // centre; round pipe ID10/OD14 L10 hangs from the hopper floor, bottom
+    // BOTTOM-CENTER hover pipe (v34 OD10: 6-o'clock, x=0 = drum
+    // centre; round pipe ID6/OD10 L10 hangs from the hopper floor, bottom
     // hovers drop_gap=10 above the ribbon top -- NO seal, NO slots).
-    // Tapered groove (inner wide 16 -> 10 throat) funnels seeds into the
+    // Tapered groove (inner wide 16 -> 6 throat) funnels seeds into the
     // pipe bore; drum carve trims the funnel top into a smooth
     // drum-conforming mouth (no ledges); bore void pierces cover bottom
     // = drop port; thick funnel walls saddle-fuse to cover lips (single
@@ -621,19 +624,19 @@ module hopper_body() {
     // ~21.4 at the drop: seed falls from the bore into the moving pocket).
     // Verified coords (world): ribbon top 13.4, pipe 23.4..33.4, flange
     // bottom 33.5 (flange-to-tape 20.1), disc bottom 35 (gap 21.6/11.6).
-    drop_pipe_id = 10; drop_pipe_od = 14; drop_pipe_len = 10; drop_gap = 10;
+    drop_pipe_id = 6; drop_pipe_od = 10; drop_pipe_len = 10; drop_gap = 10;
     pipe_bot_local = tape_z + tape_thick + drop_gap - (drum_axle_z - hopper_axis_z); // 19.4
     pipe_top_local = pipe_bot_local + drop_pipe_len; // 29.4
-    tube_x0 = -7; tube_x1 = 7;
-    bore_x0 = -5; bore_x1 = 5;
+    tube_x0 = -5; tube_x1 = 5;
+    bore_x0 = -3; bore_x1 = 3;
     tube_z0 = pipe_bot_local; tube_z1 = 52;
-    assert(drop_pipe_id == 10, "hopper_body: hover pipe ID must be 10");
-    assert(drop_pipe_od == 14, "hopper_body: hover pipe OD must be 14");
+    assert(drop_pipe_id == 6, "hopper_body: hover pipe ID must be 6");
+    assert(drop_pipe_od == 10, "hopper_body: hover pipe OD must be 10");
     assert(drop_pipe_len == 10, "hopper_body: hover pipe length must be 10");
-    assert((drop_pipe_od - drop_pipe_id)/2 >= 1.2, "hopper_body: hover pipe wall must be >=1.2");
-    assert(bore_x1 - bore_x0 == 10, "hopper_body: drop bore must be 10");
-    assert(tube_x1 - tube_x0 == 14, "hopper_body: drop tube outer must be 14");
-    assert(bore_x0 - tube_x0 >= 1.2, "hopper_body: drop tube X wall must be >=1.2");
+    assert((drop_pipe_od - drop_pipe_id)/2 == 2.0, "hopper_body: hover pipe wall must be 2.0");
+    assert(bore_x1 - bore_x0 == 6, "hopper_body: drop bore must be 6");
+    assert(tube_x1 - tube_x0 == 10, "hopper_body: drop tube outer must be 10");
+    assert(bore_x0 - tube_x0 == 2.0, "hopper_body: drop tube X wall must be 2.0");
     assert(tube_z0 + (drum_axle_z - hopper_axis_z) == tape_z + tape_thick + drop_gap,
            "hopper_body: hover pipe bottom must sit tape_top+10 (no seal)");
     assert(drop_gap >= 10, "hopper_body: hover gap must be >=10");
@@ -712,11 +715,12 @@ module hopper_body() {
                         rotate_extrude(angle=150, convexity=10)
                             translate([drum_radius + 1.5 + 1, 0, 0])
                                 square([2, 2*y_out], center=true);
-            // v33 hover pipe + tapered funnel (single manifold solid):
-            // round tube OD14 (r7) from the hover bottom up L10, fused into
-            // a tapered outer cone (r7 -> r10) running up into the hopper
-            // (wall 2.0 throughout vs the inner void, >=1.2; drum carve
-            // trims the top into the mouth, remainder fuses to cover lips).
+            // v34 OD10 hover pipe + tapered funnel (single manifold solid):
+            // round tube OD10 (r5) from the hover bottom up L10, fused into
+            // a tapered outer cone (r5 -> r10) running up into the hopper
+            // (wall 2.0 throughout vs the inner void: 5-3 = 10-8 = 2.0;
+            // drum carve trims the top into the mouth, remainder fuses to
+            // cover lips).
             translate([0, 0, pipe_bot_local])
                 cylinder(h=drop_pipe_len, r=drop_pipe_od/2, center=false);
             translate([0, 0, pipe_top_local - epsilon])
@@ -733,15 +737,15 @@ module hopper_body() {
             rotate([0, -LOW_TILT, 0])
                 translate([-3, -(cheek_in + 0.5), -0.5])
                     cube([48, 2*(cheek_in + 0.5), 30.5]);
-        // v33 drop bore + tapered groove (no window box, no tape slots):
-        // cylindrical ID10 bore through the hover pipe + tapered inner
-        // cone (r5 -> r8, wide 16 -> 10 throat) up through the funnel to
+        // v34 drop bore + tapered groove (no window box, no tape slots):
+        // cylindrical ID6 bore through the hover pipe + tapered inner
+        // cone (r3 -> r8, wide 16 -> 6 throat) up through the funnel to
         // the drum mouth (fed by the 6 cavities over the top, not by the
         // trough void). Drum carve trims the funnel top into a smooth
         // drum-conforming mouth (no steps/ledges). Pipe hovers 10 above
-        // the tape: no notches, no seal overlap. Trough (HW 3.0) stays
-        // centred under the bore (bore +-5); seed falls 10 from the bore
-        // into the already-folded transit pocket below.
+        // the tape: no notches, no seal overlap. Trough (HW 2.0, outer
+        // 7.8 < OD10) stays centred under the bore (bore +-3); seed falls
+        // 10 from the bore into the already-folded transit pocket below.
         translate([0, 0, pipe_bot_local - epsilon])
             cylinder(h=drop_pipe_len + 2*epsilon, r=drop_pipe_id/2, center=false);
         translate([0, 0, pipe_top_local - epsilon])
@@ -1062,8 +1066,8 @@ module seed_tape_bend() {
 // outward-up, vertical wall, shoulder kink (outward+slightly up) then
 // foot back down onto the ribbon wing at [s*(hw+r+2.5), base_top].
 module fold_section(x0, dx, sc) {
-    hw = fold_width/2;                 // 3.0 trough bottom half-width
-    r = tape_bend_radius;              // 1.75
+    hw = fold_width/2;                 // 2.0 trough bottom half-width
+    r = tape_bend_radius;              // 1.5
     a = tape_fold_angle;               // 90 = vertical walls (full U)
     sh_r = tape_shoulder_r;            // 1.5 reverse S-kink radius
     base_top = tape_thick;             // 0.4: ribbon top (trough floor, single layer)
@@ -1391,9 +1395,9 @@ module animated_assembly() {
             translate([0, 0, -drum_dia/2])
                 seed_cartridge(seed_dia, seed_depth);
 
-    // Hopper (v33 option B: ONE printed piece — right wedge pickup level
+    // Hopper (v34 OD10: ONE printed piece — right wedge pickup level
     // top z=73, open-top half-pipe 16mm/8mm cover 11->6 with grooves,
-    // 2 side joints, closed box, bottom-center hover pipe ID10/OD14 L10
+    // 2 side joints, closed box, bottom-center hover pipe ID6/OD10 L10
     // at drum x hovering 10 above the lowered lane)
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
@@ -1409,8 +1413,8 @@ module animated_assembly() {
     translate([plow_start, chassis_width/2 - 12.7, base_thick])
         seed_cradle();
 
-    // Seed tape with center U-fold (v28 true mimic: narrow 6 trough,
-    // R1.75, 5.5 walls, S-shoulders; v31: forming 37..70 fully west of
+    // Seed tape with center U-fold (v34 OD10: narrow 4 trough,
+    // R1.5, 5.5 walls, S-shoulders; v31: forming 37..70 fully west of
     // the drum face + straight full-U transit 70..126 under the drum
     // (13.6 air gap) UNDER the hover pipe (10 gap) to the plow mouth;
     // static in CAD, scrolls in the viewer; single-layer floor, min_z=0).

@@ -1,6 +1,38 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v33**
+**Version: v34**
+
+## v34 OD10 Exit Pipe (ID6/Wall2.0 L10 + 10 Gap, Fold 4/R1.5) - 2026-09-17
+
+1. **Goal (user-confirmed)**: exit pipe outer diameter 10mm
+   including wall (was ID10/OD14). Lane geometry unchanged
+   (`tape_z` 13, ribbon top 13.4, pipe world 23.4..33.4, gap 10,
+   flange-to-tape 20.1): only diameters + fold shrink.
+2. **CAD** (`seed_tape_machine_v2.scad` only): `drop_pipe_od`
+   14->10, `drop_pipe_id` 10->6 (wall kept 2.0 per user, assert
+   `==2.0` replaces `>=1.2`; bore X +-3, tube X +-5); outer cone
+   r5->r10 + inner cone r3->r8 (wide 16 -> 6 throat, wall 2.0
+   throughout); `fold_width` 6.0->4.0, `tape_bend_radius`
+   1.75->1.5 (outer = 4+2*(1.5+0.4) = 7.8 < OD10, assert now
+   outer-half <= 5.0; pocket mouth inner = 4+2*1.5 = 7 ~=
+   ID6); transit top 21.4->21.15 (disc clearance 13.85, 2.25
+   under the pipe mouth, no touch); walls 5.5 / L10 / gap10 /
+   export -19.4 / min_z=0 kept; `$fn=60`, `tol=0.3`,
+   drum/roller/crank/R->L/fold-before-drop intact.
+3. **SEED-FIT WARNING (fail-loud, user accepted)**: ID6 < 8mm
+   seeds AND < 6mm max wheel seeds — 8mm seeds CANNOT pass a
+   printable OD10 pipe (even min wall 1.2 -> ID7.6 < 8). OD10
+   fits only <=5mm seeds (ID6 minus clearance). Revert to
+   v33 (ID10/OD14) if 8mm seeds must drop through the pipe.
+4. **Viewer** (`web/index.html` only): `TAPE_BEND_R`
+   1.75->1.5, `TAPE_FOLD_HW` 3.0->2.0 (arc centres y=1.9,
+   former/collar/foot auto-follow), `_dropSeal` bore 10->6 /
+   outer 14->10 (pipe bottom 23.4, ribbon 13.4, gap 10, drop
+   x=100 kept); `ASSET_V` 20->21, all GLBs regenerated.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+   `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°, back
+   gears, crank back wall [40,-8,60], R->L hopper > drum >
+   shroud > roller+crank kept; port 9099 only.
 
 ## v33 Option B Drop-Tape-Lower (Hover Pipe ID10/OD14 L10 + 10 Gap) - 2026-09-17
 
