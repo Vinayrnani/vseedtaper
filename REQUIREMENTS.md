@@ -1,5 +1,42 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v60**
+
+## v60 U-to-Swirl Forming Plow: open-U entry (180°) winding to tight 6-swirl exit, matched to Front/Back/Top.jpg - 2026-09-17
+
+1. **Concept** (user clarification: "6 = U bent transforming to
+    swirl, tape folded round"): `six_turner()` is a FORMING PLOW /
+    folding funnel, not a pre-curled tube. Entry (world 126, LARGE
+    dia 21) = open U-channel (~180° wrap, wide slit ~180° on top,
+    NO hook) catching the flat seeded tape; walls rise and curl
+    inward along the 33 length (wrap 180->210->240->270->300->
+    320->330, hook 0->30->60->90->120->145->160); exit (world
+    159, SMALL dia 9) = fully closed swirl / "6" overlap (outer
+    330° + inner hook 160° with the 1.0 daylight gap, never
+    touches, see-through bore). Matches photos: Top.jpg side =
+    tapered cone + flat tongue entry (tray kept); Back.jpg end =
+    6-swirl exit; Front.jpg = looking through the hollow bore
+    with the overlap seam. Radius taper 10.5->4.5, wall 0.8,
+    hollow bore see-through, open slit full length on top, skid
+    + side blade + 2 small 6x6x1 ears kept.
+2. **CAD** (`seed_tape_machine_v2.scad` only): station table
+    rewritten (st_W entry 300->180 with 210/240/270/300/320
+    ramp, st_H entry 20->0 with 30/60/90/120/145 ramp, R
+    untouched); 17 fine plates re-interpolated (fW/fH, exit
+    plate snapped exact); hook+rib plates skipped where H<1°
+    (entry stays a clean U, no degenerate polygon); asserts
+    updated (entry U 170-190°, exit 325-335°, hook starts 0,
+    monotonic kept, exit dia 9 + 1.0 gap proofs kept); tray/
+    skid/blade/ears/straps/bars untouched; `$fn=60`, `tol=0.3`,
+    manifold single solid, min_z=0.
+3. **Tape**: untouched.
+4. **Viewer** (`web/index.html` only): `ASSET_V` 43->44, plow GLB
+    rebuilt, legend + `_sixTurner` hooks relabelled U-to-swirl.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v59**
 
 ## v59 Photo-Matched 6-Folder: flat entry tongue/tray per Top.jpg (tray extending beyond the large end) - 2026-09-17

@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v60 — 2026-09-17
+- U-to-swirl forming plow (user: "6 = U bent transforming to swirl, tape folded round"): six_turner entry rebuilt as open U-channel (wrap 300->180, hook 20->0, no hook/rib at the mouth) winding along 33 to the tight 6-swirl exit (330 + hook 160, dia 9, 1.0 gap kept); 7 stations 180/210/240/270/300/320/330 + hook 0/30/60/90/120/145/160, 17 plates re-interpolated, entry-U/exit-swirl asserts; tray/skid/blade/ears untouched; viewer ASSET_V 44, plow GLB rebuilt
+
 ## v59 — 2026-09-17
 - Photo-matched 6-folder: flat entry tongue/tray per Top.jpg (was missing in v58): six_turner gains 13.8x16x0.8 flat tray west of the large mouth (local x -14..-0.2, top flush with skid 3.0, 0.3 below bore, mortised into extended skid nose x0->-2, 0.2 clear of cradle, tip world 112 on chassis); v58 shell/hook/gap/ears untouched; viewer ASSET_V 43, plow GLB rebuilt
 
