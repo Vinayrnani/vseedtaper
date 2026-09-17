@@ -1525,17 +1525,26 @@ module seed_cradle() {
 }
 
 // ============================================================
-// 7. 6-FOLDER ASYMMETRIC INNER-CURL, v54 (user REJECTS every
-// outer pipe/shell: "tape arrives already bent U; inside that U
-// ONE side wall curls IN, OTHER side curls a little LESS, curls
-// advance so paper edges roll together into overlapped roll").
-// NO tube, NO shell, NO ring, NO bore. The part is a SEPARATE
-// open object that sits INSIDE the tape U: an open base
-// plate/blade + center fin tongue + two asymmetric curling
-// wings, all base-fused into ONE printable solid, screw-mounted
-// to the chassis on the old plow M3 holes.
+// 7. 6-FOLDER HOLLOW, v55 (Front/Back/Top.jpg cardboard prototype:
+// bore must be HOLLOW see-through, no center post). Cross-section is
+// an OPEN "6", not a closed O: front = open C entry, back = 6/9
+// spiral exit (outer tail + inner free-edge hook). Asymmetric: left
+// (+Y) deep in-roll 30->270deg, right (-Y) shallow 20->180deg, tips
+// overlapped; narrow flat/pinched entry -> wide rolled exit. Side
+// walls ONLY, paper self-supports around air, CENTER EMPTY.
+// v54 center fin tongue + wedge nose + root rails DELETED (they
+// stabbed into the bore and blocked the tape). The part is a
+// SEPARATE open object screw-mounted to the chassis on the old
+// plow M3 holes: low flat base plate/blade + two outer side curl
+// wings, base-fused into ONE printable solid. Wing roots bed in
+// low OUTER root walls (outboard of the tape U, clear of the bore)
+// full length — nothing above the paper floor inside the center
+// except the side wings themselves.
 // Local frame like the old plow: x 0..turner_len (33, world
 // 126..159), y 0..40 (tape centre cy=20), z 0..top, min_z=0.
+// Bore hollow see-through full length: NO center fin, NO nose,
+// NO rails in the bore (v54 parts deleted); above the paper floor
+// the center holds ONLY the two side wings.
 // 7 stations, per-side curl angle + radius interpolated to 17 fine
 // plates (~2.06 apart, hull-bridged; steps small so the walls stay
 // thin and read as curls, not domes):
@@ -1547,10 +1556,9 @@ module seed_cradle() {
 // Left (+Y) starts as a small in-turned lip and winds to a 270deg
 // in-roll; right (-Y) starts near-flat and winds to 180deg; at the
 // exit the two roll tips nest (~2.7 apart) so the paper edges roll
-// TOGETHER overlapped. Wing roots ride full-length support rails
-// (also the U-wall guides); the center fin tongue rises
-// progressively into the roll zone; a wedge nose gives entry
-// lead-in chamfers.
+// TOGETHER overlapped. Wing roots bed in low OUTER root walls
+// (outboard of the tape U, clear of the bore) full length; the
+// low converging guides funnel the flat entry.
 // part_to_render "plow" (compat) and "turner" both render this.
 // ============================================================
 // Annular-sector strip for one curl plate, pre-mapped so
@@ -1566,13 +1574,19 @@ module six_turner() {
     tw = 40;                        // v1-precedent width kept (old plow_w)
     cy = tw/2;                      // 20: tape centre
     curl_cz = 12;                   // wing curl-axis height (v39 datum kept)
-    wall = 1.4;                     // wing/fin wall (printable 1.2-1.6 band)
+    wall = 1.4;                     // wing/side-wall (printable 1.2-1.6 band)
     wing_off = 1.8;                 // wing arc centres at cy+-1.8
-    rail_in = 4.2;                  // root-rail inner faces at cy+-4.2
-    rail_top = 12.3;                // rails bed the wing roots (root ribbons at z=12)
-    fin_t0 = 9.5;                   // center-fin entry top (progressive rise)
-    fin_t1 = 13;                    // center-fin exit top (reaches the roll zone)
-    nose_top = 8.5;                 // nose block top (stays under the paper floor)
+    // v55 HOLLOW: fin tongue + wedge nose + bore rails DELETED.
+    // Wing roots bed in low OUTER root walls (side walls only):
+    // left wall y 24.2..25.8, right wall y 14.2..15.8 (inner faces
+    // at cy+-4.2 = outside the tape U walls + tol, clear of the
+    // bore). Wall tops bed the root ribbons (z=12) with 0.3 embed.
+    rwall_in = 4.2;               // root-wall inner faces at cy+-4.2 (float-exact, like v54 rail_in)
+    rwallL0 = cy + rwall_in;        // left root-wall inner face
+    rwallL1 = cy + 5.8;             // left root-wall outer face
+    rwallR0 = cy - 5.8;             // right root-wall outer face
+    rwallR1 = cy - rwall_in;        // right root-wall inner face
+    rwall_top = 12.3;               // beds the wing roots
     // THE station table: per-side curl span (deg) + radius.
     st_x = [0, 5.5, 11, 16.5, 22, 27.5, 33];
     st_spanL = [30, 75, 120, 165, 210, 245, 270];
@@ -1630,18 +1644,28 @@ module six_turner() {
         + pow(st_rL[n_st-1]*sin(st_spanL[n_st-1])
         - st_rR[n_st-1]*sin(180 - st_spanR[n_st-1]), 2)) < 4,
         "six_turner: exit roll tips must nest (<4 apart) so edges roll together overlapped");
-    assert(rail_in - (fold_width/2 + tape_bend_radius + tape_thick) >= tolerance,
-        "six_turner: root rails must clear the tape U walls (inner face outside sheet+tol)");
-    assert(wing_off + st_rL[0] >= rail_in && wing_off + st_rL[0] <= rail_in + 2,
-        "six_turner: entry lips must land over the rails (root bed)");
+    // v55 HOLLOW BORE (fail-loud): no center fin, no nose, no bore
+    // rails — the center holds ONLY air + the side wings. Root walls
+    // stand outboard of the tape U (|dy| >= sheet + tol).
+    assert(base_thick <= floor_local,
+        "six_turner: base plate must stay at/below the paper floor (bore airspace clear)");
+    assert(rwall_in - (fold_width/2 + tape_bend_radius + tape_thick) >= tolerance
+        && rwallL0 == cy + rwall_in && rwallR1 == cy - rwall_in,
+        "six_turner: root walls must clear the tape U walls (inner face outside sheet+tol)");
+    assert(rwallL1 - rwallL0 >= 1.2 && rwallR1 - rwallR0 >= 1.2,
+        "six_turner: root walls must stay printable (>=1.2 thick)");
+    assert(cy + wing_off + st_rL[0] >= rwallL0 && cy + wing_off + st_rL[0] <= rwallL1,
+        "six_turner: left entry root must bed in the left root wall");
+    assert(cy - wing_off - st_rR[0] >= rwallR0 && cy - wing_off - st_rR[0] <= rwallR1,
+        "six_turner: right entry root must bed in the right root wall");
+    assert(cy + wing_off + st_rL[n_st-1] >= rwallL0 && cy + wing_off + st_rL[n_st-1] <= rwallL1,
+        "six_turner: left exit root must stay bedded in the left root wall");
+    assert(cy - wing_off - st_rR[n_st-1] >= rwallR0 && cy - wing_off - st_rR[n_st-1] <= rwallR1,
+        "six_turner: right exit root must stay bedded in the right root wall");
     assert(curl_cz - st_rL[n_st-1] >= floor_local - 0.1,
         "six_turner: deep roll tip must not stab the trough floor");
     assert(curl_cz + st_rL[0] <= 18,
         "six_turner: entry lips must fit under the pocket walls");
-    assert(fin_t1 > curl_cz && fin_t0 < fin_t1,
-        "six_turner: center fin must rise progressively into the roll zone");
-    assert(nose_top < floor_local,
-        "six_turner: nose must stay under the paper floor (lead-in, no touch)");
     assert(n_fp == 17, "six_turner: need 17 fine wing plates");
     assert(fpx[0] >= 0 && fpx[n_fp-1] + 1.2 <= turner_len,
         "six_turner: wing plates must stay in footprint");
@@ -1655,10 +1679,10 @@ module six_turner() {
         "six_turner: mount holes must hit the chassis M3 holes (world 132/153, old plow pattern)");
     assert(chassis_width/2 - 20 == 10 && by[0] + 10 == 6 && by[1] + 10 == 54,
         "six_turner: mount holes must hit the chassis M3 holes across (world 6/54)");
-    // No bore, no slot, no ring: the voids below are ONLY the M3
-    // clearance holes. Wings/fin/nose/rails unite on the base plate;
-    // wing plates share into consecutive hulls, roots bed in the
-    // rails — one solid.
+    // v55 HOLLOW: the voids below are ONLY the M3 clearance
+    // holes. Base + guides + root walls + wings unite into one
+    // solid: wing plates share into consecutive hulls, roots bed
+    // in the outer root walls full length. Center holds only air.
     union() {
         difference() {
             union() {
@@ -1671,25 +1695,13 @@ module six_turner() {
                 translate([0, cy + paper_width/2 + 1 - 2, base_thick])
                     rotate([0, 0, -plan_ang])
                         cube([turner_len + 2, 2, 6]);
-                // Root rails: U-wall guides outside + wing root beds
-                // (roots embed 0.3, fused full length).
-                for (s=[-1,1])
-                    translate([0, cy + s*rail_in - (s > 0 ? 0 : 2), base_thick - epsilon])
-                        cube([turner_len, 2, rail_top - base_thick + epsilon]);
-                // Center fin tongue (progressive rise into the roll zone).
-                hull() {
-                    translate([2, cy - 0.7, base_thick - epsilon])
-                        cube([4, 1.4, fin_t0 - base_thick + epsilon]);
-                    translate([27, cy - 0.7, base_thick - epsilon])
-                        cube([6, 1.4, fin_t1 - base_thick + epsilon]);
-                }
-                // Wedge nose: entry lead-in chamfers (plan taper + rise).
-                hull() {
-                    translate([0, cy - 3.5, base_thick - epsilon])
-                        cube([0.8, 7, 5.5 - base_thick + epsilon]);
-                    translate([4, cy - 2.5, base_thick - epsilon])
-                        cube([2, 5, nose_top - base_thick + epsilon]);
-                }
+                // Outer root walls (SIDE WALLS ONLY): bed the wing roots
+                // outboard of the tape U, clear of the bore (roots
+                // embed 0.1..1.1, fused full length). Center stays air.
+                translate([0, rwallL0, base_thick - epsilon])
+                    cube([turner_len, rwallL1 - rwallL0, rwall_top - base_thick + epsilon]);
+                translate([0, rwallR0, base_thick - epsilon])
+                    cube([turner_len, rwallR1 - rwallR0, rwall_top - base_thick + epsilon]);
                 // Curling wings: hull-loft between fine plates, per side.
                 // Left (+Y) sweeps 0->span (deep); right (-Y) sweeps
                 // 180->180-span (shallow mirror). Plates share into
