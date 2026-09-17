@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v28 — 2026-09-17
+- Tape bend true mimic (tapeubend.png end-on): CAD R 3.0->1.75, fold 12.7->6.0 (HW 3.0), wall 2.0->5.5, N_ARC 12->20, new shoulder R1.5/60° S-kink + N_X 12 taper (0.15->1.0 W->E), double slab removed (single-layer floor), former collar shoe visual; stale v25 NOT-found comment fixed; viewer mirrors params, TAPE_LEN 320->180 unified, collar visual, ASSET_V 15
+
 ## v27 — 2026-09-16
 - Final printable pass: chassis back bearing blocks fused (y_off, was floating), shroud flanges gain 4xM3 holes, upper roller zoffset 11->0 (min_z=0), hopper export -26.5 to base (viewer +26.5 Y recomp), cover groove 0.8->0.7 (wall >=1.2); tape 0.4 film exempt, cones/rollers sets vs watertight singles noted; viewer collapsible kept, ASSET_V 14, 13 GLBs rebuilt
 

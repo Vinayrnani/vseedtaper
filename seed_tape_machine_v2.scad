@@ -113,7 +113,7 @@ plow_len      = 33; // v21 FIXED: decoupled from roller_axle_x (roller moved wes
                     // of drum, so the old roller-based end 39-126 went negative
                     // and tripped the plow_len assert). Plow stays east (v1 precedent).
 plow_end      = plow_start + plow_len; // 159
-fold_width    = 12.7;
+fold_width    = 6.0;   // v28 true mimic (was 12.7): narrow U trough 5-7 to match tapeubend.png; plow plan_ang derives from it
 track_depth   = 3;
 
 // ============================================================
@@ -190,26 +190,31 @@ cradle_u_depth  = 3;
 cradle_u_radius = 4;
 
 // ============================================================
-// Seed tape with center U-fold bend (v25 Step 4: mimic tapeubend.png)
-// NOTE: tapeubend.png was NOT found in repo or /tmp (glob
-// **/tapeubend.png empty); bend inferred from the name + v14 MVP
-// spec ("1 inch wide, center-fold with seed in middle") + the plow
-// 25.4->12.7 convergence: flat 25.4 ribbon full length, U-fold
-// channel (bottom = fold_width 12.7 + r3 quarter arcs + 2 walls)
-// riding on top through the plow zone (world x 126..159) where the
-// plow converges the tape. tape_bend_radius = arc R, tape_fold_angle
-// = arc sweep per side (90 = vertical walls = full U). tape_thick 0.4
-// keeps printables solid (no zero-thickness). Assembly: static tape
-// (viewer scrolls it); export standalone min_z=0.
+// Seed tape with center U-fold bend (v28 true mimic of tapeubend.png)
+// End-on photo (now in repo): flat 25.4 sheet -> tight narrow U trough
+// 5-7 wide, inner R 1.5-2, vertical walls 5-6 deep pocket, small reverse
+// S-kink at the shoulders flaring back to the flat wings, progressive
+// flat-entry (shallow west) to full-U exit (deep east) along the plow
+// zone (world x 126..159); seed drops in the center; stainless former
+// collar (transverse shoe with U notch) rides over the exit as a visual.
+// Single-layer bottom (flat ribbon IS the trough floor, no double slab).
+// tape_bend_radius = inner arc R (1.75), fold_width = trough bottom width
+// (6.0, HW 3.0), tape_fold_wall = vertical wall length (5.5),
+// tape_shoulder_r/ang = reverse S-kink at shoulders (1.5/60), tape_n_arc
+// = 20 facets/side, tape_n_x = 12 taper steps (depth 0.15->1.0 W->E).
+// Assembly: static tape (viewer scrolls it); export standalone min_z=0.
 // ============================================================
 tape_thick       = 0.4;
-tape_bend_radius = 3.0;
+tape_bend_radius = 1.75;
 tape_fold_angle  = 90;
-tape_fold_wall   = 2.0;
+tape_fold_wall   = 5.5;
+tape_shoulder_r  = 1.5;
+tape_shoulder_ang = 60;
 tape_len         = 180;
 tape_x0          = chassis_x0;   // -14: spans spool(-6)..plow end(159)+margin
 tape_z           = 30;           // ride height under drum (drop tube exit 30.5)
-tape_n_arc       = 12;           // arc facets per side (smooth like $fn=60 curves)
+tape_n_arc       = 20;           // arc facets per side (smooth like $fn=60 curves)
+tape_n_x         = 12;           // taper steps along X (progressive entry->exit)
 
 // ============================================================
 // Spool cones
@@ -933,53 +938,80 @@ module folding_plow() {
 }
 
 // ============================================================
-// 7b. Seed tape with center U-fold bend (v25 Step 4).
+// 7b. Seed tape with center U-fold bend (v28 true mimic).
 // Local frame: x 0..tape_len, y centred 0, z 0..fold-top, min_z=0.
-// Flat paper_width ribbon full length + U-fold channel (bottom =
-// fold_width, quarter-arc sides R=tape_bend_radius sweeping
-// tape_fold_angle, straight walls tape_fold_wall) fused on top over
-// the plow zone (local x plow_start-tape_x0, length plow_len).
-// Ribbon boxes are centered ON the fold path (thickness +-0.2) with
-// epsilon overlap so the union stays manifold, never zero-thickness.
+// Flat paper_width ribbon full length (single-layer trough floor) +
+// U-fold channel fused on top over the plow zone (local x
+// plow_start-tape_x0, length plow_len): bottom edges at +-hw rise via
+// quarter-arc sides R=tape_bend_radius sweeping tape_fold_angle, then
+// straight vertical walls tape_fold_wall, then a reverse S-shoulder per
+// side (outward kink + foot landing back on the ribbon wings so the
+// sheet reads continuous, no floating free edge). Fold depth tapers
+// along X (tape_n_x steps, scale 0.15->1.0 W->E: shallow flat-entry,
+// full-U exit = chamfered entry). Ribbon boxes centered ON the fold
+// path (thickness +-0.2) with epsilon overlap so the union stays
+// manifold, never zero-thickness.
 // Allowed modules only: union/cube/for/if/translate/rotate.
 // ============================================================
 module seed_tape_bend() {
-    hw = fold_width/2;                 // 6.35 flat bottom half-width
-    r = tape_bend_radius;              // 3
+    hw = fold_width/2;                 // 3.0 trough bottom half-width
+    r = tape_bend_radius;              // 1.75
     a = tape_fold_angle;               // 90 = vertical walls (full U)
+    sh_r = tape_shoulder_r;            // 1.5 reverse S-kink radius
     fx0 = plow_start - tape_x0;        // 140: fold segment local x
-    slab_top = 2*tape_thick - epsilon; // 0.75: fold slab top (on ribbon)
-    cz = slab_top + r;                 // 3.75: arc center height
+    base_top = tape_thick;             // 0.4: ribbon top (trough floor, single layer)
+    cz = base_top + r;                 // arc center height at full depth
+    dx = plow_len/tape_n_x;
     union() {
-        // Flat ribbon full length (base min_z=0)
+        // Flat ribbon full length (base min_z=0, single-layer floor)
         translate([0, -paper_width/2, 0])
             cube([tape_len, paper_width, tape_thick]);
-        // Fold bottom slab on the ribbon (epsilon-fused, plow zone)
-        translate([fx0, -hw, tape_thick - epsilon])
-            cube([plow_len, 2*hw, tape_thick]);
-        // Fold sides: arc (n facets) + tangent wall, mirrored.
-        // Arc starts at the slab edge (angle -90: [hw, slab_top]) and
-        // sweeps outward-up by tape_fold_angle (a=90 ends vertical).
+        // Fold sides: per-side full-depth path, tapered per X step.
+        // Path per side s (full depth): arc (n facets) from the ribbon
+        // top at [s*hw, base_top] sweeping outward-up, vertical wall,
+        // shoulder kink (outward+slightly up) then foot back down onto
+        // the ribbon wing at [s*(hw+r+2.5), base_top].
         for (s=[-1,1])
-            for (i=[0:tape_n_arc-1]) {
-                t0 = -90 + i*a/tape_n_arc;
-                t1 = -90 + (i+1)*a/tape_n_arc;
-                p0 = [s*(hw + r*cos(t0)), cz + r*sin(t0)];
-                p1 = [s*(hw + r*cos(t1)), cz + r*sin(t1)];
-                seg_ribbon(fx0, p0, p1);
+            for (xi=[0:tape_n_x-1]) {
+                sc = 0.15 + 0.85*(xi + 0.5)/tape_n_x;  // W shallow -> E full
+                x0 = fx0 + xi*dx;
+                // arc facets
+                for (i=[0:tape_n_arc-1]) {
+                    t0 = -90 + i*a/tape_n_arc;
+                    t1 = -90 + (i+1)*a/tape_n_arc;
+                    p0 = [s*(hw + r*cos(t0)), base_top + (r + r*sin(t0))*sc];
+                    p1 = [s*(hw + r*cos(t1)), base_top + (r + r*sin(t1))*sc];
+                    seg_ribbon_taper(x0, dx, p0, p1);
+                }
+                te = a - 90;  // arc end angle (0 = vertical tangent)
+                pa = [s*(hw + r*cos(te)), base_top + (r + r*sin(te))*sc];
+                wd = [-s*sin(te), cos(te)];  // tangent dir at arc end
+                pb = [pa[0] + wd[0]*tape_fold_wall*sc, pa[1] + wd[1]*tape_fold_wall*sc];
+                seg_ribbon_taper(x0, dx, pa, pb);
+                // reverse S-shoulder: kink outward+up, then foot down to wing
+                pk = [pb[0] + s*sh_r*0.9, pb[1] + sh_r*0.5*sc];
+                pf = [s*(hw + r + 2.5), base_top];
+                seg_ribbon_taper(x0, dx, pb, pk);
+                seg_ribbon_taper(x0, dx, pk, pf);
             }
-        for (s=[-1,1]) {
-            te = a - 90;  // arc end angle
-            pa = [s*(hw + r*cos(te)), cz + r*sin(te)];
-            wd = [-s*sin(te), cos(te)];  // tangent dir at arc end
-            pb = [pa[0] + wd[0]*tape_fold_wall, pa[1] + wd[1]*tape_fold_wall];
-            seg_ribbon(fx0, pa, pb);
-        }
     }
 }
 
-// Ribbon segment between 2D path points p0/p1 ([y,z]), length plow_len
-// in X at fx0, centered on the path (thickness tape_thick).
+// Tapered ribbon segment between 2D path points p0/p1 ([y,z]), X-span
+// [x0, x0+dx+eps overlap], centered on the path (thickness tape_thick).
+module seg_ribbon_taper(x0, dx, p0, p1) {
+    dy = p1[0] - p0[0];
+    dz = p1[1] - p0[1];
+    seg = sqrt(dy*dy + dz*dz);
+    if (seg > 0) {
+        translate([x0 + dx/2, (p0[0]+p1[0])/2, (p0[1]+p1[1])/2])
+            rotate([atan2(dz, dy), 0, 0])
+                cube([dx + 2*epsilon, seg + 2*epsilon, tape_thick], center=true);
+    }
+}
+
+// Legacy fixed-length ribbon segment (kept: allowed-module helper,
+// unused by the tapered bend but harmless).
 module seg_ribbon(fx0, p0, p1) {
     dy = p1[0] - p0[0];
     dz = p1[1] - p0[1];
@@ -988,6 +1020,31 @@ module seg_ribbon(fx0, p0, p1) {
         translate([fx0 + plow_len/2, (p0[0]+p1[0])/2, (p0[1]+p1[1])/2])
             rotate([atan2(dz, dy), 0, 0])
                 cube([plow_len, seg + 2*epsilon, tape_thick], center=true);
+    }
+}
+
+// Stainless former collar (v28 visual): transverse shoe with a U notch
+// straddling the trough at the plow exit (full-U end). Two feet ride the
+// flat wings + top bridge clears the pocket; the notch (inner width
+// fold_width+2*tol, depth wall+r) forms the paper around the trough.
+// Visual in assembly only (not a separate print export).
+module former_collar() {
+    shoe_w = 30;          // across-tape (covers 25.4 wings)
+    shoe_t = 3;           // along-tape thickness
+    foot_w = (shoe_w - (fold_width + 2*tolerance))/2;
+    notch_d = tape_fold_wall + tape_bend_radius + 1.0;
+    bridge_t = 2.0;
+    difference() {
+        union() {
+            // feet on the wings
+            translate([-shoe_t/2, -shoe_w/2, 0]) cube([shoe_t, foot_w, notch_d]);
+            translate([-shoe_t/2, shoe_w/2 - foot_w, 0]) cube([shoe_t, foot_w, notch_d]);
+            // top bridge
+            translate([-shoe_t/2, -shoe_w/2, notch_d]) cube([shoe_t, shoe_w, bridge_t]);
+        }
+        // U notch (open bottom): trough pocket clearance
+        translate([-shoe_t/2 - epsilon, -(fold_width + 2*tolerance)/2, -epsilon])
+            cube([shoe_t + 2*epsilon, fold_width + 2*tolerance, notch_d + epsilon]);
     }
 }
 
@@ -1258,11 +1315,17 @@ module animated_assembly() {
     translate([plow_start, chassis_width/2 - 12.7, base_thick])
         seed_cradle();
 
-    // Seed tape with center U-fold (v25 Step 4: flat ribbon + fold
-    // channel over the plow zone, world x tape_x0..+180 at z=30 under
-    // the drum; static in CAD, scrolls in the viewer).
+    // Seed tape with center U-fold (v28 true mimic: narrow 6 trough,
+    // R1.75, 5.5 walls, S-shoulders, W-shallow->E-full taper over the
+    // plow zone, world x tape_x0..+180 at z=30 under the drum; static
+    // in CAD, scrolls in the viewer; single-layer floor, min_z=0).
     translate([tape_x0, chassis_width/2, tape_z])
         seed_tape_bend();
+
+    // Former collar (v28 visual): stainless transverse shoe with U notch
+    // straddling the full-U exit end of the fold (world x ~156).
+    translate([plow_end - 3, chassis_width/2, tape_z + tape_thick])
+        former_collar();
 
     // Folding plow
     translate([plow_start, chassis_width/2 - 20, base_thick])

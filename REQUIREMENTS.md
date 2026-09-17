@@ -1,6 +1,36 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v27**
+**Version: v28**
+
+## v28 Tape Bend True Mimic (tapeubend.png) - 2026-09-17
+
+1. **Source of truth**: `tapeubend.png` (end-on view, now in repo):
+   flat 25.4 sheet -> tight narrow U trough ~5-7 wide, inner R ~1.5-2,
+   vertical walls ~5-6 deep pocket, small reverse S-kink at the shoulders,
+   progressive flat-entry to full-U exit, seed drops in the center,
+   stainless former collar transverse over the exit.
+2. **CAD** (`seed_tape_machine_v2.scad` only): `seed_tape_bend()` retuned
+   to `tape_bend_radius` 1.75, `fold_width` 6.0 (HW 3.0),
+   `tape_fold_wall` 5.5, `tape_shoulder_r` 1.5 / `tape_shoulder_ang` 60,
+   `tape_n_arc` 20, new `tape_n_x` 12 taper steps (depth scale 0.15->1.0
+   W->E, chamfered entry); double-thickness bottom slab REMOVED
+   (flat ribbon IS the single-layer floor); per-side reverse S-shoulder
+   (wall-top kink outward+up, foot back down onto the wing, sheet reads
+   continuous); new `seg_ribbon_taper()` (old `seg_ribbon()` kept as
+   unused helper); new visual `former_collar()` shoe with U notch over
+   the exit (assembly only, not a print export). Stale v25
+   "tapeubend.png NOT found" comment replaced. `min_z=0`, `$fn=60`,
+   `tol=0.3`, R->L order, back gears/crank untouched.
+3. **Viewer** (`web/index.html` only): `TAPE_BEND_R` 1.75, `TAPE_FOLD_HW`
+   3.0, `TAPE_FOLD_WALL` 5.5, `TAPE_N_ARC` 20, `TAPE_N_X` 12 +
+   `TAPE_SH_R` 1.5 mirrored; double slab removed; tapered fold (per-X
+   depth scale) + S-shoulder + former collar shoe visual; `TAPE_LEN`
+   320->180 unified with CAD `tape_len`; collapsible panel kept;
+   `ASSET_V` 14->15, tape GLB rebuilt (+ full regen via cache).
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L hopper > drum > shroud > roller+crank kept;
+   port 9099 only.
 
 ## v27 Final Pass: Readily Printable Audit - 2026-09-16
 
