@@ -1,6 +1,38 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v57**
+**Version: v58**
+
+## v58 Big-to-Small 6-Turner (user direction reversal: entry BIG loose 6 dia 21 at world 126, exit SMALL tight curled 6 dia 9 at world 159, 1.0mm daylight gap) - 2026-09-17
+
+1. **Concept** (discuss-first agreed): entry (world x126) = BIG loose
+    6, wide mouth (outer dia 21, R10.5) to catch the seeded U-tape
+    (lane check: 7.8 pocket + transit top 21.15 thread the 19.4 entry
+    bore with room; bore axis local y20/z13 kept); exit (world
+    x159) = SMALL tight curled 6, outer dia 9 (R4.5) per user.
+    6-gap: inner hook edge approaches the outer circle but NEVER
+    touches — ~1.0mm daylight gap full length so the tape slides.
+    Thin wall 0.8 minimum printable, hollow bore see-through, open
+    slit full length (wrap 300->330, never a tube), taper
+    big->small along +X, flat skid underside + lower side blade,
+    2 small 6x6x1 screw ears to chassis holes (132/6, 153/54).
+2. **CAD** (`seed_tape_machine_v2.scad` only): `six_turner()`
+    stations rewritten (7 stations x0..33, R 10.5->4.5 decreasing,
+    wrap 300->330, hook 20->160, `hook_off` 3.3->1.8 so
+    hook-shell daylight = 1.0); 17 fine plates re-interpolated
+    (exit plate R4.5 exact = dia 9 proof); skid re-tapered
+    3.0->8.8 (fused to big-entry shell, clear of bore); side
+    blade re-seated mid-height fused to shell, clear of bore;
+    bore-blocking posts deleted, mounts re-routed as ground-level
+    bars via the skid (single solid); fail-loud asserts incl.
+    exit dia == 9, gap == 1.0 (never-touch), decreasing R.
+    `$fn=60`, `tol=0.3`, manifold single solid, min_z=0.
+3. **Tape**: untouched.
+4. **Viewer** (`web/index.html` only): `ASSET_V` 41->42, plow GLB
+    rebuilt, legend + `_sixTurner` hooks relabelled big->small.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
 
 ## v57 Hollow-Loft Fix: hull() Filled the Bore (user visual check: thin-wall six_turner looked SOLID BLOCK + flipped) - 2026-09-17
 

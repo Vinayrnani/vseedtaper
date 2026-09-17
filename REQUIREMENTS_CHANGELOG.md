@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v58 — 2026-09-17
+- Big-to-small 6-turner (user direction reversal): entry BIG loose 6 dia 21 (R10.5, catches seeded 7.8 U-pocket, bore axis y20/z13 kept) -> exit SMALL tight curled 6 dia 9 (R4.5); 1.0mm daylight gap hook-to-shell full length (never touch); wall 0.8, hollow bore, open slit (wrap 300->330), skid 3.0->8.8 + re-seated side blade, ground-bar mounts via skid (bore-blocking posts deleted); fail-loud exit-dia/gap/taper asserts; viewer ASSET_V 42, plow GLB rebuilt
+
 ## v57 — 2026-09-17
 - Hollow-loft fix, hull() filled the bore (user: thin-wall six_turner looked SOLID BLOCK + flipped): diagnosed via solo-plow screenshots + GLB volume ~8682 (convex hull of 300deg annular plates includes bore centre); six_turner loft rebuilt as overlapping plates with zero hull on shell/hook/rib (plate_t 1.2->2.2 > 1.925 pitch, 17 plates re-interpolated, union only) — hollow bore, open slit/ends; orientation verified correct with no swap (R grows x0->33 = world 126->159, rigid viewer rot, no mirror); viewer ASSET_V 41, plow GLB rebuilt
 
