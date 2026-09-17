@@ -98,8 +98,8 @@ spool_axle_z  = 65;  // 120mm max roll OD, height 65mm above base
 // ============================================================
 // Chassis
 // ============================================================
-chassis_x0    = -14; // v22: west edge (was 0); east edge stays chassis_x0+chassis_len=200
-chassis_len   = 214; // v22: 200->214, west extension seats the spool bearing at x=-6
+chassis_x0    = -14; // v22: west edge (was 0); east edge stays chassis_x0+chassis_len=248 (v38: 200->248 seats take-up 226+16=242 + 6 margin)
+chassis_len   = 262; // v38: 214->262, east extension seats the wind-up reel clear of the pull nip (X gap 6)
 chassis_width = 60;
 chassis_height = 110;  // > max(spool top=90, drum top=102) + 5 = 107 ✓
 base_thick    = 4;
@@ -240,11 +240,50 @@ tape_fold_angle  = 90;
 tape_fold_wall   = 5.5;
 tape_shoulder_r  = 1.5;
 tape_shoulder_ang = 60;
-tape_len         = 180;
-tape_x0          = chassis_x0;   // -14: spans spool(-6)..plow end(159)+margin
+tape_len         = 270;
+tape_x0          = chassis_x0;   // -14: spans spool(-6)..take-up reel(226)+flange (v38: 220->270 reaches respaced bind/pull/wind)
 tape_z           = 13;           // v33 lane (was 24): transit top 21.4 clears disc 35 by 13.6, ribbon top 13.4
 tape_n_arc       = 20;           // arc facets per side (smooth like $fn=60 curves)
 tape_n_x         = 12;           // taper steps along X (progressive entry->exit)
+
+// ============================================================
+// v37 Thread-bind + vertical pull + wind-up (v36 MVP backfill:
+// hopper 9 o'clock -> 11-6 channel -> 6 o'clock drop onto the
+// 1in folded tape -> thread bind -> vertical pull -> wind-up).
+// All geared to the drum (6 cavities, 6in/152.4mm spacing intent):
+// pull nip runs 1:1 with the main roller (same dia => same surface
+// speed, spacing preserved); twister orbits once per cavity (6 per
+// drum rev, one bind per seed); take-up winds the same linear tape
+// (core d10 => 4 rev per $t, i.e. 2x crank). Bind sits just after
+// the plow (bind_x = plow_end+8); pull nip stacks vertically over
+// the finished tape at pull_x; reel sits east at takeup_x.
+// v38 RESPACED (v37 overlapped: twister 163..171 touched pull 171..191
+// at X=171, take-up 170..202 interpenetrated both in X/Y/Z).
+// Sequential eastward with >=5mm steel-to-steel X gaps:
+// plow end 159 -> twister 168..176 (gap 9) -> pull 184..204 (gap 8) ->
+// take-up 210..242 (gap 6). Centres 32 apart for pull->take-up vs
+// radii sum 10+16=26 + tol 0.3 + margin 5 = 31.3 (margin 5.7).
+// $fn=60, tol=0.3 kept.
+// ============================================================
+bind_x   = plow_end + 13;   // 172: thread orbit station east of the plow (rotor X half 4 -> 168..176, gap 9)
+pull_x   = plow_end + 35;   // 194: vertical-nip pull station (rollers r10 -> 184..204, gap 8 to twister east)
+takeup_x = 226;             // wind-up reel east (flange r16 -> 210..242, gap 6 to pull east; chassis east 248)
+takeup_z = 34;              // reel axle height (flange 18..50: bottom >= 0, top < 110)
+twister_axle_z = tape_z + 4;      // 17: ring centre over the folded pocket (pocket top ~21)
+twister_ring_r = 10;              // guide ring radius (tape pocket 7.8 passes through)
+twister_ring_tube = 2;
+twister_lift = twister_ring_r + twister_ring_tube; // 12: export lift for min_z=0
+twister_arms = 2;                 // 2 threads orbit the tape
+twister_orbits_per_drum = 6;      // one bind per cavity per drum rev (== num_divots)
+vpull_r = 10;                     // vertical-axis nip roller radius (= roller_body_r: surface speed 1:1)
+vpull_h = 24;                     // roller height (covers lane 13..21 + caps, base at 0)
+vpull_off = vpull_r + 2.0 + 1.5 + 0.4 + tolerance; // 14.2: r + fold HW + bend R + thick + tol
+takeup_core_d = 10;               // wind-up core dia (rev = tape / (PI*core_d))
+takeup_core_r = takeup_core_d/2;
+takeup_flange_r = 16;
+takeup_flange_t = 3;
+takeup_core_h = 28;
+takeup_h_total = takeup_core_h + takeup_flange_t; // 31: bottom flange 0..3 + core 0..31 + top 28..31
 
 // ============================================================
 // Spool cones
@@ -302,6 +341,20 @@ assert(tape_z + tape_thick + tape_bend_radius + tape_fold_wall + tape_shoulder_r
 assert(fold_width/2 + tape_bend_radius + tape_thick <= 5.0,
        str("fold outer half-width must fit under the OD10 pipe footprint (5.0): ", fold_width/2 + tape_bend_radius + tape_thick));
 assert(tape_x0 + tape_len >= plow_end, str("tape ribbon must reach the plow end: ", tape_x0 + tape_len));
+assert(bind_x > plow_end, str("bind station must sit east of the plow end: ", bind_x));
+assert(twister_arms == 2, "thread twister must carry exactly 2 thread arms");
+assert(twister_orbits_per_drum == num_divots, "twister must orbit once per cavity (6 per drum rev, one bind per seed)");
+assert(twister_axle_z + twister_ring_r + twister_ring_tube <= 40, str("twister ring top must clear the hover pipe/drum: ", twister_axle_z + twister_ring_r + twister_ring_tube));
+assert(pull_x > bind_x, str("pull nip must sit east of the bind station: ", pull_x));
+assert(vpull_r == roller_body_r, "vertical-pull dia must equal main roller dia (1:1 surface speed, spacing preserved)");
+assert(takeup_x > pull_x, str("wind-up reel must sit east of the pull nip: ", takeup_x));
+assert(takeup_x + takeup_flange_r <= chassis_x0 + chassis_len + 4, str("take-up flange must stay ~inside the chassis east edge: ", takeup_x + takeup_flange_r));
+assert(takeup_z - takeup_flange_r >= 0, str("take-up flange bottom must stay >= 0: ", takeup_z - takeup_flange_r));
+assert(takeup_z + takeup_flange_r <= chassis_height, str("take-up flange top must fit below wall top: ", takeup_z + takeup_flange_r));
+assert(tape_x0 + tape_len >= takeup_x + takeup_flange_r, str("tape ribbon must reach the wind-up reel: ", tape_x0 + tape_len));
+assert(bind_x - 4 - plow_end >= 5, str("v38: twister west face (bind_x-4) must clear plow end by >=5: ", bind_x - 4 - plow_end));
+assert((pull_x - vpull_r) - (bind_x + 4) >= 5, str("v38: pull west face must clear twister east face by >=5: ", (pull_x - vpull_r) - (bind_x + 4)));
+assert((takeup_x - takeup_flange_r) - (pull_x + vpull_r) >= 5, str("v38: take-up west face must clear pull east face by >=5: ", (takeup_x - takeup_flange_r) - (pull_x + vpull_r)));
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
 assert(crank_mount_x == roller_axle_x, str("crank_mount_x must be coaxial with roller axle: ", crank_mount_x));
 assert(crank_mount_y == -8, str("crank_mount_y must sit outside the back wall (-8): ", crank_mount_y));
@@ -483,6 +536,17 @@ module chassis() {
                     bearing_block(spec[0], spec[1], spec[2], spec[3]==1,
                                   side == 0 ? 0 : chassis_width);
                 }
+            // v37 wind-up reel bearing blocks (axle along Y at takeup_x/takeup_z)
+            for (side=[0,1])
+                bearing_block(takeup_x, takeup_z, bb_height_spool, false,
+                              side == 0 ? 0 : chassis_width);
+            // v37 twister guide posts (static frame for the orbiting ring:
+            // two posts flanking the tape at bind_x hold the ring axle
+            // height; the rotor GLB stays a pure symmetric rotor so the
+            // viewer can spin it about X without orbiting the frame)
+            for (s=[-1,1])
+                translate([bind_x - 2, chassis_width/2 + s*12 - 1.5, 0])
+                    cube([4, 3, twister_axle_z]);
             // Corner gussets via hull() of cubes
             for (gy=[0, chassis_width - 6]) {
                 translate([chassis_x0 + 4, gy, base_thick - 0.15])
@@ -500,6 +564,11 @@ module chassis() {
         // Axle holes (nominal + 2*tolerance)
         for (side=[0,1]) {
             translate([spool_axle_x, side*(chassis_width-wall_thick)+wall_thick/2, spool_axle_z])
+                rotate([90,0,0])
+                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        }
+        for (side=[0,1]) {
+            translate([takeup_x, side*(chassis_width-wall_thick)+wall_thick/2, takeup_z])
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
         }
@@ -1325,6 +1394,97 @@ module pull_rollers() {
 }
 
 // ============================================================
+// v37 Thread-bind + vertical pull + wind-up (v36 MVP backfill).
+// Allowed modules only; $fn=60 inherited; tol=0.3 clearances.
+// - thread_twister(): rotor CENTRED at origin, axis along X: outer
+//   guide ring (axisymmetric, so viewer spin about X looks right) +
+//   hub + exactly 2 arms (180 apart) + thread bobbins at the tips.
+//   Folded tape (outer 7.8) threads the ring bore (r 10-2=8).
+//   Export branch lifts +twister_lift for min_z=0; assembly spins
+//   it about X at [bind_x, 30, twister_axle_z] by twister_angle.
+// - vpull_roller(): ONE vertical-axis nip roller, base at z=0
+//   (body d20 h24 + caps/collar, min_z=0 in export AND assembly):
+//   pair stands on the base flanking the finished folded tape at
+//   [pull_x, 30 +/- vpull_off], spins about Z (1:1 with main
+//   roller, same dia => same surface speed => spacing preserved).
+// - takeup_reel(): wind-up reel built along Z for flat printing
+//   (bottom flange 0..3 + core r5 0..31 + top flange 28..31,
+//   min_z=0); assembly recentres, tilts to axle-Y, spins about
+//   the axle by takeup_angle (4 rev per $t = same linear tape).
+// ============================================================
+module thread_twister() {
+    assert(twister_arms == 2, "thread_twister: must carry exactly 2 arms");
+    union() {
+        // Outer guide ring in the YZ plane (axis X): rotate_extrude
+        // ring about Z then tilt so its axis lies along X.
+        rotate([0, 90, 0])
+            rotate_extrude(convexity=10)
+                translate([twister_ring_r, 0, 0])
+                    square([twister_ring_tube*2, twister_ring_tube*2], center=true);
+        // Hub along X
+        rotate([0, 90, 0])
+            cylinder(h=8, r=3, center=true);
+        // 2 arms + thread bobbins (180 apart, fused hub->ring)
+        for (k=[0:twister_arms-1])
+            rotate([k*180, 0, 0]) {
+                translate([0, (twister_ring_r+3)/2, 0])
+                    cube([4, twister_ring_r - 1, 3], center=true);
+                translate([0, twister_ring_r - 1, 0])
+                    rotate([0, 90, 0])
+                        cylinder(h=6, r=3, center=true);
+            }
+    }
+}
+
+module vpull_roller() {
+    difference() {
+      union() {
+        cylinder(h=vpull_h, r=vpull_r, center=false);
+        // Diamond knurl band (visual grip, shallow so OD stays ~20)
+        for (k=[0:11]) {
+            t = k/11;
+            zpos = 4 + t*(vpull_h - 8);
+            rotate([0, 0, k*30])
+                translate([vpull_r - 0.5, 0, zpos])
+                    cube([1.2, 2.0, 2.6], center=true);
+        }
+        translate([0, 0, vpull_h])
+            difference() {
+                cylinder(h=3, d=22, center=false);
+                translate([0, 0, -epsilon])
+                    cylinder(h=3 + 2*epsilon, d=axle_clearance_dia, center=false);
+            }
+        translate([0, 0, vpull_h/2])
+            difference() {
+                cylinder(h=3, d=22, center=true);
+                translate([0, 0, 0])
+                    cylinder(h=3 + 2*epsilon, d=axle_clearance_dia, center=true);
+            }
+      }
+      // Axle bore through body + caps
+      translate([0, 0, -epsilon])
+          cylinder(h=vpull_h + 3 + 2*epsilon, d=axle_clearance_dia, center=false);
+    }
+}
+
+module takeup_reel() {
+    difference() {
+        union() {
+            cylinder(h=takeup_flange_t, r=takeup_flange_r, center=false);
+            cylinder(h=takeup_core_h + takeup_flange_t, r=takeup_core_r, center=false);
+            translate([0, 0, takeup_core_h])
+                cylinder(h=takeup_flange_t, r=takeup_flange_r, center=false);
+            // Wound-tape pack visual (finished tape coils on the core)
+            translate([0, 0, takeup_flange_t])
+                cylinder(h=takeup_core_h - takeup_flange_t, r=takeup_core_r + 3, center=false);
+        }
+        // Axle bore through the whole reel
+        translate([0, 0, -epsilon])
+            cylinder(h=takeup_h_total + 2*epsilon, d=axle_clearance_dia, center=false);
+    }
+}
+
+// ============================================================
 // 9. Crank assembly — proper hand crank with hub boss, tapered arm (hull),
 //     counterweight stub, free-spinning grip parallel to shaft axis.
 //     Grip center traces circle of radius crank_throw about shaft axis.
@@ -1399,6 +1559,12 @@ module crank_assembly() {
 //   40:20 mesh, 2:1; +9° half-pitch so the pinion tooth falls into the drum gap)
 //   crank = roller_angle (rigid on the roller shaft, coaxial at roller_axle_x)
 //   upper idler = -720*$t (counter-rotates via tape contact)
+//   v37 downstream chain (all geared to drum/crank, spacing preserved):
+//   twister_angle = -360*$t*twister_orbits_per_drum about X (6 orbits per
+//   drum rev = one thread bind per cavity/seed); pull nip pair spins
+//   about Z at +/-roller_angle (same dia as main roller => 1:1 surface
+//   speed, the spacing driver); takeup_angle = 1440*$t about the reel
+//   axle (core d10: 4 rev per $t winds the same 125.66mm linear tape).
 // At $t=0 geometry equals static layout (plus the 9° mesh phase on the roller).
 // ============================================================
 module animated_assembly() {
@@ -1406,6 +1572,10 @@ module animated_assembly() {
     crank_angle = 720*$t;    // lower roller + crank orbit (CW, opposite drum)
     idler_angle = -720*$t;   // upper idler counter-rotates
     roller_angle = crank_angle + gear_mesh_phase; // mesh-phased roller shaft
+    twister_angle = -360*$t*twister_orbits_per_drum; // v37: 6 orbits/drum rev about X
+    pull_a_angle = roller_angle;   // v37: nip side A with the roller shaft
+    pull_b_angle = -roller_angle;  // v37: nip side B counter-rotates
+    takeup_angle = 1440*$t;        // v37: core d10 winds 125.66mm per $t
 
     // Chassis
     chassis();
@@ -1476,6 +1646,33 @@ module animated_assembly() {
         rotate([0, roller_angle, 0])
             translate([-crank_pivot_x, 0, -crank_pivot_z])
                 crank_assembly();
+
+    // v37 Thread twister (2 arms orbit the tape axis just east of the
+    // plow, binding each seed into the folded pocket; geared 6 orbits
+    // per drum rev = one bind per cavity).
+    translate([bind_x, chassis_width/2, twister_axle_z])
+        rotate([twister_angle, 0, 0])
+            thread_twister();
+
+    // v37 Vertical-nip pull pair (spacing driver): two vertical-axis
+    // rollers stand on the base flanking the finished folded tape at
+    // pull_x, pinching the closed pocket and pulling it at the same
+    // surface speed as the main roller (1:1, spacing preserved).
+    translate([pull_x, chassis_width/2 - vpull_off, base_thick])
+        rotate([0, 0, pull_a_angle])
+            vpull_roller();
+    translate([pull_x, chassis_width/2 + vpull_off, base_thick])
+        rotate([0, 0, pull_b_angle])
+            vpull_roller();
+
+    // v37 Take-up spool (wind-up reel east): reel built along Z is
+    // recentred, tilted to axle-Y, spun about its axle by takeup_angle
+    // (core d10 winds the same linear tape the pull nip delivers).
+    translate([takeup_x, chassis_width/2, takeup_z])
+        rotate([90, 0, 0])
+            rotate([0, 0, takeup_angle])
+                translate([0, 0, -takeup_h_total/2])
+                    takeup_reel();
 }
 
 module assemble_all() {
@@ -1518,6 +1715,15 @@ if (part_to_render == "all") {
     seed_tape_bend();
 } else if (part_to_render == "rollers") {
     pull_rollers();
+} else if (part_to_render == "twister") {
+    // Rotor centred at origin; lift to print base (min_z=0).
+    translate([0, 0, twister_lift]) thread_twister();
+} else if (part_to_render == "pull_a") {
+    vpull_roller(); // base at z=0 already
+} else if (part_to_render == "pull_b") {
+    vpull_roller(); // base at z=0 already
+} else if (part_to_render == "takeup") {
+    takeup_reel(); // built along Z, base at z=0 already
 } else if (part_to_render == "crank") {
     crank_assembly();
 } else {

@@ -1,6 +1,50 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v36**
+**Version: v38**
+
+## v38 Downstream Respace (v37 overlap fix) - 2026-09-17
+
+1. **Goal**: fix v37 steel overlap (twister 163..171 touched pull
+   171..191 at X=171, take-up 170..202 interpenetrated both in X/Y/Z).
+   Sequential eastward with >=5mm steel X gaps: plow end 159 ->
+   twister 172 (168..176, gap 9) -> pull 194 (184..204, gap 8) ->
+   take-up 226/34 (210..242, gap 6); centres 32 vs 26+0.3+5=31.3.
+2. **CAD**: bind_x 167->172, pull_x 181->194, takeup 186/28->226/34,
+   chassis_len 214->262 (east 248), tape 220->270, 3 fail-loud gap
+   asserts; gearing/animation unchanged; min_z=0, $fn=60, tol=0.3 kept.
+3. **Viewer**: pivots to 172/194/226-34, BIND_X 172 (HALF 7), TAPE_LEN
+   270, tape-path comment, ASSET_V 24, GLBs rebuilt.
+4. **Frozen**: v1 scad + web/backup/ untouched; port 9099 only.
+
+## v37 Thread-Bind + Vertical Pull + Wind-Up Build (v36 spec) - 2026-09-17
+
+1. **Goal**: build the v36 MVP tail: 2 threads orbit the tape after the
+   folding plow (one bind per seed), vertical nip rollers pull the
+   finished tape at constant speed (spacing driver), take-up spool winds
+   it; all geared to the drum (6 cavities, 6 inch / 152.4mm intent).
+   Process: hopper 9 o'clock -> 11-6 channel -> 6 o'clock drop onto the
+   1in folded tape -> thread bind -> vertical pull -> wind-up.
+2. **CAD** (`seed_tape_machine_v2.scad` only): new `thread_twister()`
+   (ring r10 + hub + 2 arms/bobbins at bind_x=plow_end+8=167, axle
+   z=tape_z+4=17), `vpull_roller()` x2 (vertical-axis d20 h24 at
+   pull_x=181, y=30±14.2 flanking the 7.8 folded pocket, same dia as
+   main roller = 1:1 surface speed), `takeup_reel()` (core d10 +
+   r16 flanges + tape pack at takeup_x=186/takeup_z=28); chassis gains
+   take-up bearing blocks + axle holes + twister posts; tape 214->220
+   reaches the reel; `part_to_render` branches twister/pull_a/pull_b/
+   takeup; animated_assembly gears twister -2160t / pull ±roller /
+   takeup +1440t; fail-loud asserts (bind>plow, 2 arms, 6 orbits==6
+   cav, pull dia==roller dia, takeup east + flange clear, tape reaches
+   reel); min_z=0 all; `$fn=60`, `tol=0.3` kept.
+3. **Viewer** (`web/index.html` only): twister/pullA/pullB/takeup pivots
+   + PART_DEFS + PART_ORDER, animation synced (twister -3x crank about
+   X, pull ±2x about Y, take-up -2x about Z), 2 procedural thread helix
+   lines through the bind zone + `window._twister` proof hooks, tape
+   path comment extended spool->nip->forming->transit->plow->bind->
+   pull->wind; `ASSET_V` 23, all GLBs rebuilt.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L order, port 9099 only.
 
 ## v36 Thread-Wrapping + Vertical Pull + Wind-Up to MVP (v15 spec backfill) - 2026-09-17
 

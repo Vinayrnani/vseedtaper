@@ -60,6 +60,7 @@ fi
 #             default is all parts. Valid names:
 #             chassis hopper shroud cartridge plow crank cones rollers
 #             cone_a cone_b rollers_lower rollers_upper tape
+#             twister pull_a pull_b takeup
 FORCE=0
 FILTER=()
 for arg in "$@"; do
@@ -70,7 +71,7 @@ for arg in "$@"; do
     fi
 done
 
-ALL_GLB="chassis hopper shroud cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape"
+ALL_GLB="chassis hopper shroud cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister pull_a pull_b takeup"
 if [ "${#FILTER[@]}" -gt 0 ]; then
     for p in "${FILTER[@]}"; do
         case " $ALL_GLB " in

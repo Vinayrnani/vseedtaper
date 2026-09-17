@@ -1,5 +1,11 @@
 # Requirements Change Log
 
+## v38 — 2026-09-17
+- Downstream respace (v37 overlap fix): bind 167->172, pull 181->194, take-up 186/28->226/34 (X gaps 9/8/6, centres 32 vs 26+0.3+5=31.3); chassis 214->262 (east 248), tape 220->270, 3 fail-loud gap asserts; viewer pivots/BIND/TAPE_LEN/comment, ASSET_V 24, GLBs rebuilt
+
+## v37 — 2026-09-17
+- Thread-bind + vertical pull + wind-up build (v36 spec): CAD thread_twister (167, 2 arms, 6 orbits/drum rev) + vpull pair (181, d20 1:1 spacing driver) + takeup_reel (186/28, core d10) + chassis blocks/posts + tape 220 + 4 part branches + geared assembly + fail-loud asserts + min_z=0; viewer pivots/PART_DEFS/synced animation + procedural thread helices + _twister hooks + tape path comment, ASSET_V 23, all GLBs rebuilt
+
 ## v36 — 2026-09-17
 - Add thread-wrapping + vertical pull + wind-up to MVP (v15 spec backfill): 2 threads orbit tape after folding plow to bind each seed, vertical nip rollers pull finished tape at constant speed (spacing driver), take-up spool winds finished tape; all geared to drum 6 cavities for 6 inch spacing
 
