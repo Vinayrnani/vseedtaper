@@ -1,6 +1,32 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v43**
+**Version: v44**
+
+## v44 Minimal Drum-Driven Gear Train (user: too many gears) - 2026-09-17
+
+1. **Goal**: drive simply FROM THE DRUM. The crank<->drum 2:1
+   (dist 60 = 20+40, module 2, phase 9°) is the only crank
+   connection. The v43 long spine (E0..H3 8x chain + compounds
+   across the wall + GT/GJ/GS far chain, 16 pieces) is removed.
+2. **CAD** (`seed_tape_machine_v2.scad` only): exterior DRUM40 at
+   (100,60) rigid on the drum shaft; twister DRUM->C20/C30
+   compound (159.94,62.71, dist 60)->TW-10T (170,24, dist 40,
+   6x drum, 7.3mm bracket to rotor); pull DRUM->P1-12T
+   (141.07,28.10, 52)->P2-12T (164.77,24.34, 24)->PP-20T
+   (196.46,28.79, 32, 1:1 crank); take-up PP(shared
+   axle)->TU-10T (226,34 coaxial reel, 30, 2x crank, sense
+   unchanged vs v43). 8 pieces / 5 layshafts; module 2, every
+   mesh dist=r1+r2 (fail-loud <= tol+0.01), half-pitch phasing,
+   bosses + through-holes, same-plane non-mesh clearance >=6
+   (closest C-P2 6.67), min_z>=0, `$fn=60`, `tol=0.3`;
+   animated angles unchanged; stations/gaps untouched (>=5),
+   6-turner two-stage untouched.
+3. **Viewer** (`web/index.html` only): gear comments/legend/
+   `_gearTrain` rewritten minimal-drum-driven; pivots/ratios/
+   signs unchanged; `ASSET_V` 27->28, all GLBs rebuilt.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L order, port 9099 only.
 
 ## v43 True-Meshed Gear Train (decorative-idler audit fix) - 2026-09-17
 

@@ -316,45 +316,49 @@ turner_curl_off = 1.2;            // bore offset upward (thin top curl-over read
 turner_curl_cz = 12;              // curl axis height above the turner base
 
 // ============================================================
-// v43 TRUE-MESHED exterior gear train (NO belts anywhere, NO
-// decorative idlers): crank -> drum 2:1 via the interior 40:20
-// mesh (dist 60 = r20+r40, mesh-phased 9°) -> drum through-shaft
-// takeoff D2-20T -> L1a-12T/L1b-36T compound -> L2-10T twister
-// layshaft (6x drum: (20/12)*(36/10) = 6, even flips keep drum
-// sign) -> rigid transfer to the twister rotor; crank through-shaft
-// takeoff E0-12T -> 8x 12T idler chain east at z=16 -> PC-12T pull
-// layshaft (equal teeth => 1:1, even flips keep crank sign); L1b-36T
-// -> GT-15T -> GJ-15T -> GS-15T take-up layshaft coaxial with the
-// reel axle (step-up 2x crank: (20/12)*(36/15) = 4x drum = 2x crank,
-// odd flips reverse the winding sense vs v42).
-// ALL module 2 (single module), every pair dist = r1+r2 (asserted
+// v44 MINIMAL drum-driven gear train (NO belts, NO long spine):
+// crank -> drum 2:1 via the interior 40:20 mesh (dist 60, phased
+// 9°) is the ONLY crank connection. Everything downstream drives
+// locally FROM an exterior drum gear (rigid on the drum shaft).
+// Twister branch: DRUM40 -> C-in-20T/C-out-30T compound -> TW-10T
+//   twister pinion (6x drum: (40/20)*(30/10) = 6, even flips keep
+//   drum sign; 7.3mm rigid bracket to the rotor at (172,17)).
+// Pull branch: DRUM40 -> P1-12T -> P2-12T -> PP-20T pull layshaft
+//   (idlers cancel: 40/20 = 2x drum = 1:1 crank, odd flips keep
+//   crank sign; layshaft 2.5 off the nip at pull_x=194).
+// Take-up branch: PP-20T (shared axle, doubles as idler) -> TU-10T
+//   coaxial with the reel axle (20/10 step-up: 4x drum = 2x crank,
+//   even flips total keep drum sign; sense unchanged vs v43).
+// 8 gear pieces on 5 layshafts (was 16 pieces / 12 layshafts in
+// v43: E0..PC 9-chain + D2 + L1a/L1b + L2 + GT/GJ/GS removed).
+// ALL module 2 (single module), every mesh dist = r1+r2 (asserted
 // fail-loud <= tol+0.01), teeth phased half-pitch tooth-into-gap,
 // each layshaft on its own through-axle (boss + wall hole + block,
 // no float), min_z >= 0 kept. Plane A = back-wall outer (y -8..-2),
-// plane B = back-wall inner (y -16..-10); coaxial compounds share
-// centre across planes. Stations/gaps untouched (turner lip 160.35
-// -> twister gap 7.65, gaps >= 5).
-// Speeds (rev per crank rev, sign about +Y): crank/E0 +1, drum/D2
-// -0.5, L1 +0.833, L2/twister -3, chain -1..+1 alternating, PC/pull
-// +1, GT -2, GJ +2, GS/takeup -2.
+// plane B = back-wall inner (y -16..-10); the C compound shares its
+// centre across planes; pull/take-up share the PP axle in plane A
+// so plane B holds only C-out + TW (no same-plane rivals).
+// Stations/gaps untouched (turner lip 160.35 -> twister gap 7.65,
+// gaps >= 5).
+// Speeds (rev per crank rev, sign about +Y): crank +1, drum/DRUM
+// -0.5, C +1, TW/twister -3, P1 +1.667, P2 -1.667, PP/pull +1,
+// TU/takeup -2.
 // vpull cushioned (v39): soft rubber/silicone sleeve visual over the
 // steel core (OD stays ~d20 => 1:1 kept), firm grip without crushing.
 // ============================================================
-// Plane-A 12T pull chain (E0 takeoff rigid on the crank/roller
-// through-shaft; PC layshaft adjacent to the pull nip at x=194).
-extA_x = [40, 52.97, 56, 80, 104, 128, 152, 166.73, 190.22];
-extA_z = [60, 39.81, 16, 16, 16, 16, 16, 34.94, 30];
-extA_T = [12, 12, 12, 12, 12, 12, 12, 12, 12];
-extA_names = ["E0", "H1", "R0", "C80", "C104", "C128", "C152", "H3", "PC"];
-// Drum takeoff (rigid on the drum through-shaft) + twister compound:
-// L1a-12T (plane A) + L1b-36T (plane B) rigid compound at L1.
-extD2_x = 100; extD2_z = 60; extD2_T = 20;
-extL1_x = 130.91; extL1_z = 51.72; extL1a_T = 12; extL1b_T = 36;
-// Plane-B take-up branch: L2 twister pinion, GT/GJ idlers, GS reel gear.
-extL2_x = 166.05; extL2_z = 22.03; extL2_T = 10;
-extGT_x = 178.83; extGT_z = 69.16; extGT_T = 15;
-extGJ_x = 205.94; extGJ_z = 56.31; extGJ_T = 15;
-extGS_x = 226; extGS_z = 34; extGS_T = 15;
+// Exterior drum gear (rigid on the drum through-shaft) + twister
+// compound (C-in plane A + C-out plane B, one rigid axle).
+extD_x = 100; extD_z = 60; extD_T = 40;
+extC_x = 159.94; extC_z = 62.71; extCa_T = 20; extCb_T = 30;
+// Plane-B twister pinion (short bracket to the rotor at 172,17).
+extTW_x = 170; extTW_z = 24; extTW_T = 10;
+// Plane-A pull chain (P1/P2 idlers + PP layshaft near the nip).
+extP1_x = 141.07; extP1_z = 28.10; extP1_T = 12;
+extP2_x = 164.77; extP2_z = 24.34; extP2_T = 12;
+extPP_x = 196.46; extPP_z = 28.79; extPP_T = 20;
+// Plane-A take-up pinion (coaxial with the reel axle, shares the
+// PP axle as its driver: no extra idler, no far GT/GJ/GS chain).
+extTU_x = 226; extTU_z = 34; extTU_T = 10;
 vpull_sleeve_r = 10.15;           // cushioned sleeve outer (proud 0.15, under the r11 caps: envelope kept)
 vpull_sleeve_h = 16;
 
@@ -386,23 +390,36 @@ assert(roller_axle_z >= roller_outer_dia/2 + 1, str("roller_axle_z must clear ba
 assert(drum_axle_z >= drum_radius + base_thick + tolerance, str("drum_axle_z must clear cradle+tape: need >= ", drum_radius+base_thick+tolerance, " got ", drum_axle_z));
 assert(abs(sqrt(pow(roller_axle_x - drum_axle_x,2)+pow(roller_axle_z - drum_axle_z,2)) - center_distance) < 0.5,
        str("gear center distance must be ~60mm, got ", sqrt(pow(roller_axle_x-drum_axle_x,2)+pow(roller_axle_z-drum_axle_z,2))));
-// v43 exterior train: single module 2 + every mesh dist = r1+r2
-// (fail-loud <= tol+0.01; coordinates rounded to 0.01 so err < 0.05).
-assert(gear_module == 2, "v43: exterior train must stay single module 2");
-assert(len(extA_x) == 9 && len(extA_z) == 9 && len(extA_T) == 9, "v43: plane-A chain arrays must hold 9 stations");
-for (i=[0:7])
-    assert(abs(sqrt(pow(extA_x[i+1]-extA_x[i],2)+pow(extA_z[i+1]-extA_z[i],2)) - gear_module*(extA_T[i+1]+extA_T[i])/2) <= tolerance+0.01,
-        str("v43: plane-A mesh ", extA_names[i], "-", extA_names[i+1], " must satisfy dist=r1+r2"));
-assert(abs(sqrt(pow(extL1_x-extD2_x,2)+pow(extL1_z-extD2_z,2)) - gear_module*(extD2_T+extL1a_T)/2) <= tolerance+0.01, "v43: D2-L1a mesh must satisfy dist=r1+r2 (32)");
-assert(abs(sqrt(pow(extL2_x-extL1_x,2)+pow(extL2_z-extL1_z,2)) - gear_module*(extL1b_T+extL2_T)/2) <= tolerance+0.01, "v43: L1b-L2 mesh must satisfy dist=r1+r2 (46)");
-assert(abs(sqrt(pow(extGT_x-extL1_x,2)+pow(extGT_z-extL1_z,2)) - gear_module*(extL1b_T+extGT_T)/2) <= tolerance+0.01, "v43: L1b-GT mesh must satisfy dist=r1+r2 (51)");
-assert(abs(sqrt(pow(extGJ_x-extGT_x,2)+pow(extGJ_z-extGT_z,2)) - gear_module*(extGT_T+extGJ_T)/2) <= tolerance+0.01, "v43: GT-GJ mesh must satisfy dist=r1+r2 (30)");
-assert(abs(sqrt(pow(extGS_x-extGJ_x,2)+pow(extGS_z-extGJ_z,2)) - gear_module*(extGJ_T+extGS_T)/2) <= tolerance+0.01, "v43: GJ-GS mesh must satisfy dist=r1+r2 (30)");
-assert((20/extL1a_T)*(extL1b_T/extL2_T) == 6, "v43: twister step-up must be 6x drum");
-assert((20/extL1a_T)*(extL1b_T/extGT_T)*(extGT_T/extGJ_T)*(extGJ_T/extGS_T) == 4, "v43: take-up step-up must be 4x drum (2x crank)");
-assert(min(extA_z) - (gear_module*12/2+2) >= 0, "v43: lowest plane-A gear must keep min_z>=0");
-assert(extL2_z - (gear_module*extL2_T/2+2) >= 0, "v43: twister pinion must keep min_z>=0");
-assert(extGT_z + (gear_module*extGT_T/2+2) <= chassis_height, "v43: GT must fit below wall top");
+// v44 minimal drum-driven train: single module 2 + every mesh
+// dist = r1+r2 (fail-loud <= tol+0.01; coordinates rounded to 0.01
+// so err < 0.05). Same-plane non-mesh clearance >= 6 throughout.
+assert(gear_module == 2, "v44: exterior train must stay single module 2");
+assert(abs(sqrt(pow(extC_x-extD_x,2)+pow(extC_z-extD_z,2)) - gear_module*(extD_T+extCa_T)/2) <= tolerance+0.01, "v44: DRUM-C mesh must satisfy dist=r1+r2 (60)");
+assert(abs(sqrt(pow(extP1_x-extD_x,2)+pow(extP1_z-extD_z,2)) - gear_module*(extD_T+extP1_T)/2) <= tolerance+0.01, "v44: DRUM-P1 mesh must satisfy dist=r1+r2 (52)");
+assert(abs(sqrt(pow(extP2_x-extP1_x,2)+pow(extP2_z-extP1_z,2)) - gear_module*(extP1_T+extP2_T)/2) <= tolerance+0.01, "v44: P1-P2 mesh must satisfy dist=r1+r2 (24)");
+assert(abs(sqrt(pow(extPP_x-extP2_x,2)+pow(extPP_z-extP2_z,2)) - gear_module*(extP2_T+extPP_T)/2) <= tolerance+0.01, "v44: P2-PP mesh must satisfy dist=r1+r2 (32)");
+assert(abs(sqrt(pow(extTU_x-extPP_x,2)+pow(extTU_z-extPP_z,2)) - gear_module*(extPP_T+extTU_T)/2) <= tolerance+0.01, "v44: PP-TU mesh must satisfy dist=r1+r2 (30)");
+assert(abs(sqrt(pow(extTW_x-extC_x,2)+pow(extTW_z-extC_z,2)) - gear_module*(extCb_T+extTW_T)/2) <= tolerance+0.01, "v44: C-TW mesh must satisfy dist=r1+r2 (40)");
+assert((extD_T/extCa_T)*(extCb_T/extTW_T) == 6, "v44: twister step-up must be 6x drum");
+assert((extD_T/extPP_T)*(extPP_T/extTU_T) == 4, "v44: take-up step-up must be 4x drum (2x crank)");
+assert(extPP_T == 20, "v44: pull layshaft must be 20T (40/20 = 1:1 crank)");
+assert(extTU_T == 10, "v44: take-up pinion must be 10T (20/10 from the shared PP axle = 2x crank)");
+assert(sqrt(pow(extP2_x-extD_x,2)+pow(extP2_z-extD_z,2)) - (extD_T+extP2_T) >= 6, "v44: DRUM-P2 clearance must stay >=6");
+assert(sqrt(pow(extPP_x-extD_x,2)+pow(extPP_z-extD_z,2)) - (extD_T+extPP_T) >= 6, "v44: DRUM-PP clearance must stay >=6");
+assert(sqrt(pow(extTU_x-extD_x,2)+pow(extTU_z-extD_z,2)) - (extD_T+extTU_T) >= 6, "v44: DRUM-TU clearance must stay >=6");
+assert(sqrt(pow(extP1_x-extC_x,2)+pow(extP1_z-extC_z,2)) - (extCa_T+extP1_T) >= 6, "v44: C-P1 clearance must stay >=6");
+assert(sqrt(pow(extP2_x-extC_x,2)+pow(extP2_z-extC_z,2)) - (extCa_T+extP2_T) >= 6, "v44: C-P2 clearance must stay >=6");
+assert(sqrt(pow(extPP_x-extC_x,2)+pow(extPP_z-extC_z,2)) - (extCa_T+extPP_T) >= 6, "v44: C-PP clearance must stay >=6");
+assert(sqrt(pow(extTU_x-extC_x,2)+pow(extTU_z-extC_z,2)) - (extCa_T+extTU_T) >= 6, "v44: C-TU clearance must stay >=6");
+assert(sqrt(pow(extP1_x-extPP_x,2)+pow(extP1_z-extPP_z,2)) - (extP1_T+extPP_T) >= 6, "v44: P1-PP clearance must stay >=6");
+assert(sqrt(pow(extP1_x-extTU_x,2)+pow(extP1_z-extTU_z,2)) - (extP1_T+extTU_T) >= 6, "v44: P1-TU clearance must stay >=6");
+assert(sqrt(pow(extP2_x-extTU_x,2)+pow(extP2_z-extTU_z,2)) - (extP2_T+extTU_T) >= 6, "v44: P2-TU clearance must stay >=6");
+assert(extP1_z - (gear_module*extP1_T/2+2) >= 0, "v44: P1 must keep min_z>=0");
+assert(extP2_z - (gear_module*extP2_T/2+2) >= 0, "v44: P2 must keep min_z>=0");
+assert(extPP_z - (gear_module*extPP_T/2+2) >= 0, "v44: PP must keep min_z>=0");
+assert(extTU_z - (gear_module*extTU_T/2+2) >= 0, "v44: TU must keep min_z>=0");
+assert(extTW_z - (gear_module*extTW_T/2+2) >= 0, "v44: twister pinion must keep min_z>=0");
+assert(extC_z + (gear_module*extCb_T/2+2) <= chassis_height, "v44: C-out must fit below wall top");
 assert(spool_axle_z == 65, "spool_axle_z must be 65");
 assert(chassis_height > max(spool_axle_z + cone_h + bb_height_spool, drum_axle_z + drum_outer_r) + 5,
        str("chassis_height must hold tallest axle + clearance: need > ", max(spool_axle_z+cone_h+bb_height_spool, drum_axle_z+drum_outer_r)+5, " got ", chassis_height));
@@ -663,65 +680,59 @@ module chassis() {
             for (s=[-1,1])
                 translate([pull_x, chassis_width/2 + s*vpull_off, 29])
                     cylinder(h=3 + epsilon, r=6, center=false);
-            // v43 TRUE-MESHED exterior train (gear-only, NO belts, NO
-            // decorative idlers): plane-A 12T chain E0..PC (mesh dist 24
-            // exact, alternating half-pitch phase tooth-into-gap) driven
-            // by the crank through-shaft (E0 rigid) to the pull layshaft
-            // PC (+1 = crank speed, 1:1); drum takeoff D2-20T (rigid on
-            // the drum through-shaft) drives the L1a-12T/L1b-36T compound
-            // (dist 32) whose plane-B 36T drives the L2-10T twister pinion
-            // (dist 46, -3 = 6x drum) + the GT/GJ/GS 15T take-up branch
-            // (51/30/30, -2 = 2x crank, sense reversed vs v42). Each
-            // layshaft: exterior boss ring + axle stub passing through
-            // the back wall into a bearing block (side-mount, no float).
-            // GS sits coaxial with the take-up reel axle (direct drive);
-            // L2 couples to the twister rotor via a short rigid layshaft
-            // bracket (6mm offset, documented in GEAR_RATIO.md).
-            for (i=[0:len(extA_x)-1])
-                translate([extA_x[i], -8, extA_z[i]])
-                    rotate([90, 0, 0])
-                        rotate([0, 0, (i%2)*180/extA_T[i]])
-                            spur_gear(teeth=extA_T[i], module_mm=gear_module, thickness=6);
-            // Drum takeoff D2 (plane A, phase 0 = rigid with drum).
-            translate([extD2_x, -8, extD2_z])
+            // v44 MINIMAL drum-driven train (gear-only, NO belts, NO
+            // long spine): exterior DRUM40 (rigid on the drum shaft)
+            // drives two short plane-A branches + one plane-B pinion.
+            // Twister: DRUM -> C-in-20T/C-out-30T compound (dist 60)
+            // -> TW-10T pinion (dist 40, -3 = 6x drum, drum sign kept,
+            // 7.3mm bracket to the rotor). Pull: DRUM -> P1-12T
+            // (dist 52) -> P2-12T (dist 24) -> PP-20T layshaft (dist
+            // 32, +1 = 1:1 crank, 2.5 off the nip). Take-up: PP-20T
+            // (shared axle, doubles as idler) -> TU-10T coaxial with
+            // the reel (dist 30, -2 = 2x crank, drum sign kept).
+            // Each layshaft: exterior boss ring + axle stub passing
+            // through the back wall into a bearing block (side-mount,
+            // no float). DRUM rides the drum shaft, TU rides the reel
+            // axle with its bearing blocks below. Half-pitch phasing
+            // alternates tooth-into-gap along each branch.
+            translate([extD_x, -8, extD_z])
                 rotate([90, 0, 0])
-                    spur_gear(teeth=extD2_T, module_mm=gear_module, thickness=6);
-            // Twister compound L1: L1a plane A (half-pitch 15°) + L1b
-            // plane B (phase 0, rigid mate) on one through-axle.
-            translate([extL1_x, -8, extL1_z])
+                    spur_gear(teeth=extD_T, module_mm=gear_module, thickness=6);
+            translate([extC_x, -8, extC_z])
                 rotate([90, 0, 0])
-                    rotate([0, 0, 180/extL1a_T])
-                        spur_gear(teeth=extL1a_T, module_mm=gear_module, thickness=6);
-            translate([extL1_x, -16, extL1_z])
+                    rotate([0, 0, 180/extCa_T])
+                        spur_gear(teeth=extCa_T, module_mm=gear_module, thickness=6);
+            translate([extC_x, -16, extC_z])
                 rotate([90, 0, 0])
-                    spur_gear(teeth=extL1b_T, module_mm=gear_module, thickness=6);
-            // Plane-B branch gears (half-pitch phased tooth-into-gap).
-            translate([extL2_x, -16, extL2_z])
+                    spur_gear(teeth=extCb_T, module_mm=gear_module, thickness=6);
+            translate([extTW_x, -16, extTW_z])
                 rotate([90, 0, 0])
-                    rotate([0, 0, 180/extL2_T])
-                        spur_gear(teeth=extL2_T, module_mm=gear_module, thickness=6);
-            translate([extGT_x, -16, extGT_z])
+                    rotate([0, 0, 180/extTW_T])
+                        spur_gear(teeth=extTW_T, module_mm=gear_module, thickness=6);
+            translate([extP1_x, -8, extP1_z])
                 rotate([90, 0, 0])
-                    rotate([0, 0, 180/extGT_T])
-                        spur_gear(teeth=extGT_T, module_mm=gear_module, thickness=6);
-            translate([extGJ_x, -16, extGJ_z])
+                    rotate([0, 0, 180/extP1_T])
+                        spur_gear(teeth=extP1_T, module_mm=gear_module, thickness=6);
+            translate([extP2_x, -8, extP2_z])
                 rotate([90, 0, 0])
-                    spur_gear(teeth=extGJ_T, module_mm=gear_module, thickness=6);
-            translate([extGS_x, -16, extGS_z])
+                    spur_gear(teeth=extP2_T, module_mm=gear_module, thickness=6);
+            translate([extPP_x, -8, extPP_z])
                 rotate([90, 0, 0])
-                    rotate([0, 0, 180/extGS_T])
-                        spur_gear(teeth=extGS_T, module_mm=gear_module, thickness=6);
+                    rotate([0, 0, 180/extPP_T])
+                        spur_gear(teeth=extPP_T, module_mm=gear_module, thickness=6);
+            translate([extTU_x, -8, extTU_z])
+                rotate([90, 0, 0])
+                    rotate([0, 0, 180/extTU_T])
+                        spur_gear(teeth=extTU_T, module_mm=gear_module, thickness=6);
             // Layshaft bosses (exterior boss rings on the back wall;
-            // E0/D2 ride the existing crank/drum through-shafts, GS
-            // rides the take-up axle with its bearing blocks below).
-            for (i=[1:len(extA_x)-1])
-                translate([extA_x[i], -5, extA_z[i]])
+            // DRUM/TU ride the existing drum/reel through-shafts).
+            for (px=[[extC_x, extC_z], [extP1_x, extP1_z], [extP2_x, extP2_z], [extPP_x, extPP_z]])
+                translate([px[0], -5, px[1]])
                     rotate([90, 0, 0])
                         cylinder(h=12, r=6, center=true);
-            for (px=[[extL1_x, extL1_z], [extL2_x, extL2_z], [extGT_x, extGT_z], [extGJ_x, extGJ_z]])
-                translate([px[0], -9, px[1]])
-                    rotate([90, 0, 0])
-                        cylinder(h=20, r=6, center=true);
+            translate([extTW_x, -9, extTW_z])
+                rotate([90, 0, 0])
+                    cylinder(h=20, r=6, center=true);
             // v37 twister guide posts (static frame for the orbiting ring:
             // two posts flanking the tape at bind_x hold the ring axle
             // height; the rotor GLB stays a pure symmetric rotor so the
@@ -764,14 +775,9 @@ module chassis() {
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
         }
-        // v43 exterior-train layshaft through-holes (back wall only:
+        // v44 exterior-train layshaft through-holes (back wall only:
         // each layshaft axle passes through the wall into its boss).
-        for (i=[1:len(extA_x)-1]) {
-            translate([extA_x[i], -wall_thick/2, extA_z[i]])
-                rotate([90,0,0])
-                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
-        }
-        for (px=[[extL1_x, extL1_z], [extL2_x, extL2_z], [extGT_x, extGT_z], [extGJ_x, extGJ_z]]) {
+        for (px=[[extC_x, extC_z], [extP1_x, extP1_z], [extP2_x, extP2_z], [extPP_x, extPP_z], [extTW_x, extTW_z]]) {
             translate([px[0], -wall_thick/2, px[1]])
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
@@ -798,8 +804,8 @@ module chassis() {
         translate([drum_axle_x - 20.2, chassis_width - 15 + (8-6.4)/2, base_thick - epsilon])
             cube([40.4, 6.4, 6 + 2*epsilon]);
         // Lightening cutouts in walls (v43: back cutout moved 90->56
-        // + up 18->64 so the exterior gear chain (C80/C104 bosses at
-        // z 2..30) keeps solid wall to fuse to; front cutout kept).
+        // + up 18->64 so the exterior gear bosses (v44: P1/P2 at z
+        // 24..28) keep solid wall to fuse to; front cutout kept).
         translate([56, -epsilon, 64])
             cube([24, wall_thick+2*epsilon, 22]);
         translate([90, chassis_width - wall_thick - epsilon, 18])
@@ -1892,13 +1898,14 @@ module crank_assembly() {
 //   40:20 mesh, 2:1; +9° half-pitch so the pinion tooth falls into the drum gap)
 //   crank = roller_angle (rigid on the roller shaft, coaxial at roller_axle_x)
 //   upper idler = -720*$t (counter-rotates via tape contact)
-//   v43 TRUE-MESHED exterior train (all module 2, dist=r1+r2
-//   asserted): crank->drum 2:1 interior (40:20, dist 60, phase 9°);
-//   drum takeoff D2-20T -> L1a-12T/L1b-36T compound -> L2-10T twister
-//   pinion = 6x drum (even flips, sign kept); crank takeoff E0-12T ->
-//   8-idler 12T chain -> PC-12T pull layshaft = 1:1 (even flips, sign
-//   kept); L1b-36T -> GT-15T -> GJ-15T -> GS-15T reel gear = 2x crank
-//   (odd flips, winding sense reversed vs v42). External mesh flips
+//   v44 MINIMAL drum-driven train (all module 2, dist=r1+r2
+//   asserted): crank->drum 2:1 interior (40:20, dist 60, phase 9°,
+//   the ONLY crank connection); exterior DRUM40 -> C-20T/30T
+//   compound -> TW-10T twister pinion = 6x drum (even flips, sign
+//   kept); DRUM40 -> P1-12T -> P2-12T -> PP-20T pull layshaft = 1:1
+//   crank (idlers cancel, odd flips, sign kept); PP-20T (shared
+//   axle) -> TU-10T reel gear = 2x crank (even flips total, drum
+//   sign kept, sense unchanged vs v43). External mesh flips
 //   direction each mesh - signs above follow the flip count.
 //   pull nip pair spins about Z at +/-roller_angle (same d20 dia as
 //   main roller => 1:1 surface speed, the spacing driver; cushioned
@@ -1918,7 +1925,7 @@ module animated_assembly() {
     twister_angle = -360*$t*twister_orbits_per_drum; // v37: 6 orbits/drum rev about X
     pull_a_angle = roller_angle;   // v37: nip side A with the roller shaft
     pull_b_angle = -roller_angle;  // v37: nip side B counter-rotates
-    takeup_angle = -1440*$t;       // v43: reel gear GS-15T ends odd-flipped vs the drum (-2 = 2x crank, sense reversed vs v42; winds the same 125.66mm linear tape)
+    takeup_angle = -1440*$t;       // v44: TU-10T off the shared PP-20T axle ends even-flipped vs the drum (-2 = 2x crank, drum sign kept, sense unchanged vs v43; winds the same 125.66mm linear tape)
 
     // Chassis
     chassis();

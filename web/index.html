@@ -149,8 +149,8 @@
     Single wrap-around hopper: right wedge pickup (level top), 11→6 cover, hover pipe (ID6/OD10 L10, 10 gap) drops seeds at x=100 port.
     Two-stage forming: first-stage U (forming 37..70 + transit 70..126, seed drops at 100 into the open pocket) →
     6-turner second stage (126..159: U-in, twin curl horns + inner tongue fold the 2 edges inside into an overlapping roll, near-closed exit reads as 6 end-on).
-    Thread twister (2 arms, 6 orbits/drum rev via D2/L1/L2 meshed spur pair) binds each rolled seed past the 6-turner → cushioned vertical pull nip
-    (rubber sleeve, 1:1 via E0 idler chain, spacing driver) → wind-up reel (core d10 step-up via GT/GJ/GS, slip clutch: fast empty, slips full). All crank-driven via true-meshed gears only (module 2, dist=r1+r2), no belts.
+    Thread twister (2 arms, 6 orbits/drum rev via DRUM/C/TW meshed spurs) binds each rolled seed past the 6-turner → cushioned vertical pull nip
+    (rubber sleeve, 1:1 via DRUM/P1/P2/PP short chain, spacing driver) → wind-up reel (core d10 step-up via shared PP-axle/TU pinion, slip clutch: fast empty, slips full). Minimal drum-driven gears only (module 2, dist=r1+r2), no belts, no long spine.
     Mounts — bottom: 6-turner + wind-up reel · side: twister + pull + drum (axles through walls) · top: hopper + shroud + input spools.
   </div>
 </div>
@@ -526,7 +526,7 @@
   // gear-only drive (no belts), slip clutch behaviour, mounting layout.
   window._sixTurner = { start: 126, end: 159, dropX: 100, curlR: 6.5, boreR: 4.2,
     stages: 'U-in then 6-fold edges inside to roll', entry: 'U-accept', exit: 'near-closed tube' };
-  window._gearTrain = { chain: 'crank->drum 2:1 -> D2/L1/L2 twister 6x/drum -> E0-chain/PC pull 1:1 -> GT/GJ/GS take-up 2x crank (sense reversed)', belts: false,
+  window._gearTrain = { chain: 'crank->drum 2:1 only crank link -> DRUM40 ext -> C-20T/30T + TW-10T twister 6x/drum; DRUM40 -> P1/P2-12T -> PP-20T pull 1:1; PP-axle -> TU-10T take-up 2x crank (drum sign kept)', belts: false,
     mesh: 'module 2 throughout, every pair dist=r1+r2 (CAD-asserted); external mesh flips direction each mesh' };
   window._slipClutch = {
     pivot: takeupPivot, discs: 2, baseRatio: '+2x crank (viewer sense; CAD -1440t)',
@@ -623,7 +623,7 @@
     twisterPivot.rotation.x = -3 * crankAngle;           // v37: 6 orbits/drum rev about X
     pullAPivot.rotation.y = 2 * crankAngle + GEAR_PHASE; // v37: nip side A with roller shaft
     pullBPivot.rotation.y = -2 * crankAngle - GEAR_PHASE;// v37: nip side B counter-rotates
-    takeupPivot.rotation.z = 2 * crankAngle;             // v43: GS-15T odd-flipped (CAD -1440t); winding sense reversed vs v42, same linear tape
+    takeupPivot.rotation.z = 2 * crankAngle;             // v44: TU-10T even-flipped (CAD -1440t); winding sense unchanged vs v43, same linear tape
   };
 
   // ---------- part loading ----------
@@ -642,7 +642,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 27; // v43: true-meshed exterior gear train (module 2, dist=r1+r2 asserted, layshaft bosses, take-up sense reversed)
+  var ASSET_V = 28; // v44: minimal drum-driven gear train (DRUM40 ext + C/TW twister 6x + P1/P2/PP pull 1:1 + shared-axle TU take-up 2x; E0..PC spine + GT/GJ/GS removed)
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -912,11 +912,12 @@
     lowerPivot.rotation.z = -crankAngle - GEAR_PHASE;
     upperPivot.rotation.z = crankAngle;
     drumPivot.rotation.z = crankAngle * DRUM_RATIO;
-    // v43 TRUE-MESHED exterior train (module 2, dist=r1+r2 CAD-asserted):
-    // crank takeoff E0-12T -> 8-idler chain -> PC-12T pull layshaft 1:1
-    // (even flips, sign kept); drum takeoff D2-20T -> L1a-12T/L1b-36T ->
-    // L2-10T twister pinion 6x drum (even flips, sign kept); L1b-36T ->
-    // GT/GJ/GS-15T reel gear 2x crank (odd flips: take-up +2x below);
+    // v44 MINIMAL drum-driven train (module 2, dist=r1+r2 CAD-asserted):
+    // exterior DRUM40 -> C-20T/30T compound -> TW-10T twister pinion
+    // 6x drum (even flips, sign kept); DRUM40 -> P1/P2-12T idlers ->
+    // PP-20T pull layshaft 1:1 crank (idlers cancel, odd flips, sign
+    // kept); shared PP-axle -> TU-10T reel gear 2x crank (even flips
+    // total, drum sign kept, sense unchanged vs v43);
     // external mesh flips direction each mesh - signs follow flip count.
     // Pull nip 1:1 with the roller shaft (cushioned rubber sleeve =
     // spacing driver, no crush).

@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v44 — 2026-09-17
+- Minimal drum-driven gear train (user: too many gears on chassis): crank<->drum 2:1 kept as the ONLY crank connection; everything downstream drives locally from exterior DRUM40 — C-20T/30T compound + TW-10T twister 6x drum, P1/P2-12T + PP-20T pull 1:1 crank, shared PP-axle + TU-10T take-up 2x crank (sense unchanged); 16 pieces/~12 layshafts -> 8 pieces/5 layshafts (E0..PC spine + D2/L1/L2 + GT/GJ/GS removed); module 2, dist=r1+r2 fail-loud, half-pitch phasing, bosses+through-holes, clearances >=6, min_z>=0; ratios/signs unchanged; viewer comments/legend/_gearTrain + ASSET_V 28, GLBs rebuilt; stations/gaps + 6-turner untouched
+
 ## v43 — 2026-09-17
 - True-meshed gear train (decorative-idler audit fix): CAD exterior train all module 2, every pair dist=r1+r2 fail-loud (plane-A 12T chain E0->PC pull 1:1; D2-20T->L1 12T/36T compound; plane-B L1b->L2-10T twister 6x drum + GT/GJ/GS-15T take-up 2x crank sense-reversed), half-pitch phasing, layshaft bosses+through-holes, min_z=0; takeup_angle +1440t->-1440t; viewer take-up sign flip + meshed comments, ASSET_V 27, GLBs rebuilt; stations/gaps + 6-turner untouched
 

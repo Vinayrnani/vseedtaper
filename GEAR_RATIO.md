@@ -84,6 +84,41 @@ takeup_angle  = 1440 * $t                     # core d10 step-up: 2x crank winds
   twister 168..176 (gap 9, actual 7.65 with tab overhang) -> pull
   183..205 incl. caps (gap 7) -> take-up 210..242 (gap 5).
 
+## v44 minimal drum-driven train (replaces the v43 long spine)
+
+User asked for fewer gears on the chassis: everything downstream now
+drives locally FROM an exterior drum gear. The crank<->drum 2:1
+(dist 60 = 20+40, module 2, phase 9°) is the ONLY crank connection.
+
+```
+interior: crank20 (40,60) <-> drum40 (100,60): dist 60 = 20+40
+  W: crank +1 -> drum -0.5 (2:1, 1 flip, phase 9° half-pitch)
+
+exterior DRUM40 (100,60, rigid on the drum shaft, W -0.5, plane A):
+  twister: DRUM40 -> C-in-20T/C-out-30T compound (159.94,62.71,
+      dist 60 = 40+20; W_C = +1)
+    -> TW-10T pinion (170,24, plane B, dist 40 = 30+10;
+      7.3mm bracket to the rotor at 172,17)
+      W_TW = -3 = 6x drum, drum sign kept (2 flips)
+  pull: DRUM40 -> P1-12T (141.07,28.10, dist 52 = 40+12;
+      W +1.667) -> P2-12T (164.77,24.34, dist 24 = 12+12;
+      W -1.667) -> PP-20T layshaft (196.46,28.79, dist 32;
+      2.5 off the nip, W +1 = 1:1 crank, 3 flips)
+  take-up: PP-20T (shared axle, doubles as idler) -> TU-10T
+      (226,34, coaxial reel, dist 30 = 20+10; W -2 = 2x crank,
+      drum sign kept, 4 flips total, sense unchanged vs v43)
+```
+
+- Teeth check: (40/20)*(30/10) = 6.0 (twister 6x drum);
+  40/20 = 2x drum = 1:1 crank (pull, idlers cancel);
+  (40/20)*(20/10) = 4.0x drum = 2x crank (take-up).
+- Gear count: 8 pieces on 5 layshafts (was 16 / ~12 in v43:
+  E0..PC 9-chain + D2 + L1a/L1b + L2 + GT/GJ/GS all removed).
+- Same-plane non-mesh clearance verified >= 6mm everywhere
+  (closest: C-P2 6.67); plane B holds only C-out + TW.
+- Spacing unchanged (pull nip still 1:1 d20).
+- Viewer: pivots/ratios/signs unchanged; ASSET_V 28.
+
 ## v43 true-meshed exterior train (audit + fix, replaces decorative idlers)
 
 BEFORE (v39-v42 audit): only crank20<->drum40 truly meshed
