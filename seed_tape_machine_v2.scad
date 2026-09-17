@@ -1540,7 +1540,10 @@ module seed_cradle() {
 // slides, never catches). Lower side tail blade full length on the
 // -Y side (mid-height, fused to shell, clear of bore); tapered skid
 // wedge underneath = flat underside sit (fused to shell, clear of
-// bore). Bore hollow see-through full length. Two SMALL 6x6x1 screw
+// bore) with a 2mm nose shelf west of the mouth; flat entry
+// tongue/tray per Top.jpg (13.8x16x0.8 plate west of the large
+// mouth, top flush with the skid, mortised into the nose, 0.2
+// clear of the seed cradle). Bore hollow see-through full length. Two SMALL 6x6x1 screw
 // ears (diagonal pair to chassis M3 holes world (132,6)/(153,54))
 // on thin ground straps + bars via the skid — minimal, not a base.
 // Local frame like the old plow: x 0..turner_len (33, world
@@ -1587,6 +1590,14 @@ module six_turner() {
     plate_t = 2.2;                  // plate thickness along X (must exceed pitch)
     skid_t0 = 3.0;                  // skid top at entry (fused to big shell, clear of bore)
     skid_t1 = 8.8;                  // skid top at exit (fused to small shell, clear of bore)
+    skid_nose = -2;                 // v59: skid front extends 2 west (shelf mortised into the tray)
+    // v59 flat entry tongue/tray (Top.jpg: flat sheet extends west
+    // beyond the LARGE mouth; same 0.8 minimum-printable wall).
+    tray_x0 = -14;                  // tray west tip (world 112, on chassis)
+    tray_x1 = -0.2;                 // tray east end (0.2 air gap to the cradle face)
+    tray_w = 16;                    // tray width (centred on the bore axis cy)
+    tray_z0 = 2.2;                  // tray bottom (0.8 wall with top 3.0)
+    tray_top = 3.0;                 // tray top (flush with skid_t0, 0.3 below bore)
     // Screw ears: 6x6x1 diagonal pair to chassis M3 holes.
     // Ear A entry: local centre (6,-4) -> world (132,6).
     // Ear B exit: local centre (27,44) -> world (153,54).
@@ -1658,6 +1669,30 @@ module six_turner() {
         "six_turner: skid must stay below the bore (hollow kept)");
     assert(skid_t0 >= curl_cz - st_R[0] && skid_t1 >= curl_cz - st_R[n_st-1],
         "six_turner: skid must fuse into the shell (single solid)");
+    // v59 TRAY (Top.jpg flat sheet west of the large mouth): top
+    // flush with the skid and 0.3 below the bore inner bottom
+    // (hollow kept); overlaps the skid nose volumetrically
+    // (single-solid mortise); stops 0.2 west of the mouth plane
+    // (never touches the seed cradle); tip stays on the chassis;
+    // centred on the bore axis, no wider than the large mouth.
+    assert(tray_top == skid_t0,
+        "six_turner: tray top must sit flush with the skid top");
+    assert(tray_top <= curl_cz - (st_R[0] - wall) - 0.3,
+        "six_turner: tray must stay below the bore (hollow kept)");
+    assert(tray_top - tray_z0 >= 0.75 && tray_top - tray_z0 <= 0.85,
+        "six_turner: tray must keep the 0.8 minimum-printable wall");
+    assert(tray_x1 < 0,
+        "six_turner: tray must end west of the mouth plane (clear of cradle)");
+    assert(tray_x1 - skid_nose >= 1,
+        "six_turner: tray must overlap the skid nose (single-solid fuse)");
+    assert(tray_z0 >= 0 && tray_top <= skid_t0,
+        "six_turner: tray must sit inside the skid nose band");
+    assert(cy - tray_w/2 <= 17 && cy + tray_w/2 >= 23,
+        "six_turner: tray must span the skid nose width (mortise fuse)");
+    assert(tray_w <= 2*st_R[0],
+        "six_turner: tray must be no wider than the large mouth");
+    assert(tray_x0 + plow_start >= chassis_x0,
+        "six_turner: tray tip must stay on the chassis");
     // Side blade: inner edge overlaps the shell outer flank (fused)
     // but stays clear of the bore inner flank (tape path kept).
     assert(9.7 > 20 - st_R[0] && 9.7 < 20 - (st_R[0] - wall),
@@ -1701,11 +1736,19 @@ module six_turner() {
                     translate([turner_len-3, 8, 12]) cube([3, 7.8, 1.2]);
                 }
                 // Skid wedge (flat underside gravity sit: tops fused to
-                // the shell, clear of the bore, tapering big->small).
+                // the shell, clear of the bore, tapering big->small;
+                // v59 nose shelf extends 2 west of the mouth, mortised
+                // into the entry tray).
                 hull() {
-                    translate([0, 17, 0]) cube([4, 6, skid_t0]);
+                    translate([skid_nose, 17, 0]) cube([4 - skid_nose, 6, skid_t0]);
                     translate([turner_len-4, 17, 0]) cube([4, 6, skid_t1]);
                 }
+                // v59 flat entry tongue/tray (Top.jpg: flat sheet
+                // extending west beyond the large mouth; top flush
+                // with the skid top, 0.3 below the bore; mortised
+                // into the skid nose, 0.2 clear of the cradle).
+                translate([tray_x0, cy - tray_w/2, tray_z0])
+                    cube([tray_x1 - tray_x0, tray_w, tray_top - tray_z0]);
                 // Screw ears + ground straps + bars via the skid (all at
                 // z0..1 ground level, far below the bore — minimal mounts).
                 translate([earA[0], earA[1], 0]) cube([ear, ear, ear_t]);

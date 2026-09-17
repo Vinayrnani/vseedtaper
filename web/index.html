@@ -544,8 +544,8 @@
   // drop 100 so the seed lands flat first),
   // gear-only drive (no belts), slip clutch behaviour, mounting layout.
   window._sixTurner = { start: 126, end: 159, dropX: 100, wall: 0.8, boreR: 0,
-    entryBore: 21, exitBore: 9, seamGap: 1.0,
-    stages: '7-station big-to-small taper: BIG loose open-6 entry dia 21 -> SMALL tight curl exit dia 9 (1.0 daylight gap, hollow bore)', entry: 'BIG loose open-6 dia 21 (side blade + skid, top slit)', exit: 'SMALL tight curled 6 dia 9, 330deg wrap + 160deg hook, hollow bore (thin shell)' };
+    entryBore: 21, exitBore: 9, seamGap: 1.0, tray: [112, 125.8, 16],
+    stages: '7-station big-to-small taper: BIG loose open-6 entry dia 21 -> SMALL tight curl exit dia 9 (1.0 daylight gap, hollow bore)', entry: 'BIG loose open-6 dia 21 + flat entry tray 13.8x16x0.8 west of mouth (side blade + skid, top slit)', exit: 'SMALL tight curled 6 dia 9, 330deg wrap + 160deg hook, hollow bore (thin shell)' };
   window._gearTrain = { chain: 'crank->drum 2:1 interior -> drum-coaxial spur 50T -> parallel counter spur 10T (5x, beside the drum, high) -> Y-bevel 12T -> side X-pinion 10T (1.2x, 6x at the layshaft) -> friction wheel on the ring OD (slip after, hollow middle); pull nip tape-coupled 4/3 (no gears); take-up tape-tension wind-up 2x crank (no gears)', belts: false, exteriorGears: 0,
     bevel: 'one parallel spur pair (Y-Y, module 2, dist=r1+r2=60) + one 90° bevel pair (Y-X, module 2): spur (50/10) = 5x; bevel (12/10) = 1.2x; total 6.0 at the layshaft = 1 bind/seed nominal; apex I51 (~141.85,45.5,17)',
     mesh: 'parallel spur centres (100,60)-(~141.85,17) dist 60 = 50+10 (CAD-asserted); bevel apex at I51 = Y line ∩ side layshaft, 90° (CAD-asserted intersection + perpendicular + contact); twister driven by friction on the ring OD (wheel r3.5 at 15.5 = 12+3.5, CAD-asserted tangent), nothing coaxial; drum takeoff coaxial with the drum shaft (100,60); one high Y countershaft + one side layshaft, zero exterior gears, no floor contact',
@@ -664,7 +664,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 42; // v58: big-to-small 6 (entry dia 21 -> exit dia 9, 1.0 daylight gap), plow GLB rebuilt
+  var ASSET_V = 43; // v59: photo-matched 6 (flat entry tray west of large mouth), plow GLB rebuilt
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -678,8 +678,8 @@
         parent: spoolGroup, pos: [0, 0, 26], rot: [Math.PI, 0, 0] },
       { id: 'cones_b', label: 'Cones B', file: 'stl/cone_b.glb', color: 0xc96a2b,
         parent: spoolGroup, pos: [-50, 0, -26], rot: [0, 0, 0] },
-      { id: 'plow', label: '6-folder (big-to-small, entry dia 21 -> exit dia 9)', file: 'stl/plow.glb', color: 0x8a8f98,
-        parent: plowPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4 }, // v58 big-to-small: seeded first-stage U (37..126) arrives, BIG loose open-6 entry dia 21 (126) -> SMALL tight curled exit dia 9 (159); outer wrap 300->330deg + inner hook 20->160deg (1.0 daylight gap, never touches); side blade + skid flat sit; hollow bore; 2 small ears to chassis holes; part_to_render "plow" compat alias; screw-mounted after the drop (seed lands flat at 100 first)
+      { id: 'plow', label: '6-folder (big-to-small 21->9 + entry tray)', file: 'stl/plow.glb', color: 0x8a8f98,
+        parent: plowPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4 }, // v59 photo-matched: seeded first-stage U (37..126) lands on the flat entry tray (world 112..125.8) then BIG loose open-6 entry dia 21 (126) -> SMALL tight curled exit dia 9 (159); outer wrap 300->330deg + inner hook 20->160deg (1.0 daylight gap, never touches); side blade + skid flat sit; hollow bore; 2 small ears to chassis holes; part_to_render "plow" compat alias; screw-mounted after the drop (seed lands flat at 100 first)
       { id: 'rollers_lower', label: 'Rollers lower (hidden)', file: 'stl/rollers_lower.glb', color: 0x9aa2ad,
         parent: lowerPivot, pos: [0, 0, 34.95], rot: [Math.PI, 0, 0], // v21: gear-down export (body centre 34.95); Rx(180) lands gear on back plane Y~12.
         metalness: 0.8, roughness: 0.35, visible: false },
