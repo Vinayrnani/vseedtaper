@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v59 — 2026-09-17
+- Photo-matched 6-folder: flat entry tongue/tray per Top.jpg (was missing in v58): six_turner gains 13.8x16x0.8 flat tray west of the large mouth (local x -14..-0.2, top flush with skid 3.0, 0.3 below bore, mortised into extended skid nose x0->-2, 0.2 clear of cradle, tip world 112 on chassis); v58 shell/hook/gap/ears untouched; viewer ASSET_V 43, plow GLB rebuilt
+
 ## v58 — 2026-09-17
 - Big-to-small 6-turner (user direction reversal): entry BIG loose 6 dia 21 (R10.5, catches seeded 7.8 U-pocket, bore axis y20/z13 kept) -> exit SMALL tight curled 6 dia 9 (R4.5); 1.0mm daylight gap hook-to-shell full length (never touch); wall 0.8, hollow bore, open slit (wrap 300->330), skid 3.0->8.8 + re-seated side blade, ground-bar mounts via skid (bore-blocking posts deleted); fail-loud exit-dia/gap/taper asserts; viewer ASSET_V 42, plow GLB rebuilt
 

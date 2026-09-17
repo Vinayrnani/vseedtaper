@@ -1,5 +1,44 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v59**
+
+## v59 Photo-Matched 6-Folder: flat entry tongue/tray per Top.jpg (tray extending beyond the large end) - 2026-09-17
+
+1. **Concept** (photo re-read with Read tool: Front.jpg hollow
+    see-through bore + overlap seam = v58 shell ✓; Back.jpg
+    end-view 6-section + daylight gap = v58 hook ✓; Top.jpg side
+    taper + flat inner tray extending beyond the LARGE end =
+    MISSING in v58): `six_turner()` keeps the full v58 shell
+    (entry BIG loose 6 dia 21 at world 126 -> exit SMALL tight
+    curled 6 dia 9 at world 159, wrap 300->330, hook 20->160,
+    1.0 daylight gap never-touch, wall 0.8, hollow bore
+    see-through, open slit full length, tapered skid + side
+    blade + 2 small 6x6x1 ears) and GAINS the flat entry
+    tongue/tray from Top.jpg: 13.8-long x 16-wide x 0.8-thick
+    flat plate (same minimum-printable wall) extending west
+    from the large mouth (local x -14..-0.2 = world 112..125.8,
+    centred on the bore axis y20), top flush with the skid top
+    (z 2.2..3.0 = 0.3 below the bore inner bottom 3.3, bore
+    stays hollow/see-through), mortised 1.8 into an extended
+    skid nose (skid front x0 -> -2, single-solid fuse), 0.2 air
+    gap to the seed-cradle west face (never touches), tray tip
+    well inside the chassis (world 112 vs west edge -14).
+2. **CAD** (`seed_tape_machine_v2.scad` only): `six_turner()`
+    gains `tray_x0/x1/w/z` params + tray cube in the union +
+    skid front cube extended to the nose; new fail-loud
+    asserts (tray top below bore inner bottom, tray-skid
+    volumetric fuse overlap, tray-cradle 0.2 clearance, tray
+    tip on chassis, tray centred on bore axis); shell/hook/
+    rib/blade/ears/straps/bars/table untouched; `$fn=60`,
+    `tol=0.3`, manifold single solid, min_z=0.
+3. **Tape**: untouched.
+4. **Viewer** (`web/index.html` only): `ASSET_V` 42->43, plow GLB
+    rebuilt, legend + `_sixTurner` tray hooks.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v58**
 
 ## v58 Big-to-Small 6-Turner (user direction reversal: entry BIG loose 6 dia 21 at world 126, exit SMALL tight curled 6 dia 9 at world 159, 1.0mm daylight gap) - 2026-09-17
