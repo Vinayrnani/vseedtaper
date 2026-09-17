@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v35 — 2026-09-17
+- Thinnest-wall pipe (user-confirmed): drop_pipe_id 6->7.6 (wall 2.0->1.2, OD10 fixed, assert ==1.2; bore +-3.8, X wall 1.2); inner cone r3->r3.8 (wide 16->7.6 throat, ~8.6° half-angle, steep); outer cone kept (wall 1.2->2.0); fold 4/R1.5/walls5.5 kept (outer 7.8<OD10, mouth 7<ID7.6, seed lands in pocket); entry inspection: trimesh proof (carve eats funnel above ~1 over pipe top = short stub into drum mouth, no hang; profile monotonic, no step; throat centred x=100/Y-centred, offset 0<0.5), sharp bore-end rims found catching → 45° lead-in flares (throat r3.8->4.6/h0.8, exit r3.8->4.4/h0.6, legs>=0.6); drop path clear ID7.6; ID7.6 still <8mm seeds (<=6mm only); viewer _dropSeal bore 7.6, ASSET_V 22
+
 ## v33 — 2026-09-17
 - Option B drop-tape-lower (user-confirmed): tape_z 24->13 (ribbon top 13.4, flange-to-tape 20.1, disc gap 21.6, transit top 21.4); sealed tube replaced by hover round pipe ID10/OD14 L10 (world 23.4..33.4, gap 10, no seal/slots) + tapered groove wide 16->10 throat; shroud roof 34->23 (slot 6.45 kept); hopper child +19.4, TAPE_Z 13, _dropSeal 23.4/13.4, ASSET_V 20
 

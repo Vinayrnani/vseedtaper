@@ -1,6 +1,52 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v34**
+**Version: v35**
+
+## v35 Thinnest-Wall Pipe (OD10/ID7.6/Wall1.2) + Entry Lead-In - 2026-09-17
+
+1. **Goal (user-confirmed)**: thinnest printable wall on the OD10
+   exit pipe: wall 2.0->1.2, so ID 6->7.6 (OD10 fixed). Lane
+   geometry unchanged (`tape_z` 13, ribbon top 13.4, pipe world
+   23.4..33.4, gap 10, flange-to-tape 20.1): only the bore +
+   funnel throat + fold-fit note.
+2. **CAD** (`seed_tape_machine_v2.scad` only): `drop_pipe_id`
+   6->7.6 (assert `==7.6`, wall assert `==1.2` replaces `==2.0`;
+   bore X +-3.8, tube X +-5, X wall 1.2); inner cone r3->r3.8
+   (wide 16 -> 7.6 throat, half-angle ~8.6° from vertical —
+   steep, no hang); outer cone r5->r10 kept (wall 1.2 at pipe,
+   growing to 2.0 at funnel top); fold kept 4-wide R1.5 walls5.5
+   (outer 7.8 < OD10; pocket mouth inner 7 < ID7.6 — seed lands
+   INSIDE the pocket, good); L10 / gap10 / export -19.4 /
+   min_z=0 kept; `$fn=60`, `tol=0.3`, drum/roller/crank/R->L/
+   fold-before-drop intact.
+3. **ENTRY INSPECTION (seed stops at pipe entry?)**: measured —
+   trimesh probe of the hopper STL: the drum carve eats the whole
+   funnel above ~1 over the pipe top, so the funnel is a short
+   stub opening straight into the drum mouth (wide 16 design
+   intent, actual mouth = carve opening, no shallow-angle hang);
+   throat-to-bore profile is monotonic (no radial step, <=0.3 ✓);
+   throat centre local x=0 = drum drop point world x=100,
+   Y centred (offset 0.0 < 0.5 ✓); ONE real catcher found:
+   sharp 90° circular inner rims at the bore ends (bottom exit
+   lip + bore-to-cone edge — knife edges that shave/catch
+   off-centre seeds). Drop path itself is a clear cylinder ID7.6
+   from drum mouth to tape.
+4. **FIX (lead-in, 45° break, leg>=0.6)**: throat entry flare
+   (r3.8->r4.6 over h0.8, 45°, self-clearing) breaks the
+   bore-to-cone edge; bore exit flare (r3.8->r4.4 over h0.6,
+   45°, 0.6 flat land left) breaks the bottom inner edge; cone
+   base follows at r4.6 (continuous profile, slope-only kinks,
+   no radial step). Fail-loud asserts (throat_cx == drum_cx,
+   flare legs >=0.6).
+5. **SEED-FIT NOTE (fail-loud)**: ID7.6 still < 8mm seeds — OD10
+   fits only <=6mm seeds (ID7.6 minus clearance). Revert to v33
+   (ID10/OD14) if 8mm seeds must drop through the pipe.
+6. **Viewer** (`web/index.html` only): `_dropSeal` bore 6->7.6
+   (outer 10 kept); `ASSET_V` 21->22, all GLBs regenerated.
+7. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+   `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°, back
+   gears, crank back wall [40,-8,60], R->L hopper > drum >
+   shroud > roller+crank kept; port 9099 only.
 
 ## v34 OD10 Exit Pipe (ID6/Wall2.0 L10 + 10 Gap, Fold 4/R1.5) - 2026-09-17
 

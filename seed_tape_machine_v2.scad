@@ -125,7 +125,7 @@ fold_end      = 70;   // v31: forming exit 5 clear of the drum west face (75)
 fold_start    = fold_end - fold_len; // 37: shallow entry at the roller nip (40)
 transit_end   = plow_start; // 126: straight full-U transit ends at the plow mouth
 transit_len   = transit_end - fold_end; // 56: forming exit -> plow mouth via pipe
-fold_width    = 4.0;   // v34 OD10 pipe (was 6.0): narrow U trough 3-5 so outer=fold+2*(R+thick)=7.8<10; plow plan_ang derives from it
+fold_width    = 4.0;   // v34 OD10 pipe (was 6.0): narrow U trough 3-5 so outer=fold+2*(R+thick)=7.8<10 (v35: mouth 7 < ID7.6, lands inside); plow plan_ang derives from it
 track_depth   = 3;
 
 // ============================================================
@@ -230,12 +230,12 @@ cradle_u_radius = 4;
 // Full-U tape-local top = 0.4 + (1.5+5.5)*1.0 + 1.5*0.5 = 8.15
 // (shoulder apex); world top = tape_z + 8.15 = 21.15.
 // Fold outer = 4.0 + 2*(1.5+0.4) = 7.8 < OD10; pocket mouth inner
-// = 4.0 + 2*1.5 = 7.0 ~= ID6 (seed falls from the 6-bore into the
-// already-folded 7-mouth pocket).
+// = 4.0 + 2*1.5 = 7.0 < ID7.6 (seed falls from the 7.6-bore into the
+// already-folded 7-mouth pocket, lands inside).
 // Assembly: static tape (viewer scrolls it); export standalone min_z=0.
 // ============================================================
 tape_thick       = 0.4;
-tape_bend_radius = 1.5;   // v34 OD10 (was 1.75): outer=4+2*(1.5+0.4)=7.8<10, mouth inner=4+2*1.5=7~=ID6
+tape_bend_radius = 1.5;   // v34 OD10 (was 1.75): outer=4+2*(1.5+0.4)=7.8<10, mouth inner=4+2*1.5=7<7.6 (v35 ID)
 tape_fold_angle  = 90;
 tape_fold_wall   = 5.5;
 tape_shoulder_r  = 1.5;
@@ -612,31 +612,42 @@ module hopper_body() {
     tilt_pivot = [25, 0, 56];              // 3-o'clock mouth point on drum
     floor_half = cheek_in + 1.0;           // v19 SEAL (was +0.5): floor sides bury into cheeks
     floor_lx1 = (84.5 - tilt_pivot[0])/cos(LOW_TILT);  // v19 SEAL: floor local-x end = world x84.5
-    // BOTTOM-CENTER hover pipe (v34 OD10: 6-o'clock, x=0 = drum
-    // centre; round pipe ID6/OD10 L10 hangs from the hopper floor, bottom
-    // hovers drop_gap=10 above the ribbon top -- NO seal, NO slots).
-    // Tapered groove (inner wide 16 -> 6 throat) funnels seeds into the
-    // pipe bore; drum carve trims the funnel top into a smooth
+    // BOTTOM-CENTER hover pipe (v35 thinnest printable wall: 6-o'clock,
+    // x=0 = drum centre; round pipe OD10/ID7.6 (wall 1.2) L10 hangs from
+    // the hopper floor, bottom hovers drop_gap=10 above the ribbon top --
+    // NO seal, NO slots).
+    // Tapered groove (inner wide 16 -> 7.6 throat) funnels seeds into the
+    // pipe bore; drum carve trims the funnel stub into a smooth
     // drum-conforming mouth (no ledges); bore void pierces cover bottom
     // = drop port; thick funnel walls saddle-fuse to cover lips (single
     // object). Drop x=100 world; the full-U transit (world 70..126) runs
     // UNDER the pipe with a 10 air gap (pipe bottom 23.4 vs pocket top
-    // ~21.4 at the drop: seed falls from the bore into the moving pocket).
+    // ~21.15 at the drop: seed falls from the bore into the moving pocket).
     // Verified coords (world): ribbon top 13.4, pipe 23.4..33.4, flange
     // bottom 33.5 (flange-to-tape 20.1), disc bottom 35 (gap 21.6/11.6).
-    drop_pipe_id = 6; drop_pipe_od = 10; drop_pipe_len = 10; drop_gap = 10;
+    // ENTRY (v35 inspection): throat centre local x=0 == drum drop point
+    // world x=100, Y centred (offset 0.0 < 0.5); funnel half-angle ~8.6deg
+    // from vertical (steep, no hang); sharp 90deg circular inner rims at
+    // the bore ends are broken by 45deg lead-in flares (legs 0.6/0.8>=0.6).
+    drop_pipe_id = 7.6; drop_pipe_od = 10; drop_pipe_len = 10; drop_gap = 10;
+    throat_cx = 0;                       // v35: funnel throat centre (local X)
+    entry_flare_leg = 0.6;               // v35: bore exit 45deg break leg (>=0.6)
+    mouth_flare_leg = 0.8;               // v35: throat entry 45deg break leg (>=0.6)
     pipe_bot_local = tape_z + tape_thick + drop_gap - (drum_axle_z - hopper_axis_z); // 19.4
     pipe_top_local = pipe_bot_local + drop_pipe_len; // 29.4
     tube_x0 = -5; tube_x1 = 5;
-    bore_x0 = -3; bore_x1 = 3;
+    bore_x0 = -3.8; bore_x1 = 3.8;
     tube_z0 = pipe_bot_local; tube_z1 = 52;
-    assert(drop_pipe_id == 6, "hopper_body: hover pipe ID must be 6");
+    assert(abs(drop_pipe_id - 7.6) < 0.001, "hopper_body: hover pipe ID must be 7.6 (thinnest wall)");
     assert(drop_pipe_od == 10, "hopper_body: hover pipe OD must be 10");
     assert(drop_pipe_len == 10, "hopper_body: hover pipe length must be 10");
-    assert((drop_pipe_od - drop_pipe_id)/2 == 2.0, "hopper_body: hover pipe wall must be 2.0");
-    assert(bore_x1 - bore_x0 == 6, "hopper_body: drop bore must be 6");
+    assert(abs((drop_pipe_od - drop_pipe_id)/2 - 1.2) < 0.001, "hopper_body: hover pipe wall must be 1.2 (thinnest printable)");
+    assert(abs((bore_x1 - bore_x0) - 7.6) < 0.001, "hopper_body: drop bore must be 7.6");
     assert(tube_x1 - tube_x0 == 10, "hopper_body: drop tube outer must be 10");
-    assert(bore_x0 - tube_x0 == 2.0, "hopper_body: drop tube X wall must be 2.0");
+    assert(abs((bore_x0 - tube_x0) - 1.2) < 0.001, "hopper_body: drop tube X wall must be 1.2");
+    assert(throat_cx == drum_c[0], "hopper_body: funnel throat centre must equal drum drop point x (local 0 = world 100)");
+    assert(entry_flare_leg >= 0.6, "hopper_body: bore exit lead-in leg must be >=0.6");
+    assert(mouth_flare_leg >= 0.6, "hopper_body: funnel-mouth lead-in leg must be >=0.6");
     assert(tube_z0 + (drum_axle_z - hopper_axis_z) == tape_z + tape_thick + drop_gap,
            "hopper_body: hover pipe bottom must sit tape_top+10 (no seal)");
     assert(drop_gap >= 10, "hopper_body: hover gap must be >=10");
@@ -715,12 +726,12 @@ module hopper_body() {
                         rotate_extrude(angle=150, convexity=10)
                             translate([drum_radius + 1.5 + 1, 0, 0])
                                 square([2, 2*y_out], center=true);
-            // v34 OD10 hover pipe + tapered funnel (single manifold solid):
+            // v35 thinnest-wall hover pipe + tapered funnel (single manifold solid):
             // round tube OD10 (r5) from the hover bottom up L10, fused into
             // a tapered outer cone (r5 -> r10) running up into the hopper
-            // (wall 2.0 throughout vs the inner void: 5-3 = 10-8 = 2.0;
-            // drum carve trims the top into the mouth, remainder fuses to
-            // cover lips).
+            // (wall 1.2 at the pipe growing to 2.0 at the funnel top vs
+            // the inner void: 5-3.8 = 1.2, 10-8 = 2.0; drum carve trims
+            // the top into the mouth, remainder fuses to cover lips).
             translate([0, 0, pipe_bot_local])
                 cylinder(h=drop_pipe_len, r=drop_pipe_od/2, center=false);
             translate([0, 0, pipe_top_local - epsilon])
@@ -737,19 +748,35 @@ module hopper_body() {
             rotate([0, -LOW_TILT, 0])
                 translate([-3, -(cheek_in + 0.5), -0.5])
                     cube([48, 2*(cheek_in + 0.5), 30.5]);
-        // v34 drop bore + tapered groove (no window box, no tape slots):
-        // cylindrical ID6 bore through the hover pipe + tapered inner
-        // cone (r3 -> r8, wide 16 -> 6 throat) up through the funnel to
-        // the drum mouth (fed by the 6 cavities over the top, not by the
-        // trough void). Drum carve trims the funnel top into a smooth
-        // drum-conforming mouth (no steps/ledges). Pipe hovers 10 above
-        // the tape: no notches, no seal overlap. Trough (HW 2.0, outer
-        // 7.8 < OD10) stays centred under the bore (bore +-3); seed falls
-        // 10 from the bore into the already-folded transit pocket below.
+        // v35 drop bore + tapered groove + 45deg lead-ins (no window box, no tape slots):
+        // cylindrical ID7.6 bore through the hover pipe + tapered inner
+        // cone (r4.6 -> r8, wide 16 -> 7.6 throat, ~8.6deg from vertical)
+        // up through the funnel to the drum mouth (fed by the 6 cavities
+        // over the top, not by the trough void). Drum carve trims the
+        // funnel stub into a smooth drum-conforming mouth (only ~1 survives
+        // above the pipe top; the rest is open mouth air by design).
+        // Profile is monotonic (no radial step >0.3 anywhere, no overhang
+        // in the seed travel direction). Two 45deg breaks: bore-exit flare
+        // (r3.8->r4.4 over h0.6, 0.6 flat land left) kills the bottom sharp
+        // inner rim; throat entry flare (r3.8->r4.6 over h0.8, leg 0.8>=0.6)
+        // breaks the bore-to-cone edge into a self-clearing 45deg lead-in.
+        // Pipe hovers 10 above the tape: no notches, no seal overlap.
+        // Trough (HW 2.0, outer 7.8 < OD10) stays centred under the bore
+        // (bore +-3.8, mouth 7 < ID7.6: seed lands INSIDE the
+        // already-folded transit pocket below).
         translate([0, 0, pipe_bot_local - epsilon])
             cylinder(h=drop_pipe_len + 2*epsilon, r=drop_pipe_id/2, center=false);
         translate([0, 0, pipe_top_local - epsilon])
-            cylinder(h=(tube_z1 - pipe_top_local) + epsilon, r1=drop_pipe_id/2, r2=8, center=false);
+            cylinder(h=(tube_z1 - pipe_top_local) + epsilon, r1=drop_pipe_id/2 + mouth_flare_leg, r2=8, center=false);
+        // v35 bore-exit lead-in: 45deg break of the bottom sharp inner rim
+        // (unioned into the bore void; top r == bore r, no step above).
+        translate([throat_cx, 0, pipe_bot_local - epsilon])
+            cylinder(h=entry_flare_leg + epsilon, r1=drop_pipe_id/2 + entry_flare_leg, r2=drop_pipe_id/2, center=false);
+        // v35 throat entry lead-in: 45deg flare straddling the pipe top
+        // (base r == bore r sits inside the bore wall, top r == cone base
+        // r; continuous profile, slope-only kinks, no radial step).
+        translate([throat_cx, 0, pipe_top_local - mouth_flare_leg])
+            cylinder(h=mouth_flare_leg + epsilon, r1=drop_pipe_id/2, r2=drop_pipe_id/2 + mouth_flare_leg, center=false);
         // Cover inner-face groove (v14 YELLOW: w7 x d0.8 along 120..270 arc,
         // matches drum 6-cavity track for wheel-to-frame positioning ONLY
         // (NOT seed drive); shallow guide, channel stays smooth).
