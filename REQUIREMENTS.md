@@ -1,6 +1,12 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v35**
+**Version: v36**
+
+## v36 Thread-Wrapping + Vertical Pull + Wind-Up to MVP (v15 spec backfill) - 2026-09-17
+
+- Add thread-wrapping + vertical pull + wind-up to MVP: 2 threads orbit tape after folding plow to bind each seed, vertical nip rollers pull finished tape at constant speed (spacing driver), take-up spool winds finished tape; all geared to drum 6 cavities for 6 inch spacing
+- Backfills the v15 (2026-09-16) MVP request: item 6 (tape 1 inch + thread bind), item 7 (spacing via vertical pull + gear ratio), new items 10 (thread unit + pull/wind) and 11 (process flow hopper 9 o'clock -> channel -> 6 o'clock -> bind -> pull -> wind-up). File history v16-v35 kept intact (v15 slot was already taken by the changes.jpg markups entry).
+- MVP Update section renamed to "(v15 refinements)" with items 1-9 kept, 6/7 updated, 10/11 added per spec.
 
 ## v35 Thinnest-Wall Pipe (OD10/ID7.6/Wall1.2) + Entry Lead-In - 2026-09-17
 
@@ -870,17 +876,19 @@ If context is ever lost, read this file first.
   (through-wall axle to crank), chassis envelope itself (gussets x→210).
   Screenshots: /tmp/fit_t0.png, /tmp/fit_top.png, /tmp/fit_side.png.
 
-## MVP Update - 2026-09-16 - Agreed with User (v14 refinements)
+## MVP Update - 2026-09-16 - Agreed with User (v15 refinements)
 
 1. **Browser preview stays as is** (no UI change), but must be a logically working model: parts mounted in true fit positions (no floating), motions synced (crank -> seed wheel -> drop -> tape pull, no random spinning).
 2. **Round cover/shroud**: open-top half-cut 16mm pipe channel running 11 o'clock to 6 o'clock along the drum undershot path, guides seed to the 6 o'clock drop onto tape. Top open so seed travel is visible from the hopper to 11 o'clock in top view, no internal blocking ribs (red removed). Bore fits 8mm seed, inner face has grooves matching drum for wheel-to-frame positioning. Joints to the hopper on both sides.
 3. **Seed wheel/cartridge (drum)**: 6 cavities, fixed for MVP. Wheels still interchangeable by hand (no tools) to support 1mm to 6mm seed sizes (cavity size varies, count stays 6).
 4. **Hopper/seed box**: closed container (seeds retained, no open gap). Keeps the horizontal top edge (z=73) but the open gap is filled with walls. Sits at 9 o'clock, max volume extended up to 10:30 around the seed wheel. Inner face has grooves matching drum for wheel-to-frame positioning.
 5. **Hopper + shroud = single printed piece** (with 2 side joints, blue support joints on both sides retained).
-6. **Tape**: 1 inch wide, same for all seed sizes, center-fold with seed in middle.
-7. **Seed spacing**: fixed 6 inch in MVP. Spacing driven by pull roller + gear ratio linked to 6 cavities (drum geared slower vs roller to keep 6 inch). Future enhancement (post-MVP): swap-gears for adjustable spacing (e.g. 3/6/9 inch).
+6. **Tape**: 1 inch wide, same for all seed sizes, center-fold with seed in middle; after plow, 2 threads rotate around tape to bind each seed.
+7. **Seed spacing**: fixed 6 inch in MVP. Spacing 6 inch driven by vertical pull rollers + gear ratio linked to 6 cavities and thread twister; vertical nip rollers pull at constant speed, take-up spool winds finished tape, all synced via gears. Future enhancement (post-MVP): swap-gears for adjustable spacing (e.g. 3/6/9 inch).
 8. **Gear-ratio calculator/chart**: cavities count + roller + gears = spacing. Include as future helper.
 9. **Pink gaps sealed – no leak gaps; Red blocking feature removed – seed path clear from 11 to 6**.
+10. **Thread wrapping unit**: 2 threads orbit tape axis after folding, lock each seed; pull/wind subsystem: vertical rollers + wind-up reel.
+11. **Process flow**: hopper drop (9 o'clock, 6 holes) -> 11-6 channel -> 6 o'clock onto 1 inch folded tape -> thread bind -> vertical pull -> wind-up.
 
 ## Project Location
 - Working dir: /home/ubuntu/projects/vseedtaper
