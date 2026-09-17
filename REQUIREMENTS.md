@@ -1,6 +1,39 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v50**
+**Version: v51**
+
+## v51 Hollow Twister: 2 Rod Bobbin Holders, Empty Middle, Side Friction Drive (user: twister must have nothing in the middle, 2 rod-like bobbin holders, hollow support so the tape passes through) - 2026-09-17
+
+1. **Removed** (middle now completely empty): the solid hub
+   cylinder r3 + the fused coaxial X-drive shaft stub
+   (apex->172) + the mid-hanger post at the tape lane + the
+   coaxial X-pinion. Nothing crosses the ring bore (r8 clears
+   the 7.8 tape pocket).
+2. **CAD** (`seed_tape_machine_v2.scad` only):
+   `thread_twister()` = outer guide ring ONLY (r10 tube2,
+   YZ-plane axis-X) + 2 rod-like bobbin holders 180° apart on
+   the ring (rods r1.2 h10 parallel to X at orbit radius 9.5,
+   each carrying a thread bobbin r2.5 h6 on the rod, orbiting
+   with the rotor, clear of the centre bore); envelope kept
+   (outer 12, `twister_lift` 12 = min_z 0, station 168..176,
+   gaps >= 5, cradle posts + 2mm rolling gap untouched).
+   Drive (NOT coaxial): side layshaft along X at (y=45.5,
+   z=17, cx->175, r2.5) + friction wheel r3.5 touching the
+   ring OD (dist 15.5 = 12+3.5, CAD-asserted) + bevel 12/10
+   retargeted to the side apex (cx,45.5,17); hanger post moved
+   beside the tape (clears it); geared stages still exactly
+   6x at the layshaft ((50/10)*(12/10), friction slip after);
+   new fail-loud asserts (OD contact, rod bore clearance,
+   bobbin tape-corner clearance, interior, min_z);
+   stations/gaps/viewer kinematic -3x/tape/6-turner untouched;
+   min_z>=0, `$fn=60`, `tol=0.3`.
+3. **Viewer** (`web/index.html` only): legend + `_gearTrain`
+   rewritten (side friction drive, apex I50, no coaxial
+   drive); pivots/animation ratios untouched; `ASSET_V`
+   33->34, twister + chassis GLBs rebuilt.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+    `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+    wall [40,-8,60], R->L order, port 9099 only.
 
 ## v50 True 6-Profile Open Folder (user REJECTS v49 closed tube; "6 folder.stl" at root is the shape reference) - 2026-09-17
 
