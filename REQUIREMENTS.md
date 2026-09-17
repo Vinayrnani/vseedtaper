@@ -1,6 +1,44 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v29**
+**Version: v30**
+
+## v30 Fold-Before-Drop Order Fix - 2026-09-17
+
+1. **Goal**: the U-bend must form BEFORE the seed enters, not after. v29
+   folded 126..159 EAST (downstream) of the drop at x=100, so the seed
+   fell onto flat ribbon and folded later — wrong order. v30 moves the
+   fold zone upstream: world x 67..100 (shallow entry in the shroud
+   58..84, full-U exit at x=100 under the drop tube); the seed drops
+   into the already-folded pocket; the east plow (126..159, v1
+   precedent kept) now closes/seals the seeded pocket downstream.
+2. **Verified coords**: drop at world x=100; fold zone 67..100
+   (`fold_start`=67, `fold_len`=33, `fold_end`=100=`drum_axle_x`);
+   fold exit x (100) >= drop x (100) - 3 and fold max x (100) <= 100+7
+   (tube outer) — fold before/at drop, never after. Trough (6 wide,
+   HW 3.0) centered under the bore (10 wide, +-5); fold outer half
+   5.15 fits the tube interior (7.8).
+3. **CAD** (`seed_tape_machine_v2.scad` only): new `fold_start/fold_len/
+   fold_end` params decoupled from the east plow; `seed_tape_bend()`
+   `fx0` 140->81 (`fold_start-tape_x0`), `dx` from `fold_len`, taper
+   unchanged (W shallow -> E full-U at the drop); `tape_len` 180,
+   `tape_z` 30, R1.75, trough 6, walls 5.5, S-shoulders kept;
+   `former_collar()` assembly seat `plow_end-3` (156) -> `fold_end-3`
+   (97, over the fold exit at the drop); drop-tube E/W notches gain a
+   central U clearance (half-width 5.45 = hw+r+thick+tol, local z
+   26.7..35.0, clears wall top ~34.4) while N/S walls + side stubs keep
+   the v29 0.5 wing overlap seal (bottom 29.9 vs ribbon top 30.4);
+   bore 10 / outer 14 untouched; fail-loud asserts (fold exit == drop,
+   entry in shroud band 60..72, fold fits ribbon + tube interior);
+   `min_z=0`, `$fn=60`, `tol=0.3`, R->L order, back gears/crank intact.
+4. **Viewer** (`web/index.html` only): `tapeFoldGroup` seat 142.5->83.5
+   (fold zone 67..100), collar local exit offset unchanged (len 33
+   kept); new `window._tapeFold` order hooks (`foldStart/foldEnd/
+   dropX`); `_dropSeal` unchanged (seal kept); `ASSET_V` 16->17, tape +
+   hopper GLBs rebuilt (fold + notch geometry).
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L hopper > drum > shroud > roller+crank kept;
+   port 9099 only.
 
 ## v29 Sealed Drop Tube (bore 10 / outer 14) - 2026-09-17
 
