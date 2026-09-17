@@ -1,5 +1,31 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v54**
+
+## v54 Asymmetric Inner-Curl 6-Folder (user REJECTS outer pipe/shell again; correct spec in their words: tape arrives already bent U, inside that U ONE side wall curls IN deep, OTHER side curls LESS, curls advance along length so paper edges roll together into overlapped roll) - 2026-09-17
+
+1. **Concept**: DELETE the outer tube/pipe shell entirely. New part
+    is a SEPARATE open object that sits INSIDE the tape U: an open
+    base plate/blade + center fin tongue + two asymmetric curling
+    wings. Left wing: small in-turned lip (r~4) at entry progressing
+    to a ~270deg in-roll (r~2.5) at exit; right wing: flat/small lip
+    at entry progressing to a ~180deg in-roll meeting the left roll
+    at the exit so the paper edges roll together overlapped.
+2. **CAD** (`seed_tape_machine_v2.scad` only): `six_turner()`
+    rebuilt with 6-7 stations over local x0..33 (world 126..159)
+    interpolating per-side curl angle + radius; thin walls 1.2-1.6,
+    entry lead-in chamfers, base plate with 2x screw tabs to the
+    chassis (M3 holes + clearance at the old plow holes, `tol=0.3`);
+    no enclosing ring, no bore. `part_to_render` plow/turner prints
+    it as a separate object. `$fn=60`, manifold, fail-loud asserts.
+3. **Tape**: `seed_tape_bend()` visual update only if trivial to show
+    edges rolling together through it, else untouched.
+4. **Viewer** (`web/index.html` only): relabel + `ASSET_V` bump, plow
+    GLB rebuilt.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+    `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+    wall [40,-8,60], R->L order, port 9099 only.
+
 **Version: v53**
 
 ## v53 True 6-Profile Folder Rebuild, Take 2 (user REJECTS v50 as pipe-like closed tube; "6 folder.stl" at root is the shape reference) - 2026-09-17

@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v54 — 2026-09-17
+- Asymmetric inner-curl 6-folder (user REJECTS outer pipe/shell again): tape arrives already bent U, inside that U one side wall curls IN deep, other side curls a little LESS, curls advance along length so paper edges roll together into overlapped roll; six_turner rebuilt as SEPARATE screw-mounted object (open base plate/blade + center fin tongue + two asymmetric curling wings, 6-7 stations x0..33, thin walls 1.2-1.6, lead-in chamfers, 2x M3 tabs at old plow holes, no ring, no bore); $fn=60, tol=0.3, manifold, asserts; tape visual only if trivial; viewer relabel + ASSET_V bump, plow GLB rebuilt
+
 ## v53 — 2026-09-17
 - True 6-profile folder rebuild take 2 (user REJECTS v50 pipe-like closed tube): sample forensics for real (inches x25.4 = 28.0 x 23.6 x 31.9mm open wrap, tall lapping tongue, curled exit roll); six_turner diagnosis (full-ring shell loft + fused tongue = tube with slit) fixed via progressive eccentric tongue lift (entry fused shallow -> exit floating overlap, 1-2mm visible seam gap) + tall tongue-side ramp blade + bigger flare trumpet; exit overlapping roll not a ring; fail-loud seam/burial/footprint asserts; tape untouched; viewer _sixTurner relabel, ASSET_V 37, plow GLB rebuilt
 
