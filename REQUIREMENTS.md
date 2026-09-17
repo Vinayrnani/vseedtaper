@@ -95,9 +95,10 @@
     ends at the mouth (126), the 7.8 pocket threads the open entry
     and rolls under the tongue (documented, not modelled).
 4. **Viewer** (`web/index.html` only): `_sixTurner` hooks rewritten
-    (open-seam entry/exit), plow legend relabelled true-6 open
-    folder; pivots/animation ratios untouched; `ASSET_V` 33->34,
-    plow GLB rebuilt.
+    (open-seam entry/exit, `seamGap` 2.0, no `shutX`), plow legend
+    relabelled true-6 open folder; pivots/animation ratios
+    untouched; `ASSET_V` 35->36 (shared tree with v51 twister +
+    v52 pullers; v50 plow GLB rebuilt into it).
 5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
     `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
     wall [40,-8,60], R->L order, port 9099 only.
