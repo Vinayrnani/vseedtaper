@@ -1,6 +1,40 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v32**
+**Version: v33**
+
+## v33 Option B Drop-Tape-Lower (Hover Pipe ID10/OD14 L10 + 10 Gap) - 2026-09-17
+
+1. **Goal (user-confirmed option B)**: fit a round ID10/OD14 L10 pipe
+   plus a >=10mm air gap under the wheel. v32 clearance was tape top
+   24.4, flange bottom 33.5, disc 35.0 = only 9.1mm. v33 lowers the
+   tape lane ~11mm (`tape_z` 24->13, ribbon top 13.4) so
+   flange-to-tape = 33.5-13.4 = 20.1 (>=20 = L10+gap10), disc-to-tape
+   = 21.6, transit pocket top 21.4 clears the disc by 13.6.
+2. **CAD** (`seed_tape_machine_v2.scad` only): `tape_z` 24->13
+   (forming 37..70 + transit 70..126 geometry auto-follows; former
+   shoe rides `tape_z+tape_thick`); `shroud_h` 34->23 (roof 21..23,
+   ends open 0..21, slot half 6.45 + d10 ports kept, port_z 18 spans
+   13..23); `hopper_body()` sealed rectangular tube REPLACED by a
+   hover assembly — round pipe OD14 (r7) L10 from local 19.4 (world
+   23.4 = ribbon top 13.4 + gap 10, hover, no seal/slots) to local
+   29.4 (world 33.4) fused into a tapered outer cone (r7->r10) to
+   local 52, inner void = ID10 bore (r5) + tapered groove (r5->r8,
+   wide 16 -> 10 throat) to the drum mouth; drum carve trims the
+   funnel top (mouth stays open); old drop-window box + E/W wing
+   slots + U clearance deleted; export offset -19.9->-19.4 (min_z=0
+   kept); fail-loud asserts (ID/OD/L10, wall 2.0>=1.2, bottom ==
+   tape_top+10, gap>=10, flange-to-tape>=20); `$fn=60`, `tol=0.3`,
+   drum/roller/crank/R->L/fold-before-drop intact.
+3. **Viewer** (`web/index.html` only): `TAPE_Z` 24->13 (fold/ribbon/
+   collar/drop path follow), hopper child `[0,19.9,0]`->`[0,19.4,0]`
+   (re-seats drum centre for the new export drop), `_dropSeal`
+   23.9/24.4->23.4/13.4 + pipeLen/hoverGap hooks, dropSeed falls
+   30->14 through the bore into the pocket; `ASSET_V` 19->20, all
+   GLBs regenerated.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L hopper > drum > shroud > roller+crank kept;
+   port 9099 only.
 
 ## v32 Viewer Displacement Audit Fix - 2026-09-17
 

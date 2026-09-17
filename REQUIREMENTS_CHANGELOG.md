@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v33 — 2026-09-17
+- Option B drop-tape-lower (user-confirmed): tape_z 24->13 (ribbon top 13.4, flange-to-tape 20.1, disc gap 21.6, transit top 21.4); sealed tube replaced by hover round pipe ID10/OD14 L10 (world 23.4..33.4, gap 10, no seal/slots) + tapered groove wide 16->10 throat; shroud roof 34->23 (slot 6.45 kept); hopper child +19.4, TAPE_Z 13, _dropSeal 23.4/13.4, ASSET_V 20
+
 ## v32 — 2026-09-17
 - Viewer displacement audit fix (CAD untouched): hopper child +25.9->+19.9 (floated +6: tube 29.9 vs 23.9, 5.7 spill gap, cover eccentric to drum; now 0.5 seal overlap, coaxial), tape mesh +0.2 Y (ribbon top 24.4 exact); drum/roller/crank/shroud/fold/transit/plow/spool verified undisplaced; ASSET_V 19, GLBs rebuilt, verify_v32.js proves live mesh placement
 
