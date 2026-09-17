@@ -1,6 +1,40 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v49**
+**Version: v50**
+
+## v50 True 6-Profile Open Folder (user REJECTS v49 closed tube; "6 folder.stl" at root is the shape reference) - 2026-09-17
+
+1. **Sample forensics** (measured for real, `trimesh` + 4 Playwright
+    views on port 9099): the STL ships in inches (raw extents
+    1.10x0.93x1.26) -> x25.4 = **28.0 long x 23.6 wide x ~15 tall**
+    trough-to-crown; entry rim spans the full ~23.6 width (one flank
+    rises higher = the tongue side), exit pinches to a ~7 tall roll;
+    cross-sections show an OPEN wrap with one edge lapping OVER the
+    top (overlap seam, never welded shut). Exported scaled at origin
+    as `web/stl/folder6_sample.glb` (reference only, not a machine part).
+2. **CAD** (`seed_tape_machine_v2.scad` only): `six_turner()`
+    rebuilt as a true open 6-profile former in the same 126..159
+    footprint (mounting tabs + base + side posts + mount kept, width
+    40, bore axis at lane height so the tape at `tape_z`=13 threads
+    through): U-trough + ONE side wall rising + tongue curling over
+    the top with a 1-2mm overlap seam gap that stays OPEN full
+    length — entry shallow curl (flare funnel guides the seeded
+    7.8 pocket in) -> exit deep overlap curl (round-folded roll with
+    visible seam, NOT a closed ring). Deleted: v49 shut-tube section
+    (local x27.5..33), exit ring (R5.6/bore r3.2), blind slot wedge.
+    New fail-loud asserts (seam gap open at every station, overlap
+    > 0 at exit, exit NOT a closed ring, footprint, pocket
+    threading); min_z=0, `$fn=60`, `tol=0.3`, manifold single solid.
+3. **Tape**: `seed_tape_bend()`/`fold_section` untouched — the fold
+    ends at the mouth (126), the 7.8 pocket threads the open entry
+    and rolls under the tongue (documented, not modelled).
+4. **Viewer** (`web/index.html` only): `_sixTurner` hooks rewritten
+    (open-seam entry/exit), plow legend relabelled true-6 open
+    folder; pivots/animation ratios untouched; `ASSET_V` 33->34,
+    plow GLB rebuilt.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+    `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+    wall [40,-8,60], R->L order, port 9099 only.
 
 ## v49 Gradual-Curl 6-Folder (user: "6 folder.stl" at root is INSPIRATION ONLY, make something nicer) - 2026-09-17
 

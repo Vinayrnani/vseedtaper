@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v50 — 2026-09-17
+- True 6-profile open folder (user REJECTS v49 pipe: exit ring fully closed): sample forensics for real (inches x25.4 = 28.0 x 23.6mm, open wrap + overlap seam); six_turner rebuilt as U-trough + rising wall + tongue overlapping the top with 1-2mm seam gap open full length (entry shallow curl + flare -> exit deep overlap roll, shut-tube section + R5.6 exit ring deleted); fail-loud seam/overlap/not-closed/footprint asserts; tape untouched; viewer _sixTurner relabel, ASSET_V 34, plow GLB rebuilt, verify_v50.js
+
 ## v49 — 2026-09-17
 - Gradual-curl 6-folder (user: "6 folder.stl" inspiration only, nicer former): six_turner rebuilt as 7-station hull-loft (same 126..159 footprint/tabs/mount) — open-U entry (slot +-3.9, flare, lead walls) -> U -> C -> overlap -> closed tube from local x27 + exit ring R5.6/bore 3.2 (crown 1.2) with 6 seam tail at exit only; bore tapers 4.6->3.2 (entry dia 9.2 clears 7.8 pocket); curl rails on slot edges (void-trimmed, never blocking); horns/tongue/inner-roll deleted; fail-loud slot/crown/footprint/threading asserts; tape untouched (curls inside hidden steel, documented); viewer _sixTurner relabel, ASSET_V 33, plow GLB rebuilt, verify_v49.js
 
