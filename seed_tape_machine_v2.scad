@@ -1527,17 +1527,22 @@ module seed_cradle() {
 
 // ============================================================
 // 7. 6-FOLDER THIN-WALL TAPERED SHELL, v56 (Front/Back/Top.jpg
-// v58 big-to-small 6-folder (user direction reversal 2026-09-17:
-// entry BIG loose 6 (dia 21) catches the seeded U-tape, exit SMALL
-// tight curled 6 (dia 9); inner hook edge approaches the outer
-// circle but NEVER touches — 1.0mm daylight gap full length).
+// v60 U-to-swirl forming plow (user 2026-09-17: "6 = U bent
+// transforming to swirl, tape folded round"): FORMING PLOW /
+// folding funnel — entry LARGE open U-channel (dia 21, ~180° wrap,
+// wide slit ~180° on top, NO hook) catches the flat seeded tape;
+// walls rise and curl inward along the length into the exit SMALL
+// tight 6-swirl (dia 9, outer 330° + inner hook 160°); inner hook
+// edge approaches the outer circle but NEVER touches — 1.0mm
+// daylight gap full length (where the hook exists).
 // THIN-WALL SHELL ONLY: wall 0.8 (minimum printable single wall),
 // NO thick base plate. 7-station loft local x0..33 (world 126..159):
-// entry outer dia 21 (BIG loose open 6) -> exit outer dia 9 (SMALL
-// tight curled 6). Cross-section open-6 full length: outer wrap
-// 300->330deg (slit >=30deg open full length, never a tube) + inner
-// hook 20->160deg riding 1.0 off the shell ID (daylight slit, tape
-// slides, never catches). Lower side tail blade full length on the
+// entry outer dia 21 (open U, 180°) -> exit outer dia 9 (tight
+// 6-swirl, 330° + 160° hook). Cross-section U-to-6 full length:
+// outer wrap 180->330deg (slit ~180° at the mouth narrowing to
+// 30° at exit, open full length on top, never a tube) + inner
+// hook 0->160deg (absent at the mouth, riding 1.0 off the shell
+// ID where present — daylight slit, tape slides, never catches). Lower side tail blade full length on the
 // -Y side (mid-height, fused to shell, clear of bore); tapered skid
 // wedge underneath = flat underside sit (fused to shell, clear of
 // bore) with a 2mm nose shelf west of the mouth; flat entry
@@ -1553,8 +1558,8 @@ module seed_cradle() {
 // thick, hull-bridged; steps small so the wall stays a thin curl):
 //   x:     0    5.5   11   16.5   22   27.5   33
 //   R:   10.5   9.5   8.5   7.5   6.5   5.5   4.5 (outer radius)
-//   wrap: 300   305   310   315   320   325   330 (outer, deg)
-//   hook:  20    45    70    95   120   145   160 (inner, deg)
+//   wrap: 180   210   240   270   300   320   330 (outer, deg)
+//   hook:   0    30    60    90   120   145   160 (inner, deg)
 // part_to_render "plow" (compat) and "turner" both render this.
 // ============================================================
 // Annular-sector strip for one shell/hook/rib plate, pre-mapped so
@@ -1574,8 +1579,8 @@ module six_turner() {
     // THE station table: outer radius + outer wrap + inner hook span.
     st_x = [0, 5.5, 11, 16.5, 22, 27.5, 33];
     st_R = [10.5, 9.5, 8.5, 7.5, 6.5, 5.5, 4.5];
-    st_W = [300, 305, 310, 315, 320, 325, 330];
-    st_H = [20, 45, 70, 95, 120, 145, 160];
+    st_W = [180, 210, 240, 270, 300, 320, 330];
+    st_H = [0, 30, 60, 90, 120, 145, 160];
     n_st = len(st_x);
     // Fine shell/hook plates: 7-station table interpolated to 17
     // plates (1.925 apart, 2.2 thick, 0.275 overlapped and UNIONED
@@ -1584,8 +1589,8 @@ module six_turner() {
     // filled the bore solid; last plate ends 30.8+2.2 = 33).
     fpx = [0.0000, 1.9250, 3.8500, 5.7750, 7.7000, 9.6250, 11.5500, 13.4750, 15.4000, 17.3250, 19.2500, 21.1750, 23.1000, 25.0250, 26.9500, 28.8750, 30.8000];
     fR = [10.500, 10.150, 9.800, 9.450, 9.100, 8.750, 8.400, 8.050, 7.700, 7.350, 7.000, 6.650, 6.300, 5.950, 5.600, 5.250, 4.500];
-    fW = [300.00, 301.75, 303.50, 305.25, 307.00, 308.75, 310.50, 312.25, 314.00, 315.75, 317.50, 319.25, 321.00, 322.75, 324.50, 326.25, 330.00];
-    fH = [20.00, 28.75, 37.50, 46.25, 55.00, 63.75, 72.50, 81.25, 90.00, 98.75, 107.50, 116.25, 125.00, 133.75, 142.50, 148.75, 160.00];
+    fW = [180.00, 190.50, 201.00, 211.50, 222.00, 232.50, 243.00, 253.50, 264.00, 274.50, 285.00, 295.50, 304.00, 311.00, 318.00, 322.50, 330.00];
+    fH = [0.00, 10.50, 21.00, 31.50, 42.00, 52.50, 63.00, 73.50, 84.00, 94.50, 105.00, 115.50, 125.00, 132.50, 140.00, 148.75, 160.00];
     n_fp = len(fpx);
     plate_t = 2.2;                  // plate thickness along X (must exceed pitch)
     skid_t0 = 3.0;                  // skid top at entry (fused to big shell, clear of bore)
@@ -1620,11 +1625,17 @@ module six_turner() {
     assert(st_R[0] > st_R[1] && st_R[1] > st_R[2] && st_R[2] > st_R[3]
         && st_R[3] > st_R[4] && st_R[4] > st_R[5] && st_R[5] > st_R[6],
         "six_turner: radius must shrink monotonically (big->small taper)");
-    assert(st_W[0] >= 295 && st_W[n_st-1] <= 340,
-        "six_turner: outer wrap must stay open-6 (300-330, never a tube)");
+    assert(st_W[0] >= 170 && st_W[0] <= 190,
+        str("six_turner: entry must be an open U (~180), got ", st_W[0]));
+    assert(st_W[n_st-1] >= 325 && st_W[n_st-1] <= 335,
+        str("six_turner: exit must be a closed swirl (330, never a tube), got ", st_W[n_st-1]));
+    assert(360 - st_W[0] >= 150,
+        "six_turner: entry slit must be wide open (U mouth, >=150deg)");
     assert(st_W[0] < st_W[1] && st_W[1] < st_W[2] && st_W[2] < st_W[3]
         && st_W[3] < st_W[4] && st_W[4] < st_W[5] && st_W[5] < st_W[6],
         "six_turner: outer wrap must advance monotonically");
+    assert(st_H[0] >= 0 && st_H[0] <= 5,
+        str("six_turner: entry hook must start ~0 (clean U mouth), got ", st_H[0]));
     assert(st_H[0] < st_H[1] && st_H[1] < st_H[2] && st_H[2] < st_H[3]
         && st_H[3] < st_H[4] && st_H[4] < st_H[5] && st_H[5] < st_H[6],
         "six_turner: inner hook must advance monotonically");
@@ -1714,19 +1725,25 @@ module six_turner() {
                 // Inner hook loft: radius Rh = R-hook_off, span a1-H..a1
                 // (root at the shell a1 edge, 1.0 daylight off the shell ID).
                 // Root rib: annular quad bridging hook root to shell.
+                // v60: hook+rib skipped while H<25° (entry region stays
+                // a clean hook-free U mouth; the hook grows in where it
+                // is ≥21° like the proven v58 minimum — also avoids a
+                // degenerate polygon and CGAL tip splinters).
                 for (k=[0:n_fp-1]) {
                     translate([fpx[k], cy, curl_cz])
                         rotate([0, 90, 0])
                             linear_extrude(height=plate_t)
                                 polygon(curl_strip_pts(fR[k]-wall, fR[k], 90+(360-fW[k])/2, 90+(360-fW[k])/2+fW[k], 30));
-                    translate([fpx[k], cy, curl_cz])
-                        rotate([0, 90, 0])
-                            linear_extrude(height=plate_t)
-                                polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k]-hook_off, 90+(360-fW[k])/2+fW[k]-fH[k], 90+(360-fW[k])/2+fW[k]-1, 20));
-                    translate([fpx[k], cy, curl_cz])
-                        rotate([0, 90, 0])
-                            linear_extrude(height=plate_t)
-                                polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k], 90+(360-fW[k])/2+fW[k]-4, 90+(360-fW[k])/2+fW[k]+4, 2));
+                    if (fH[k] >= 25) {
+                        translate([fpx[k], cy, curl_cz])
+                            rotate([0, 90, 0])
+                                linear_extrude(height=plate_t)
+                                    polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k]-hook_off, 90+(360-fW[k])/2+fW[k]-fH[k], 90+(360-fW[k])/2+fW[k]-1, 20));
+                        translate([fpx[k], cy, curl_cz])
+                            rotate([0, 90, 0])
+                                linear_extrude(height=plate_t)
+                                    polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k], 90+(360-fW[k])/2+fW[k]-4, 90+(360-fW[k])/2+fW[k]+4, 2));
+                    }
                 }
                 // Lower side tail blade (-Y side, full length, mid-height
                 // z12: inner edge fused into the shell flank, clear of

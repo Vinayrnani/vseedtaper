@@ -23,10 +23,11 @@
     rewritten (st_W entry 300->180 with 210/240/270/300/320
     ramp, st_H entry 20->0 with 30/60/90/120/145 ramp, R
     untouched); 17 fine plates re-interpolated (fW/fH, exit
-    plate snapped exact); hook+rib plates skipped where H<1°
-    (entry stays a clean U, no degenerate polygon); asserts
-    updated (entry U 170-190°, exit 325-335°, hook starts 0,
-    monotonic kept, exit dia 9 + 1.0 gap proofs kept); tray/
+    plate snapped exact); hook+rib loft skipped while H<25°
+    (entry region stays a clean hook-free U mouth; hook grows in
+    at >=21° like the proven v58 minimum, one watertight solid);
+    asserts updated (entry U 170-190°, exit 325-335°, hook starts
+    0, monotonic kept, exit dia 9 + 1.0 gap proofs kept); tray/
     skid/blade/ears/straps/bars untouched; `$fn=60`, `tol=0.3`,
     manifold single solid, min_z=0.
 3. **Tape**: untouched.
