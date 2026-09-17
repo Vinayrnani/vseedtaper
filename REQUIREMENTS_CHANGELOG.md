@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v53 — 2026-09-17
+- True 6-profile folder rebuild take 2 (user REJECTS v50 pipe-like closed tube): sample forensics for real (inches x25.4 = 28.0 x 23.6 x 31.9mm open wrap, tall lapping tongue, curled exit roll); six_turner diagnosis (full-ring shell loft + fused tongue = tube with slit) fixed via progressive eccentric tongue lift (entry fused shallow -> exit floating overlap, 1-2mm visible seam gap) + tall tongue-side ramp blade + bigger flare trumpet; exit overlapping roll not a ring; fail-loud seam/burial/footprint asserts; tape untouched; viewer _sixTurner relabel, ASSET_V 37, plow GLB rebuilt
+
 ## v52 — 2026-09-17
 - Smaller vertical pullers + 9.5mm nip gap (user: gap 9.5, pullers too big): vpull_r 10->7.5 (d20->d15), sleeve 10.15->7.65 (0.15 proud), h 24->20, sleeve_h 16->12, caps/collar d22->d17; param-driven vpull_gap=9.5, vpull_off=sleeve_r+gap/2=12.4 (replaces r+2.0+1.5+0.4+tol); Y 17.6/42.4; spin-compensated drive x4/3 (surface speed kept, 1:1 assert replaced); bridge/cup/pins lowered to the shorter stack (top 27); fail-loud 9.5 gap assert; viewer pivots + PULL_SPIN, ASSET_V 34, pull + chassis GLBs rebuilt, verify_v52.js
 

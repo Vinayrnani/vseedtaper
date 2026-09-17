@@ -1,5 +1,44 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v53**
+
+## v53 True 6-Profile Folder Rebuild, Take 2 (user REJECTS v50 as pipe-like closed tube; "6 folder.stl" at root is the shape reference) - 2026-09-17
+
+1. **Sample forensics** (measured for real, `trimesh` + 5 Playwright
+    views on port 9099): the STL ships in inches (raw extents
+    1.10x0.93x1.26) -> x25.4 = **28.0 x 23.6 x 31.9mm** former;
+    OPEN sheet wrap (never a tube): wide entry trough spanning the
+    full ~23.6 width with ONE flank rising into a tall tongue that
+    laps OVER the top (overlap seam), exit narrows to a curled
+    ~7-10 roll; cross-slices collapse to one side at the exit =
+    the lapping tongue tail. Committed `web/stl/folder6_sample.glb`
+    is already mm-scaled (reference only, not a machine part).
+2. **Why v50 reads as pipe**: the outer shell lofts full 360° rings
+    (R7.0->5.35) with only a 2mm slot slit, and the tongue
+    (root buried R-0.5, 1.1 proud, same union) melts into the crown
+    — from outside it is a closed tube with a slit, the overlap
+    seam is invisible. The rebuild keeps footprint/world
+    x126-159, width 40, mounting tabs, bore axis at lane height
+    (`tape_z`=13, 7.8 pocket threads through) but makes the 6-read
+    structural: progressive eccentric tongue lift (entry fused
+    shallow curl -> exit floating overlap with a 1-2mm VISIBLE
+    radial seam gap), taller tongue-side entry ramp blade, bigger
+    entry flare trumpet; shell slot stays OPEN full length ending
+    2mm; exit is an overlapping roll, NOT a ring. New fail-loud
+    asserts (exit seam gap 0.8-2.0, entry fused <=0, root burial
+    >=0.3, edge stops +Y of slot, footprint, pocket threading);
+    min_z=0, `$fn=60`, `tol=0.3`, manifold single solid.
+3. **Tape**: `seed_tape_bend()`/`fold_section` untouched — the fold
+    ends at the mouth (126), the 7.8 pocket threads the open entry
+    and rolls under the floating tongue (documented, not modelled).
+4. **Viewer** (`web/index.html` only): `_sixTurner` hooks rewritten
+    (floating-overlap entry/exit, `seamGap` 1.1), plow legend
+    relabelled true-6 floating overlap; pivots/animation ratios
+    untouched; `ASSET_V` 36->37, plow GLB rebuilt.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+    `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+    wall [40,-8,60], R->L order, port 9099 only.
+
 **Version: v52**
 
 ## v52 Smaller Vertical Pullers + 9.5mm Nip Gap - 2026-09-17
