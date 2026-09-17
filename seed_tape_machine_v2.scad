@@ -1575,14 +1575,16 @@ module six_turner() {
     st_H = [20, 45, 70, 95, 120, 145, 160];
     n_st = len(st_x);
     // Fine shell/hook plates: 7-station table interpolated to 17
-    // plates (1.9875 apart, 1.2 thick, hull-bridged; steps small so
-    // the wall stays a thin curl, last plate ends 31.8+1.2 = 33).
-    fpx = [0.0000, 1.9875, 3.9750, 5.9625, 7.9500, 9.9375, 11.9250, 13.9125, 15.9000, 17.8875, 19.8750, 21.8625, 23.8500, 25.8375, 27.8250, 29.8125, 31.8000];
-    fR = [6.200, 6.453, 6.706, 6.959, 7.212, 7.465, 7.718, 7.971, 8.224, 8.477, 8.730, 8.982, 9.235, 9.488, 9.747, 10.036, 10.325];
-    fW = [300.00, 301.45, 302.89, 304.25, 305.34, 306.42, 307.50, 308.59, 309.67, 310.50, 311.23, 311.95, 312.67, 313.40, 314.06, 314.42, 314.78];
-    fH = [20.00, 29.03, 38.07, 47.10, 56.14, 65.17, 74.20, 83.24, 92.27, 101.31, 110.34, 119.38, 128.41, 137.44, 145.89, 151.31, 156.73];
+    // plates (1.925 apart, 2.2 thick, 0.275 overlapped and UNIONED
+    // directly — v57: hull() is banned on shell/hook/rib, the convex
+    // hull of a 300deg annular sector includes the bore centre and
+    // filled the bore solid; last plate ends 30.8+2.2 = 33).
+    fpx = [0.0000, 1.9250, 3.8500, 5.7750, 7.7000, 9.6250, 11.5500, 13.4750, 15.4000, 17.3250, 19.2500, 21.1750, 23.1000, 25.0250, 26.9500, 28.8750, 30.8000];
+    fR = [6.200, 6.445, 6.690, 6.935, 7.180, 7.425, 7.670, 7.915, 8.160, 8.405, 8.650, 8.895, 9.140, 9.385, 9.630, 9.900, 10.180];
+    fW = [300.00, 301.40, 302.80, 304.15, 305.20, 306.25, 307.30, 308.35, 309.40, 310.30, 311.00, 311.70, 312.40, 313.10, 313.80, 314.25, 314.60];
+    fH = [20.00, 28.75, 37.50, 46.25, 55.00, 63.75, 72.50, 81.25, 90.00, 98.75, 107.50, 116.25, 125.00, 133.75, 142.50, 148.75, 154.00];
     n_fp = len(fpx);
-    plate_t = 1.2;                  // plate thickness along X
+    plate_t = 2.2;                  // plate thickness along X (must exceed pitch)
     // Screw ears: 6x6x1 diagonal pair to chassis M3 holes.
     // Ear A entry: local centre (6,-4) -> world (132,6).
     // Ear B exit: local centre (27,44) -> world (153,54).
@@ -1644,50 +1646,34 @@ module six_turner() {
     assert(7.0 <= curl_cz - (st_R[0] - wall) - 0.3
         && 3.0 <= curl_cz - (st_R[n_st-1] - wall) - 0.3,
         "six_turner: skid must stay below the bore (hollow kept)");
-    // v56 THIN SHELL: the voids below are ONLY the 2 M3 ear holes.
+    // v57 THIN SHELL (hollow loft): the voids below are ONLY the
+    // 2 M3 ear holes.
     // Shell + hook + ribs + blade + skid + ears/straps/posts unite
-    // into one solid: plates hull-bridged consecutively, hook roots
-    // ribbed to the shell, blade/skid/straps/posts overlapped in.
+    // into one solid: plates overlapped consecutively (plate_t exceeds
+    // pitch, union only, NO hull — hull of an open annular sector caps
+    // the bore solid), hook roots ribbed to the shell, blade/skid/straps/posts overlapped in.
     // Center holds only air.
     union() {
         difference() {
             union() {
-                // Outer shell loft: hull-bridged annular-sector plates
+                // Outer shell loft: overlapping annular-sector plates
                 // (gap centred at top 90: a0 = 90+(360-W)/2, a1 = a0+W).
                 // Inner hook loft: radius Rh = R-hook_off, span a1-H..a1
                 // (root at the shell a1 edge, 2.5 slit off the shell ID).
                 // Root rib: annular quad bridging hook root to shell.
-                for (k=[0:n_fp-2]) {
-                    hull() {
-                        translate([fpx[k], cy, curl_cz])
-                            rotate([0, 90, 0])
-                                linear_extrude(height=plate_t)
-                                    polygon(curl_strip_pts(fR[k]-wall, fR[k], 90+(360-fW[k])/2, 90+(360-fW[k])/2+fW[k], 30));
-                        translate([fpx[k+1], cy, curl_cz])
-                            rotate([0, 90, 0])
-                                linear_extrude(height=plate_t)
-                                    polygon(curl_strip_pts(fR[k+1]-wall, fR[k+1], 90+(360-fW[k+1])/2, 90+(360-fW[k+1])/2+fW[k+1], 30));
-                    }
-                    hull() {
-                        translate([fpx[k], cy, curl_cz])
-                            rotate([0, 90, 0])
-                                linear_extrude(height=plate_t)
-                                    polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k]-hook_off, 90+(360-fW[k])/2+fW[k]-fH[k], 90+(360-fW[k])/2+fW[k], 20));
-                        translate([fpx[k+1], cy, curl_cz])
-                            rotate([0, 90, 0])
-                                linear_extrude(height=plate_t)
-                                    polygon(curl_strip_pts(fR[k+1]-hook_off-wall, fR[k+1]-hook_off, 90+(360-fW[k+1])/2+fW[k+1]-fH[k+1], 90+(360-fW[k+1])/2+fW[k+1], 20));
-                    }
-                    hull() {
-                        translate([fpx[k], cy, curl_cz])
-                            rotate([0, 90, 0])
-                                linear_extrude(height=plate_t)
-                                    polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k], 90+(360-fW[k])/2+fW[k]-4, 90+(360-fW[k])/2+fW[k]+4, 2));
-                        translate([fpx[k+1], cy, curl_cz])
-                            rotate([0, 90, 0])
-                                linear_extrude(height=plate_t)
-                                    polygon(curl_strip_pts(fR[k+1]-hook_off-wall, fR[k+1], 90+(360-fW[k+1])/2+fW[k+1]-4, 90+(360-fW[k+1])/2+fW[k+1]+4, 2));
-                    }
+                for (k=[0:n_fp-1]) {
+                    translate([fpx[k], cy, curl_cz])
+                        rotate([0, 90, 0])
+                            linear_extrude(height=plate_t)
+                                polygon(curl_strip_pts(fR[k]-wall, fR[k], 90+(360-fW[k])/2, 90+(360-fW[k])/2+fW[k], 30));
+                    translate([fpx[k], cy, curl_cz])
+                        rotate([0, 90, 0])
+                            linear_extrude(height=plate_t)
+                                polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k]-hook_off, 90+(360-fW[k])/2+fW[k]-fH[k], 90+(360-fW[k])/2+fW[k]-1, 20));
+                    translate([fpx[k], cy, curl_cz])
+                        rotate([0, 90, 0])
+                            linear_extrude(height=plate_t)
+                                polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k], 90+(360-fW[k])/2+fW[k]-4, 90+(360-fW[k])/2+fW[k]+4, 2));
                 }
                 // Lower flat tail blade (-Y side, full length, flat at z~8).
                 hull() {
