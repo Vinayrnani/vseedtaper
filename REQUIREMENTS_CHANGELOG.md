@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v43 — 2026-09-17
+- True-meshed gear train (decorative-idler audit fix): CAD exterior train all module 2, every pair dist=r1+r2 fail-loud (plane-A 12T chain E0->PC pull 1:1; D2-20T->L1 12T/36T compound; plane-B L1b->L2-10T twister 6x drum + GT/GJ/GS-15T take-up 2x crank sense-reversed), half-pitch phasing, layshaft bosses+through-holes, min_z=0; takeup_angle +1440t->-1440t; viewer take-up sign flip + meshed comments, ASSET_V 27, GLBs rebuilt; stations/gaps + 6-turner untouched
+
 ## v42 — 2026-09-17
 - True 6-fold second stage (user clarification: tape ALREADY U-bent by first stage): six_turner reworked 126..159 into U-accept entry + twin edge-curl horns (r2.5) + inner tongue diving crown->bore with inner roll (r2.2, post-cut union) folding 2 U edges inside + necked exit ring (r5.5/bore r3.2) reading as 6 end-on; main bore r4.2+1.2 kept (dia 8.4 clears 7.8), footprint/tabs/stations kept (lip 160.35 -> twister gap 7.65); 5 new asserts; viewer relabel two-stage + _sixTurner stages/entry/exit hooks, ASSET_V 26, GLBs rebuilt
 

@@ -84,6 +84,50 @@ takeup_angle  = 1440 * $t                     # core d10 step-up: 2x crank winds
   twister 168..176 (gap 9, actual 7.65 with tab overhang) -> pull
   183..205 incl. caps (gap 7) -> take-up 210..242 (gap 5).
 
+## v43 true-meshed exterior train (audit + fix, replaces decorative idlers)
+
+BEFORE (v39-v42 audit): only crank20<->drum40 truly meshed
+(dist 60 = 20+40, module 2, phase 9°). Idler1 20T at (110,60):
+dist to drum 10 vs needed 60 (overlap -50), to crank 70 vs needed
+40 (gap +30) — fused to the back wall, meshes nothing. Idler2 12T
+at (183,17): nearest gear >60 away — decorative. Twister/pull/
+take-up had animation ratios but no gears, no mesh phase, no
+through-axles. Modules all 2 (ok), but center distances wrong.
+
+AFTER (all module 2, pitch r = T, outer r = T+2; dist err 0.00):
+
+```
+interior: crank20 (40,60) <-> drum40 (100,60): dist 60 = 20+40
+  W: crank +1 -> drum -0.5 (2:1, 1 flip, phase 9° half-pitch)
+
+plane A (back-wall outer y -8..-2), all 12T (r12, MeshD 24):
+  E0 (40,60) -> H1 (52.97,39.81) -> R0 (56,16) -> (80,16) ->
+  (104,16) -> (128,16) -> (152,16) -> H3 (166.73,34.94) ->
+  PC (190.22,30, pull layshaft, 4mm off the nip at 194)
+  every hop dist 24.00 = 12+12; W_PC = +1 (8 flips, 1:1 crank)
+
+drum takeoff D2-20T (100,60, rigid on drum shaft, W -0.5):
+  D2 -> L1a-12T/L1b-36T compound (130.91,51.72): dist 32 = 20+12
+  W_L1 = +0.8333
+
+plane B (back-wall inner y -16..-10):
+  L1b-36T -> L2-10T twister pinion (166.05,22.03): dist 46 = 36+10
+    W = -3 = 6x drum, same sign (2 flips); layshaft 6mm off the
+    twister rotor (172,17), rigid transfer bracket
+  L1b-36T -> GT-15T (178.83,69.16): dist 51 = 36+15; W = -2
+  GT-15T -> GJ-15T (205.94,56.31): dist 30 = 15+15; W = +2
+  GJ-15T -> GS-15T (226,34, coaxial with the reel axle): dist 30
+    W = -2 = 2x crank, sense reversed vs v42 (3 flips)
+```
+
+- Teeth check: (20/12)*(36/10) = 6.0 (twister 6x drum);
+  (20/12)*(36/15)*(15/15)*(15/15) = 4.0x drum = 2x crank.
+- Same-plane non-mesh clearance verified >= 6mm everywhere;
+  coaxial compounds share centres across planes A/B.
+- Spacing unchanged (pull nip still 1:1 d20).
+- Viewer: twister/pull pivots + ratios unchanged; take-up sign
+   flipped (+2x viewer sense = CAD -1440t); ASSET_V 27.
+
 ## v42 true 6-fold second stage (no ratio change — turner geometry only)
 
 - FIRST stage still makes the U (forming 37..70 + transit 70..126);

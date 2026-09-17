@@ -1,6 +1,35 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v42**
+**Version: v43**
+
+## v43 True-Meshed Gear Train (decorative-idler audit fix) - 2026-09-17
+
+1. **Audit (user-report confirmed)**: only crank20<->drum40 truly
+   meshed (dist 60 = r20+r40, module 2, phase 9°). Idler1 20T at
+   (110,60): 10 off drum (needs 60), 70 off crank (needs 40) —
+   fused decoration. Idler2 12T at (183,17): >60 from any gear —
+   decoration. Twister/pull/take-up had animation ratios but no
+   gears, no mesh phase, no through-axles (modules were all 2, ok).
+2. **CAD** (`seed_tape_machine_v2.scad` only): new exterior train,
+   all module 2, every pair dist=r1+r2 (fail-loud <= tol+0.01),
+   half-pitch tooth phasing, layshaft bosses + wall through-holes
+   (no float): plane-A 12T chain E0(40,60)->H1->R0->80->104->128->
+   152->H3->PC(190.22,30, pull layshaft 1:1, sign kept); drum
+   takeoff D2-20T->L1a-12T/L1b-36T compound (130.91,51.72, dist
+   32); plane-B L1b->L2-10T twister pinion (166.05,22.03, dist 46,
+   6x drum, sign kept, 6mm transfer to rotor) + L1b->GT-15T
+   (178.83,69.16, 51)->GJ-15T (205.94,56.31, 30)->GS-15T (226,34
+   coaxial reel, 30) = 2x crank, sense reversed (takeup_angle
+   +1440t->-1440t); same-plane non-mesh clearance >=6; min_z=0,
+   `$fn=60`, `tol=0.3`; stations/gaps untouched (>=5), 6-turner
+   geometry untouched.
+3. **Viewer** (`web/index.html` only): take-up sign flipped
+   (`-2*crankAngle`->`+2*crankAngle`, both call sites), gear-train
+   comments/legend/`_gearTrain.mesh` rewritten meshed; pivots,
+   twister/pull ratios unchanged; `ASSET_V` 26->27, all GLBs rebuilt.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L order, port 9099 only.
 
 ## v42 True 6-Fold Second Stage (two-stage: U then fold edges inside to roll) - 2026-09-17
 
