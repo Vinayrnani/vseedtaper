@@ -1,5 +1,38 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v52**
+
+## v52 Smaller Vertical Pullers + 9.5mm Nip Gap - 2026-09-17
+
+1. **CAD** (`seed_tape_machine_v2.scad` only): vertical pullers
+    downsized (were big d20): `vpull_r` 10->7.5 (d20->d15),
+    `vpull_sleeve_r` 10.15->7.65 (0.15 proud kept),
+    `vpull_h` 24->20, `vpull_sleeve_h` 16->12, top cap + mid
+    collar d22->d17 (r+1 rim kept: 8.5 = 7.5+1). Cushioned
+    surface-to-surface nip gap enforced param-driven:
+    `vpull_gap=9.5`, `vpull_off=vpull_sleeve_r+vpull_gap/2`
+    = 12.4 (replaces the old r+2.0+1.5+0.4+tol = 14.2
+    formula); Y = 30±12.4 = 17.6/42.4; cushioned gap
+    2*12.4-2*7.65 = 9.5, steel gap 2*12.4-2*7.5 = 9.8.
+    Pocket 7.8 threads the 9.5 nip with 0.85/side (soft
+    sleeve kisses under load, no crush). Surface speed kept
+    via `vpull_spin=roller_body_r/vpull_r` = 4/3:
+    `pull_a/b_angle` = ±roller_angle*spin (replaces 1:1
+    `vpull_r==roller_body_r` assert). Shorter stack (top
+    27): bridge 32->28, cup 29->25, pins 33/31->27; X
+    envelope 186.35..201.65 keeps gaps >=5 (twister 10.35,
+    take-up 8.35). New fail-loud gap assert (==9.5±0.01);
+    min_z=0, `$fn=60`, `tol=0.3` kept.
+2. **Viewer** (`web/index.html` only): pullAPivot
+    (194,4,-15.8)->(194,4,-17.6), pullBPivot
+    (194,4,-44.2)->(194,4,-42.4); new `PULL_SPIN` 4/3 scales
+    both pull rotations (all 4 sites); `ASSET_V` 33->34,
+    pull_a/pull_b (+chassis bridge/cup/pins) GLBs rebuilt.
+3. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order,
+    port 9099 only.
+
 **Version: v51**
 
 ## v51 Hollow Twister: 2 Rod Bobbin Holders, Empty Middle, Side Friction Drive (user: twister must have nothing in the middle, 2 rod-like bobbin holders, hollow support so the tape passes through) - 2026-09-17
