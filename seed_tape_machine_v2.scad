@@ -341,8 +341,8 @@ drop_x = drum_axle_x;             // 100: seed drop point (hopper bore centre)
 turner_start = plow_start;        // 126: 6-curl mouth (flat landing 100..126 first)
 turner_len = plow_len;            // 33
 turner_end = plow_end;            // 159
-turner_curl_r = 6.5;              // 6-curl outer radius (tape pocket 7.8 threads the bore)
-turner_curl_bore = 4.2;           // 6-curl bore radius (dia 8.4 clears the 7.8 pocket)
+turner_curl_r = 6.5;              // nominal outer radius (v49: station table 7.0->5.5 supersedes; kept for reference)
+turner_curl_bore = 4.2;           // nominal bore radius (v49: tapered bore 4.6->3.2 supersedes; kept for reference)
 turner_curl_off = 1.2;            // bore offset upward (thin top curl-over reads as "6")
 turner_curl_cz = 12;              // curl axis height above the turner base
 
@@ -1453,58 +1453,73 @@ module seed_cradle() {
 }
 
 // ============================================================
-// 7. 6-turner SECOND STAGE (v42 TRUE 6-fold: tape is ALREADY U-bent
-// by the first stage forming 37..70 + transit 70..126; this piece
-// only folds the 2 U edges INSIDE into an overlapping roll).
+// 7. 6-turner GRADUAL-CURL former, v49 (inspiration: "6 folder.stl"
+// only — NOT copied; that sample is a ~28mm stub shoulder, ours is
+// a full 33mm progressive former in the same 126..159 footprint).
 // Local frame like the old plow: x 0..turner_len (33, world
-// 126..159), y 0..40 (tape centre y=20), z 0..curl top, min_z=0.
-// STAGE A (entry x 0..10): open U-accept channel — two side walls
-// hold the incoming U-section (mouth inner 7 from the first stage)
-// + low converging guides (25.4 -> ~8 funnel, first-stage wings).
-// STAGE B (x 8..24): two SYMMETRIC edge-curl horns (solid former
-// noses r2.5 at y=cy+-4.2) roll the left/right U edges inward/down;
-// an inner tongue plate dives from the crown into the bore and ends
-// in an inner roll (r2.2 solid along X inside the bore) — the tongue
-// + inner roll IS the inner loop of the "6", folding edges INSIDE.
-// STAGE C (exit x 24..33): near-closed tube — exit ring (outer r5.5,
-// bore r3.2 < main bore 4.2) necks the roll shut; top seam lip
-// overlaps the joint so the end-on cross-section reads as "6"
-// (outer curl + inner tongue), NOT a plain round tube.
-// Main bore (r4.2 offset +1.2, dia 8.4) still clears the 7.8 pocket;
-// footprint/tabs/posts/positions unchanged (turner 126..159 ->
-// twister 168..176 gap 9 kept). part_to_render "plow" (compat) and
-// "turner" both render this.
+// 126..159), y 0..40 (tape centre y=20), z 0..shell top, min_z=0.
+// ONE station table drives shell + slot + ribs (single source of
+// truth): 7 stations from open-U (small side curl) to shut tube:
+//   x:    4    8    12   16   20   24   27   (+closed 27.5..33)
+//   R:    7.0  6.8  6.6  6.3  6.0  5.7  5.5  (outer shell radius)
+//   slot: 3.9  3.2  2.5  1.8  1.1  0.45 0.0  (top slot half-width)
+// Outer shell = hull-loft between consecutive station rings
+// (smooth taper with a faint forming-station read); inner bore =
+// ONE tapered cylinder r4.6->r3.2 (entry dia 9.2 clears the seeded
+// 7.8 U-pocket, exit dia 6.4 passes the finished ~8-wide roll);
+// the top slot void = hull-loft between station slot boxes closing
+// to a blind wedge at x27.5 (tube fully round-folded past that,
+// exit ring 28..33 has NO slot); side curl ribs ride the shell
+// flanks (proud beads, void-trimmed so they never block the bore);
+// entry flare + lead walls guide the seeded pocket in; the "6"
+// seam-overlap tail lives at the EXIT only. v42 horns / tongue /
+// inner-roll deleted (the progressive slot does their job).
+// Bore axis stays straight at bore_cz (lane-aligned, pocket
+// threads through); footprint/tabs/posts/positions unchanged
+// (turner 126..159 -> twister 168..176 gap 9 kept).
+// part_to_render "plow" (compat) and "turner" both render this.
 // ============================================================
 module six_turner() {
     assert(turner_len > 15, str("six_turner: turner_len must exceed 15, got ", turner_len));
-    assert(turner_curl_bore * 2 > 7.8, str("six_turner: bore dia must clear the 7.8 pocket: ", turner_curl_bore * 2));
     tw = 40;                        // v1-precedent width kept (old plow_w)
     cy = tw/2;                      // 20: tape centre
-    curl_x0 = 8; curl_len = 22;     // main tube x 8..30 (inside 0..33)
-    curl_cz = turner_curl_cz;       // 12
-    curl_r = turner_curl_r;         // 6.5
-    bore_r = turner_curl_bore;      // 4.2
-    bore_cz = curl_cz + turner_curl_off; // 13.2: bore 9..17.4
-    // Second-stage fold members (all inside the 0..33 footprint):
-    horn_r = 2.5;                   // edge-curl horn nose radius
-    horn_y = 4.2;                   // horns at cy+-4.2 (U edges at +-3.9)
-    horn_cz = curl_cz + 1.5;        // 13.5: horn centre over the U walls
-    horn_x0 = 6; horn_len = 14;     // horns x 6..20 (stage B)
-    tongue_len = 12;                // tongue x 6..18 dives crown->bore
-    inner_roll_r = 2.2;             // inner roll of the "6" (folded edges)
-    inner_roll_len = 14;            // x 12..26 inside the bore
-    exit_len = 4;                   // exit ring x 29..33 (stage C)
-    exit_r = 5.5; exit_bore = 3.2;  // necked near-closed exit
-    assert(horn_x0 + horn_len <= curl_x0 + curl_len, "six_turner: horns must overlap the main tube (fused, no float)");
-    assert(12 + inner_roll_len <= curl_x0 + curl_len, "six_turner: inner roll must sit inside the main tube");
-    assert(curl_x0 + curl_len + exit_len - 1 <= turner_len, "six_turner: exit ring must stay in footprint");
-    assert(exit_bore < bore_r, "six_turner: exit must neck down vs main bore (near-closed roll)");
-    assert(horn_cz - horn_r >= base_thick, "six_turner: horns must clear the base top");
+    shell_cz = turner_curl_cz;      // 12: shell axis height (kept datum)
+    bore_cz = shell_cz + turner_curl_off; // 13.2: bore axis (thin crown reads as the "6" curl-over)
+    entry_bore = 4.6;               // entry bore r (dia 9.2 clears the 7.8 pocket)
+    exit_bore = 3.2;                // exit bore r (dia 6.4 passes the finished roll)
+    exit_r = 5.6;                   // exit ring outer r (crown 5.6-3.2-1.2 = 1.2 printable)
+    ring_x0 = 28; ring_len = 5;     // exit ring x 28..33 (closed tube, no slot)
+    slot_shut_x = 27.5;             // slot void ends (blind wedge); tube shut past here
+    // THE station table: [x, outer R, slot half-width]. open-U ->
+    // deeper U -> C -> overlap -> shut. Everything derives from this.
+    st_x = [4, 8, 12, 16, 20, 24, 27];
+    st_r = [7.0, 6.8, 6.6, 6.3, 6.0, 5.7, 5.5];
+    st_s = [3.9, 3.2, 2.5, 1.8, 1.1, 0.45, 0.0];
+    n_st = len(st_x);
+    assert(n_st >= 7, str("six_turner: need >=7 forming stations, got ", n_st));
+    assert(st_s[0] >= 3.5 && st_s[n_st-1] == 0,
+        str("six_turner: slot must start open-U (>=3.5) and end shut (0): ", st_s[0], " -> ", st_s[n_st-1]));
+    assert(st_s[0] > st_s[1] && st_s[1] > st_s[2] && st_s[2] > st_s[3]
+        && st_s[3] > st_s[4] && st_s[4] > st_s[5] && st_s[5] > st_s[6],
+        "six_turner: slot half-width must shrink monotonically (gradual curl, no reopen)");
+    assert(st_r[0] > st_r[n_st-1], "six_turner: shell must taper down toward the exit");
+    assert(entry_bore * 2 > 7.8, str("six_turner: entry bore dia must clear the 7.8 pocket: ", entry_bore * 2));
+    assert(exit_bore < entry_bore, "six_turner: bore must taper down (near-closed roll exit)");
+    assert(exit_r - exit_bore - turner_curl_off >= 1.2,
+        str("six_turner: exit crown must stay printable (>=1.2): ", exit_r - exit_bore - turner_curl_off));
+    assert(ring_x0 + ring_len <= turner_len, "six_turner: exit ring must stay in footprint");
+    assert(base_thick + bore_cz - entry_bore >= tape_z + tape_thick - 1,
+        "six_turner: entry bore floor must thread the pocket trough (not block it)");
+    assert(base_thick + bore_cz + entry_bore >= 21,
+        "six_turner: entry bore crown must swallow the pocket walls");
+    assert(7.0*0.995 - 1.8 - 4.57 >= 0.4 && 6.3*0.995 - 1.8 - 3.88 >= 0.4 && 5.7*0.995 - 1.8 - 3.42 >= 0.4,
+        "six_turner: curl ribs must clear the bore surface (>=0.4 at entry/mid/late)");
+    assert(11.5 > 12 - sqrt(6.0*6.0 - 25), "six_turner: side posts must reach the shell flank (fused, no float)");
     plan_ang = atan(((paper_width - 8)/2)/turner_len);
-    // Outer shell is cut by the bores; the inner fold members (tongue
-    // tip + inner roll) are added AFTER the cut so the bore void cannot
-    // delete them — they stay fused to the crown/exit and read as the
-    // inner loop of the "6" in end-on cross-section.
+    slot_floor = bore_cz - 1.0;     // slot cuts from just below bore centre up through the crown
+    slot_top = shell_cz + 7.0 + 2;  // clears the tallest station + margin
+    // Outer shell is cut by bore+slot; ribs/ring/lip are united BEFORE
+    // the cut so the voids trim them flush — nothing can block the tape.
     union() {
         difference() {
             union() {
@@ -1517,53 +1532,51 @@ module six_turner() {
                 translate([0, cy + paper_width/2 + 1 - 2, base_thick])
                     rotate([0, 0, -plan_ang])
                         cube([turner_len + 2, 2, 6]);
-                // STAGE A: open U-accept channel walls (entry x 0..12 hold the
-                // incoming U-section: inner faces at cy+-3.9 clear the 7.8 pocket)
+                // Entry lead walls (x 0..12 hold the incoming U-section)
                 for (s=[-1,1])
                     translate([0, cy + s*5.9 - (s > 0 ? 0 : 2), base_thick - epsilon])
                         cube([12, 2, 6]);
-                // STAGE B+C outer: 6-curl outer tube along X
-                translate([curl_x0, cy, curl_cz])
+                // Entry flare funnel (mouth guides the seeded pocket in)
+                translate([1, cy, shell_cz])
                     rotate([0, 90, 0])
-                        cylinder(h=curl_len, r=curl_r, center=false);
-                // Entry flare funnel (mouth r8 -> tube, guides the seeded U-pocket in)
-                translate([curl_x0 - 3, cy, curl_cz])
+                        cylinder(h=3 + epsilon, r1=st_r[0] + 1.0, r2=st_r[0], center=false);
+                // PROGRESSIVE SHELL: hull-loft between station rings
+                for (i=[0:n_st-2])
+                    hull() {
+                        translate([st_x[i], cy, shell_cz])
+                            rotate([0, 90, 0])
+                                cylinder(h=1.2, r=st_r[i], center=false);
+                        translate([st_x[i+1], cy, shell_cz])
+                            rotate([0, 90, 0])
+                                cylinder(h=1.2, r=st_r[i+1], center=false);
+                    }
+                // Side curl ribs: proud beads on the shell flanks marking
+                // the progression (embedded ~1.8, proud ~1.0, bore-clear)
+                for (s=[-1,1])
+                    for (i=[0:n_st-3])
+                        hull() {
+                            translate([st_x[i] - 2.3, cy + s*(st_r[i]*0.995 - 0.4), shell_cz + st_r[i]*0.1])
+                                rotate([0, 90, 0])
+                                    cylinder(h=4.6, r=1.4, center=false);
+                            translate([st_x[i+1] - 2.3, cy + s*(st_r[i+1]*0.995 - 0.4), shell_cz + st_r[i+1]*0.1])
+                                rotate([0, 90, 0])
+                                    cylinder(h=4.6, r=1.4, center=false);
+                        }
+                // Exit ring (fully closed tube: NO slot here)
+                translate([ring_x0, cy, shell_cz])
                     rotate([0, 90, 0])
-                        cylinder(h=3 + epsilon, r1=curl_r + 1.5, r2=curl_r, center=false);
-                // STAGE B: two SYMMETRIC edge-curl horns (solid former noses
-                // rolling the left/right U edges inward/down into the bore)
-                for (s=[-1,1])
-                    translate([horn_x0, cy + s*horn_y, horn_cz])
-                        rotate([0, 90, 0])
-                            cylinder(h=horn_len, r=horn_r, center=false);
-                // Horn bridge fins fuse horns to the outer tube (no float)
-                for (s=[-1,1])
-                    translate([horn_x0 + 4, cy + s*horn_y - 1, horn_cz - 3])
-                        cube([6, 2, 3 + epsilon]);
-                // Horn foot posts fuse horns down to the base (no float)
-                for (s=[-1,1])
-                    translate([horn_x0 + 2, cy + s*horn_y - 1, base_thick - epsilon])
-                        cube([4, 2, horn_cz - horn_r - base_thick + epsilon]);
-                // Tongue ROOT (outside the bore: fused into the crown/flare,
-                // survives the bore cut; the tip continues below post-cut)
-                translate([curl_x0 - 2, cy - 3, bore_cz + 2.8])
-                    rotate([0, -18, 0])
-                        cube([6, 6, 1.5]);
-                // STAGE C: exit ring (near-closed tube: necks the roll shut)
-                translate([curl_x0 + curl_len - 1, cy, curl_cz])
-                    rotate([0, 90, 0])
-                        cylinder(h=exit_len, r=exit_r, center=false);
-                // Top seam-overlap lip (the "6" tail overlapping the joint)
-                translate([curl_x0 + curl_len - 2, cy - 1.5, curl_cz + exit_r - 1.5])
+                        cylinder(h=ring_len, r=exit_r, center=false);
+                // "6" seam-overlap tail (exit only, bridges the shut seam)
+                translate([ring_x0 - 1, cy - 1.5, shell_cz + exit_r - 1.5])
                     rotate([0, -8, 0])
                         cube([6, 3, 1.5]);
-                // Side posts fuse the tube to the base (both flanks)
+                // Side posts fuse the shell to the base (both flanks)
                 for (s=[-1,1])
-                    translate([curl_x0 + 4, cy + s*5 - 1, base_thick - epsilon])
-                        cube([6, 2, curl_cz - base_thick - 0.5]);
+                    translate([8, cy + s*5 - 1, base_thick - epsilon])
+                        cube([6, 2, 11.5 - base_thick + epsilon]);
                 for (s=[-1,1])
-                    translate([curl_x0 + 14, cy + s*5 - 1, base_thick - epsilon])
-                        cube([6, 2, curl_cz - base_thick - 0.5]);
+                    translate([20, cy + s*5 - 1, base_thick - epsilon])
+                        cube([6, 2, 11.5 - base_thick + epsilon]);
                 // Mounting tabs (same pattern as the old plow: chassis M3 holes line up)
                 for (tx=[2, turner_len - 10]) {
                     translate([tx, -8, 0]) cube([8, 8.15, 3]);
@@ -1576,34 +1589,39 @@ module six_turner() {
                         translate([bx, by, 3 - epsilon]) cylinder(h=2.5, r=bolt_head_across/sqrt(3), $fn=6, center=false);
                     }
             }
-            // 6 bore (offset up: thin crown = the curl-over of the "6")
-            translate([curl_x0 - epsilon, cy, bore_cz])
+            // Tapered inner bore (entry 4.6 -> 3.25 at the ring, straight axis)
+            translate([st_x[0] - epsilon, cy, bore_cz])
                 rotate([0, 90, 0])
-                    cylinder(h=curl_len + 3 + 2*epsilon, r=bore_r, center=false);
+                    cylinder(h=(ring_x0 - st_x[0]) + 2*epsilon, r1=entry_bore, r2=3.25, center=false);
+            // Exit bore (closed roll exit)
+            translate([ring_x0 - epsilon, cy, bore_cz])
+                rotate([0, 90, 0])
+                    cylinder(h=ring_len + 2*epsilon, r=exit_bore, center=false);
             // Entry flare void (funnel into the bore)
-            translate([curl_x0 - 3 - epsilon, cy, bore_cz])
+            translate([1 - epsilon, cy, bore_cz])
                 rotate([0, 90, 0])
-                    cylinder(h=3 + 2*epsilon, r1=bore_r + 1.8, r2=bore_r, center=false);
-            // Exit bore (necked: near-closed roll exit, still passes the roll)
-            translate([curl_x0 + curl_len - 1 - epsilon, cy, bore_cz])
-                rotate([0, 90, 0])
-                    cylinder(h=exit_len + 2*epsilon, r=exit_bore, center=false);
+                    cylinder(h=3 + 2*epsilon, r1=entry_bore + 1.8, r2=entry_bore, center=false);
+            // PROGRESSIVE SLOT: hull-loft between station slot boxes,
+            // wide open-U at entry closing to a blind wedge at 27.5
+            for (i=[0:n_st-3])
+                hull() {
+                    translate([st_x[i] - 2, cy - (st_s[i] + tolerance), slot_floor])
+                        cube([4, 2*(st_s[i] + tolerance), slot_top - slot_floor]);
+                    translate([st_x[i+1] - 2, cy - (st_s[i+1] + tolerance), slot_floor])
+                        cube([4, 2*(st_s[i+1] + tolerance), slot_top - slot_floor]);
+                }
+            hull() {
+                translate([st_x[n_st-2] - 2, cy - (st_s[n_st-2] + tolerance), slot_floor])
+                    cube([4, 2*(st_s[n_st-2] + tolerance), slot_top - slot_floor]);
+                translate([slot_shut_x - 2.5, cy - tolerance, slot_floor])
+                    cube([2.5, 2*tolerance, slot_top - slot_floor]);
+            }
             // Tab bolt clearance holes
             for (bx=[6, turner_len - 6])
                 for (by=[-4, tw + 4])
                     translate([bx, by, -epsilon])
                         cylinder(h=3 + 2*epsilon, d=bolt_dia + 2*tolerance, center=false);
         }
-        // POST-CUT inner fold members (survive the bore void):
-        // tongue tip dives crown->bore folding edges INSIDE + inner roll
-        // along X inside the bore (overlapped folded edges). Both overlap
-        // the tongue root / exit ring so nothing floats.
-        translate([curl_x0 + 1.5, cy - 3, bore_cz + 0.6])
-            rotate([0, -18, 0])
-                cube([tongue_len, 6, 1.5]);
-        translate([12, cy + 0.5, bore_cz - 0.5])
-            rotate([0, 90, 0])
-                cylinder(h=inner_roll_len, r=inner_roll_r, center=false);
     }
 }
 
