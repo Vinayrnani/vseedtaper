@@ -1,6 +1,11 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v38**
+**Version: v39**
+
+## v39 6-Turner + Gear-Only Drive + Cushioned Pull - 2026-09-17
+
+- Replace U-plow with 6-shaped turner/roller former (tape with seed passes through 6 curl to roll edges over); twister/pull/wind all crank-driven via gears only (no belts) – crank→drum 2:1 → twister 6× per drum via idler spur → vertical pull 1:1 → wind-up step-up; vertical pull rollers cushioned (soft rubber/silicone) for firm grip without crushing
+- v39 overrides plow to 6-turner (all prior "folding plow / U-plow / after plow" references now mean the 6-shaped turner/roller former).
 
 ## v38 Downstream Respace (v37 overlap fix) - 2026-09-17
 
@@ -920,18 +925,18 @@ If context is ever lost, read this file first.
   (through-wall axle to crank), chassis envelope itself (gussets x→210).
   Screenshots: /tmp/fit_t0.png, /tmp/fit_top.png, /tmp/fit_side.png.
 
-## MVP Update - 2026-09-16 - Agreed with User (v15 refinements)
+## MVP Update - 2026-09-16 - Agreed with User (v15 refinements + v39 6-turner/gear-only/cushioned-pull)
 
 1. **Browser preview stays as is** (no UI change), but must be a logically working model: parts mounted in true fit positions (no floating), motions synced (crank -> seed wheel -> drop -> tape pull, no random spinning).
 2. **Round cover/shroud**: open-top half-cut 16mm pipe channel running 11 o'clock to 6 o'clock along the drum undershot path, guides seed to the 6 o'clock drop onto tape. Top open so seed travel is visible from the hopper to 11 o'clock in top view, no internal blocking ribs (red removed). Bore fits 8mm seed, inner face has grooves matching drum for wheel-to-frame positioning. Joints to the hopper on both sides.
 3. **Seed wheel/cartridge (drum)**: 6 cavities, fixed for MVP. Wheels still interchangeable by hand (no tools) to support 1mm to 6mm seed sizes (cavity size varies, count stays 6).
 4. **Hopper/seed box**: closed container (seeds retained, no open gap). Keeps the horizontal top edge (z=73) but the open gap is filled with walls. Sits at 9 o'clock, max volume extended up to 10:30 around the seed wheel. Inner face has grooves matching drum for wheel-to-frame positioning.
 5. **Hopper + shroud = single printed piece** (with 2 side joints, blue support joints on both sides retained).
-6. **Tape**: 1 inch wide, same for all seed sizes, center-fold with seed in middle; after plow, 2 threads rotate around tape to bind each seed.
-7. **Seed spacing**: fixed 6 inch in MVP. Spacing 6 inch driven by vertical pull rollers + gear ratio linked to 6 cavities and thread twister; vertical nip rollers pull at constant speed, take-up spool winds finished tape, all synced via gears. Future enhancement (post-MVP): swap-gears for adjustable spacing (e.g. 3/6/9 inch).
+6. **Tape**: 1 inch wide, same for all seed sizes, center-fold with seed in middle; 6-shaped turner/roller former (replaces U-plow) – tape with seed passes through 6 curl to get rolled; after former, 2 threads rotate around tape to bind each seed.
+7. **Seed spacing**: fixed 6 inch in MVP. Spacing 6 inch driven by vertical pull rollers + gear ratio linked to 6 cavities and thread twister; vertical nip rollers pull at constant speed, take-up spool winds finished tape, all synced via gears. All crank-driven via gears only, no belts; crank→drum→twister→pull→wind. Future enhancement (post-MVP): swap-gears for adjustable spacing (e.g. 3/6/9 inch).
 8. **Gear-ratio calculator/chart**: cavities count + roller + gears = spacing. Include as future helper.
 9. **Pink gaps sealed – no leak gaps; Red blocking feature removed – seed path clear from 11 to 6**.
-10. **Thread wrapping unit**: 2 threads orbit tape axis after folding, lock each seed; pull/wind subsystem: vertical rollers + wind-up reel.
+10. **Thread wrapping unit**: 2 threads orbit tape axis after folding, lock each seed; pull/wind subsystem: vertical rollers + wind-up reel. All crank-driven via gears only, no belts; crank→drum→twister→pull→wind; vertical pull rollers cushioned (soft).
 11. **Process flow**: hopper drop (9 o'clock, 6 holes) -> 11-6 channel -> 6 o'clock onto 1 inch folded tape -> thread bind -> vertical pull -> wind-up.
 
 ## Project Location
