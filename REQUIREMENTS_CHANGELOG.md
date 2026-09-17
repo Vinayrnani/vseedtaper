@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v49 — 2026-09-17
+- Gradual-curl 6-folder (user: "6 folder.stl" inspiration only, nicer former): six_turner rebuilt as 7-station hull-loft (same 126..159 footprint/tabs/mount) — open-U entry (slot +-3.9, flare, lead walls) -> U -> C -> overlap -> closed tube from local x27 + exit ring R5.6/bore 3.2 (crown 1.2) with 6 seam tail at exit only; bore tapers 4.6->3.2 (entry dia 9.2 clears 7.8 pocket); curl rails on slot edges (void-trimmed, never blocking); horns/tongue/inner-roll deleted; fail-loud slot/crown/footprint/threading asserts; tape untouched (curls inside hidden steel, documented); viewer _sixTurner relabel, ASSET_V 33, plow GLB rebuilt, verify_v49.js
+
 ## v48 — 2026-09-17
 - Parallel-spur + perpendicular-pinion twister drive (user: floor-lying gear wrong; wanted parallel gear FROM drum + small perpendicular to twister): deleted v47 upright shaft (100,30) + floor bevels; new drum-coaxial 50T -> parallel counter 10T (5x, Y-Y, dist 60 = sqrt(dx^2+43^2), (~141.85,17), high, bottoms 8/5) + Y-bevel 12T -> X-pinion 10T (1.2x, 90° at I48 (~141.85,30,17)); total 6.0 = 1 bind/seed; high Y countershaft (through-wall 1..59) + clean X stub (cx->172 fused to hub, mid hanger); module 2, teeth [10,60], fail-loud parallel/bevel/interior/min_z (smallest 3, shafts >=14); pull/takeup tape-coupled; animation/ratios/signs/stations/gaps/tape/6-turner untouched, ASSET_V 32, GLBs rebuilt --force, verify_v48.js
 

@@ -1,6 +1,37 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v48**
+**Version: v49**
+
+## v49 Gradual-Curl 6-Folder (user: "6 folder.stl" at root is INSPIRATION ONLY, make something nicer) - 2026-09-17
+
+1. **CAD** (`seed_tape_machine_v2.scad` only): `six_turner()`
+    rebuilt as a progressive 7-station loft in the same 126..159
+    footprint (mounting tabs + base + side posts + mount kept, width
+    40, straight bore axis at bore_cz kept so the lane stays
+    aligned): entry open-U (slot +-3.9 + small side curl, entry
+    flare + lead walls kept) -> deeper U -> C-shape -> overlap ->
+    fully closed tube from local x27 + exit ring (R5.6/bore r3.2,
+    crown 1.2) with the "6" seam-overlap tail at the exit only.
+    Outer shell = hull-loft between station rings (R 7.0->5.6);
+    inner bore tapers r4.6->r3.2 (entry dia 9.2 clears the 7.8
+    pocket, exit dia 6.4 passes the finished ~8-wide roll); tapered
+    top slot void closes to a wedge (closed tube needs no slot);
+    side curl rails ride the slot edges (the bore void trims them,
+    so they can never block the tape); v42 horns/tongue/inner-roll
+    deleted (no longer needed); new fail-loud asserts (slot
+    monotonic to shut, exit crown >= 1.2, exit in footprint, entry
+    clears pocket, pocket-threading window); min_z=0, `$fn=60`,
+    `tol=0.3`; stations/gaps/ratios/signs untouched.
+2. **Tape**: `seed_tape_bend()`/`fold_section` untouched — the fold
+    ends at the mouth (126), the 7.8 pocket threads the 9.2 entry
+    bore and curls inside hidden steel (documented, not modelled).
+3. **Viewer** (`web/index.html` only): `_sixTurner` hooks rewritten
+    (stations/entry/exit), plow legend relabelled gradual-curl;
+    pivots/animation ratios untouched; `ASSET_V` 32->33, plow GLB
+    rebuilt.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+    `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+    wall [40,-8,60], R->L order, port 9099 only.
 
 ## v48 Parallel-Spur + Perpendicular-Pinion Twister Drive (user clarification: floor-lying gear was wrong) - 2026-09-17
 
