@@ -84,6 +84,55 @@ takeup_angle  = 1440 * $t                     # core d10 step-up: 2x crank winds
   twister 168..176 (gap 9, actual 7.65 with tab overhang) -> pull
   183..205 incl. caps (gap 7) -> take-up 210..242 (gap 5).
 
+## v46 shaft-mounted train (replaces the v44/v45 layshaft placements)
+
+Audit faults in v44/v45 (all meshes were numerically dist=r1+r2, but
+mechanically misplaced): TW-10T sat 7.3 off the twister rotor
+(170,24 vs 172,17) on a bracket fiction; PP-20T sat 2.5 off the nip
+(196.46,28.79 vs 194) and dead-ended with no transfer to the
+vertical rollers; C/P1/P2/PP/TW had boss visuals but no modeled
+axles (floating cantilevers); take-up hung off the shared PP
+layshaft instead of taking off a shaft gear.
+
+```
+interior: crank20 (40,60) <-> drum40 (100,60): dist 60 = 20+40
+  W: crank +1 -> drum -0.5 (2:1, 1 flip, phase 9° half-pitch)
+
+exterior DRUM40 (100,60, rigid on the drum shaft, W -0.5, plane A):
+  twister: DRUM40 -> C-in-14T/C-out-21T compound (149.42,38.24,
+      dist 54 = 40+14; W_C = +1.4286)
+    -> TW-10T pinion (172,17 = bind_x/twister_axle_z, plane B,
+      dist 31 = 21+10; wall-fused timing tongue, 1.5 rolling gap
+      to the hub)
+      W_TW = -3 = 6x drum, drum sign kept (2 flips)
+  pull: DRUM40 -> C-in-14T -> P2-12T (173.50,28.43, dist 26 =
+      14+12; W -1.6667) -> PULL-20T (194,53, dist 32 = 12+20;
+      on the pull-A axle line, drive-tube ring down to the
+      roller cap on the shared static pin, W +1 = 1:1 crank,
+      3 flips)
+  take-up: PULL-20T -> J-12T (225.86,56.00, dist 32 = 20+12;
+      W -1.6667) -> TU-10T (226,34, coaxial reel, dist 22 =
+      12+10; W +2 = 2x crank, drum sign kept, 5 flips total,
+      sense unchanged vs v43/v44)
+```
+
+- Teeth check: (40/14)*(21/10) = 6.0 (twister 6x drum);
+  40/20 = 2x drum = 1:1 crank (pull, idlers cancel);
+  40/10 = 4.0x drum = 2x crank (take-up).
+- Gear count: 8 pieces on 3 layshafts (C, P2, J) + 4 shaft gears
+  (DRUM40/TW-10T/PULL-20T/TU-10T); v44 P1/PP layshafts deleted
+  (C doubles as the pull idler, take-up takes off PULL).
+- Same-plane non-mesh clearance verified >= 6mm everywhere
+  (closest: C-PULL... now Ca-PULL 12.96, PULL-TU 7.22); plane B
+  holds only C-out + TW.
+- Bearings: idlers bored (slip 0.3/side) on modeled static stubs
+  fused into solid bosses + back wall (cantilever with boss);
+  pull-A rotor (roller + tube + gear) spins on the extended
+  static pin + in the bridge hole (both-ends support); drum/reel
+  keep the v45 dead axles.
+- Spacing unchanged (pull nip still 1:1 d20).
+- Viewer: pivots/ratios/signs unchanged; ASSET_V 30.
+
 ## v45 forensic tape-path + mount fix (no ratio change)
 
 - Tape flat shortened 270->222 (-14..208) + wind-up leader 206..224.5

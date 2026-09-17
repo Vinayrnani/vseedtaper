@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v46 — 2026-09-17
+- Shaft-mounted gear train (user: gear setup incorrect, tape/shafts fine): TW-10T rotor-coaxial (172,17, was 7.3 off), PULL-20T on pull-A axle (194,53, was 2.5 off, genuine pin+tube+bridge-hole drive), TU-10T reel-coaxial takeoff via J-12T (shared PP layshaft deleted, P1 deleted, C-14T/21T doubles as pull idler); 8 pieces/3 layshafts, module 2, dist=r1+r2 fail-loud, half-pitch phasing, bored idlers on stub+boss+wall cantilevers, TW tongue 1.5 gap, min_z>=0; ratios/signs/stations/gaps/tape/6-turner untouched, ASSET_V 30, GLBs rebuilt --force, verify_v46.js
+
 ## v45 — 2026-09-17
 - Forensic tape-path + mount integrity fix (19-angle inspection): D1 viewer tape scroll-dangle removed (static ribbon -14..208, TAPE_LEN 270->222, regression test); D2 wind-up leader added (CAD flat ends 208 + w8 strip 206..224.5 into pack r8, viewer mirrors + _windLeader, fail-loud asserts, min_z=0 watertight); D3 dead axles seat drum/reel/spool + fuse DRUM40/TU (slip fits, buried ends, asserts); D4 twister posts 17->13 (2 rolling gap, analytic graze fix, 1.5..4 window assert); D5 pull mid-collar 12->5.0 local (CAD top 10.5 clears ribbon by 2.5, asserted); ratios/signs/gears/stations/gaps/6-turner untouched, ASSET_V 29, dirty GLBs rebuilt, verify_v45.js
 

@@ -1,6 +1,41 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v45**
+**Version: v46**
+
+## v46 Shaft-Mounted Gear Train (user: GEAR SETUP incorrect, tape/shafts v45 fine) - 2026-09-17
+
+1. **Close-up audit** (port 9099 Playwright back-wall closeups
+   `audit_train_wide/twister_end/pull_end/crank_drum.png` + CAD
+   gear-plane math): meshes were numerically dist=r1+r2, but
+   mechanically misplaced — TW-10T 7.3 off the rotor (170,24 vs
+   172,17, bracket fiction, spur cannot reach the X-axle rotor);
+   PP-20T 2.5 off the nip (196.46,28.79 vs 194) dead-ending with no
+   transfer to the vertical rollers; C/P1/P2/PP/TW boss visuals with
+   NO modeled axles (floating cantilevers, gears 5 off the wall);
+   take-up hung off the shared PP layshaft. Coplanar per plane,
+   sizes/ratios/directions were correct — placement + support were not.
+2. **CAD** (`seed_tape_machine_v2.scad` only): shaft-mounted train,
+   all module 2, every mesh dist=r1+r2 (fail-loud <= tol+0.01),
+   half-pitch phasing, min_z>=0, `$fn=60`, `tol=0.3` — DRUM40
+   (100,60, drum shaft) -> C-14T/21T compound (149.42,38.24, dist
+   54) -> TW-10T at (bind_x,twister_axle_z)=(172,17) rotor-coaxial
+   (dist 31, 6x drum, wall-fused timing tongue 1.5 off hub);
+   C-14T -> P2-12T (173.50,28.43, dist 26) -> PULL-20T (194,53,
+   dist 32, pull-A axle line, genuine drive: static pin base->55
+   + tube ring fused cap<->gear spinning on pin + in bridge hole,
+   1:1 crank); PULL -> J-12T (225.86,56.00, dist 32) -> TU-10T
+   (226,34, reel-coaxial, dist 22, 2x crank, sense unchanged).
+   8 pieces / 3 layshafts (P1/PP deleted); idlers bored on modeled
+   stubs fused into solid bosses + wall (cantilever+boss); pins/
+   slips/fuses/holes all fail-loud asserted; stations/gaps/ratios/
+   signs/tape/6-turner untouched.
+3. **Viewer** (`web/index.html` only): legend + `_gearTrain`
+   (chain/mesh/mounts incl. coaxial proof points) rewritten;
+   pivots/ratios/signs/animation untouched; `ASSET_V` 29->30, all
+   GLBs rebuilt `--force`.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L order, port 9099 only.
 
 ## v45 Forensic Tape-Path + Mount Integrity Fix (user: model still incorrect at all angles) - 2026-09-17
 
