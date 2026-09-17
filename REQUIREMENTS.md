@@ -1,6 +1,34 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v46**
+**Version: v47**
+
+## v47 Bevel Twister Drive, Zero Exterior Gears (user: REMOVE outside gears, twister<->drum via perpendicular bevels + proper ratio) - 2026-09-17
+
+1. **Removed** (chassis back wall clean solid): the full v46
+   exterior spur farm — DRUM40 + C-14T/21T + TW-10T + P2-12T +
+   PULL-20T + J-12T + TU-10T + idler stubs + boss rings + TW timing
+   tongue + pull drive tube + bridge tube-hole. Kept: interior
+   crank<->drum 40:20 2:1 (ONLY spur pair, inside) + dead axles +
+   pull support pins + SOLID pull bridge (no hole).
+2. **CAD** (`seed_tape_machine_v2.scad` only): new `bevel_gear()`
+   module (pitch cone + teeth suggestion + slip bore, Z-built, $fn=60);
+   TWO true 90° bevel pairs on interior shafts — drum-shaft 20T
+   (fused, axis Y) -> vertical-top 10T (axis Z) = 2x at
+   I_top=(100,30,60); vertical-bottom 30T (same jackshaft at
+   (100,30), 2->44) -> twister-shaft 10T (axis X, shaft 100->172
+   fused into the rotor hub) = 3x at I_bot=(100,30,17); total
+   (20/10)*(30/10)=6.0 = 1 bind/seed (6 cavities). Module 2 single,
+   teeth in [10,60], apices/intersection/perp/contact/interior/
+   min_z all fail-loud asserted; pull/takeup tape-coupled (no
+   gears, documented); stations/gaps/ratios/signs/tape/6-turner
+   untouched; min_z>=0, `$fn=60`, `tol=0.3`.
+3. **Viewer** (`web/index.html` only): train legend rewritten
+   (bevel note, zero exterior gears), `_gearTrain` carries the
+   bevel table + apices; pivots/ratios/signs/animation untouched;
+   `ASSET_V` 30->31, all GLBs rebuilt `--force`.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L order, port 9099 only.
 
 ## v46 Shaft-Mounted Gear Train (user: GEAR SETUP incorrect, tape/shafts v45 fine) - 2026-09-17
 

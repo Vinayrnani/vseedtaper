@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v47 — 2026-09-17
+- Bevel twister drive, zero exterior gears (user: remove outside gears, perpendicular bevels + proper ratio): deleted v46 exterior spur farm (DRUM40/C-14T-21T/TW-10T/P2-12T/PULL-20T/J-12T/TU-10T + stubs/bosses/tongue/tube/bridge-hole, wall clean solid); new bevel_gear module + two 90° pairs (drum 20T->vertical 10T = 2x at I_top (100,30,60); vertical 30T->twister 10T = 3x at I_bot (100,30,17); total 6.0 = 1 bind/seed), interior jackshaft + twister shaft fused to hub; pull/takeup tape-coupled (documented, no gears); module 2, teeth [10,60], fail-loud intersection/perp/contact/interior/min_z asserts; animation/ratios/signs/stations/gaps/tape/6-turner untouched, ASSET_V 31, GLBs rebuilt --force, verify_v47.js
+
 ## v46 — 2026-09-17
 - Shaft-mounted gear train (user: gear setup incorrect, tape/shafts fine): TW-10T rotor-coaxial (172,17, was 7.3 off), PULL-20T on pull-A axle (194,53, was 2.5 off, genuine pin+tube+bridge-hole drive), TU-10T reel-coaxial takeoff via J-12T (shared PP layshaft deleted, P1 deleted, C-14T/21T doubles as pull idler); 8 pieces/3 layshafts, module 2, dist=r1+r2 fail-loud, half-pitch phasing, bored idlers on stub+boss+wall cantilevers, TW tongue 1.5 gap, min_z>=0; ratios/signs/stations/gaps/tape/6-turner untouched, ASSET_V 30, GLBs rebuilt --force, verify_v46.js
 

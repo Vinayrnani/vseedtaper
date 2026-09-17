@@ -84,6 +84,51 @@ takeup_angle  = 1440 * $t                     # core d10 step-up: 2x crank winds
   twister 168..176 (gap 9, actual 7.65 with tab overhang) -> pull
   183..205 incl. caps (gap 7) -> take-up 210..242 (gap 5).
 
+## v47 bevel twister drive, ZERO exterior gears (replaces the v43-v46 spur farm)
+
+User asked: REMOVE outside gears from the chassis wall; connect the
+twister to the drum with perpendicular (bevel) gears + proper ratio.
+
+Removed (all exterior spur visuals on the back wall): DRUM40 (40T) +
+C-14T/21T compound + TW-10T + P2-12T + PULL-20T + J-12T + TU-10T +
+idler stubs + boss rings + TW timing tongue + pull drive tube +
+bridge tube-hole. The back wall is clean solid. Kept: the interior
+crank<->drum 40:20 2:1 (the ONLY spur pair, inside) + dead axles +
+pull support pins + solid pull bridge.
+
+The twister axis runs along the tape (X) at (y=30, z=17); the drum
+axis runs transverse (Y) at (x=100, z=60) — skew lines (dz=43), so
+no single direct bevel can join them. v47 uses ONE interior vertical
+jackshaft at (100,30) + the twister longitudinal shaft (100->172 at
+y=30, z=17, fused into the rotor hub) to make TWO true 90° pairs:
+
+```
+I_top = [100,30,60] = drum axis (Y) ∩ vertical axis (Z), 90°
+  drum bevel Zdb=20 (r20, fused on the drum shaft)
+    -> vertical-top Zvt=10 (r10): 20/10 = 2x
+I_bot = [100,30,17] = vertical axis (Z) ∩ twister axis (X), 90°
+  vertical-bottom Zvb=30 (r30, same shaft as Zvt)
+    -> twister bevel Ztw=10 (r10, on the twister shaft): 30/10 = 3x
+
+total = (Zdb/Zvt) * (Zvb/Ztw) = (20/10) * (30/10) = 2 * 3 = 6.0
+  = 6 twister orbits per drum rev = 1 bind per seed (6 cavities)
+```
+
+- Teeth all in [10,60], single module 2; pitch apices exactly at
+  I_top/I_bot; gear centres one mating pitch radius off each apex
+  (drum (100,20,60), vtop (100,30,40), vbot (100,30,27), tw
+  (130,30,17)); all asserted fail-loud in CAD (intersection +
+  perpendicular + ratio + apex contact + interior y>=0 + min_z>=0).
+- Animation unchanged (twister -3x crank = 6x drum at 0.5x crank;
+  1 bind/seed kept).
+- Pull/takeup choice (documented): BOTH exterior spur branches also
+  removed — zero clutter wins. The pull nip is tape-coupled 1:1 with
+  the main roller (same d20 OD, spacing driver, static pins both
+  ends); the take-up winds via tape tension + slip clutch (geared
+  base speed kept in animation). No belts anywhere.
+- Viewer: train legend rewritten (bevel note), `_gearTrain` carries
+  the bevel table + apices; ASSET_V 31.
+
 ## v46 shaft-mounted train (replaces the v44/v45 layshaft placements)
 
 Audit faults in v44/v45 (all meshes were numerically dist=r1+r2, but

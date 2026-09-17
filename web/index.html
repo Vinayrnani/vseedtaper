@@ -149,8 +149,8 @@
     Single wrap-around hopper: right wedge pickup (level top), 11→6 cover, hover pipe (ID6/OD10 L10, 10 gap) drops seeds at x=100 port.
     Two-stage forming: first-stage U (forming 37..70 + transit 70..126, seed drops at 100 into the open pocket) →
     6-turner second stage (126..159: U-in, twin curl horns + inner tongue fold the 2 edges inside into an overlapping roll, near-closed exit reads as 6 end-on).
-    Thread twister (2 arms, 6 orbits/drum rev via DRUM40/C-14T-21T/TW-10T meshed spurs, TW coaxial with the rotor) binds each rolled seed past the 6-turner → cushioned vertical pull nip
-    (rubber sleeve, 1:1 via DRUM40/C-14T/P2-12T/PULL-20T on the pull-A axle with drive tube, spacing driver) → wind-up reel (core d10 step-up via PULL/J-12T/TU-10T takeoff, slip clutch: fast empty, slips full). Shaft-mounted drum-driven gears only (module 2, dist=r1+r2), no belts, no long spine.
+    Thread twister (2 arms, 6 orbits/drum rev via interior 90° bevel pair: drum-shaft 20T → vertical-shaft 10T/30T → twister-shaft 10T = 6.0x, twister drive coaxial with the rotor) binds each rolled seed past the 6-turner → cushioned vertical pull nip
+    (rubber sleeve, tape-coupled 1:1 with the roller, spacing driver, no gears) → wind-up reel (core d10, tape-tension wind-up with slip clutch: fast empty, slips full). Zero exterior gears — back wall clean solid, crank→drum 2:1 is the only spur pair (interior).
     Mounts — bottom: 6-turner + wind-up reel · side: twister + pull + drum (axles through walls) · top: hopper + shroud + input spools.
   </div>
 </div>
@@ -541,9 +541,10 @@
   // gear-only drive (no belts), slip clutch behaviour, mounting layout.
   window._sixTurner = { start: 126, end: 159, dropX: 100, curlR: 6.5, boreR: 4.2,
     stages: 'U-in then 6-fold edges inside to roll', entry: 'U-accept', exit: 'near-closed tube' };
-  window._gearTrain = { chain: 'crank->drum 2:1 only crank link -> DRUM40 ext -> C-14T/21T + TW-10T (rotor-coaxial) twister 6x/drum; DRUM40 -> C-14T -> P2-12T -> PULL-20T (pull-A axle, drive tube) pull 1:1; PULL -> J-12T -> TU-10T (reel-coaxial) take-up 2x crank (drum sign kept)', belts: false,
-    mesh: 'module 2 throughout, every pair dist=r1+r2 (CAD-asserted); shaft-mounted (TW/PULL/TU coaxial with driven shafts); idlers bored on bossed stubs; external mesh flips direction each mesh',
-    mounts: { twCoaxial: [172, 17], pullAxle: [194, 53], tuCoaxial: [226, 34] } };
+  window._gearTrain = { chain: 'crank->drum 2:1 interior (only spur pair) -> drum-shaft bevel 20T -> vertical-shaft 10T/30T -> twister-shaft 10T (twister 6x/drum, coaxial with the rotor); pull nip tape-coupled 1:1 (no gears); take-up tape-tension wind-up 2x crank (no gears)', belts: false, exteriorGears: 0,
+    bevel: 'two 90° pairs, module 2: I_top (100,30,60) = drum-Y ∩ vertical-Z, (20/10) = 2x; I_bot (100,30,17) = vertical-Z ∩ twister-X, (30/10) = 3x; total 6.0 = 1 bind/seed',
+    mesh: 'bevel pitch apices at I_top/I_bot (CAD-asserted intersection + perpendicular + contact); twister drive coaxial with the rotor (172,17); drum takeoff coaxial with the drum shaft (100,60); one interior vertical jackshaft, zero exterior gears',
+    mounts: { twCoaxial: [172, 17], drumTakeoff: [100, 60], iTop: [100, 30, 60], iBot: [100, 30, 17] } };
   window._slipClutch = {
     pivot: takeupPivot, discs: 2, baseRatio: '+2x crank (viewer sense; CAD -1440t)',
     // Slip logic: the geared base speed (+2x crank viewer sense) is constant; the
@@ -639,7 +640,7 @@
     twisterPivot.rotation.x = -3 * crankAngle;           // v37: 6 orbits/drum rev about X
     pullAPivot.rotation.y = 2 * crankAngle + GEAR_PHASE; // v37: nip side A with roller shaft
     pullBPivot.rotation.y = -2 * crankAngle - GEAR_PHASE;// v37: nip side B counter-rotates
-    takeupPivot.rotation.z = 2 * crankAngle;             // v46: J-12T off PULL-20T drives TU-10T, 5 flips vs drum (CAD -1440t); winding sense unchanged vs v43/v44, same linear tape
+    takeupPivot.rotation.z = 2 * crankAngle;             // v47: tape-tension wind-up (no take-up gears; CAD -1440t base speed); winding sense unchanged vs v43-v46, same linear tape
   };
 
   // ---------- part loading ----------
@@ -658,7 +659,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 30; // v46: shaft-mounted gear train (TW/PULL/TU coaxial, C-14T/21T, P2/J idlers, pull drive tube+pin, bored idlers on stubs)
+  var ASSET_V = 31; // v47: bevel twister drive (20/10 + 30/10 = 6x), zero exterior gears (spur farm deleted), pull/takeup tape-coupled
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -928,15 +929,11 @@
     lowerPivot.rotation.z = -crankAngle - GEAR_PHASE;
     upperPivot.rotation.z = crankAngle;
     drumPivot.rotation.z = crankAngle * DRUM_RATIO;
-    // v44 MINIMAL drum-driven train (module 2, dist=r1+r2 CAD-asserted):
-    // exterior DRUM40 -> C-20T/30T compound -> TW-10T twister pinion
-    // 6x drum (even flips, sign kept); DRUM40 -> P1/P2-12T idlers ->
-    // PP-20T pull layshaft 1:1 crank (idlers cancel, odd flips, sign
-    // kept); shared PP-axle -> TU-10T reel gear 2x crank (even flips
-    // total, drum sign kept, sense unchanged vs v43);
-    // external mesh flips direction each mesh - signs follow flip count.
-    // Pull nip 1:1 with the roller shaft (cushioned rubber sleeve =
-    // spacing driver, no crush).
+    // v47 BEVEL twister drive (zero exterior gears, module 2):
+    // drum-shaft 20T -> vertical 10T/30T -> twister-shaft 10T = 6x
+    // drum (sign kept, 1 bind/seed); pull nip tape-coupled 1:1 with
+    // the roller shaft (cushioned rubber sleeve = spacing driver,
+    // no crush); take-up tape-tension wind-up 2x crank (slip clutch).
     var twAngle = -3 * crankAngle;
     twisterPivot.rotation.x = twAngle;
     pullAPivot.rotation.y = 2 * crankAngle + GEAR_PHASE;
@@ -953,8 +950,8 @@
     // bind(165..179, SIDE-mounted twister orbits threads) -> cushioned pull nip(194, SIDE-mounted,
     // spacing driver) -> flat ribbon ends 212 -> wind-up leader climbs to the pack (BOTTOM-mounted reel 226,
     // slip clutch). Rollers v21 west(x=40).
-    // Mounts — bottom: 6-turner + wind-up · side: twister + pull + drum + gear layshafts (axles through
-    // walls) · top: hopper + shroud + input spools. Drive is true-meshed gears only (module 2, dist=r1+r2, no belts).
+    // Mounts — bottom: 6-turner + wind-up · side: twister + pull + drum (axles through
+    // walls) · top: hopper + shroud + input spools. Drive is interior bevels + tape only (module 2, apices CAD-asserted, no belts, zero exterior gears).
     // Drum center root-local y=60, radius 25 -> tape runs at y=13 under
     // the drum (v33 option B lane: hover pipe exit at y=23.4, 10 above
     // the ribbon top 13.4, bore 6 / outer 10, L10).
