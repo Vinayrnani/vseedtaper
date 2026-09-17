@@ -1523,9 +1523,15 @@ module seed_cradle() {
 }
 
 // ============================================================
-// 7. 6-turner TRUE-6 OPEN FOLDER, v50 (sample: "6 folder.stl" —
-// measured real: inches x25.4 = 28 long x 23.6 wide, OPEN wrap
+// 7. 6-turner TRUE-6 OPEN FOLDER, v53 take 2 (sample: "6 folder.stl" —
+// measured real: inches x25.4 = 28 x 23.6 x 31.9, OPEN wrap
 // with one edge lapping over the top, never a welded tube).
+// v50 REJECTED (read as a pipe): full-360 shell rings + tongue
+// melted into the crown = closed tube with a slit, seam invisible.
+// v53 fix: the overlap is STRUCTURAL — progressive eccentric tongue
+// lift (entry fused shallow curl -> exit FLOATING overlap with a
+// 1-2mm visible radial seam gap), tall tongue-side ramp blade +
+// bigger flare trumpet at entry. Exit = overlapping roll, NOT a ring.
 // Local frame like the old plow: x 0..turner_len (33, world
 // 126..159), y 0..40 (tape centre y=20), z 0..shell top, min_z=0.
 // ONE station table drives shell + slot (single source of truth):
@@ -1539,19 +1545,21 @@ module seed_cradle() {
 // tapered cylinder r4.6->r3.2 (entry dia 9.2 clears the seeded
 // 7.8 U-pocket); the top slot void runs FULL length (open
 // C-channel into the bore, exit face shows the notch); THE TONGUE
-// = annular-sector wrap (root buried 0.5 in the +Y flank, 1.1
-// proud over the crown, -30..88deg about the shell axis, x 10..33
-// in 3 lofted plates) lapping over the crown and stopping just
-// +Y of the slot — end-on the section reads as 6 (bore + open
-// top + overlapping tongue), never a closed ring. Entry flare +
-// lead walls guide the seeded pocket in; v49 shut-tube section +
+// = eccentric annular-sector wrap (same -30..88deg sector, but each
+// plate lifted +0.2/+0.9/+1.6 above the shell axis: root stays
+// buried in the +Y flank, crown floats with a visible seam gap,
+// x 10..33 in 3 lofted plates) lapping over the crown and stopping
+// just +Y of the slot — end-on the section reads as 6 (bore + open
+// top + FLOATING overlapping tongue with a slit of daylight),
+// never a closed ring. Entry flare trumpet + lead walls + tall
+// ramp blade guide the seeded pocket in; v49 shut-tube section +
 // exit ring + blind wedge + curl ribs + seam tail deleted.
 // Bore axis straight at bore_cz (lane-aligned, pocket threads
 // through); footprint/tabs/posts/positions unchanged (turner
 // 126..159 -> twister 168..176 gap 9 kept).
 // part_to_render "plow" (compat) and "turner" both render this.
 // ============================================================
-// Annular-sector polygon for the v50 tongue wrap, pre-mapped so
+// Annular-sector polygon for the v53 tongue wrap, pre-mapped so
 // rotate([0,90,0]) + linear_extrude lays it as a plate across X:
 // angle a gives y_part = r*cos(a), z_part = r*sin(a).
 function tongue_sector_pts(r_in, r_out, a0, a1, n) = concat(
@@ -1582,17 +1590,50 @@ module six_turner() {
     assert(st_r[0] > st_r[n_st-1], "six_turner: shell must taper down toward the exit");
     assert(entry_bore * 2 > 7.8, str("six_turner: entry bore dia must clear the 7.8 pocket: ", entry_bore * 2));
     assert(exit_bore < entry_bore, "six_turner: bore must taper down (roll exit)");
-    // TONGUE (the 6-overlap wrap): annular sector about the shell
-    // axis, root buried in the +Y flank, proud over the crown,
-    // free edge stopping +Y of the slot. Radii keyed to R(10)=6.7
-    // and R(33)=5.35 from the table above.
+    // TONGUE (the 6-overlap wrap): ECCENTRIC annular sector about
+    // a lifted centre — root stays buried in the +Y flank while the
+    // crown floats with a visible seam gap that OPENS progressively
+    // (entry fused shallow curl -> exit floating overlap). Radii
+    // keyed to R(10)=6.7 and R(33)=5.35 from the table above.
     tongue_x0 = 10; tongue_len = 23; // x 10..33 (overlaps shell loft, ends at the exit face)
     tongue_a0 = -30; tongue_a1 = 88; // root in +Y flank -> edge near crown, +Y of slot
     tongue_plates_x = [10, 21, 31.8];
-    tongue_r_in = [6.2, 5.43, 4.89];  // R(x)-0.5: buried 0.5 (fused full length)
+    tongue_r_in = [6.2, 5.43, 4.89];  // R(x)-0.5: buried 0.5 at zero lift (fused full length)
     tongue_r_out = [7.8, 7.03, 6.49]; // R(x)+1.1: 1.1 proud (overlap wrap read)
+    tongue_lift = [0.2, 0.9, 1.6];    // v53 eccentric lift above shell axis (progressive seam opening)
     assert(st_r[1] == 6.8 && st_r[2] == 6.6, "six_turner: tongue entry radii assume R(10)=6.7");
     assert(st_r[n_st-1] == 5.35, "six_turner: tongue exit radii assume R(33)=5.35");
+    // Seam-gap progression (crown: tongue underside minus shell outer
+    // R(10)=6.7, R(21)=5.925, R(31.8)=5.386): entry fused (shallow),
+    // mid kissing, exit 1.1 FLOATING (visible 6-seam, not a pipe).
+    assert((tongue_r_in[0] + tongue_lift[0]) - 6.7 <= 0,
+        "six_turner: tongue entry must stay fused (shallow curl, no daylight)");
+    assert((tongue_r_in[1] + tongue_lift[1]) - 5.925 > 0.2,
+        "six_turner: tongue mid seam must start opening (>0.2)");
+    assert((tongue_r_in[2] + tongue_lift[2]) - 5.386 >= 0.8
+        && (tongue_r_in[2] + tongue_lift[2]) - 5.386 <= 2.0,
+        "six_turner: tongue exit seam must float open 0.8-2.0 (visible 6-overlap, not a ring)");
+    // Root burial (sector root at a0=-30 about the LIFTED centre must
+    // stay inside shell R at every plate: single solid via the root).
+    assert(6.7 - sqrt(pow(tongue_r_in[0]*cos(tongue_a0), 2)
+        + pow(tongue_r_in[0]*sin(tongue_a0) + tongue_lift[0], 2)) >= 0.3,
+        "six_turner: tongue entry root must stay buried (>=0.3, fused)");
+    assert(5.925 - sqrt(pow(tongue_r_in[1]*cos(tongue_a0), 2)
+        + pow(tongue_r_in[1]*sin(tongue_a0) + tongue_lift[1], 2)) >= 0.3,
+        "six_turner: tongue mid root must stay buried (>=0.3, fused)");
+    assert(5.35 - sqrt(pow(tongue_r_in[2]*cos(tongue_a0), 2)
+        + pow(tongue_r_in[2]*sin(tongue_a0) + tongue_lift[2], 2)) >= 0.3,
+        "six_turner: tongue exit root must stay buried (>=0.3, fused)");
+    // Tall tongue-side ramp blade (v53 entry asymmetry): guides the
+    // tape edge up into the tongue curl; base-fused, clears pocket.
+    assert(4.5 - 3.9 >= tolerance,
+        "six_turner: ramp blade must clear the 7.8 pocket (inner face outside 3.9+tol)");
+    assert(4.5 + 2 <= st_r[1],
+        "six_turner: ramp blade must overlap the shell flank in Y (fused)");
+    // Entry flare trumpet wall (eccentric: outer about shell axis,
+    // void about bore axis; thinnest point is the crown).
+    assert((shell_cz + st_r[0] + 2.0) - (bore_cz + entry_bore + 1.8) >= 1.2,
+        "six_turner: flare trumpet crown wall must stay printable (>=1.2)");
     assert(tongue_x0 >= 0 && tongue_x0 + tongue_len <= turner_len,
         "six_turner: tongue must stay in footprint");
     assert(tongue_r_out[0] - 6.7 >= 0.8, "six_turner: tongue must stand proud (>=0.8)");
@@ -1630,10 +1671,18 @@ module six_turner() {
                 for (s=[-1,1])
                     translate([0, cy + s*5.9 - (s > 0 ? 0 : 2), base_thick - epsilon])
                         cube([12, 2, 6]);
-                // Entry flare funnel (mouth guides the seeded pocket in)
+                // Tall tongue-side ramp blade (x 0..12, entry asymmetry:
+                // rising wall guides the tape edge up into the tongue
+                // curl; base-fused full length, flank/funnel-fused at
+                // both ends; bore+slot voids trim it, never blocks tape)
+                hull() {
+                    translate([0, cy + 4.5, base_thick - epsilon]) cube([2, 2, 6]);
+                    translate([10, cy + 4.5, base_thick - epsilon]) cube([2, 2, 10]);
+                }
+                // Entry flare trumpet (mouth guides the seeded pocket in)
                 translate([1, cy, shell_cz])
                     rotate([0, 90, 0])
-                        cylinder(h=3 + epsilon, r1=st_r[0] + 1.0, r2=st_r[0], center=false);
+                        cylinder(h=4 + epsilon, r1=st_r[0] + 2.0, r2=st_r[0], center=false);
                 // PROGRESSIVE SHELL: hull-loft between station rings
                 // (plates shifted -1.2 so the loft ENDS at x33 flush)
                 for (i=[0:n_st-2])
@@ -1645,18 +1694,19 @@ module six_turner() {
                             rotate([0, 90, 0])
                                 cylinder(h=1.2, r=st_r[i+1], center=false);
                     }
-                // TONGUE (the 6-overlap wrap): 3 annular-sector plates
-                // hull-lofted (root buried in the flank, 1.1 proud over
-                // the crown, free edge stopping +Y of the slot; the
-                // slot void trims its early edge back, so the overlap
-                // emerges progressively toward the exit)
+                // TONGUE (the 6-overlap wrap): 3 ECCENTRIC annular-sector
+                // plates hull-lofted (each plate lifted above the shell
+                // axis: root buried in the flank, crown floating with a
+                // progressively opening seam gap; the slot void trims the
+                // early edge back, so the floating overlap emerges toward
+                // the exit with a slit of daylight — the 6 read)
                 for (k=[0:1])
                     hull() {
-                        translate([tongue_plates_x[k], cy, shell_cz])
+                        translate([tongue_plates_x[k], cy, shell_cz + tongue_lift[k]])
                             rotate([0, 90, 0])
                                 linear_extrude(height=1.2)
                                     polygon(tongue_sector_pts(tongue_r_in[k], tongue_r_out[k], tongue_a0, tongue_a1, 36));
-                        translate([tongue_plates_x[k+1], cy, shell_cz])
+                        translate([tongue_plates_x[k+1], cy, shell_cz + tongue_lift[k+1]])
                             rotate([0, 90, 0])
                                 linear_extrude(height=1.2)
                                     polygon(tongue_sector_pts(tongue_r_in[k+1], tongue_r_out[k+1], tongue_a0, tongue_a1, 36));
@@ -1685,10 +1735,10 @@ module six_turner() {
             translate([st_x[0] - epsilon, cy, bore_cz])
                 rotate([0, 90, 0])
                     cylinder(h=(33 - st_x[0]) + 2*epsilon, r1=entry_bore, r2=exit_bore, center=false);
-            // Entry flare void (funnel into the bore)
+            // Entry flare void (trumpet into the bore)
             translate([1 - epsilon, cy, bore_cz])
                 rotate([0, 90, 0])
-                    cylinder(h=3 + 2*epsilon, r1=entry_bore + 1.8, r2=entry_bore, center=false);
+                    cylinder(h=4 + 2*epsilon, r1=entry_bore + 1.8, r2=entry_bore, center=false);
             // PROGRESSIVE SLOT: hull-loft between station slot boxes,
             // wide open-U at entry narrowing to a 2mm OPEN seam at
             // the exit face (asymmetric: centred cy-slot_off so the
