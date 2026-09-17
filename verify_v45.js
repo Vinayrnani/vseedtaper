@@ -137,7 +137,7 @@ const MESHES = [
     // lane height (world y 12..22) where the pocket actually runs.
     async function minDist(A, B, o) {
       o = o || {};
-      return await page.evaluate((q) => {
+      return await page.evaluate(async (q) => {
         function worldVerts(ids, stride) {
           const pts = [];
           ids.forEach(id => {
@@ -157,10 +157,11 @@ const MESHES = [
           return pts;
         }
         const pa = worldVerts(q.A, q.sA || 3), pb = worldVerts(q.B, q.sB || 3);
-        let min2 = Infinity;
+        let min2 = Infinity, n = 0;
         for (let i = 0; i < pa.length; i++) for (let j = 0; j < pb.length; j++) {
           const d2 = pa[i].distanceToSquared(pb[j]);
           if (d2 < min2) min2 = d2;
+          if (++n % 400000 === 0) await new Promise(r => setTimeout(r, 0));
         }
         return { d: Math.round(Math.sqrt(min2) * 100) / 100, na: pa.length, nb: pb.length };
       }, { A, B, sA: o.sA, sB: o.sB, yMin: o.yMin, yMax: o.yMax });
@@ -193,7 +194,7 @@ const MESHES = [
     // (proves full-span shafts, not stubs). CAD asserts already tie bores
     // to the same axis constants.
     async function shaftSeat(ax, z, y0, y1, r) {
-      return await page.evaluate((o) => {
+      return await page.evaluate(async (o) => {
         let back = Infinity, front = Infinity;
         const ym = (o.y0 + o.y1) / 2;
         (window._partMeshes['chassis'] || []).forEach(g => g.traverse(m => {
@@ -222,7 +223,7 @@ const MESHES = [
       check(s.back < 2 && s.front < 2, `${nm} full-span dead axle in chassis (got ${s.back}/${s.front})`);
     }
     for (const [nm, A] of [['turner-chassis', ['plow']], ['pull-chassis', ['pull_a']]]) {
-      const r = await minDist(A, ['chassis'], { sA: 1, sB: 12 });
+      const r = await minDist(A, ['chassis'], { sA: 2, sB: 24 });
       // pull stands on the base + cups meet the bridge (true 0, CAD-asserted);
       // 2.5 absorbs vertex-sampling sparsity on the huge chassis mesh.
       const need = nm.startsWith('pull') ? 2.5 : 1.5;
