@@ -1,6 +1,39 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v28**
+**Version: v29**
+
+## v29 Sealed Drop Tube (bore 10 / outer 14) - 2026-09-17
+
+1. **Goal**: no seed spill at the hopper-to-tape handoff — the drop-tube
+   walls must touch/seal with the tape (overlap, not a gap).
+2. **Verified coords**: drop at world x=100 (hopper local x=0 = drum
+   centre); tube old outer local x -9..9 (world 91..109, 18 wide), bore
+   -4.5..4.5 (9), bottom local z0=26.5 (world 30.5, 0.1 above ribbon top
+   30.4). Tape U-fold trough (6 wide, R1.75, walls 5.5 at tape_z=30)
+   lives EAST in the plow zone (world 126..159) — at the drop (x=100)
+   the tape is FLAT ribbon (base 30.0, top 30.4), so the tube seals
+   directly onto the flat ribbon: ribbon threads E/W, N/S walls seal.
+3. **CAD** (`seed_tape_machine_v2.scad` only): bore 9->10 (r=5,
+   -5..5, fits 8mm seeds with clearance), outer 18->14 (r=7, -7..7,
+   2.0 walls/side >= 1.2); tube_z0 26.5->25.9 (world bottom 29.9, 0.5
+   below ribbon top 30.4 = 0.5 touch-overlap); bottom-open tape notches
+   (band local 25.7..26.7 = ribbon +-0.3) through EAST+WEST walls so
+   the ribbon threads through while NORTH/SOUTH walls run full-height
+   to the sealed bottom (corner nibbles <0.3, sub-seed, no spill path);
+   drop window widened to bore 10; hopper export `zoffset` -26.5->-25.9
+   (min_z=0 kept, assembly branch untouched); fail-loud asserts
+   (bore==10, outer==14, wall>=1.2, bottom<=ribbon top); `$fn=60`,
+   `tol=0.3`, R->L order, back gears/crank intact.
+4. **Viewer** (`web/index.html` only): hopper child pos [0,26.5,0]->
+   [0,25.9,0] (re-seats drum centre for the new export drop); dropSeed
+   falls inside the bore (31.5->30.4 pocket, was 30.5->30.0); new
+   `window._dropSeal` proof hooks (bore/outer/bottom/ribbonTop/dropX);
+   `ASSET_V` 15->16, all 13 GLBs rebuilt (hopper watertight, min_z=0,
+   low-slice outer +-7.0 / inner +-5.0 proven via trimesh).
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L hopper > drum > shroud > roller+crank kept;
+   port 9099 only.
 
 ## v28 Tape Bend True Mimic (tapeubend.png) - 2026-09-17
 
