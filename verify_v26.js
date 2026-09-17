@@ -1,4 +1,4 @@
-const { chromium } = require('playwright');
+const pool = require('./playwright_pool');
 const fs = require('fs');
 const path = require('path');
 
@@ -30,7 +30,7 @@ function check(cond, msg) {
 }
 
 (async () => {
-  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+  const browser = await pool.getBrowser();
   try {
     // ---------- desktop ----------
     const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -154,10 +154,11 @@ function check(cond, msg) {
     check(/js\/three\.min\.js/.test(vendored) && !/cdn/i.test(vendored), 'vendored three.js local, never CDN');
 
     pruneShots();
+    await ctx.close();
     if (fail) { console.error('VERIFY FAILED:', fail); process.exitCode = 1; }
     else console.log('VERIFY PASSED');
   } finally {
-    await browser.close();
-    console.log('Browser closed.');
+    await pool.releaseBrowser(browser);
+    console.log('Browser released to pool.');
   }
 })().catch(e => { console.error('VERIFY FAILED:', e); process.exit(1); });

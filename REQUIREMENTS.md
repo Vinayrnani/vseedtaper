@@ -1,6 +1,37 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v47**
+**Version: v48**
+
+## v48 Parallel-Spur + Perpendicular-Pinion Twister Drive (user clarification: floor-lying gear was wrong) - 2026-09-17
+
+1. **Removed**: the full v47 floor arrangement — slim upright shaft
+   at (100,30) + floor-lying/horizontal bevels (I_top/I_bot,
+   vertical 2->44, twist shaft 100->172). No floor gears remain.
+2. **CAD** (`seed_tape_machine_v2.scad` only): parallel spur speedup
+   tucked beside the drum (same axis orientation Y-Y, same mesh
+   plane y=45, high, NOT on the floor): drum-coaxial 50T (r50,
+   fused, (100,60)) -> counter 10T (r10, (~141.85,17)):
+   dist 60 = 50+10 = sqrt(dx^2+43^2) exact, 50/10 = 5x; then a
+   small perpendicular bevel at the twister station: Y-bevel 12T
+   (same countershaft) -> X-pinion 10T (coaxial with the rotor) at
+   I48 = (~141.85,30,17) = Y ∩ X 90°: 12/10 = 1.2x; total
+   (50/10)*(12/10) = 5*1.2 = 6.0 exactly = 1 bind/seed (6
+   cavities). One high Y countershaft (cx,17, y 1..59,
+   through-wall/bracket) + one clean X stub (cx->172 at y=30,z=17,
+   fused into the hub, mid hanger post meeting the shaft bottom);
+   module 2 single, teeth in [10,60], parallel dist=r1+r2 +
+   bevel intersection/perp/contact/interior/min_z all fail-loud;
+   smallest outer bottom 3 (no floor contact, shafts >= 14);
+   pull/takeup tape-coupled (no gears, documented);
+   stations/gaps/ratios/signs/tape/6-turner untouched; min_z>=0,
+   `$fn=60`, `tol=0.3`. Twister -3x crank, drum +0.5x kept.
+3. **Viewer** (`web/index.html` only): legend + `_gearTrain`
+   rewritten (parallel + perpendicular table, apex I48, mounts
+   spurCounter/apex); pivots/ratios/signs/animation untouched;
+   `ASSET_V` 31->32, all GLBs rebuilt `--force`.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L order, port 9099 only.
 
 ## v47 Bevel Twister Drive, Zero Exterior Gears (user: REMOVE outside gears, twister<->drum via perpendicular bevels + proper ratio) - 2026-09-17
 

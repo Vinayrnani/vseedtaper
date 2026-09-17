@@ -84,6 +84,44 @@ takeup_angle  = 1440 * $t                     # core d10 step-up: 2x crank winds
   twister 168..176 (gap 9, actual 7.65 with tab overhang) -> pull
   183..205 incl. caps (gap 7) -> take-up 210..242 (gap 5).
 
+## v48 parallel-spur + perpendicular-pinion twister drive (replaces the v47 floor vertical jackshaft)
+
+User clarification: the floor-lying gear was wrong. Wanted: another
+gear FROM the seed drum parallel to it (parallel-axes spur speedup),
+then a small perpendicular gear attaching to the twister. The slim
+upright shaft at (100,30) with its floor-lying/horizontal bevels is
+deleted.
+
+New layout (all interior, high, no floor contact, zero exterior gears):
+
+```
+drum axis (Y) at (100,60) ──parallel spur──> counter axis (Y) at (~141.85,17)
+  drum-coaxial Zd=50 (r50, fused on the drum shaft, mesh plane y=45)
+    -> counter Zc=10 (r10, same plane): dist = 50+10 = 60
+       = sqrt((141.85-100)^2 + 43^2) exact → 50/10 = 5x (tucked beside
+       the drum, bottoms 8/5, NOT on the floor)
+
+counter axis (Y) at (~141.85,17) ──90° bevel──> twister axis (X) at (y=30,z=17)
+  Y-bevel Zy=12 (r12, same countershaft) -> X-pinion Zx=10 (r10,
+  coaxial with the rotor): apex I48 = (~141.85,30,17) = Y ∩ X
+    -> 12/10 = 1.2x (small perpendicular pinion at the twister end)
+
+total = (Zd/Zc) * (Zy/Zx) = (50/10) * (12/10) = 5 * 1.2 = 6.0
+  = 6 twister orbits per drum rev = 1 bind per seed (6 cavities)
+```
+
+- Teeth all in [10,60], single module 2; parallel mesh dist=r1+r2
+  (60, fail-loud <= tol+0.01); bevel apex intersection + 90°
+  perpendicular + pitch-cone contact (fail-loud); every centre y>=0
+  (interior); smallest outer bottom 3 (Y-bevel 12T at z17), shafts >=
+  14 (well above 0, no floor contact); through-wall/bracket support
+  (Y countershaft in wall bores 1..59, X stub apex->hub fused into the
+  rotor + mid hanger post meeting the shaft bottom).
+- Animation unchanged (twister -3x crank = 6x drum at 0.5x crank;
+  1 bind/seed kept; drum +0.5x, crank 2:1 interior 40:20 kept).
+- Pull/takeup choice (documented): tape-coupled (no gears); no belts.
+- Viewer: legend + `_gearTrain` rewritten; ASSET_V 32.
+
 ## v47 bevel twister drive, ZERO exterior gears (replaces the v43-v46 spur farm)
 
 User asked: REMOVE outside gears from the chassis wall; connect the

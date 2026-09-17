@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v48 — 2026-09-17
+- Parallel-spur + perpendicular-pinion twister drive (user: floor-lying gear wrong; wanted parallel gear FROM drum + small perpendicular to twister): deleted v47 upright shaft (100,30) + floor bevels; new drum-coaxial 50T -> parallel counter 10T (5x, Y-Y, dist 60 = sqrt(dx^2+43^2), (~141.85,17), high, bottoms 8/5) + Y-bevel 12T -> X-pinion 10T (1.2x, 90° at I48 (~141.85,30,17)); total 6.0 = 1 bind/seed; high Y countershaft (through-wall 1..59) + clean X stub (cx->172 fused to hub, mid hanger); module 2, teeth [10,60], fail-loud parallel/bevel/interior/min_z (smallest 3, shafts >=14); pull/takeup tape-coupled; animation/ratios/signs/stations/gaps/tape/6-turner untouched, ASSET_V 32, GLBs rebuilt --force, verify_v48.js
+
 ## v47 — 2026-09-17
 - Bevel twister drive, zero exterior gears (user: remove outside gears, perpendicular bevels + proper ratio): deleted v46 exterior spur farm (DRUM40/C-14T-21T/TW-10T/P2-12T/PULL-20T/J-12T/TU-10T + stubs/bosses/tongue/tube/bridge-hole, wall clean solid); new bevel_gear module + two 90° pairs (drum 20T->vertical 10T = 2x at I_top (100,30,60); vertical 30T->twister 10T = 3x at I_bot (100,30,17); total 6.0 = 1 bind/seed), interior jackshaft + twister shaft fused to hub; pull/takeup tape-coupled (documented, no gears); module 2, teeth [10,60], fail-loud intersection/perp/contact/interior/min_z asserts; animation/ratios/signs/stations/gaps/tape/6-turner untouched, ASSET_V 31, GLBs rebuilt --force, verify_v47.js
 

@@ -22,7 +22,7 @@
 ## Gotchas — do not violate
 - Never edit v1 scad or `web/backup/` except to restore.
 - 10. **Playwright screenshots: `screenshots/` only, never in git, max 25.** Keep all Playwright screenshots in `screenshots/` folder, ensure it is gitignored, and auto-delete oldest files when count exceeds 25.
-- Kill chromium after every Playwright run: `pkill -f chromium` (also `chrome`); check before starting new session.
+- Playwright browser reuse: verify scripts use `playwright_pool.js` (one shared browser, idle-kill after 10min). Never `browser.close()` per script — use `pool.releaseBrowser(browser)`. Full teardown only via `node playwright_pool.js stop` (does the pkill); check `node playwright_pool.js status` before starting new session.
 - Serve on port 9099 only (iptables rule); don't change port.
 - CAD conventions: `$fn=60` for curves, `tol=0.3` (`tolerance`, clearances derive from it) — keep both.
 
