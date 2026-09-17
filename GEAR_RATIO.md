@@ -84,6 +84,14 @@ takeup_angle  = 1440 * $t                     # core d10 step-up: 2x crank winds
   twister 168..176 (gap 9, actual 7.65 with tab overhang) -> pull
   183..205 incl. caps (gap 7) -> take-up 210..242 (gap 5).
 
+## v45 forensic tape-path + mount fix (no ratio change)
+
+- Tape flat shortened 270->222 (-14..208) + wind-up leader 206..224.5
+  into the pack; viewer ribbon static (scroll-dangle removed).
+- Dead axles seat drum/reel/spool; twister cradled (gap 2); pull collar
+  clears the tape. Angles/ratios/signs above unchanged; pull nip still
+  1:1 d20 (spacing driver).
+
 ## v44 minimal drum-driven train (replaces the v43 long spine)
 
 User asked for fewer gears on the chassis: everything downstream now

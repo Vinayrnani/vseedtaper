@@ -137,6 +137,19 @@ hex_axle_flat = 8;
 hex_axle_r    = hex_axle_flat / sqrt(3);
 axle_clearance_dia = axle_dia + 2*tolerance; // 8.6
 hex_clearance_r  = (hex_axle_flat + 2*tolerance) / sqrt(3);
+// v45 DEAD AXLES (forensic fix: exterior DRUM40/TU gears + drum + reel +
+// spool cones were held by NOTHING — bores + wall/block holes with no
+// shaft modelled; parts spun on viewer pivots but the steel read as
+// floating). Static bars in chassis(): slip-fit through bores/holes (tol
+// gap all around, spinning parts stay free), fused into the solid
+// exterior gears (DRUM40/TU-10T have no bore), ends buried/hidden (never
+// coplanar, never proud into other stations).
+drum_shaft_y0 = -10;   // buried 1 inside DRUM40 (-11..-5, fused)
+drum_shaft_y1 = 59;    // hidden in the front drum-block bore
+takeup_shaft_y0 = -10; // buried 1 inside TU-10T (-11..-5, fused)
+takeup_shaft_y1 = 59;  // hidden in the front take-up block bore
+spool_shaft_y0 = 1;    // hidden in the back spool-block bore
+spool_shaft_y1 = 59;   // hidden in the front spool-block bore
 bolt_dia        = 3;
 bolt_head_across = 5.5;
 nut_trap_depth  = 2.5;
@@ -240,8 +253,20 @@ tape_fold_angle  = 90;
 tape_fold_wall   = 5.5;
 tape_shoulder_r  = 1.5;
 tape_shoulder_ang = 60;
-tape_len         = 270;
-tape_x0          = chassis_x0;   // -14: spans spool(-6)..take-up reel(226)+flange (v38: 220->270 reaches respaced bind/pull/wind)
+tape_x0          = chassis_x0;   // -14: spans spool(-6)..leader start (flat ribbon no longer dangles under/past the reel)
+// v45 WIND-UP LEADER (forensic fix: the flat ribbon used to run UNDER the
+// bare reel core with a ~13 gap and dangle 14 past the reel to 256 while
+// the viewer scroll slid it +/-63 per rev). Now the flat ribbon ENDS at
+// tape_flat_end (208: east of the nip caps 205, west of the reel flange 210)
+// and a narrow leader strip (finished folded-tube width 8) climbs from
+// the ribbon top onto the wound pack (pack r8 on core r5 at (226,34)),
+// ending fused inside the pack silhouette.
+tape_flat_end    = 208;
+tape_len         = tape_flat_end - tape_x0;   // 222 (was 270: -14..256 dangled past reel 242/chassis 248)
+leader_x0        = 206;   // leader start (2 overlap onto the flat ribbon)
+leader_x1        = 224.5; // leader end (inside the pack silhouette)
+leader_z1        = 26.5;  // leader end height (pack bottom 26 + 0.5 bite)
+leader_w         = 8;     // leader width (finished folded tube, not full 25.4)
 tape_z           = 13;           // v33 lane (was 24): transit top 21.4 clears disc 35 by 13.6, ribbon top 13.4
 tape_n_arc       = 20;           // arc facets per side (smooth like $fn=60 curves)
 tape_n_x         = 12;           // taper steps along X (progressive entry->exit)
@@ -275,6 +300,7 @@ twister_ring_tube = 2;
 twister_lift = twister_ring_r + twister_ring_tube; // 12: export lift for min_z=0
 twister_arms = 2;                 // 2 threads orbit the tape
 twister_orbits_per_drum = 6;      // one bind per cavity per drum rev (== num_divots)
+twister_post_h = 13;              // v45 cradle-stub height (2 rolling gap under the ring-OD tube: 17-2-13=2)
 vpull_r = 10;                     // vertical-axis nip roller radius (= roller_body_r: surface speed 1:1)
 vpull_h = 24;                     // roller height (covers lane 13..21 + caps, base at 0)
 vpull_off = vpull_r + 2.0 + 1.5 + 0.4 + tolerance; // 14.2: r + fold HW + bend R + thick + tol
@@ -294,6 +320,9 @@ clutch_spring_h = 3;
 clutch_nut_h = 3;
 clutch_stack = clutch_disc_t + clutch_disc_t + clutch_spring_h + clutch_nut_h; // 10
 takeup_h_total = takeup_core_h + takeup_flange_t + clutch_stack; // 41: bottom flange 0..3 + core 0..31 + top 28..31 + clutch 31..41
+// v45 leader pack radius (must equal the takeup_reel() wound-pack visual:
+// core r5 + 3 = r8 at (takeup_x, takeup_z); the leader ends inside it).
+tape_pack_r = takeup_core_r + 3;
 
 // ============================================================
 // v39 6-turner (replaces the U-plow closing geometry) + v40 position.
@@ -361,6 +390,7 @@ extPP_x = 196.46; extPP_z = 28.79; extPP_T = 20;
 extTU_x = 226; extTU_z = 34; extTU_T = 10;
 vpull_sleeve_r = 10.15;           // cushioned sleeve outer (proud 0.15, under the r11 caps: envelope kept)
 vpull_sleeve_h = 16;
+vpull_collar_z = 5.0;              // v45 mid-collar centre LOCAL (assembly lifts +base_thick: CAD top 4+5+1.5=10.5 clears ribbon base 13 by 2.5; was 12 grazing the tape)
 
 // ============================================================
 // Spool cones
@@ -458,7 +488,11 @@ assert(takeup_x > pull_x, str("wind-up reel must sit east of the pull nip: ", ta
 assert(takeup_x + takeup_flange_r <= chassis_x0 + chassis_len + 4, str("take-up flange must stay ~inside the chassis east edge: ", takeup_x + takeup_flange_r));
 assert(takeup_z - takeup_flange_r >= 0, str("take-up flange bottom must stay >= 0: ", takeup_z - takeup_flange_r));
 assert(takeup_z + takeup_flange_r <= chassis_height, str("take-up flange top must fit below wall top: ", takeup_z + takeup_flange_r));
-assert(tape_x0 + tape_len >= takeup_x + takeup_flange_r, str("tape ribbon must reach the wind-up reel: ", tape_x0 + tape_len));
+assert(tape_x0 + tape_len >= tape_flat_end, str("v45: flat ribbon must reach the leader start: ", tape_x0 + tape_len));
+assert(leader_x0 < tape_flat_end, str("v45: leader must overlap the flat ribbon: ", leader_x0));
+assert(tape_flat_end <= takeup_x - takeup_flange_r, str("v45: flat ribbon must end before the reel flange (no dangle under/past reel): ", tape_flat_end));
+assert(sqrt(pow(leader_x1 - takeup_x, 2) + pow(leader_z1 - takeup_z, 2)) <= tape_pack_r, str("v45: leader end must fuse inside the wound pack: ", sqrt(pow(leader_x1 - takeup_x, 2) + pow(leader_z1 - takeup_z, 2))));
+assert(tape_pack_r == takeup_core_r + 3, str("v45: leader pack radius must match the takeup_reel() pack visual: ", tape_pack_r));
 assert(bind_x - 4 - plow_end >= 5, str("v38: twister west face (bind_x-4) must clear plow end by >=5: ", bind_x - 4 - plow_end));
 assert((pull_x - vpull_r) - (bind_x + 4) >= 5, str("v38: pull west face must clear twister east face by >=5: ", (pull_x - vpull_r) - (bind_x + 4)));
 assert((takeup_x - takeup_flange_r) - (pull_x + vpull_r) >= 5, str("v38: take-up west face must clear pull east face by >=5: ", (takeup_x - takeup_flange_r) - (pull_x + vpull_r)));
@@ -479,6 +513,22 @@ assert(clutch_stack == 10, str("v40: slip-clutch stack must be 10: ", clutch_sta
 assert(clutch_disc_r < takeup_flange_r, "v40: clutch discs must stay inside the flange envelope (X gap kept)");
 assert(takeup_h_total == takeup_core_h + takeup_flange_t + clutch_stack,
        str("v40: take-up export height must include the clutch stack: ", takeup_h_total));
+// v45 MOUNT INTEGRITY (forensic fix: floating gears/rotors/reels):
+// dead-axle shafts seat every bore (slip fits, spinning parts stay free;
+// gears fused); twister cradle keeps a rolling gap (no touch, no float);
+// pull mid-collar clears the tape.
+assert(drum_shaft_y0 <= -11 + 1 && drum_shaft_y0 >= -11 - 1, str("v45: drum shaft must start buried in DRUM40 (-11..-5): ", drum_shaft_y0));
+assert(drum_shaft_y1 >= 58 && drum_shaft_y1 <= 60, str("v45: drum shaft must end hidden in the front block bore: ", drum_shaft_y1));
+assert(hex_clearance_r > hex_axle_r, "v45: drum hex bore must slip on the shaft (free spin, no fuse)");
+assert(takeup_shaft_y0 <= -11 + 1 && takeup_shaft_y0 >= -11 - 1, str("v45: take-up shaft must start buried in TU-10T (-11..-5): ", takeup_shaft_y0));
+assert(takeup_shaft_y1 >= 58 && takeup_shaft_y1 <= 60, str("v45: take-up shaft must end hidden in the front block bore: ", takeup_shaft_y1));
+assert(axle_clearance_dia/2 > axle_dia/2, "v45: reel/wall/block bores must slip on the take-up shaft");
+assert(spool_shaft_y0 >= 0 && spool_shaft_y0 <= 2, str("v45: spool shaft must start hidden in the back block bore: ", spool_shaft_y0));
+assert(spool_shaft_y1 >= 58 && spool_shaft_y1 <= 60, str("v45: spool shaft must end hidden in the front block bore: ", spool_shaft_y1));
+assert((twister_axle_z - twister_ring_tube) - twister_post_h >= 1.5, str("v45: twister cradle must keep a rolling gap (no touch): ", (twister_axle_z - twister_ring_tube) - twister_post_h));
+assert((twister_axle_z - twister_ring_tube) - twister_post_h <= 4, str("v45: twister cradle must not float the rotor (gap <= 4): ", (twister_axle_z - twister_ring_tube) - twister_post_h));
+assert(tape_z - (base_thick + vpull_collar_z + 1.5) >= 2, str("v45: pull mid-collar top must clear the ribbon base by >=2 (assembly lifts +base_thick): ", tape_z - (base_thick + vpull_collar_z + 1.5)));
+assert(base_thick + vpull_h + 3 > 29 && base_thick + vpull_h + 3 <= 32, str("v45: pull roller top must engage the bridge cup (cup 29..32, bridge 32): ", base_thick + vpull_h + 3));
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
 assert(crank_mount_x == roller_axle_x, str("crank_mount_x must be coaxial with roller axle: ", crank_mount_x));
 assert(crank_mount_y == -8, str("crank_mount_y must sit outside the back wall (-8): ", crank_mount_y));
@@ -733,13 +783,32 @@ module chassis() {
             translate([extTW_x, -9, extTW_z])
                 rotate([90, 0, 0])
                     cylinder(h=20, r=6, center=true);
-            // v37 twister guide posts (static frame for the orbiting ring:
-            // two posts flanking the tape at bind_x hold the ring axle
-            // height; the rotor GLB stays a pure symmetric rotor so the
-            // viewer can spin it about X without orbiting the frame)
+            // v45 DEAD AXLES (static bars, slip-fit through bores/holes):
+            // drum hex through-shaft (fuses into solid DRUM40, slip in the
+            // drum/interior-gear hex bores + wall/block hex holes — the drum
+            // stays free to spin); take-up round shaft (fuses into solid
+            // TU-10T, slip in the reel/wall/block round bores); spool round
+            // shaft (slip in cone hex holes + wall/block bores, ends hidden
+            // in the block bores). Ends buried/hidden, never coplanar.
+            translate([drum_axle_x, (drum_shaft_y0 + drum_shaft_y1)/2, drum_axle_z])
+                rotate([90, 0, 0])
+                    cylinder(h=drum_shaft_y1 - drum_shaft_y0, r=hex_axle_r, $fn=6, center=true);
+            translate([takeup_x, (takeup_shaft_y0 + takeup_shaft_y1)/2, takeup_z])
+                rotate([90, 0, 0])
+                    cylinder(h=takeup_shaft_y1 - takeup_shaft_y0, r=axle_dia/2, center=true);
+            translate([spool_axle_x, (spool_shaft_y0 + spool_shaft_y1)/2, spool_axle_z])
+                rotate([90, 0, 0])
+                    cylinder(h=spool_shaft_y1 - spool_shaft_y0, r=axle_dia/2, center=true);
+            // v37 twister guide posts (static frame cradling the orbiting
+            // ring: two stubs flanking the tape at bind_x reach z=13,
+            // holding a 2 rolling gap under the ring-OD tube (ring bottom
+            // outer 18, tube r2 -> nearest steel 15; v45: was full-height
+            // 17 and grazed the swept tube by ~1). The product passes
+            // through the ring bore, so no through-axle is possible; the
+            // rotor spins on the viewer pivot (axis-correct), cradled here.
             for (s=[-1,1])
                 translate([bind_x - 2, chassis_width/2 + s*12 - 1.5, 0])
-                    cube([4, 3, twister_axle_z]);
+                    cube([4, 3, twister_post_h]);
             // Corner gussets via hull() of cubes
             for (gy=[0, chassis_width - 6]) {
                 translate([chassis_x0 + 4, gy, base_thick - 0.15])
@@ -1451,9 +1520,26 @@ module seed_tape_bend() {
     n_t = ceil(transit_len/4);         // ~4mm straight chunks
     dx_t = transit_len/n_t;
     union() {
-        // Flat ribbon full length (base min_z=0, single-layer floor)
+        // Flat ribbon full length (base min_z=0, single-layer floor;
+        // v45: ends at tape_flat_end 208, the leader takes it from there)
         translate([0, -paper_width/2, 0])
             cube([tape_len, paper_width, tape_thick]);
+        // v45 wind-up leader: narrow strip (folded-tube width) climbing
+        // ribbon-top -> wound pack, fused into both (overlaps ribbon by
+        // 2+ in x, ends inside the pack silhouette). Matches the viewer
+        // leader mesh 1:1 (same endpoints).
+        lle_s = leader_x0 - tape_x0;
+        lle_e = leader_x1 - tape_x0;
+        lle_dx = lle_e - lle_s;
+        lle_dz = (leader_z1 - tape_z) - tape_thick;
+        lle_len = sqrt(lle_dx*lle_dx + lle_dz*lle_dz);
+        lle_ang = atan2(lle_dz, lle_dx);
+        // +1 length shifted +0.25 along the climb: start face lands flush
+        // on the ribbon top (fused, no sub-zero poke), end bites ~1
+        // into the pack (min_z>=0 kept, tape film exempt anyway).
+        translate([(lle_s + lle_e)/2 + 0.25*cos(lle_ang), 0, tape_thick + lle_dz/2 + 0.25*sin(lle_ang)])
+            rotate([0, -lle_ang, 0])
+                cube([lle_len + 1, leader_w, tape_thick + 2*epsilon], center=true);
         // Forming taper: W shallow -> E full-U exit
         for (xi=[0:tape_n_x-1])
             fold_section(fx0 + xi*dx, dx, 0.15 + 0.85*(xi + 0.5)/tape_n_x);
@@ -1776,7 +1862,11 @@ module vpull_roller() {
                 translate([0, 0, -epsilon])
                     cylinder(h=3 + 2*epsilon, d=axle_clearance_dia, center=false);
             }
-        translate([0, 0, vpull_h/2])
+        // v45: mid collar rides LOW (centre vpull_collar_z=8.5, top 10:
+        // clears the ribbon base tape_z=13 by 3; was vpull_h/2=12 with
+        // top 13.5 grazing 0.5 into the tape). Top cap (24..27) is above
+        // the tape zone; sleeve/rib grip at the nip is intended (soft).
+        translate([0, 0, vpull_collar_z])
             difference() {
                 cylinder(h=3, d=22, center=true);
                 translate([0, 0, 0])

@@ -1,6 +1,53 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v44**
+**Version: v45**
+
+## v45 Forensic Tape-Path + Mount Integrity Fix (user: model still incorrect at all angles) - 2026-09-17
+
+1. **Forensic method**: 19-angle Playwright capture (ISO/TOP/FRONT/SIDE/
+   END-ON/BOTTOM + 8 station closeups, animating timestamps) + trimesh GLB
+   ground truth + live vertex-sampling probes. Cleared as NOT defects:
+   exterior gears (truly exterior, 5 off wall on bosses; dotted look =
+   tooth lighting), hopper-drum interface, 6-turner, twister ring/threads,
+   pull nip/bridge, take-up/clutch, R->L order. Found + fixed:
+2. **D1 tape scroll-dangle (viewer)**: ribbon `100+mod(advance,62.83)`
+   slid +/-63mm per rev — uncovered spool/nip/forming at high phase and
+   dangled ~50 past the chassis east end (f_iso_t3 proof). FIX: ribbon
+   STATIC at the CAD span (TAPE_LEN 270->222 = -14..208, centre 97);
+   advance readout still counts mm. Regression test: tapeGroup.x equal
+   across animating timestamps.
+3. **D2 wind-up disconnect (CAD+viewer)**: flat ribbon ran UNDER the bare
+   reel core (~13 gap) to 256, past reel/chassis, never engaging. FIX:
+   `seed_tape_bend()` flat ends at `tape_flat_end`=208 (east of nip caps
+   205, west of reel flange 210) + narrow leader strip (w8, folded-tube
+   width) 206..224.5 climbing ribbon-top -> wound pack r8 (fused both
+   ends, min_z=0, watertight); viewer mirrors 1:1 (+`_windLeader` hooks);
+   fail-loud asserts (flat reach, leader overlap, flange clearance,
+   leader-inside-pack, pack-radius match).
+4. **D3 floating rotating parts (CAD)**: DRUM40/TU exterior gears + drum +
+   reel + spool cones were held by NOTHING (bores/holes, no shafts —
+   comments claimed through-shafts that did not exist). FIX: static dead
+   axles in `chassis()` — drum hex (fused into solid DRUM40, slip in drum/
+   gear hex bores + wall/block holes), take-up round r4 (fused into solid
+   TU, slip in reel/wall/block bores), spool round r4 (slip in cone hex
+   holes + bores, ends hidden in block bores); ends buried/hidden, never
+   coplanar; fail-loud seat/slip asserts.
+5. **D4 twister posts grazed the ring (CAD)**: cradle posts (full height
+   17) intersected the swept ring tube by ~1 (analytic). FIX: posts to
+   `twister_post_h`=13 (2 rolling gap, cradled not floating; through-axle
+   impossible — product passes through the bore); assert 1.5..4 window.
+6. **D5 pull mid-collar grazed the tape (CAD)**: r11 collar at z 12 (top
+   13.5) clipped 0.5 into the ribbon over a ~9 strip. FIX: collar to
+   `vpull_collar_z`=8.5 (top 10, clears ribbon 13 by 3, CAD-asserted).
+   Sleeve/rib grip at the nip (0.15) is intended soft grip, kept.
+7. **Viewer** (`web/index.html` only): static ribbon + leader mesh +
+   `_windLeader` hooks + tape-path comment; pivots/ratios/signs/mounts
+   story unchanged; `ASSET_V` 28->29; dirty GLBs rebuilt (chassis:
+   shafts+posts; pull_a/b: collar; tape: flat+leader).
+8. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L order, port 9099 only; module-2 meshes, two-stage
+   6-turner logic, drum-driven 8-gear train, gaps>=5, min_z>=0 all kept.
 
 ## v44 Minimal Drum-Driven Gear Train (user: too many gears) - 2026-09-17
 
