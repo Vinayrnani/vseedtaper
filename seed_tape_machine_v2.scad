@@ -1526,145 +1526,103 @@ module seed_cradle() {
 }
 
 // ============================================================
-// 7. 6-FOLDER THIN-WALL TAPERED SHELL, v56 (Front/Back/Top.jpg
-// v60 U-to-swirl forming plow (user 2026-09-17: "6 = U bent
-// transforming to swirl, tape folded round"): FORMING PLOW /
-// folding funnel — entry LARGE open U-channel (dia 21, ~180° wrap,
-// wide slit ~180° on top, NO hook) catches the flat seeded tape;
-// walls rise and curl inward along the length into the exit SMALL
-// tight 6-swirl (dia 9, outer 330° + inner hook 160°); inner hook
-// edge approaches the outer circle but NEVER touches — 1.0mm
-// daylight gap full length (where the hook exists).
-// THIN-WALL SHELL ONLY: wall 0.8 (minimum printable single wall),
-// NO thick base plate. 7-station loft local x0..33 (world 126..159):
-// entry outer dia 21 (open U, 180°) -> exit outer dia 9 (tight
-// 6-swirl, 330° + 160° hook). Cross-section U-to-6 full length:
-// outer wrap 180->330deg (slit ~180° at the mouth narrowing to
-// 30° at exit, open full length on top, never a tube) + inner
-// hook 0->160deg (absent at the mouth, riding 1.0 off the shell
-// ID where present — daylight slit, tape slides, never catches). Lower side tail blade full length on the
-// -Y side (mid-height, fused to shell, clear of bore); tapered skid
-// wedge underneath = flat underside sit (fused to shell, clear of
-// bore) with a 2mm nose shelf west of the mouth; flat entry
-// tongue/tray per Top.jpg (13.8x16x0.8 plate west of the large
-// mouth, top flush with the skid, mortised into the nose, 0.2
-// clear of the seed cradle). Bore hollow see-through full length. Two SMALL 6x6x1 screw
-// ears (diagonal pair to chassis M3 holes world (132,6)/(153,54))
-// on thin ground straps + bars via the skid — minimal, not a base.
-// Local frame like the old plow: x 0..turner_len (33, world
-// 126..159), y local (tape centre cy=20, world +10), z local
-// (world +4 in assembly), min_z=0. Bore axis (cy,cz)=(20,13).
-// 7 stations interpolated to 17 fine plates (1.925 apart, 2.2
-// thick, hull-bridged; steps small so the wall stays a thin curl):
-//   x:     0    5.5   11   16.5   22   27.5   33
-//   R:   10.5   9.5   8.5   7.5   6.5   5.5   4.5 (outer radius)
-//   wrap: 180   210   240   270   300   320   330 (outer, deg)
-//   hook:   0    30    60    90   120   145   160 (inner, deg)
+// 7. 6-FOLDER v61 CLEAN-SHEET PARAMETRIC U-TO-SPIRAL-SWIRL PLOW
+// (all v55-v60 loft/table code deleted; nothing inherited).
+// Fresh photo read (Front/Back/Top.jpg, cardboard prototype):
+// Front = wide open U mouth; Back = tight spiral 6 (outer loop +
+// inner tail diving toward centre); Top = tapered cone + flat
+// tray sticking out past the LARGE end. User: "6 = U bent
+// transforming to swirl, tape folded round".
+// Fresh construction: smooth station FUNCTIONS of s in [0,1]
+// (no tables) over local x0..33 (world 126..159):
+//   R(s) = 10.5->4.5 linear (outer dia 21->9);
+//   W(s) = 180->352 smoothstep (clean open-U entry, near-closed
+//     swirl exit; wrap STRICTLY <360 so every plate polygon stays
+//     simple — the overlap read comes from the hook, never from a
+//     self-intersecting shell; open top slit full length);
+//   H(s) = 0 for s<0.25 (clean hook-free U mouth, first quarter)
+//     then 0->190 (separate spiral-diving inner curl: root outer
+//     Rh=R-1.8 = 1.0 daylight off the shell ID, tip dives
+//     proportionally toward centre but stays >=1.4 off axis so
+//     the bore stays see-through) + a root stitch rib fusing the
+//     hook root to the shell (single solid; daylight elsewhere).
+// 25 fresh plates (pitch 1.3, t1.8, overlapped UNION, ZERO hull
+// on shell/hook/rib). Interface (rewritten, same dims): flat
+// entry tray 13.8x16x0.8 west of the mouth (top flush w/ skid),
+// tapered skid wedge (flat sit, nose shelf), lower side tail
+// blade, 2 small 6x6x1 ears to chassis M3 holes world
+// (132,6)/(153,54). Bore axis (cy,cz)=(20,13), min_z=0.
 // part_to_render "plow" (compat) and "turner" both render this.
 // ============================================================
-// Annular-sector strip for one shell/hook/rib plate, pre-mapped so
-// rotate([0,90,0]) + linear_extrude lays it as a plate across X:
-// angle a gives y_part = r*cos(a), z_part = r*sin(a). Shell spans
-// a0..a1 (gap centred at top 90); hook spans a1-H..a1 at Rh;
-// rib bridges hook root to shell at a1. Wraps stay <= 330 (open).
-function curl_strip_pts(r_in, r_out, a0, a1, n) = concat(
-    [for (i=[0:n]) [-r_out*sin(a0+(a1-a0)*i/n), r_out*cos(a0+(a1-a0)*i/n)]],
-    [for (i=[n:-1:0]) [-r_in*sin(a0+(a1-a0)*i/n), r_in*cos(a0+(a1-a0)*i/n)]]);
+// v61 fresh helpers (s = normalized station 0..1):
+// outer radius taper (dia 21->9), wrap ramp (U 180->swirl 352),
+// hook span (0->190, suppressed first quarter), hook root/tip radii.
+function swirl_R(s) = 10.5 - 6.0*s;
+function swirl_W(s) = 180 + 172*(s*s*(3-2*s));
+function swirl_H(s) = s < 0.25 ? 0 : 190*(s-0.25)/0.75;
+function swirl_Rh(s) = swirl_R(s) - 1.8;
+function swirl_tip(s) = max(swirl_Rh(s)*0.62, 2.2);
+// Annular-sector strip plate, pre-mapped so rotate([0,90,0]) +
+// linear_extrude lays it across X: angle a gives y = r*cos(a),
+// z = r*sin(a) (a=270 is the channel bottom, a=90 the top slit).
+function swirl_shell_pts(r_in, r_out, a0, a1, n) = concat(
+    [for (i=[0:n]) [r_out*cos(a0+(a1-a0)*i/n), r_out*sin(a0+(a1-a0)*i/n)]],
+    [for (i=[n:-1:0]) [r_in*cos(a0+(a1-a0)*i/n), r_in*sin(a0+(a1-a0)*i/n)]]);
+// Spiral-diving hook strip: outer radius eases root->tip while the
+// angle sweeps h0..h1 (the "6" tail); inner edge follows by wall.
+function swirl_hook_pts(r_root, r_tip, h0, h1, n, wall) = concat(
+    [for (i=[0:n]) let (a=h0+(h1-h0)*i/n, r=r_root+(r_tip-r_root)*i/n) [r*cos(a), r*sin(a)]],
+    [for (i=[n:-1:0]) let (a=h0+(h1-h0)*i/n, r=r_root+(r_tip-r_root)*i/n-wall) [r*cos(a), r*sin(a)]]);
 
 module six_turner() {
+    // ---- v61 fresh parameters (interface dims kept, all new code) ----
     cy = 20;                        // tape centre (local y)
-    curl_cz = 13;                   // bore-axis height (v56 datum == turner_curl_cz)
-    wall = 0.8;                     // THIN WALL: minimum printable single wall
-    hook_off = 1.8;                 // hook outer radius Rh = R - hook_off (daylight = hook_off - wall = 1.0)
-    // THE station table: outer radius + outer wrap + inner hook span.
-    st_x = [0, 5.5, 11, 16.5, 22, 27.5, 33];
-    st_R = [10.5, 9.5, 8.5, 7.5, 6.5, 5.5, 4.5];
-    st_W = [180, 210, 240, 270, 300, 320, 330];
-    st_H = [0, 30, 60, 90, 120, 145, 160];
-    n_st = len(st_x);
-    // Fine shell/hook plates: 7-station table interpolated to 17
-    // plates (1.925 apart, 2.2 thick, 0.275 overlapped and UNIONED
-    // directly — v57: hull() is banned on shell/hook/rib, the convex
-    // hull of a 300deg annular sector includes the bore centre and
-    // filled the bore solid; last plate ends 30.8+2.2 = 33).
-    fpx = [0.0000, 1.9250, 3.8500, 5.7750, 7.7000, 9.6250, 11.5500, 13.4750, 15.4000, 17.3250, 19.2500, 21.1750, 23.1000, 25.0250, 26.9500, 28.8750, 30.8000];
-    fR = [10.500, 10.150, 9.800, 9.450, 9.100, 8.750, 8.400, 8.050, 7.700, 7.350, 7.000, 6.650, 6.300, 5.950, 5.600, 5.250, 4.500];
-    fW = [180.00, 190.50, 201.00, 211.50, 222.00, 232.50, 243.00, 253.50, 264.00, 274.50, 285.00, 295.50, 304.00, 311.00, 318.00, 322.50, 330.00];
-    fH = [0.00, 10.50, 21.00, 31.50, 42.00, 52.50, 63.00, 73.50, 84.00, 94.50, 105.00, 115.50, 125.00, 132.50, 140.00, 148.75, 160.00];
-    n_fp = len(fpx);
-    plate_t = 2.2;                  // plate thickness along X (must exceed pitch)
+    curl_cz = 13;                   // bore-axis height (datum == turner_curl_cz)
+    wall = 0.8;                     // minimum printable single wall
+    hook_off = 1.8;                 // hook root Rh = R-hook_off (daylight = hook_off-wall = 1.0)
+    n_plate = 41;                   // fresh plate count (pitch 0.7925, t1.3, overlap 0.5)
+    plate_t = 1.3;                  // plate thickness along X (must exceed pitch)
     skid_t0 = 3.0;                  // skid top at entry (fused to big shell, clear of bore)
     skid_t1 = 8.8;                  // skid top at exit (fused to small shell, clear of bore)
-    skid_nose = -2;                 // v59: skid front extends 2 west (shelf mortised into the tray)
-    // v59 flat entry tongue/tray (Top.jpg: flat sheet extends west
-    // beyond the LARGE mouth; same 0.8 minimum-printable wall).
+    skid_nose = -2;                 // skid front extends 2 west (shelf mortised into tray)
     tray_x0 = -14;                  // tray west tip (world 112, on chassis)
     tray_x1 = -0.2;                 // tray east end (0.2 air gap to the cradle face)
     tray_w = 16;                    // tray width (centred on the bore axis cy)
     tray_z0 = 2.2;                  // tray bottom (0.8 wall with top 3.0)
-    tray_top = 3.0;                 // tray top (flush with skid_t0, 0.3 below bore)
-    // Screw ears: 6x6x1 diagonal pair to chassis M3 holes.
-    // Ear A entry: local centre (6,-4) -> world (132,6).
-    // Ear B exit: local centre (27,44) -> world (153,54).
+    tray_top = 3.0;                 // tray top (flush with skid_t0, below bore)
     ear = 6;                        // ear edge length (6x6x1)
     ear_t = 1;                      // ear thickness
-    earA = [3, -7];                 // ear A corner (x,y), centre (6,-4)
-    earB = [24, 41];                // ear B corner (x,y), centre (27,44)
+    earA = [3, -7];                 // ear A corner (x,y), centre (6,-4) -> world (132,6)
+    earB = [24, 41];                // ear B corner (x,y), centre (27,44) -> world (153,54)
     hole_d = bolt_dia + 2*tolerance; // M3 clearance 3.6
-    floor_local = tape_z + tape_thick - base_thick; // 9.4: paper floor in turner frame
+    // ---- v61 fail-loud: U-entry vs swirl-exit shape ----
     assert(turner_len > 15, str("six_turner: turner_len must exceed 15, got ", turner_len));
-    assert(curl_cz == turner_curl_cz, "six_turner: bore axis must keep the v56 datum (13)");
+    assert(curl_cz == turner_curl_cz, "six_turner: bore axis must keep the datum (13)");
     assert(wall >= 0.75 && wall <= 0.85, str("six_turner: wall must be minimum printable 0.8, got ", wall));
-    assert(n_st == 7, str("six_turner: need 7 forming stations, got ", n_st));
-    assert(st_x[0] == 0 && st_x[n_st-1] == turner_len,
-        "six_turner: stations must span local x0..33 (world 126..159)");
-    assert(2*st_R[0] >= 20 && 2*st_R[0] <= 22,
-        str("six_turner: entry must be BIG loose 6 (dia ~20-22), got ", 2*st_R[0]));
-    assert(2*st_R[n_st-1] == 9,
-        str("six_turner: exit must be SMALL tight curled 6 (dia 9), got ", 2*st_R[n_st-1]));
-    assert(st_R[0] > st_R[1] && st_R[1] > st_R[2] && st_R[2] > st_R[3]
-        && st_R[3] > st_R[4] && st_R[4] > st_R[5] && st_R[5] > st_R[6],
-        "six_turner: radius must shrink monotonically (big->small taper)");
-    assert(st_W[0] >= 170 && st_W[0] <= 190,
-        str("six_turner: entry must be an open U (~180), got ", st_W[0]));
-    assert(st_W[n_st-1] >= 325 && st_W[n_st-1] <= 335,
-        str("six_turner: exit must be a closed swirl (330, never a tube), got ", st_W[n_st-1]));
-    assert(360 - st_W[0] >= 150,
+    assert(2*swirl_R(0) >= 20 && 2*swirl_R(0) <= 22,
+        str("six_turner: entry must be BIG loose U (dia ~20-22), got ", 2*swirl_R(0)));
+    assert(2*swirl_R(1) == 9,
+        str("six_turner: exit must be SMALL tight swirl (dia 9), got ", 2*swirl_R(1)));
+    assert(swirl_W(0) >= 170 && swirl_W(0) <= 190,
+        str("six_turner: entry must be an open U (~180), got ", swirl_W(0)));
+    assert(swirl_W(1) >= 345 && swirl_W(1) <= 359,
+        str("six_turner: exit must be a near-closed swirl (345-359, never shut), got ", swirl_W(1)));
+    assert(360 - swirl_W(0) >= 150,
         "six_turner: entry slit must be wide open (U mouth, >=150deg)");
-    assert(st_W[0] < st_W[1] && st_W[1] < st_W[2] && st_W[2] < st_W[3]
-        && st_W[3] < st_W[4] && st_W[4] < st_W[5] && st_W[5] < st_W[6],
-        "six_turner: outer wrap must advance monotonically");
-    assert(st_H[0] >= 0 && st_H[0] <= 5,
-        str("six_turner: entry hook must start ~0 (clean U mouth), got ", st_H[0]));
-    assert(st_H[0] < st_H[1] && st_H[1] < st_H[2] && st_H[2] < st_H[3]
-        && st_H[3] < st_H[4] && st_H[4] < st_H[5] && st_H[5] < st_H[6],
-        "six_turner: inner hook must advance monotonically");
-    assert(st_H[n_st-1] >= 120 && st_H[n_st-1] <= 180,
-        "six_turner: exit hook must be 120-180deg (tight inner curl)");
-    // DAYLIGHT GAP: hook outer (R-hook_off) rides 1.0 off the shell
-    // ID (R-wall) full length — approaches but NEVER touches.
-    assert(hook_off > wall,
-        "six_turner: hook must NEVER touch the shell (hook_off > wall)");
+    assert(swirl_H(0) == 0, "six_turner: entry hook must be 0 (clean U mouth)");
+    assert(swirl_H(1) >= 150 && swirl_H(1) <= 200,
+        str("six_turner: exit hook must be 150-200deg (spiral tail), got ", swirl_H(1)));
+    assert(hook_off > wall, "six_turner: hook must NEVER touch the shell (hook_off > wall)");
     assert(hook_off - wall >= 0.7 && hook_off - wall <= 1.3,
         str("six_turner: daylight gap must be ~1.0 full length, got ", hook_off - wall));
-    // Seeded pocket core (7.8 wide x ~7 tall U, corner r 5.17 about
-    // the bore axis) must clear the BIG entry inner bore (9.7). Tape
-    // shoulders feed through the top opening (intended, not modelled).
-    assert(st_R[0] - wall - sqrt(pow(3.9, 2) + pow(3.4, 2)) >= 0.1,
+    assert(swirl_tip(1) - wall >= 1.35,
+        "six_turner: hook tip must stay clear of the bore axis (hollow see-through)");
+    assert(n_plate == 41, "six_turner: need 41 fresh plates");
+    assert(plate_t > turner_len/n_plate, "six_turner: plates must overlap (pitch < thickness)");
+    // Seeded pocket core must thread the BIG entry bore; shoulders
+    // feed through the top opening (intended, not modelled).
+    assert(swirl_R(0) - wall - sqrt(pow(3.9, 2) + pow(3.4, 2)) >= 0.1,
         "six_turner: seeded pocket core must thread the entry bore");
-    // Hook never reaches the bore axis (see-through ray stays clear);
-    // tightest at the SMALL exit.
-    assert(st_R[n_st-1] - hook_off - wall >= 1.5,
-        "six_turner: hook must stay clear of the bore axis (hollow see-through)");
-    assert(n_fp == 17, "six_turner: need 17 fine plates");
-    assert(fpx[0] == 0 && fpx[n_fp-1] + plate_t == turner_len,
-        "six_turner: plates must span the full footprint (0..33)");
-    assert(fR[0] == st_R[0] && fW[0] == st_W[0] && fH[0] == st_H[0],
-        "six_turner: fine plates must match the station table at entry");
-    assert(fR[n_fp-1] == st_R[n_st-1] && fW[n_fp-1] == st_W[n_st-1] && fH[n_fp-1] == st_H[n_st-1],
-        "six_turner: exit plate must match the station table (dia 9 proof)");
-    assert(fH[n_fp-1] >= 120 && fH[n_fp-1] <= 180,
-        "six_turner: exit plate hook must stay 120-180deg");
     // Screw ears: 6x6x1 diagonal pair on the chassis M3 holes.
     assert(ear == 6 && ear_t == 1, "six_turner: ears must stay 6x6x1 (small, minimal)");
     assert(earA[0] + ear/2 == 6 && earB[0] + ear/2 == turner_len - 6
@@ -1675,99 +1633,102 @@ module six_turner() {
     assert(hole_d == bolt_dia + 2*tolerance, "six_turner: ear holes must be M3 clearance");
     // Skid tops stay below the bore inner bottom (see-through kept)
     // and overlap the shell outer bottom (fused, single solid).
-    assert(skid_t0 <= curl_cz - (st_R[0] - wall) - 0.3
-        && skid_t1 <= curl_cz - (st_R[n_st-1] - wall) - 0.3,
+    assert(skid_t0 <= curl_cz - (swirl_R(0) - wall) - 0.3
+        && skid_t1 <= curl_cz - (swirl_R(1) - wall) - 0.3,
         "six_turner: skid must stay below the bore (hollow kept)");
-    assert(skid_t0 >= curl_cz - st_R[0] && skid_t1 >= curl_cz - st_R[n_st-1],
+    assert(skid_t0 >= curl_cz - swirl_R(0) && skid_t1 >= curl_cz - swirl_R(1),
         "six_turner: skid must fuse into the shell (single solid)");
-    // v59 TRAY (Top.jpg flat sheet west of the large mouth): top
-    // flush with the skid and 0.3 below the bore inner bottom
-    // (hollow kept); overlaps the skid nose volumetrically
-    // (single-solid mortise); stops 0.2 west of the mouth plane
-    // (never touches the seed cradle); tip stays on the chassis;
-    // centred on the bore axis, no wider than the large mouth.
-    assert(tray_top == skid_t0,
-        "six_turner: tray top must sit flush with the skid top");
-    assert(tray_top <= curl_cz - (st_R[0] - wall) - 0.3,
+    // Tray (Top.jpg flat sheet west of the large mouth): top flush
+    // with the skid and below the bore (hollow kept); overlaps the
+    // skid nose volumetrically (single-solid mortise); stops west
+    // of the mouth plane (never touches the seed cradle); tip stays
+    // on the chassis; centred on the bore axis, no wider than mouth.
+    assert(tray_top == skid_t0, "six_turner: tray top must sit flush with the skid top");
+    assert(tray_top <= curl_cz - (swirl_R(0) - wall) - 0.3,
         "six_turner: tray must stay below the bore (hollow kept)");
     assert(tray_top - tray_z0 >= 0.75 && tray_top - tray_z0 <= 0.85,
         "six_turner: tray must keep the 0.8 minimum-printable wall");
-    assert(tray_x1 < 0,
-        "six_turner: tray must end west of the mouth plane (clear of cradle)");
-    assert(tray_x1 - skid_nose >= 1,
-        "six_turner: tray must overlap the skid nose (single-solid fuse)");
-    assert(tray_z0 >= 0 && tray_top <= skid_t0,
-        "six_turner: tray must sit inside the skid nose band");
+    assert(tray_x1 < 0, "six_turner: tray must end west of the mouth plane (clear of cradle)");
+    assert(tray_x1 - skid_nose >= 1, "six_turner: tray must overlap the skid nose (single-solid fuse)");
+    assert(tray_z0 >= 0 && tray_top <= skid_t0, "six_turner: tray must sit inside the skid nose band");
     assert(cy - tray_w/2 <= 17 && cy + tray_w/2 >= 23,
         "six_turner: tray must span the skid nose width (mortise fuse)");
-    assert(tray_w <= 2*st_R[0],
-        "six_turner: tray must be no wider than the large mouth");
-    assert(tray_x0 + plow_start >= chassis_x0,
-        "six_turner: tray tip must stay on the chassis");
+    assert(tray_w <= 2*swirl_R(0), "six_turner: tray must be no wider than the large mouth");
+    assert(tray_x0 + plow_start >= chassis_x0, "six_turner: tray tip must stay on the chassis");
     // Side blade: inner edge overlaps the shell outer flank (fused)
     // but stays clear of the bore inner flank (tape path kept).
-    assert(9.7 > 20 - st_R[0] && 9.7 < 20 - (st_R[0] - wall),
+    assert(9.7 > 20 - swirl_R(0) && 9.7 < 20 - (swirl_R(0) - wall),
         "six_turner: entry blade must fuse shell + clear bore");
-    assert(15.8 > 20 - st_R[n_st-1] && 15.8 < 20 - (st_R[n_st-1] - wall),
+    assert(15.8 > 20 - swirl_R(1) && 15.8 < 20 - (swirl_R(1) - wall),
         "six_turner: exit blade must fuse shell + clear bore");
-    // v58 THIN SHELL (hollow loft): the voids below are ONLY the
-    // 2 M3 ear holes.
-    // Shell + hook + ribs + blade + skid + ears/straps/bars unite
-    // into one solid: plates overlapped consecutively (plate_t exceeds
-    // pitch, union only, NO hull — hull of an open annular sector caps
-    // the bore solid), hook roots ribbed to the shell, blade/skid/straps/bars overlapped in.
-    // Center holds only air.
+    // Per-station ramp proofs: taper shrinks, wrap/hook advance, slit
+    // never shuts, hook tip never reaches the axis.
+    for (k=[1:n_plate-1]) {
+        s0 = ((k-1)*(turner_len-plate_t)/(n_plate-1)+plate_t/2)/turner_len;
+        s1 = (k*(turner_len-plate_t)/(n_plate-1)+plate_t/2)/turner_len;
+        assert(swirl_R(s1) < swirl_R(s0), "six_turner: radius must shrink monotonically (big->small)");
+        assert(swirl_W(s1) > swirl_W(s0), "six_turner: outer wrap must advance monotonically");
+        assert(swirl_H(s1) >= swirl_H(s0), "six_turner: inner hook must advance monotonically");
+        assert(swirl_W(s1) < 360, "six_turner: slit must stay open (wrap < 360, never a tube)");
+        assert(swirl_tip(s1) - wall >= 1.35, "six_turner: hook tip must stay off axis (see-through)");
+    }
+    // v61 fresh solid: 41 overlapped plates sampled at plate
+    // centres (union only, NO hull on shell/hook/rib — hull of an
+    // open sector would cap the bore solid) + blade/skid/tray/ears.
+    // Only voids: the 2 M3 ear holes. Center holds only air.
     union() {
         difference() {
             union() {
-                // Outer shell loft: overlapping annular-sector plates
-                // (gap centred at top 90: a0 = 90+(360-W)/2, a1 = a0+W).
-                // Inner hook loft: radius Rh = R-hook_off, span a1-H..a1
-                // (root at the shell a1 edge, 1.0 daylight off the shell ID).
-                // Root rib: annular quad bridging hook root to shell.
-                // v60: hook+rib skipped while H<25° (entry region stays
-                // a clean hook-free U mouth; the hook grows in where it
-                // is ≥21° like the proven v58 minimum — also avoids a
-                // degenerate polygon and CGAL tip splinters).
-                for (k=[0:n_fp-1]) {
-                    translate([fpx[k], cy, curl_cz])
-                        rotate([0, 90, 0])
-                            linear_extrude(height=plate_t)
-                                polygon(curl_strip_pts(fR[k]-wall, fR[k], 90+(360-fW[k])/2, 90+(360-fW[k])/2+fW[k], 30));
-                    if (fH[k] >= 25) {
-                        translate([fpx[k], cy, curl_cz])
+                // Shell plate: annular sector R-wall..R over a0..a1
+                // (gap centred at top 90). Hook plate: spiral-diving
+                // strip root->tip over a1-H..a1-1 (root at the shell
+                // a1 edge, 1.0 daylight off the shell ID). Root
+                // stitch rib: radial quad fusing hook root to shell.
+                // Hook+rib skipped while H<25 (entry stays a clean
+                // hook-free U mouth; avoids degenerate polygons).
+                for (k=[0:n_plate-1])
+                    let (px = k*(turner_len-plate_t)/(n_plate-1),
+                        s = (px+plate_t/2)/turner_len,
+                        R = swirl_R(s), W = swirl_W(s), H = swirl_H(s),
+                        a0 = 270-W/2, a1 = 270+W/2,
+                        Rh = R-hook_off, tip = swirl_tip(s)) {
+                        translate([px, cy, curl_cz])
                             rotate([0, 90, 0])
                                 linear_extrude(height=plate_t)
-                                    polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k]-hook_off, 90+(360-fW[k])/2+fW[k]-fH[k], 90+(360-fW[k])/2+fW[k]-1, 20));
-                        translate([fpx[k], cy, curl_cz])
-                            rotate([0, 90, 0])
-                                linear_extrude(height=plate_t)
-                                    polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k], 90+(360-fW[k])/2+fW[k]-4, 90+(360-fW[k])/2+fW[k]+4, 2));
+                                    polygon(swirl_shell_pts(R-wall, R, a0, a1, 48));
+                        if (H >= 25) {
+                            translate([px, cy, curl_cz])
+                                rotate([0, 90, 0])
+                                    linear_extrude(height=plate_t)
+                                        polygon(swirl_hook_pts(Rh, tip, a1-H, a1-1, 32, wall));
+                            translate([px, cy, curl_cz])
+                                rotate([0, 90, 0])
+                                    linear_extrude(height=plate_t)
+                                        polygon(swirl_shell_pts(Rh-wall, R, a1-3, a1+3, 2));
+                        }
                     }
-                }
-                // Lower side tail blade (-Y side, full length, mid-height
-                // z12: inner edge fused into the shell flank, clear of
-                // the bore; tapers with the shell big->small).
+                // Lower side tail blade (-Y side, full length,
+                // mid-height z12: inner edge fused into the shell
+                // flank, clear of the bore; tapers big->small).
                 hull() {
                     translate([0, 2, 12]) cube([3, 7.7, 1.2]);
                     translate([turner_len-3, 8, 12]) cube([3, 7.8, 1.2]);
                 }
-                // Skid wedge (flat underside gravity sit: tops fused to
-                // the shell, clear of the bore, tapering big->small;
-                // v59 nose shelf extends 2 west of the mouth, mortised
-                // into the entry tray).
+                // Skid wedge (flat underside gravity sit: tops fused
+                // to the shell, clear of the bore, tapering
+                // big->small; nose shelf mortised into the tray).
                 hull() {
                     translate([skid_nose, 17, 0]) cube([4 - skid_nose, 6, skid_t0]);
                     translate([turner_len-4, 17, 0]) cube([4, 6, skid_t1]);
                 }
-                // v59 flat entry tongue/tray (Top.jpg: flat sheet
-                // extending west beyond the large mouth; top flush
-                // with the skid top, 0.3 below the bore; mortised
-                // into the skid nose, 0.2 clear of the cradle).
+                // Flat entry tongue/tray (Top.jpg: flat sheet west
+                // of the large mouth; top flush with the skid top,
+                // below the bore; mortised into the nose, 0.2 clear
+                // of the cradle).
                 translate([tray_x0, cy - tray_w/2, tray_z0])
                     cube([tray_x1 - tray_x0, tray_w, tray_top - tray_z0]);
-                // Screw ears + ground straps + bars via the skid (all at
-                // z0..1 ground level, far below the bore — minimal mounts).
+                // Screw ears + ground straps + bars via the skid (all
+                // at z0..1 ground level, far below the bore — minimal).
                 translate([earA[0], earA[1], 0]) cube([ear, ear, ear_t]);
                 translate([earB[0], earB[1], 0]) cube([ear, ear, ear_t]);
                 translate([4, -1, 0]) cube([4, 13, 1]);

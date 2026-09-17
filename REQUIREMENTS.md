@@ -25,8 +25,8 @@
     1.0 daylight off shell ID, tip dives proportionally toward
     centre, tip inner edge >=1.4 off axis so the bore stays
     see-through) + root stitch rib fusing hook to shell (single
-    solid, daylight everywhere else). 25 fresh plates
-    (pitch 1.375, t1.8, overlapped union, ZERO hull on
+    solid, daylight everywhere else). 41 fresh plates
+    (pitch 0.7925, t1.3, overlapped union, ZERO hull on
     shell/hook/rib). Interface kept, rewritten: tray 13.8x16x0.8
     (world 112..125.8, top 3.0), skid nose -2 tops 3.0->8.8,
     side blade, 2 small 6x6x1 ears world (132,6)/(153,54).
