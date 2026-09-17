@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v40 — 2026-09-17
+- Mounting layout for all components (bottom: 6-turner+wind-up, side: twister+rollers+drum, top: hopper/shroud/spools); 6-turner positioned after drop point; wind-up slip clutch on reel axle
+
 ## v39 — 2026-09-17
 - Replace U-plow with 6-shaped turner/roller former (tape with seed passes through 6 curl to roll edges over); twister/pull/wind all crank-driven via gears only (no belts) – crank→drum 2:1 → twister 6× per drum via idler spur → vertical pull 1:1 → wind-up step-up; vertical pull rollers cushioned (soft rubber/silicone) for firm grip without crushing
 
