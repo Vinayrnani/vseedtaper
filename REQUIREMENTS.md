@@ -1,5 +1,51 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v61**
+
+## v61 Clean-Sheet 6-Folder Rebuild: parametric U-to-spiral-swirl plow, zero inherited loft code - 2026-09-17
+
+1. **Why rebuild** (user order: DON'T tweak, rebuild ONLY this
+    object from scratch): v55->v60 incrementally patched the same
+    7-station/17-plate loft (wrap/hook tables, hook thresholds)
+    and the part still reads wrong vs Front/Back/Top.jpg. All
+    `six_turner()` internals are deleted (station tables, fine
+    plate tables, plate/hook/rib loft loop, `curl_strip_pts`
+    helper) and rewritten as fresh parametric code.
+2. **Concept** (fresh photo read: Front.jpg = wide open U mouth;
+    Back.jpg = tight spiral 6 with inner tail curling toward
+    centre; Top.jpg = tapered cone + flat tray past the large
+    end; "6 = U bent transforming to swirl, tape folded round"):
+    smooth station FUNCTIONS (no tables) over local x0..33
+    (world 126..159): R(s) 10.5->4.5 linear (dia 21->9); W(s)
+    180->352 smoothstep (clean open U entry, near-closed swirl
+    exit, wrap strictly <360 so no self-intersecting polygon,
+    open top slit full length 180deg->8deg); H(s) 0 for s<0.25
+    (clean hook-free U mouth first quarter) then 0->190;
+    inner hook = separate SPIRAL-diving curl (root Rh=R-1.8 =
+    1.0 daylight off shell ID, tip dives proportionally toward
+    centre, tip inner edge >=1.4 off axis so the bore stays
+    see-through) + root stitch rib fusing hook to shell (single
+    solid, daylight everywhere else). 25 fresh plates
+    (pitch 1.375, t1.8, overlapped union, ZERO hull on
+    shell/hook/rib). Interface kept, rewritten: tray 13.8x16x0.8
+    (world 112..125.8, top 3.0), skid nose -2 tops 3.0->8.8,
+    side blade, 2 small 6x6x1 ears world (132,6)/(153,54).
+3. **CAD** (`seed_tape_machine_v2.scad` only): new
+    `swirl_R/W/H` functions + `swirl_shell_pts` /
+    `swirl_hook_pts` / `swirl_rib_pts` helpers + fresh
+    `six_turner()` (loop asserts per station); fail-loud:
+    entry U 170-190deg, exit swirl 345-359deg, hook 0->150-200,
+    mono ramps, W<360 all stations, exit dia 9, gap 1.0,
+    hook-tip-axis clearance (see-through), pocket-threads-bore,
+    tray/skid/ears proofs; `$fn=60`, `tol=0.3`, wall 0.8,
+    manifold single solid, min_z=0. Nothing else touched.
+4. **Viewer** (`web/index.html` only): `ASSET_V` 44->45, plow GLB
+    rebuilt, legend + `_sixTurner` hooks relabelled spiral-swirl.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v60**
 
 ## v60 U-to-Swirl Forming Plow: open-U entry (180°) winding to tight 6-swirl exit, matched to Front/Back/Top.jpg - 2026-09-17
