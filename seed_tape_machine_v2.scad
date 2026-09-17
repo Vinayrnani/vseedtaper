@@ -107,18 +107,24 @@ wall_thick    = 3;
 
 // ============================================================
 // Plow (downstream closer, v1 precedent: stays EAST of drum) +
-// Fold zone (v30: UPSTREAM of the drop so the U-bend forms BEFORE
-// the seed enters; shallow entry in the shroud, full-U exit at x=100
-// under the drop tube; the east plow then closes/seals the pocket)
+// Fold zone (v31: forming station fully WEST of the drum face so the
+// tall U walls never meet the wheel; shallow entry at the roller nip,
+// full-U forming exit at x=70, then a straight full-U transit (same
+// cross-section, no taper) runs EAST through the shroud slot, UNDER
+// the drum with air gap, INTO the drop-tube west side inlet at x=93,
+// through the bore (seed drops into the moving pocket at x=100) and
+// on to the plow mouth at 126 which closes/seals it downstream)
 // ============================================================
 plow_start    = drum_axle_x + drum_radius + 1; // 126 (east of drum, unchanged)
 plow_len      = 33; // v21 FIXED: decoupled from roller_axle_x (roller moved west
-                    // of drum, so the old roller-based end 39-126 went negative
-                    // and tripped the plow_len assert). Plow stays east (v1 precedent).
+                     // of drum, so the old roller-based end 39-126 went negative
+                     // and tripped the plow_len assert). Plow stays east (v1 precedent).
 plow_end      = plow_start + plow_len; // 159
-fold_len      = 33;   // v30: same 33 forming length as the plow, relocated upstream
-fold_end      = drum_axle_x; // 100: full-U exit sits under the drop tube bore
-fold_start    = fold_end - fold_len; // 67: shallow entry inside the shroud zone (58-84)
+fold_len      = 33;   // forming length kept (same taper count as v30)
+fold_end      = 70;   // v31: forming exit 5 clear of the drum west face (75)
+fold_start    = fold_end - fold_len; // 37: shallow entry at the roller nip (40)
+transit_end   = plow_start; // 126: straight full-U transit ends at the plow mouth
+transit_len   = transit_end - fold_end; // 56: forming exit -> plow mouth via pipe
 fold_width    = 6.0;   // v28 true mimic (was 12.7): narrow U trough 5-7 to match tapeubend.png; plow plan_ang derives from it
 track_depth   = 3;
 
@@ -197,20 +203,29 @@ cradle_u_radius = 4;
 
 // ============================================================
 // Seed tape with center U-fold bend (v28 true mimic of tapeubend.png,
-// v30 order fix: fold zone moved UPSTREAM of the drop)
+// v31 drum-clear: forming station 37..70 fully west of the drum face).
 // End-on photo (now in repo): flat 25.4 sheet -> tight narrow U trough
 // 5-7 wide, inner R 1.5-2, vertical walls 5-6 deep pocket, small reverse
 // S-kink at the shoulders flaring back to the flat wings, progressive
-// flat-entry (shallow west, shroud zone) to full-U exit (deep east) along
-// the fold zone (world x 67..100); the seed drops at x=100 into the
-// ALREADY-FOLDED pocket; the east plow (126..159) then closes/seals it;
+// flat-entry (shallow, at the roller nip) to full-U forming exit (deep,
+// x=70); a straight full-U transit (same section, no taper) runs
+// 70..126 under the drum (1.6 air gap) into the drop-tube west side
+// inlet, through the bore where the seed drops at x=100 into the
+// ALREADY-FOLDED pocket, on to the plow mouth (126) which closes it;
 // stainless former collar (transverse shoe with U notch) rides over the
-// fold exit at the drop (world x ~97) as a visual.
+// forming exit (world x ~67) as a visual.
+// Single-layer bottom (flat ribbon IS the trough floor, no double slab).
+// Tape lane (v31: lowered 30->24 so the full-U transit (top 32.4)
+// clears the drum bottom (35) by 2.4 and the drum flange rings (33.5)
+// by 1.1+ along the whole under-drum run; flat ribbon top 24.4, drop
+// tube re-sealed 0.5 below it).
 // Single-layer bottom (flat ribbon IS the trough floor, no double slab).
 // tape_bend_radius = inner arc R (1.75), fold_width = trough bottom width
 // (6.0, HW 3.0), tape_fold_wall = vertical wall length (5.5),
 // tape_shoulder_r/ang = reverse S-kink at shoulders (1.5/60), tape_n_arc
 // = 20 facets/side, tape_n_x = 12 taper steps (depth 0.15->1.0 W->E).
+// Full-U tape-local top = 0.4 + (1.75+5.5)*1.0 + 1.5*0.5 = 8.4
+// (shoulder apex); world top = tape_z + 8.4 = 32.4.
 // Assembly: static tape (viewer scrolls it); export standalone min_z=0.
 // ============================================================
 tape_thick       = 0.4;
@@ -221,7 +236,7 @@ tape_shoulder_r  = 1.5;
 tape_shoulder_ang = 60;
 tape_len         = 180;
 tape_x0          = chassis_x0;   // -14: spans spool(-6)..plow end(159)+margin
-tape_z           = 30;           // ride height under drum (v29 drop tube exit 29.9, seals 0.5 into ribbon top 30.4)
+tape_z           = 24;           // v31 lane (was 30): transit top 32.4 clears drum bottom 35 by 2.4
 tape_n_arc       = 20;           // arc facets per side (smooth like $fn=60 curves)
 tape_n_x         = 12;           // taper steps along X (progressive entry->exit)
 
@@ -268,10 +283,16 @@ assert(fold_width/2 + tape_bend_radius + tape_thick <= (paper_width + 2*toleranc
 assert((fold_start - tape_x0) + fold_len <= tape_len,
        str("tape fold segment must fit on the ribbon: need ", (fold_start - tape_x0) + fold_len, " <= ", tape_len));
 assert(tape_x0 + tape_len >= fold_end, str("tape ribbon must reach the fold exit: ", tape_x0 + tape_len));
-assert(fold_end == drum_axle_x, str("fold exit must sit under the drop (drum_axle_x): ", fold_end));
-assert(fold_start >= 60 && fold_start <= 72,
-       str("fold entry must sit in the shroud zone (58-84): ", fold_start));
-assert(fold_end <= drum_axle_x + 7, str("fold zone must end at/before the drop tube outer: ", fold_end));
+assert(fold_end <= drum_axle_x - drum_radius - 4,
+       str("forming exit must sit fully west of the drum face (<=71): ", fold_end));
+assert(fold_start >= 35 && fold_start <= 45,
+       str("fold entry must sit at the roller nip (35-45): ", fold_start));
+assert(transit_end == plow_start,
+       str("transit must reach the plow mouth: ", transit_end));
+assert((transit_end - tape_x0) <= tape_len,
+       str("transit must fit on the ribbon: need ", (transit_end - tape_x0), " <= ", tape_len));
+assert(tape_z + tape_thick + tape_bend_radius + tape_fold_wall + tape_shoulder_r*0.5 + 1.0 <= drum_axle_z - drum_radius,
+       str("full-U transit top + 1 must clear the drum bottom (35): ", tape_z + tape_thick + tape_bend_radius + tape_fold_wall + tape_shoulder_r*0.5 + 1.0));
 assert(fold_width/2 + tape_bend_radius + tape_thick <= 7.8,
        str("fold outer half-width must fit the drop tube interior (7.8): ", fold_width/2 + tape_bend_radius + tape_thick));
 assert(tape_x0 + tape_len >= plow_end, str("tape ribbon must reach the plow end: ", tape_x0 + tape_len));
@@ -589,16 +610,18 @@ module hopper_body() {
     // bore 10 fits 8mm seeds with clearance, outer 14 = bore + 2x2.0
     // walls; was 9/18): outer x -7..7 (thick walls saddle-fuse to
     // cover lips after carve trim), bore 10 (-5..5), straight down
-    // onto the tape. Bottom local z=25.9 (world 29.9, 0.5 below the
-    // ribbon top 30.4: walls touch/seal, no spill gap); east/west
+    // onto the tape. Bottom local z=19.9 (world 23.9, 0.5 below the
+    // ribbon top 24.4: walls touch/seal, no spill gap); east/west
     // walls carry bottom-open tape notches (folded tape threads through,
-    // north/south walls seal the sides). Drop x=100 world; the U-fold
-    // trough (world 67..100) is centered under the bore at the drop, so
-    // the tube lands INSIDE the already-folded U pocket: the fold walls
-    // touch the pipe at the notch flanks (sliding fit, seal kept).
+    // north/south walls seal the sides). Drop x=100 world; the full-U
+    // transit (world 70..126) runs straight through the bore at the
+    // drop, so the tube lands AROUND the already-folded U pocket: the
+    // fold walls pass the notch flanks (sliding fit, seal kept). The
+    // WEST notch is the tall side inlet (full-U tape enters from the
+    // west, supplied TO the pipe, never near the wheel).
     tube_x0 = -7; tube_x1 = 7;
     bore_x0 = -5; bore_x1 = 5;
-    tube_z0 = 25.9; tube_z1 = 52;
+    tube_z0 = 19.9; tube_z1 = 52;
     assert(bore_x1 - bore_x0 == 10, "hopper_body: drop bore must be 10");
     assert(tube_x1 - tube_x0 == 14, "hopper_body: drop tube outer must be 14");
     assert(bore_x0 - tube_x0 >= 1.2, "hopper_body: drop tube X wall must be >=1.2");
@@ -702,29 +725,35 @@ module hopper_body() {
         // carried over the top, not by the trough void). Overlaps bore
         // (-5..5) and drum carve. The drum carve trims the tube top
         // into a smooth drum-conforming funnel mouth (no steps/ledges).
-        translate([-5, -(cheek_in + 0.5), 29])
-            cube([10, 2*(cheek_in + 0.5), 13]);
-        // Tape notches (v29 seal, v30 folded profile): bottom-open slots
-        // through the EAST and WEST tube walls so the tape threads through
-        // while the NORTH/SOUTH walls run full-height to the sealed bottom
-        // (25.9). Wing slot band 25.7..26.7 = flat wings (local 26.0..26.4,
-        // world 30.0..30.4) +-0.3 clearance; the tube bottom sits inside
-        // the band so the slots read as bottom-open notches. Central U
-        // clearance (half-width hw+r+thick+tol = 5.45, local z 26.7..35.0)
-        // passes the fold walls (outer 5.35, top local ~34.4 at the drop)
-        // with a sliding fit; side stubs + N/S walls keep the 0.5 wing
-        // overlap seal, seeds funnel into the pocket with no spill path.
-        // Trough (HW 3.0) stays centered under the bore (bore +-5).
-        fold_slot_hw = fold_width/2 + tape_bend_radius + tape_thick + tolerance; // 5.45
-        fold_slot_top = 35.0; // local z: clears the full-U wall top (~34.4)
-        translate([tube_x0 - epsilon, -(cheek_in + 0.5) - epsilon, 25.7])
+        // v31: extended down (local 19..42) so the window reaches the
+        // lowered transit pocket (top local ~28.4).
+        translate([-5, -(cheek_in + 0.5), 19])
+            cube([10, 2*(cheek_in + 0.5), 23]);
+        // Tape notches (v29 seal, v31 lowered lane + side inlet):
+        // bottom-open slots through the EAST and WEST tube walls so the
+        // tape threads through while the NORTH/SOUTH walls run
+        // full-height to the sealed bottom (19.9). Wing slot band
+        // 19.7..20.7 = flat wings (local 20.0..20.4, world 24.0..24.4)
+        // +-0.3 clearance; the tube bottom sits inside the band so the
+        // slots read as bottom-open notches. Central U clearance
+        // (half-width hw+r+thick+tol+1.0 = 6.45, local z 20.7..29.6)
+        // passes the transit walls AND shoulder kinks (outer 6.3, top
+        // local ~28.4 at the drop) with a sliding fit; side stubs
+        // (1.85/side) + N/S walls keep the 0.5 wing overlap seal, seeds
+        // funnel into the pocket with no spill path. Trough (HW 3.0)
+        // stays centered under the bore (bore +-5). The WEST U slot is
+        // the side inlet: full-U tape enters from the west transit,
+        // supplied TO the pipe clear of the wheel.
+        fold_slot_hw = fold_width/2 + tape_bend_radius + tape_thick + tolerance + 1.0; // 6.45
+        fold_slot_top = 29.6; // local z: clears the full-U kink top (~28.4)
+        translate([tube_x0 - epsilon, -(cheek_in + 0.5) - epsilon, 19.7])
             cube([bore_x0 - tube_x0 + 2*epsilon, 2*(cheek_in + 0.5) + 2*epsilon, 1.0]);
-        translate([bore_x1 - epsilon, -(cheek_in + 0.5) - epsilon, 25.7])
+        translate([bore_x1 - epsilon, -(cheek_in + 0.5) - epsilon, 19.7])
             cube([tube_x1 - bore_x1 + 2*epsilon, 2*(cheek_in + 0.5) + 2*epsilon, 1.0]);
-        translate([tube_x0 - epsilon, -fold_slot_hw, 26.7 - epsilon])
-            cube([bore_x0 - tube_x0 + 2*epsilon, 2*fold_slot_hw, fold_slot_top - 26.7 + epsilon]);
-        translate([bore_x1 - epsilon, -fold_slot_hw, 26.7 - epsilon])
-            cube([tube_x1 - bore_x1 + 2*epsilon, 2*fold_slot_hw, fold_slot_top - 26.7 + epsilon]);
+        translate([tube_x0 - epsilon, -fold_slot_hw, 20.7 - epsilon])
+            cube([bore_x0 - tube_x0 + 2*epsilon, 2*fold_slot_hw, fold_slot_top - 20.7 + epsilon]);
+        translate([bore_x1 - epsilon, -fold_slot_hw, 20.7 - epsilon])
+            cube([tube_x1 - bore_x1 + 2*epsilon, 2*fold_slot_hw, fold_slot_top - 20.7 + epsilon]);
         // Cover inner-face groove (v14 YELLOW: w7 x d0.8 along 120..270 arc,
         // matches drum 6-cavity track for wheel-to-frame positioning ONLY
         // (NOT seed drive); shallow guide, channel stays smooth).
@@ -768,6 +797,11 @@ module u_channel_shroud() {
     inner_hw = (paper_width + 2*tolerance)/2;    // 13
     outer_hw = inner_hw + wall;                  // 15
     top_t = 2;                                   // top plate 32..34
+    slot_hw = 6.45;                              // v31: central top slot passes
+                                                 // the transit walls (5.35)
+                                                 // + shoulder kinks (6.3)
+    assert(outer_hw - slot_hw >= 6,
+           str("u_channel_shroud: top strips must stay printable (>=6): ", outer_hw - slot_hw));
     port_d = 10;
     port_z = 18;
     difference() {
@@ -776,9 +810,12 @@ module u_channel_shroud() {
             for (s=[-1,1])
                 translate([0, s > 0 ? inner_hw : -outer_hw, 0])
                     cube([shroud_len, wall, shroud_h]);
-            // Top plate (ends stay open 0..32 for the tape)
-            translate([0, -outer_hw, shroud_h - top_t])
-                cube([shroud_len, 2*outer_hw, top_t]);
+            // Top plate (ends stay open 0..32 for the tape; v31 central
+            // slot full length passes the transit walls, strips cover
+            // the wings on both sides)
+            for (s=[-1,1])
+                translate([0, s > 0 ? slot_hw : -outer_hw, shroud_h - top_t])
+                    cube([shroud_len, outer_hw - slot_hw, top_t]);
             // Sole flanges (mounting feet, solid, min_z=0)
             for (s=[-1,1])
                 translate([0, s > 0 ? outer_hw : -outer_hw - 4, 0])
@@ -989,62 +1026,74 @@ module folding_plow() {
 }
 
 // ============================================================
-// 7b. Seed tape with center U-fold bend (v28 true mimic, v30 upstream).
+// 7b. Seed tape with center U-fold bend (v28 true mimic, v31 west).
 // Local frame: x 0..tape_len, y centred 0, z 0..fold-top, min_z=0.
 // Flat paper_width ribbon full length (single-layer trough floor) +
-// U-fold channel fused on top over the fold zone (local x
-// fold_start-tape_x0 = 81, length fold_len = 33, world 67..100): bottom edges at +-hw rise via
-// quarter-arc sides R=tape_bend_radius sweeping tape_fold_angle, then
-// straight vertical walls tape_fold_wall, then a reverse S-shoulder per
-// side (outward kink + foot landing back on the ribbon wings so the
-// sheet reads continuous, no floating free edge). Fold depth tapers
-// along X (tape_n_x steps, scale 0.15->1.0 W->E: shallow flat-entry,
-// full-U exit = chamfered entry). Ribbon boxes centered ON the fold
+// U-fold channel fused on top: FORMING taper over local x
+// fold_start-tape_x0 = 51 (world 37..70, W-shallow->E-full) then a
+// STRAIGHT full-U transit (same section, no taper) local 84..140
+// (world 70..126, through the shroud slot, under the drum with air
+// gap, through the drop-tube bore to the plow mouth): bottom edges at
+// +-hw rise via quarter-arc sides R=tape_bend_radius sweeping
+// tape_fold_angle, then straight vertical walls tape_fold_wall, then a
+// reverse S-shoulder per side (outward kink + foot landing back on the
+// ribbon wings so the sheet reads continuous, no floating free edge).
+// Fold depth tapers along X in forming (tape_n_x steps, scale
+// 0.15->1.0 W->E: shallow flat-entry, full-U exit = chamfered entry);
+// transit holds sc=1. Ribbon boxes centered ON the fold
 // path (thickness +-0.2) with epsilon overlap so the union stays
 // manifold, never zero-thickness.
 // Allowed modules only: union/cube/for/if/translate/rotate.
 // ============================================================
 module seed_tape_bend() {
-    hw = fold_width/2;                 // 3.0 trough bottom half-width
-    r = tape_bend_radius;              // 1.75
-    a = tape_fold_angle;               // 90 = vertical walls (full U)
-    sh_r = tape_shoulder_r;            // 1.5 reverse S-kink radius
-    fx0 = fold_start - tape_x0;        // 81: fold segment local x (world 67..100)
-    base_top = tape_thick;             // 0.4: ribbon top (trough floor, single layer)
-    cz = base_top + r;                 // arc center height at full depth
+    fx0 = fold_start - tape_x0;        // 51: forming segment local x (world 37..70)
     dx = fold_len/tape_n_x;
+    tx0 = fold_end - tape_x0;          // 84: transit local x (world 70..126)
+    n_t = ceil(transit_len/4);         // ~4mm straight chunks
+    dx_t = transit_len/n_t;
     union() {
         // Flat ribbon full length (base min_z=0, single-layer floor)
         translate([0, -paper_width/2, 0])
             cube([tape_len, paper_width, tape_thick]);
-        // Fold sides: per-side full-depth path, tapered per X step.
-        // Path per side s (full depth): arc (n facets) from the ribbon
-        // top at [s*hw, base_top] sweeping outward-up, vertical wall,
-        // shoulder kink (outward+slightly up) then foot back down onto
-        // the ribbon wing at [s*(hw+r+2.5), base_top].
-        for (s=[-1,1])
-            for (xi=[0:tape_n_x-1]) {
-                sc = 0.15 + 0.85*(xi + 0.5)/tape_n_x;  // W shallow -> E full
-                x0 = fx0 + xi*dx;
-                // arc facets
-                for (i=[0:tape_n_arc-1]) {
-                    t0 = -90 + i*a/tape_n_arc;
-                    t1 = -90 + (i+1)*a/tape_n_arc;
-                    p0 = [s*(hw + r*cos(t0)), base_top + (r + r*sin(t0))*sc];
-                    p1 = [s*(hw + r*cos(t1)), base_top + (r + r*sin(t1))*sc];
-                    seg_ribbon_taper(x0, dx, p0, p1);
-                }
-                te = a - 90;  // arc end angle (0 = vertical tangent)
-                pa = [s*(hw + r*cos(te)), base_top + (r + r*sin(te))*sc];
-                wd = [-s*sin(te), cos(te)];  // tangent dir at arc end
-                pb = [pa[0] + wd[0]*tape_fold_wall*sc, pa[1] + wd[1]*tape_fold_wall*sc];
-                seg_ribbon_taper(x0, dx, pa, pb);
-                // reverse S-shoulder: kink outward+up, then foot down to wing
-                pk = [pb[0] + s*sh_r*0.9, pb[1] + sh_r*0.5*sc];
-                pf = [s*(hw + r + 2.5), base_top];
-                seg_ribbon_taper(x0, dx, pb, pk);
-                seg_ribbon_taper(x0, dx, pk, pf);
-            }
+        // Forming taper: W shallow -> E full-U exit
+        for (xi=[0:tape_n_x-1])
+            fold_section(fx0 + xi*dx, dx, 0.15 + 0.85*(xi + 0.5)/tape_n_x);
+        // Straight full-U transit (forming exit -> plow mouth via pipe)
+        for (ti=[0:n_t-1])
+            fold_section(tx0 + ti*dx_t, dx_t, 1);
+    }
+}
+
+// Full-U cross-section sweep over X-span [x0, x0+dx+eps] at depth
+// scale sc (sc=1 full-U, sc<1 shallow forming). Per side s: arc
+// (n facets) from the ribbon top at [s*hw, base_top] sweeping
+// outward-up, vertical wall, shoulder kink (outward+slightly up) then
+// foot back down onto the ribbon wing at [s*(hw+r+2.5), base_top].
+module fold_section(x0, dx, sc) {
+    hw = fold_width/2;                 // 3.0 trough bottom half-width
+    r = tape_bend_radius;              // 1.75
+    a = tape_fold_angle;               // 90 = vertical walls (full U)
+    sh_r = tape_shoulder_r;            // 1.5 reverse S-kink radius
+    base_top = tape_thick;             // 0.4: ribbon top (trough floor, single layer)
+    for (s=[-1,1]) {
+        // arc facets
+        for (i=[0:tape_n_arc-1]) {
+            t0 = -90 + i*a/tape_n_arc;
+            t1 = -90 + (i+1)*a/tape_n_arc;
+            p0 = [s*(hw + r*cos(t0)), base_top + (r + r*sin(t0))*sc];
+            p1 = [s*(hw + r*cos(t1)), base_top + (r + r*sin(t1))*sc];
+            seg_ribbon_taper(x0, dx, p0, p1);
+        }
+        te = a - 90;  // arc end angle (0 = vertical tangent)
+        pa = [s*(hw + r*cos(te)), base_top + (r + r*sin(te))*sc];
+        wd = [-s*sin(te), cos(te)];  // tangent dir at arc end
+        pb = [pa[0] + wd[0]*tape_fold_wall*sc, pa[1] + wd[1]*tape_fold_wall*sc];
+        seg_ribbon_taper(x0, dx, pa, pb);
+        // reverse S-shoulder: kink outward+up, then foot down to wing
+        pk = [pb[0] + s*sh_r*0.9, pb[1] + sh_r*0.5*sc];
+        pf = [s*(hw + r + 2.5), base_top];
+        seg_ribbon_taper(x0, dx, pb, pk);
+        seg_ribbon_taper(x0, dx, pk, pf);
     }
 }
 
@@ -1074,10 +1123,10 @@ module seg_ribbon(fx0, p0, p1) {
     }
 }
 
-// Stainless former collar (v28 visual, v30 at the drop): transverse shoe
-// with a U notch straddling the trough at the fold exit (full-U end,
-// world x ~97 just west of the drop). Two feet ride the
-// flat wings + top bridge clears the pocket; the notch (inner width
+// Stainless former collar (v28 visual, v31 at the forming exit):
+// transverse shoe with a U notch straddling the full-U section at the
+// forming exit (world x ~67, 5+ clear of the drum face). Two feet ride
+// the flat wings + top bridge clears the pocket; the notch (inner width
 // fold_width+2*tol, depth wall+r) forms the paper around the trough.
 // Visual in assembly only (not a separate print export).
 module former_collar() {
@@ -1368,14 +1417,16 @@ module animated_assembly() {
         seed_cradle();
 
     // Seed tape with center U-fold (v28 true mimic: narrow 6 trough,
-    // R1.75, 5.5 walls, S-shoulders, W-shallow->E-full taper over the
-    // fold zone, world x 67..100 ending at the drop under the drum;
-    // static in CAD, scrolls in the viewer; single-layer floor, min_z=0).
+    // R1.75, 5.5 walls, S-shoulders; v31: forming 37..70 fully west of
+    // the drum face + straight full-U transit 70..126 under the drum
+    // (1.6 air gap) through the drop bore to the plow mouth; static in
+    // CAD, scrolls in the viewer; single-layer floor, min_z=0).
     translate([tape_x0, chassis_width/2, tape_z])
         seed_tape_bend();
 
-    // Former collar (v28 visual, v30 at the drop): stainless transverse
-    // shoe with U notch straddling the full-U fold exit (world x ~97).
+    // Former collar (v28 visual, v31 at the forming exit): stainless
+    // transverse shoe with U notch straddling the full-U section at the
+    // forming exit (world x ~67, clear of the wheel).
     translate([fold_end - 3, chassis_width/2, tape_z + tape_thick])
         former_collar();
 
@@ -1428,8 +1479,9 @@ if (part_to_render == "all") {
     chassis();
 } else if (part_to_render == "hopper") {
     // v29 printable: standalone export drops to print base min_z=0
-    // (local tube bottom 25.9 -> 0; was 26.5); assembly branch above unaffected.
-    translate([0, 0, -25.9]) hopper_body();
+    // (local tube bottom 19.9 -> 0, v31 lowered lane; was 26.5/25.9/20.9);
+    // assembly branch above unaffected.
+    translate([0, 0, -19.9]) hopper_body();
 } else if (part_to_render == "shroud") {
     u_channel_shroud();
 } else if (part_to_render == "cartridge") {

@@ -1,6 +1,49 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v30**
+**Version: v31**
+
+## v31 Fold-Under-Drum Regression Fix - 2026-09-17
+
+1. **Regression**: v30 put the forming zone 67..100 exactly under the
+   drum wheel (drum x=100 R25 spans 75..125, bottom z=35) while the
+   full-U walls rise to world 38.1 — measured 3.1mm manifold merge of
+   fold walls INTO the drum disc (Playwright end-on isolate shot
+   v31_base_endon + analytic proof). The v30 shroud overlap (fold
+   67..84 inside the 58..84 tunnel, walls 37.6 vs top plate 32..34)
+   pierced the shroud top too. Requirement: U-bent tape is SUPPLIED TO
+   the exit (drop) pipe through its side inlet, never merged with the
+   wheel. Fix (a): forming station fully clear west of the drum face.
+2. **Verified coords**: forming 37..70 (`fold_start`=37, `fold_len`=33
+   kept, `fold_end`=70 <= 75-4 face-4); straight full-U transit
+   70..126 (`transit_end`=`plow_start`, same R1.75/trough-6/wall-5.5
+   section, no taper) runs through the shroud slot, under the drum
+   with >=1.6 air gap, into the tube WEST side inlet (93), through the
+   bore (seed drops at x=100 into the already-folded pocket), on to
+   the plow mouth (126) which closes it. Lane `tape_z` 30->24:
+   transit top world 32.6 vs drum bottom 35 = 2.4 (flange rings 1.6+);
+   flat ribbon top 24.4; tube bottom world 23.9 = 0.5 seal overlap
+   kept. Drop/seed feed still at drum 6-o'clock (x=100); gravity path
+   untouched.
+3. **CAD** (`seed_tape_machine_v2.scad` only): new `transit_end/
+   transit_len` params; `fold_section(x0,dx,sc)` helper (forming taper
+   loop + transit sc=1 loop, ~4mm chunks); `hopper_body()` tube_z0
+   25.9->19.9, wing band 25.7->19.7, U slot 26.7..35.0->20.7..29.6
+   (half-width 5.45->6.45 to pass the shoulder kinks), drop window
+   29..42->19..42 (local), export offset -25.9->-19.9;
+   `u_channel_shroud()` top plate gains central slot (half 6.45, full
+   length, strips 8.55/side printable) for the transit walls+kinks; collar seat
+   stays `fold_end-3` (67, clear of wheel); bore 10 / outer 14, R1.75,
+   trough 6, walls 5.5, min_z=0, $fn=60, tol=0.3 untouched; fail-loud
+   asserts (forming exit west of face, entry at nip 35..45, transit =
+   plow mouth + fits ribbon, transit top+1 <= drum bottom).
+4. **Viewer** (`web/index.html` only): forming 37..70 + transit to 126
+   (`tapeFoldSection`, 8mm chunks), lane `TAPE_Z`=24, `_tapeFold`
+   gains `transitEnd/laneZ`, `_dropSeal` 23.9/24.4, dropSeed path
+   lowered; `ASSET_V` 17->18, hopper+shroud+tape GLBs rebuilt.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L hopper > drum > shroud > roller+crank kept;
+   port 9099 only.
 
 ## v30 Fold-Before-Drop Order Fix - 2026-09-17
 

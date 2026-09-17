@@ -329,18 +329,23 @@
    crankSpinner.position.set(0, 0, 0);
    crankMount.add(crankSpinner);
 
-  // ---------- tape ribbon with center U-fold bend (procedural, v28 true mimic, v30 upstream) ----------
-  // Mirrors seed_tape_bend() in seed_tape_machine_v2.scad: flat 25.4
-  // ribbon full length (scrolls with crank) + static tapered U-fold
-  // channel (trough bottom 6.0/HW 3.0 + R1.75 quarter arcs + 5.5 walls +
+  // ---------- tape ribbon with center U-fold bend (procedural, v28 true mimic, v31 west + transit) ----------
+  // Mirrors seed_tape_bend()/fold_section() in seed_tape_machine_v2.scad:
+  // flat 25.4 ribbon full length (scrolls with crank) + static FORMING
+  // taper (trough bottom 6.0/HW 3.0 + R1.75 quarter arcs + 5.5 walls +
   // reverse S-shoulder kink + foot back to the wings, single-layer floor,
-  // depth 0.15->1.0 W->E over the fold zone) + former collar shoe visual
-  // (root-local x 67..100, ride height y=30, centred z=-30; full-U exit
-  // at x=100 under the drop tube so the seed falls into the folded pocket).
+  // depth 0.15->1.0 W->E over 37..70) + straight full-U TRANSIT (same
+  // section, no taper, 70..126 through the shroud slot, under the drum
+  // with air gap, into the drop-tube side inlet, through the bore to the
+  // plow mouth) + former collar shoe visual (root-local forming exit
+  // x=70, ride height y=25, centred z=-30; seed falls into the folded
+  // pocket at the x=100 bore).
   var TAPE_LEN = 180; // v28: unified with CAD tape_len (was 320 viewer-only)
-  var TAPE_FOLD_START = 67;  // v30: = fold_start in .scad (was plow_start 126)
-  var TAPE_FOLD_LEN = 33;    // v30: = fold_len in .scad (forming length kept)
-  var TAPE_FOLD_END = 100;   // v30: = fold_end = drop x (full-U exit at drop)
+  var TAPE_FOLD_START = 37;  // v31: = fold_start in .scad (forming at roller nip)
+  var TAPE_FOLD_LEN = 33;    // v31: = fold_len in .scad (forming length kept)
+  var TAPE_FOLD_END = 70;    // v31: = fold_end (forming exit, 5 clear of drum face 75)
+  var TAPE_TRANSIT_END = 126; // v31: = transit_end = plow_start (straight full-U to plow mouth)
+  var TAPE_Z = 24;           // v31: = tape_z (lane lowered; transit top 32.6 clears drum 35/flanges 33.5)
   var TAPE_LEN = 180; // v28: unified with CAD tape_len (was 320 viewer-only)
   var TAPE_BEND_R = 1.75;    // = tape_bend_radius in .scad
   var TAPE_FOLD_ANG = Math.PI / 2; // = tape_fold_angle 90deg (full U)
@@ -360,23 +365,25 @@
   var tapeGroup = new THREE.Group();
   tapeGroup.add(tape);
   root.add(tapeGroup);
-  // U-fold channel (static at the fold zone 67..100: tape slides through
-  // the fold, fold walls ride on the ribbon top; full-U exit at x=100
-  // under the drop tube).
-  // Local frame: x centred 0 (length 33), y up from ribbon top (0.4),
-  // z across (centred 0). Single-layer floor (no double slab): the flat
-  // ribbon IS the trough bottom. Depth tapers W->E (shallow entry to
-  // full-U exit); shoulders kick outward (reverse S) with feet landing
-  // back on the wings. Arc centers (z=+-3.0, y=0.4+1.75=2.15) at full depth.
+  // U-fold channel (static: forming taper 37..70 + straight full-U
+  // transit 70..126; tape slides through, fold walls ride on the ribbon
+  // top; transit runs under the drum with air gap into the drop-tube
+  // side inlet, through the bore to the plow mouth).
+  // Local frame: x centred on the forming zone, y up from ribbon top
+  // (0.4), z across (centred 0). Single-layer floor (no double slab):
+  // the flat ribbon IS the trough bottom. Forming depth tapers W->E
+  // (shallow entry to full-U exit); transit holds full-U; shoulders kick
+  // outward (reverse S) with feet landing back on the wings. Arc centers
+  // (z=+-3.0, y=0.4+1.75=2.15) at full depth.
   var tapeFoldGroup = new THREE.Group();
-  tapeFoldGroup.position.set(TAPE_FOLD_START + TAPE_FOLD_LEN / 2, 30, -30);
+  tapeFoldGroup.position.set(TAPE_FOLD_START + TAPE_FOLD_LEN / 2, TAPE_Z, -30);
   var tapeArcMeshes = [];
   var TAPE_DX = TAPE_FOLD_LEN / TAPE_N_X;
-  function tapeFoldSeg(p0, p1, xc) { // p = [z, y] cross-section path points
+  function tapeFoldSeg(p0, p1, xc, dx) { // p = [z, y] cross-section path points
     var dz = p1[0] - p0[0], dy = p1[1] - p0[1];
     var seg = Math.sqrt(dz * dz + dy * dy);
     if (seg <= 0) return null;
-    var m = new THREE.Mesh(new THREE.BoxGeometry(TAPE_DX + 0.1, 0.4, seg + 0.1), tapeMat);
+    var m = new THREE.Mesh(new THREE.BoxGeometry((dx || TAPE_DX) + 0.1, 0.4, seg + 0.1), tapeMat);
     m.position.set(xc, (p0[1] + p1[1]) / 2, (p0[0] + p1[0]) / 2);
     m.rotation.x = Math.atan2(-dy, dz);
     m.castShadow = true;
@@ -384,17 +391,15 @@
     return m;
   }
   var baseTop = 0.4, czF = baseTop + TAPE_BEND_R;
-  [-1, 1].forEach(function (s) {
-    for (var xi = 0; xi < TAPE_N_X; xi++) {
-      var sc = 0.15 + 0.85 * (xi + 0.5) / TAPE_N_X; // W shallow -> E full
-      var xc = -TAPE_FOLD_LEN / 2 + (xi + 0.5) * TAPE_DX;
-      var scY = function (y) { return baseTop + (y - baseTop) * sc; };
+  function tapeFoldSection(xc, sc, dx) { // one cross-section sweep at depth sc
+    var scY = function (y) { return baseTop + (y - baseTop) * sc; };
+    [-1, 1].forEach(function (s) {
       var prev = null;
       for (var i = 0; i <= TAPE_N_ARC; i++) {
         // Arc starts at the ribbon top (angle -PI/2) sweeping outward-up.
         var t = -Math.PI / 2 + i * TAPE_FOLD_ANG / TAPE_N_ARC;
         var p = [s * (TAPE_FOLD_HW + TAPE_BEND_R * Math.cos(t)), scY(czF + TAPE_BEND_R * Math.sin(t))];
-        if (prev) tapeArcMeshes.push(tapeFoldSeg(prev, p, xc));
+        if (prev) tapeArcMeshes.push(tapeFoldSeg(prev, p, xc, dx));
         prev = p;
       }
       var te = TAPE_FOLD_ANG - Math.PI / 2; // arc end angle
@@ -402,14 +407,27 @@
         scY(czF + TAPE_BEND_R * Math.sin(te))];
       var wd = [-s * Math.sin(te), Math.cos(te)];
       var pb = [pa[0] + wd[0] * TAPE_FOLD_WALL * sc, pa[1] + wd[1] * TAPE_FOLD_WALL * sc];
-      tapeArcMeshes.push(tapeFoldSeg(pa, pb, xc));
+      tapeArcMeshes.push(tapeFoldSeg(pa, pb, xc, dx));
       // reverse S-shoulder: kink outward+up, then foot back down to the wing
       var pk = [pb[0] + s * TAPE_SH_R * 0.9, pb[1] + TAPE_SH_R * 0.5 * sc];
       var pf = [s * (TAPE_FOLD_HW + TAPE_BEND_R + 2.5), baseTop];
-      tapeArcMeshes.push(tapeFoldSeg(pb, pk, xc));
-      tapeArcMeshes.push(tapeFoldSeg(pk, pf, xc));
+      tapeArcMeshes.push(tapeFoldSeg(pb, pk, xc, dx));
+      tapeArcMeshes.push(tapeFoldSeg(pk, pf, xc, dx));
+    });
+  }
+  (function () {
+    var groupX = TAPE_FOLD_START + TAPE_FOLD_LEN / 2; // 53.5 forming centre
+    for (var xi = 0; xi < TAPE_N_X; xi++) {
+      var sc = 0.15 + 0.85 * (xi + 0.5) / TAPE_N_X; // W shallow -> E full
+      tapeFoldSection(-TAPE_FOLD_LEN / 2 + (xi + 0.5) * TAPE_DX, sc, TAPE_DX);
     }
-  });
+    // Straight full-U transit (forming exit -> plow mouth via pipe), 8mm chunks.
+    var TAPE_T_DX = 8;
+    for (var wx = TAPE_FOLD_END; wx < TAPE_TRANSIT_END - 0.01; wx += TAPE_T_DX) {
+      var wdx = Math.min(TAPE_T_DX, TAPE_TRANSIT_END - wx);
+      tapeFoldSection(wx + wdx / 2 - groupX, 1, wdx);
+    }
+  })();
   // Former collar shoe visual (stainless transverse bridge with U notch
   // straddling the full-U exit end, mirrors former_collar() in .scad).
   var collarMat = new THREE.MeshStandardMaterial({ color: 0xb9c0c7, roughness: 0.35, metalness: 0.85 });
@@ -426,7 +444,7 @@
   bridge.position.set(0, baseTop + notchD + 1.0, 0);
   bridge.castShadow = true;
   collarGroup.add(bridge);
-  collarGroup.position.set(TAPE_FOLD_LEN / 2 - 3, 0, 0); // fold exit end (v30: at the drop)
+  collarGroup.position.set(TAPE_FOLD_LEN / 2 - 3, 0, 0); // forming exit end (v31: world 67)
   tapeFoldGroup.add(collarGroup);
   root.add(tapeFoldGroup);
   // Bend proof hooks: arc mesh centres must sit R=1.75 from the arc
@@ -435,7 +453,8 @@
     group: tapeFoldGroup, flat: tapeGroup, arcMeshes: tapeArcMeshes,
     R: TAPE_BEND_R, hw: TAPE_FOLD_HW, cz: czF,
     wall: TAPE_FOLD_WALL, nArc: TAPE_N_ARC, tapeLen: TAPE_LEN,
-    foldStart: TAPE_FOLD_START, foldEnd: TAPE_FOLD_END, dropX: 100
+    foldStart: TAPE_FOLD_START, foldEnd: TAPE_FOLD_END,
+    transitEnd: TAPE_TRANSIT_END, laneZ: TAPE_Z, dropX: 100
   };
 
   // ---------- seed drop effect ----------
@@ -533,7 +552,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 17;
+  var ASSET_V = 18;
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -796,27 +815,29 @@
     drumPivot.rotation.z = crankAngle * DRUM_RATIO;
 
     // Tape ribbon: advance per crank rev = PI*20 = 62.83mm
-    // Path: spool(x=-6, v22 west) -> fold(67..100) -> drop(x=100) ->
-    //   closer plow(126-159) -> rollers v21 west(x=40)
-    // Drum center root-local y=60, radius 25 -> tape runs at y=30 under the
-    // drum (v12: sealed drop — bottom-center tube exit at y=29.9, 0.5
-    // into the ribbon top 30.4, bore 10 / outer 14).
-    // v25: flat ribbon scrolls; U-fold channel stays static at the fold
-    // zone 67..100 (v30: tape slides through the fold, full-U exit under
-    // the drop; fold walls ride on the ribbon top).
+    // Path: spool(x=-6, v22 west) -> roller nip (40) -> forming (37..70)
+    // -> transit (70..126, under drum with gap, through pipe bore at 100)
+    // -> closer plow(126-159). Rollers v21 west(x=40).
+    // Drum center root-local y=60, radius 25 -> tape runs at y=24 under
+    // the drum (v31 lane: bottom-center tube exit at y=23.9, 0.5 into
+    // the ribbon top 24.4, bore 10 / outer 14).
+    // v25: flat ribbon scrolls; U-fold channel stays static (v31: tape
+    // slides through the forming taper, full-U transit holds the pocket
+    // under the drum into the pipe; fold walls ride on the ribbon top).
     var tapeX = 100 + mod(advance, TAPE_PER_CRANK_REV);
-    tapeGroup.position.set(tapeX, 30, -30);
+    tapeGroup.position.set(tapeX, TAPE_Z, -30);
 
     // Seed drop at hopper BOTTOM-CENTER tube exit (v29: bore centre world
-    // x=100, bore 10 / outer 14, bottom y=29.9 sealing 0.5 into the tape
-    // ribbon wings top 30.4; folded tape threads through E/W U-notches,
-    // N/S walls seal the sides — no spill path). v30: the seed falls
-    // inside the bore into the ALREADY-FOLDED U pocket (trough centred
-    // under the bore, fold walls touching the pipe), centred z=-30.
+    // x=100, bore 10 / outer 14, bottom y=23.9 sealing 0.5 into the tape
+    // ribbon wings top 24.4; folded tape threads through E/W U-notches
+    // (west notch = side inlet for the transit), N/S walls seal the
+    // sides — no spill path). v31: the seed falls inside the bore into
+    // the ALREADY-FOLDED transit pocket (trough centred under the bore,
+    // transit walls passing the notch flanks), centred z=-30.
     // Seal proof constants (mirror hopper_body() in .scad).
-    window._dropSeal = { bore: 10, outer: 14, tubeBottomWorld: 29.9, ribbonTop: 30.4, dropX: 100 };
+    window._dropSeal = { bore: 10, outer: 14, tubeBottomWorld: 23.9, ribbonTop: 24.4, dropX: 100 };
     var phase = mod(revs * DRUM_RATIO * 6, 1); // v13: 6 drops per drum rev (6 cavities)
-    dropSeed.position.set(100, 31.5 - phase * 1.1, -30);
+    dropSeed.position.set(100, 25.5 - phase * 1.1, -30);
 
     var crankRevs = revs; // v21: crank turns with the roller (1 rev per crank rev)
     stCrank.textContent = crankRevs.toFixed(2);
