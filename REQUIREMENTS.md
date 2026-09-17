@@ -1,6 +1,36 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v31**
+**Version: v32**
+
+## v32 Viewer Displacement Audit Fix - 2026-09-17
+
+1. **Displacements found** (Playwright world-box audit + trimesh GLB
+   ground truth, v31 geometry itself correct): (D1) hopper assembly
+   floated +6mm — viewer child still `[0,25.9,0]` (v29 export drop)
+   while v31 CAD exports `-19.9`: tube bottom sat at world 29.9 vs
+   intended 23.9 (5.7mm spill gap over the ribbon), cover ring ran
+   6mm eccentric to the drum (mouth gap opened at top, clipped the
+   wheel at the bottom lip), hopper top 94.5 vs 88.5. (D2) flat
+   ribbon rode 0.2 low (procedural mesh centred on the lane: top
+   24.2 vs seal reference 24.4, would have left only 0.3 overlap
+   after D1). v31 verify passed because `_dropSeal` asserts constants,
+   not mesh placement.
+2. **Fix (viewer only, CAD untouched)**: hopper child
+   `[0,25.9,0]`->`[0,19.9,0]` (re-seats drum centre, tube bottom
+   23.9 = 0.5 into ribbon top 24.4, cover coaxial again, bore 10 /
+   outer 14 kept); tape mesh `+0.2 Y` (ribbon 24.0..24.4, exact 0.5
+   seal overlap); stale `y=25` ride-height comment corrected.
+3. **Verified NOT displaced** (kept): drum [100,60] R25, roller 40,
+   crank [40,-8,60] back wall, shroud 58..84 + slot 6.45, forming
+   37..70 + transit 70..126 + collar 67, plow 126..159, spool -6,
+   R->L order, back gears + 9° phase, $fn=60, tol=0.3, min_z=0 all
+   GLBs (trimesh proof).
+4. **Viewer**: `ASSET_V` 18->19, all GLBs regenerated (identical
+   geometry, cache-busted); new `verify_v32.js` proves placement
+   from live mesh bounds (tube bottom 23.9±0.15, ribbon top
+   24.4±0.05, overlap 0.5±0.2, hopper centre on drum axle ±0.15),
+   not constants.
+5. **Frozen**: v1 scad + web/backup/ untouched; port 9099 only.
 
 ## v31 Fold-Under-Drum Regression Fix - 2026-09-17
 

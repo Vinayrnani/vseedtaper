@@ -1,5 +1,11 @@
 # Requirements Change Log
 
+## v32 — 2026-09-17
+- Viewer displacement audit fix (CAD untouched): hopper child +25.9->+19.9 (floated +6: tube 29.9 vs 23.9, 5.7 spill gap, cover eccentric to drum; now 0.5 seal overlap, coaxial), tape mesh +0.2 Y (ribbon top 24.4 exact); drum/roller/crank/shroud/fold/transit/plow/spool verified undisplaced; ASSET_V 19, GLBs rebuilt, verify_v32.js proves live mesh placement
+
+## v31 — 2026-09-17
+- Fold-under-drum regression fix: forming 37..70 fully west of drum face (was 67..100 merged into wheel), straight full-U transit 70..126 through shroud slot under drum (1.6+ air gap) into drop-tube west inlet, bore to plow mouth; lane 30->24 (transit top 32.6 vs drum 35), tube re-sealed 23.9/24.4, bore 10/outer 14 kept, ASSET_V 18
+
 ## v29 — 2026-09-17
 - Sealed drop tube (no spill): bore 9->10 (-5..5, 8mm clearance), outer 18->14 (-7..7, 2.0 walls), tube bottom 26.5->25.9 local (world 29.9, 0.5 overlap into ribbon top 30.4); E/W bottom-open tape notches (25.7..26.7) thread the flat ribbon at x=100 (fold lives 126..159), N/S walls seal full-height; drop window to bore 10, hopper export -25.9 (min_z=0, watertight), fail-loud asserts; viewer hopper child +25.9, dropSeed 31.5->30.4, _dropSeal hooks, ASSET_V 16, 13 GLBs rebuilt
 
