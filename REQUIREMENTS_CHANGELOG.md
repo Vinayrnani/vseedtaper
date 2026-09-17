@@ -1,5 +1,11 @@
 # Requirements Change Log
 
+## v42 — 2026-09-17
+- True 6-fold second stage (user clarification: tape ALREADY U-bent by first stage): six_turner reworked 126..159 into U-accept entry + twin edge-curl horns (r2.5) + inner tongue diving crown->bore with inner roll (r2.2, post-cut union) folding 2 U edges inside + necked exit ring (r5.5/bore r3.2) reading as 6 end-on; main bore r4.2+1.2 kept (dia 8.4 clears 7.8), footprint/tabs/stations kept (lip 160.35 -> twister gap 7.65); 5 new asserts; viewer relabel two-stage + _sixTurner stages/entry/exit hooks, ASSET_V 26, GLBs rebuilt
+
+## v41 — 2026-09-17
+- 6-turner + gear-only + mounts + clutch build (v39/v40 spec): CAD six_turner (6-curl r6.5/bore r4.2+1.2 offset, plow footprint kept, plow alias + turner branch, mouth 26 after drop) + cushioned pull sleeve (r10.15, 1:1) + take-up slip clutch (discs+spring+nut, h 41) + chassis pull bridge + 2 idler spurs + mount comments + 8 fail-loud asserts; viewer relabel/rubber pull/takeup 20.5/hooks/comments, ASSET_V 25, GLBs rebuilt
+
 ## v40 — 2026-09-17
 - Mounting layout for all components (bottom: 6-turner+wind-up, side: twister+rollers+drum, top: hopper/shroud/spools); 6-turner positioned after drop point; wind-up slip clutch on reel axle
 

@@ -58,3 +58,44 @@ gap 9) -> pull 194 (184..204, gap 8) -> take-up 226/34 (210..242,
 gap 6); pull->take-up centres 32 apart vs radii sum 26 + tol 0.3 +
 margin 5 = 31.3. Chassis east 200->248 (len 262), tape 220->270
 (reaches 242). Angles above unchanged.
+
+## v39/v40 gear-only drive chain (NO belts anywhere)
+
+Crank-drives-everything via spur gears only (idler visuals fused to
+the chassis back-wall exterior; live proof = synced animation ratios):
+
+```
+crank_angle   = +720 * $t (+ 9° mesh phase)   # crank + lower roller shaft, 1 rev = 1 crank rev
+drum_angle    = -360 * $t                     # 40:20 mesh => crank->drum 2:1, drum 0.5x crank
+twister_angle = -360 * $t * 6                 # 6 orbits per drum rev via idler spur (1 bind per seed)
+pull_angle    = +/- (720 * $t + 9°)           # d20 cushioned nip 1:1 with roller (spacing driver)
+takeup_angle  = 1440 * $t                     # core d10 step-up: 2x crank winds the same linear tape
+```
+
+- Spacing unchanged: `PI * roller_dia * (drum_teeth/roller_teeth) / 6`
+  (cushioned nip is 1:1, sleeve OD ~d20; swap-gear table above still
+  applies for the 152.4 mm target).
+- 6-turner is passive (no drive — the pull nip drags the seeded tape
+  through the 6 curl which rolls the edges over).
+- Slip clutch (take-up axle): the geared base ratio stays 2x crank;
+  the friction discs slip as the pack diameter grows (fast when empty,
+  slips when full), holding tape tension constant without re-gearing.
+- Edge-to-edge steel X gaps (fail-loud in CAD): turner end 159 ->
+  twister 168..176 (gap 9, actual 7.65 with tab overhang) -> pull
+  183..205 incl. caps (gap 7) -> take-up 210..242 (gap 5).
+
+## v42 true 6-fold second stage (no ratio change — turner geometry only)
+
+- FIRST stage still makes the U (forming 37..70 + transit 70..126);
+  seed drops at x=100 into the OPEN U-pocket (lands flat first).
+- SECOND stage (6-turner 126..159, passive, no drive): entry U-accept
+  channel (x 0..12) takes the seeded U-section, twin edge-curl horns
+  (r2.5 at cy+-4.2, x 6..20) + inner tongue diving crown->bore with an
+  inner roll (r2.2, x 12..26 inside the bore) fold the 2 U edges
+  INSIDE into an overlapping roll, exit ring (r5.5/bore r3.2) necks it
+  near-closed — end-on cross-section reads as 6 (outer curl + inner
+  tongue), not a plain round tube. Main bore r4.2 (dia 8.4) still
+  clears the 7.8 pocket; footprint/tabs/posts/stations unchanged, so
+  all X gaps above hold (turner lip to 160.35 -> twister gap 7.65).
+- Angles/ratios above unchanged; pull nip still drags the tape
+  through the curl (spacing driver 1:1).

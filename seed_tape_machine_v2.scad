@@ -283,7 +283,57 @@ takeup_core_r = takeup_core_d/2;
 takeup_flange_r = 16;
 takeup_flange_t = 3;
 takeup_core_h = 28;
-takeup_h_total = takeup_core_h + takeup_flange_t; // 31: bottom flange 0..3 + core 0..31 + top 28..31
+// v40 slip clutch on the take-up axle (handles changing reel diameter:
+// fast when empty, slips when full). Stack rides ABOVE the top flange
+// in the export frame (print base stays min_z=0): pressure disc +
+// friction disc (the slip interface) + spring + hex nut. Disc r8 <
+// flange r16 so the station X envelope (210..242) is unchanged.
+clutch_disc_r = 8;
+clutch_disc_t = 2;
+clutch_spring_h = 3;
+clutch_nut_h = 3;
+clutch_stack = clutch_disc_t + clutch_disc_t + clutch_spring_h + clutch_nut_h; // 10
+takeup_h_total = takeup_core_h + takeup_flange_t + clutch_stack; // 41: bottom flange 0..3 + core 0..31 + top 28..31 + clutch 31..41
+
+// ============================================================
+// v39 6-turner (replaces the U-plow closing geometry) + v40 position.
+// The tape with seed passes through a 6-shaped curl that rolls the
+// tape edges over the seed (edge roller/roller former). Aliases keep
+// the v1-precedent footprint: turner_start/end == plow_start/end
+// (126..159, len 33, w 40) so part_to_render "plow" stays a valid
+// export name (compat) and "turner" is accepted too.
+// v40 POSITION: the turner sits a little AFTER the drop point
+// (drop_x=100, turner mouth 126: 26mm of flat landing zone) so the
+// seed lands flat first, then rolls through the 6 curl to fold.
+// ============================================================
+drop_x = drum_axle_x;             // 100: seed drop point (hopper bore centre)
+turner_start = plow_start;        // 126: 6-curl mouth (flat landing 100..126 first)
+turner_len = plow_len;            // 33
+turner_end = plow_end;            // 159
+turner_curl_r = 6.5;              // 6-curl outer radius (tape pocket 7.8 threads the bore)
+turner_curl_bore = 4.2;           // 6-curl bore radius (dia 8.4 clears the 7.8 pocket)
+turner_curl_off = 1.2;            // bore offset upward (thin top curl-over reads as "6")
+turner_curl_cz = 12;              // curl axis height above the turner base
+
+// ============================================================
+// v39 gear-only drive (NO belts anywhere): crank -> drum 2:1 via the
+// 40:20 mesh -> twister 6 orbits per drum rev via idler spur on a
+// back-wall layshaft -> vertical pull 1:1 (same d20 surface speed,
+// the spacing driver) -> wind-up step-up (core d10, 2x crank).
+// The idlers below are VISUALS fused to the chassis back-wall
+// exterior (bosses pass through the wall = side-mount story); the
+// live proof is the synced animation ratios + GEAR_RATIO.md.
+// vpull cushioned (v39): soft rubber/silicone sleeve visual over the
+// steel core (OD stays ~d20 => 1:1 kept), firm grip without crushing.
+// ============================================================
+idler1_x = 110;                   // drum-drive idler (20T, outside back wall, clear of crank orbit r50)
+idler1_z = 60;
+idler1_teeth = 20;
+idler2_x = 183;                   // twister-layshaft idler (12T, outside back wall, Y-gap 6.8 to pullA)
+idler2_z = 17;
+idler2_teeth = 12;
+vpull_sleeve_r = 10.15;           // cushioned sleeve outer (proud 0.15, under the r11 caps: envelope kept)
+vpull_sleeve_h = 16;
 
 // ============================================================
 // Spool cones
@@ -355,6 +405,23 @@ assert(tape_x0 + tape_len >= takeup_x + takeup_flange_r, str("tape ribbon must r
 assert(bind_x - 4 - plow_end >= 5, str("v38: twister west face (bind_x-4) must clear plow end by >=5: ", bind_x - 4 - plow_end));
 assert((pull_x - vpull_r) - (bind_x + 4) >= 5, str("v38: pull west face must clear twister east face by >=5: ", (pull_x - vpull_r) - (bind_x + 4)));
 assert((takeup_x - takeup_flange_r) - (pull_x + vpull_r) >= 5, str("v38: take-up west face must clear pull east face by >=5: ", (takeup_x - takeup_flange_r) - (pull_x + vpull_r)));
+// v39/v40 edge-to-edge station gaps (6-turner replaces the plow closer,
+// same footprint so the v38 numbers hold; restated on turner_* names):
+// turner_end 159 -> twister 168..176 (gap 9) -> pull 184..204 (gap 8)
+// -> take-up 210..242 (gap 6). Fail loud, never silent.
+assert(turner_start == plow_start && turner_end == plow_end && turner_len == plow_len,
+       "v39: 6-turner footprint must equal the plow footprint (compat + clearance inheritance)");
+assert(turner_start - drop_x >= 8,
+       str("v40: 6-turner mouth must sit a little AFTER the drop point (flat landing first): ", turner_start - drop_x));
+assert(bind_x - 4 - turner_end >= 5, str("v39: twister west face must clear 6-turner end by >=5: ", bind_x - 4 - turner_end));
+assert((pull_x - vpull_sleeve_r) - (bind_x + 4) >= 5, str("v39: cushioned pull west face must clear twister east face by >=5: ", (pull_x - vpull_sleeve_r) - (bind_x + 4)));
+assert((takeup_x - takeup_flange_r) - (pull_x + vpull_sleeve_r) >= 5, str("v39: take-up west face must clear cushioned pull east face by >=5: ", (takeup_x - takeup_flange_r) - (pull_x + vpull_sleeve_r)));
+assert(vpull_sleeve_r <= 10.3, str("v39: cushion sleeve must stay ~d20 (1:1 surface speed): ", vpull_sleeve_r));
+assert(takeup_core_d < roller_dia, "v39: wind-up must step UP vs the roller (core d10 < d20)");
+assert(clutch_stack == 10, str("v40: slip-clutch stack must be 10: ", clutch_stack));
+assert(clutch_disc_r < takeup_flange_r, "v40: clutch discs must stay inside the flange envelope (X gap kept)");
+assert(takeup_h_total == takeup_core_h + takeup_flange_t + clutch_stack,
+       str("v40: take-up export height must include the clutch stack: ", takeup_h_total));
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
 assert(crank_mount_x == roller_axle_x, str("crank_mount_x must be coaxial with roller axle: ", crank_mount_x));
 assert(crank_mount_y == -8, str("crank_mount_y must sit outside the back wall (-8): ", crank_mount_y));
@@ -540,6 +607,40 @@ module chassis() {
             for (side=[0,1])
                 bearing_block(takeup_x, takeup_z, bb_height_spool, false,
                               side == 0 ? 0 : chassis_width);
+            // v40 MOUNTING LAYOUT (parametric on the station X positions):
+            // BOTTOM mount: 6-turner (M3 holes below) + wind-up reel
+            //   (take-up bearing blocks above ride the base).
+            // SIDE mount: twister ring + pull rollers + drum (axles pass
+            //   through the chassis walls: axle holes + blocks below).
+            // TOP mount: hopper+shroud (slide rails + sole-flange M3) +
+            //   tape input spools (spool blocks feed from above).
+            // v40 pull top bridge (side-mount story for the vertical nip):
+            // cross bar fused wall-to-wall over the nip at pull_x with a
+            // top bearing cup over each roller axle (X 192..196 stays
+            // inside the pull envelope 184..204: no clearance change).
+            translate([pull_x - 2, 0, 32])
+                cube([4, chassis_width, 3]);
+            for (s=[-1,1])
+                translate([pull_x, chassis_width/2 + s*vpull_off, 29])
+                    cylinder(h=3 + epsilon, r=6, center=false);
+            // v39 gear-train idler spurs (visuals, gear-only drive, NO
+            // belts): solid spur gears fused to the BACK-wall exterior
+            // (y -8..-2) on bosses that pass through the wall (side
+            // mount). Idler1 (20T at 110/60, drum drive) clears the crank
+            // orbit (r50 about x=40: 70 away in X); idler2 (12T at
+            // 183/17, twister layshaft) holds 6.8 Y-gap to pullA.
+            translate([idler1_x, -8, idler1_z])
+                rotate([90, 0, 0])
+                    spur_gear(teeth=idler1_teeth, module_mm=gear_module, thickness=6);
+            translate([idler1_x, -5, idler1_z])
+                rotate([90, 0, 0])
+                    cylinder(h=12, r=6, center=true);
+            translate([idler2_x, -8, idler2_z])
+                rotate([90, 0, 0])
+                    spur_gear(teeth=idler2_teeth, module_mm=gear_module, thickness=6);
+            translate([idler2_x, -5, idler2_z])
+                rotate([90, 0, 0])
+                    cylinder(h=12, r=6, center=true);
             // v37 twister guide posts (static frame for the orbiting ring:
             // two posts flanking the tape at bind_x hold the ring axle
             // height; the rotor GLB stays a pure symmetric rotor so the
@@ -1063,58 +1164,163 @@ module seed_cradle() {
 }
 
 // ============================================================
-// 7. Folding plow - converges 25.4→12.7, 4×4 wick pocket, flat base
+// 7. 6-turner SECOND STAGE (v42 TRUE 6-fold: tape is ALREADY U-bent
+// by the first stage forming 37..70 + transit 70..126; this piece
+// only folds the 2 U edges INSIDE into an overlapping roll).
+// Local frame like the old plow: x 0..turner_len (33, world
+// 126..159), y 0..40 (tape centre y=20), z 0..curl top, min_z=0.
+// STAGE A (entry x 0..10): open U-accept channel — two side walls
+// hold the incoming U-section (mouth inner 7 from the first stage)
+// + low converging guides (25.4 -> ~8 funnel, first-stage wings).
+// STAGE B (x 8..24): two SYMMETRIC edge-curl horns (solid former
+// noses r2.5 at y=cy+-4.2) roll the left/right U edges inward/down;
+// an inner tongue plate dives from the crown into the bore and ends
+// in an inner roll (r2.2 solid along X inside the bore) — the tongue
+// + inner roll IS the inner loop of the "6", folding edges INSIDE.
+// STAGE C (exit x 24..33): near-closed tube — exit ring (outer r5.5,
+// bore r3.2 < main bore 4.2) necks the roll shut; top seam lip
+// overlaps the joint so the end-on cross-section reads as "6"
+// (outer curl + inner tongue), NOT a plain round tube.
+// Main bore (r4.2 offset +1.2, dia 8.4) still clears the 7.8 pocket;
+// footprint/tabs/posts/positions unchanged (turner 126..159 ->
+// twister 168..176 gap 9 kept). part_to_render "plow" (compat) and
+// "turner" both render this.
 // ============================================================
-module folding_plow() {
-    plow_w = 40;
-    plow_base = base_thick;
-    u_len = plow_len/2;
-    u_radius = 8;
-    plan_ang = atan(((paper_width - fold_width)/2)/plow_len);
-    v_wall_thick = 2.5;
-    v_wall_height = 10;
-
-    difference() {
-        union() {
-            cube([plow_len, plow_w, plow_base]);
-            // Left converging guide
-            translate([0, plow_w/2 - paper_width/2 - 1, plow_base])
-                rotate([35,0,0])
-                    rotate([0,0,plan_ang])
-                        translate([0,0,-2])
-                            cube([plow_len + 2, v_wall_thick, v_wall_height+2]);
-            // Right converging guide mirrored
-            translate([0, plow_w/2 + paper_width/2 + 1 + v_wall_thick, plow_base])
-                rotate([-35,0,0])
-                    translate([0,0,-2])
-                        rotate([0,0,-plan_ang])
-                            translate([0,-v_wall_thick,0])
-                                cube([plow_len + 2, v_wall_thick, v_wall_height+2]);
-            // Mounting tabs
-            for (tx=[2, plow_len - 10]) {
-                translate([tx, -8, 0]) cube([8, 8.15, 3]);
-                translate([tx, plow_w - 0.15, 0]) cube([8, 8.15, 3]);
-            }
-            // Tab bolts
-            for (bx=[6, plow_len - 6])
-                for (by=[-4, plow_w + 4]) {
-                    translate([bx, by, 0]) cylinder(h=3, d=bolt_dia, center=false);
-                    translate([bx, by, 3 - epsilon]) cylinder(h=2.5, r=bolt_head_across/sqrt(3), $fn=6, center=false);
+module six_turner() {
+    assert(turner_len > 15, str("six_turner: turner_len must exceed 15, got ", turner_len));
+    assert(turner_curl_bore * 2 > 7.8, str("six_turner: bore dia must clear the 7.8 pocket: ", turner_curl_bore * 2));
+    tw = 40;                        // v1-precedent width kept (old plow_w)
+    cy = tw/2;                      // 20: tape centre
+    curl_x0 = 8; curl_len = 22;     // main tube x 8..30 (inside 0..33)
+    curl_cz = turner_curl_cz;       // 12
+    curl_r = turner_curl_r;         // 6.5
+    bore_r = turner_curl_bore;      // 4.2
+    bore_cz = curl_cz + turner_curl_off; // 13.2: bore 9..17.4
+    // Second-stage fold members (all inside the 0..33 footprint):
+    horn_r = 2.5;                   // edge-curl horn nose radius
+    horn_y = 4.2;                   // horns at cy+-4.2 (U edges at +-3.9)
+    horn_cz = curl_cz + 1.5;        // 13.5: horn centre over the U walls
+    horn_x0 = 6; horn_len = 14;     // horns x 6..20 (stage B)
+    tongue_len = 12;                // tongue x 6..18 dives crown->bore
+    inner_roll_r = 2.2;             // inner roll of the "6" (folded edges)
+    inner_roll_len = 14;            // x 12..26 inside the bore
+    exit_len = 4;                   // exit ring x 29..33 (stage C)
+    exit_r = 5.5; exit_bore = 3.2;  // necked near-closed exit
+    assert(horn_x0 + horn_len <= curl_x0 + curl_len, "six_turner: horns must overlap the main tube (fused, no float)");
+    assert(12 + inner_roll_len <= curl_x0 + curl_len, "six_turner: inner roll must sit inside the main tube");
+    assert(curl_x0 + curl_len + exit_len - 1 <= turner_len, "six_turner: exit ring must stay in footprint");
+    assert(exit_bore < bore_r, "six_turner: exit must neck down vs main bore (near-closed roll)");
+    assert(horn_cz - horn_r >= base_thick, "six_turner: horns must clear the base top");
+    plan_ang = atan(((paper_width - 8)/2)/turner_len);
+    // Outer shell is cut by the bores; the inner fold members (tongue
+    // tip + inner roll) are added AFTER the cut so the bore void cannot
+    // delete them — they stay fused to the crown/exit and read as the
+    // inner loop of the "6" in end-on cross-section.
+    union() {
+        difference() {
+            union() {
+                // Base plate (bottom mount, min_z=0)
+                cube([turner_len, tw, base_thick]);
+                // Low converging entry guides (funnel 25.4 -> ~8, first-stage wings)
+                translate([0, cy - paper_width/2 - 1, base_thick])
+                    rotate([0, 0, plan_ang])
+                        cube([turner_len + 2, 2, 6]);
+                translate([0, cy + paper_width/2 + 1 - 2, base_thick])
+                    rotate([0, 0, -plan_ang])
+                        cube([turner_len + 2, 2, 6]);
+                // STAGE A: open U-accept channel walls (entry x 0..12 hold the
+                // incoming U-section: inner faces at cy+-3.9 clear the 7.8 pocket)
+                for (s=[-1,1])
+                    translate([0, cy + s*5.9 - (s > 0 ? 0 : 2), base_thick - epsilon])
+                        cube([12, 2, 6]);
+                // STAGE B+C outer: 6-curl outer tube along X
+                translate([curl_x0, cy, curl_cz])
+                    rotate([0, 90, 0])
+                        cylinder(h=curl_len, r=curl_r, center=false);
+                // Entry flare funnel (mouth r8 -> tube, guides the seeded U-pocket in)
+                translate([curl_x0 - 3, cy, curl_cz])
+                    rotate([0, 90, 0])
+                        cylinder(h=3 + epsilon, r1=curl_r + 1.5, r2=curl_r, center=false);
+                // STAGE B: two SYMMETRIC edge-curl horns (solid former noses
+                // rolling the left/right U edges inward/down into the bore)
+                for (s=[-1,1])
+                    translate([horn_x0, cy + s*horn_y, horn_cz])
+                        rotate([0, 90, 0])
+                            cylinder(h=horn_len, r=horn_r, center=false);
+                // Horn bridge fins fuse horns to the outer tube (no float)
+                for (s=[-1,1])
+                    translate([horn_x0 + 4, cy + s*horn_y - 1, horn_cz - 3])
+                        cube([6, 2, 3 + epsilon]);
+                // Horn foot posts fuse horns down to the base (no float)
+                for (s=[-1,1])
+                    translate([horn_x0 + 2, cy + s*horn_y - 1, base_thick - epsilon])
+                        cube([4, 2, horn_cz - horn_r - base_thick + epsilon]);
+                // Tongue ROOT (outside the bore: fused into the crown/flare,
+                // survives the bore cut; the tip continues below post-cut)
+                translate([curl_x0 - 2, cy - 3, bore_cz + 2.8])
+                    rotate([0, -18, 0])
+                        cube([6, 6, 1.5]);
+                // STAGE C: exit ring (near-closed tube: necks the roll shut)
+                translate([curl_x0 + curl_len - 1, cy, curl_cz])
+                    rotate([0, 90, 0])
+                        cylinder(h=exit_len, r=exit_r, center=false);
+                // Top seam-overlap lip (the "6" tail overlapping the joint)
+                translate([curl_x0 + curl_len - 2, cy - 1.5, curl_cz + exit_r - 1.5])
+                    rotate([0, -8, 0])
+                        cube([6, 3, 1.5]);
+                // Side posts fuse the tube to the base (both flanks)
+                for (s=[-1,1])
+                    translate([curl_x0 + 4, cy + s*5 - 1, base_thick - epsilon])
+                        cube([6, 2, curl_cz - base_thick - 0.5]);
+                for (s=[-1,1])
+                    translate([curl_x0 + 14, cy + s*5 - 1, base_thick - epsilon])
+                        cube([6, 2, curl_cz - base_thick - 0.5]);
+                // Mounting tabs (same pattern as the old plow: chassis M3 holes line up)
+                for (tx=[2, turner_len - 10]) {
+                    translate([tx, -8, 0]) cube([8, 8.15, 3]);
+                    translate([tx, tw - 0.15, 0]) cube([8, 8.15, 3]);
                 }
+                // Tab bolts visual
+                for (bx=[6, turner_len - 6])
+                    for (by=[-4, tw + 4]) {
+                        translate([bx, by, 0]) cylinder(h=3, d=bolt_dia, center=false);
+                        translate([bx, by, 3 - epsilon]) cylinder(h=2.5, r=bolt_head_across/sqrt(3), $fn=6, center=false);
+                    }
+            }
+            // 6 bore (offset up: thin crown = the curl-over of the "6")
+            translate([curl_x0 - epsilon, cy, bore_cz])
+                rotate([0, 90, 0])
+                    cylinder(h=curl_len + 3 + 2*epsilon, r=bore_r, center=false);
+            // Entry flare void (funnel into the bore)
+            translate([curl_x0 - 3 - epsilon, cy, bore_cz])
+                rotate([0, 90, 0])
+                    cylinder(h=3 + 2*epsilon, r1=bore_r + 1.8, r2=bore_r, center=false);
+            // Exit bore (necked: near-closed roll exit, still passes the roll)
+            translate([curl_x0 + curl_len - 1 - epsilon, cy, bore_cz])
+                rotate([0, 90, 0])
+                    cylinder(h=exit_len + 2*epsilon, r=exit_bore, center=false);
+            // Tab bolt clearance holes
+            for (bx=[6, turner_len - 6])
+                for (by=[-4, tw + 4])
+                    translate([bx, by, -epsilon])
+                        cylinder(h=3 + 2*epsilon, d=bolt_dia + 2*tolerance, center=false);
         }
-        // U-groove at inlet half
-        translate([-epsilon, plow_w/2, plow_base + u_radius - track_depth])
-            rotate([0,90,0])
-                cylinder(h=u_len+epsilon, r=u_radius, center=false);
-        // Wick slot 4×4
-        translate([plow_len/2, plow_w/2 + paper_width/2 - 4, plow_base + 2])
-            cube([4, 4, 6]);
-        // Tab bolt clearance holes
-        for (bx=[6, plow_len - 6])
-            for (by=[-4, plow_w + 4])
-                translate([bx, by, -epsilon])
-                    cylinder(h=3 + 2*epsilon, d=bolt_dia + 2*tolerance, center=false);
+        // POST-CUT inner fold members (survive the bore void):
+        // tongue tip dives crown->bore folding edges INSIDE + inner roll
+        // along X inside the bore (overlapped folded edges). Both overlap
+        // the tongue root / exit ring so nothing floats.
+        translate([curl_x0 + 1.5, cy - 3, bore_cz + 0.6])
+            rotate([0, -18, 0])
+                cube([tongue_len, 6, 1.5]);
+        translate([12, cy + 0.5, bore_cz - 0.5])
+            rotate([0, 90, 0])
+                cylinder(h=inner_roll_len, r=inner_roll_r, center=false);
     }
+}
+
+// Legacy alias (compat): the old U-plow export name now builds the 6-turner.
+module folding_plow() {
+    six_turner();
 }
 
 // ============================================================
@@ -1437,9 +1643,24 @@ module thread_twister() {
 }
 
 module vpull_roller() {
+    assert(vpull_sleeve_r <= 10.3, "vpull_roller: cushion sleeve must stay ~d20 (1:1)");
     difference() {
       union() {
         cylinder(h=vpull_h, r=vpull_r, center=false);
+        // v39 CUSHIONED nip (soft rubber/silicone sleeve visual over the
+        // steel core: firm grip without crushing the seed pocket; viewer
+        // paints it dark rubber). OD stays ~d20 (sleeve proud 0.15, caps
+        // r11 still dominate the envelope) => 1:1 surface speed kept.
+        translate([0, 0, (vpull_h - vpull_sleeve_h)/2])
+            cylinder(h=vpull_sleeve_h, r=vpull_sleeve_r, center=false);
+        // Cushion grip ribs (shallow visual rings on the sleeve)
+        for (k=[0:5])
+            translate([0, 0, (vpull_h - vpull_sleeve_h)/2 + 2 + k*(vpull_sleeve_h - 4)/5])
+                difference() {
+                    cylinder(h=0.8, r=vpull_sleeve_r + 0.3, center=false);
+                    translate([0, 0, -epsilon])
+                        cylinder(h=0.8 + 2*epsilon, r=vpull_sleeve_r - 0.2, center=false);
+                }
         // Diamond knurl band (visual grip, shallow so OD stays ~20)
         for (k=[0:11]) {
             t = k/11;
@@ -1468,6 +1689,7 @@ module vpull_roller() {
 }
 
 module takeup_reel() {
+    assert(clutch_disc_r < takeup_flange_r, "takeup_reel: clutch must stay inside flange envelope");
     difference() {
         union() {
             cylinder(h=takeup_flange_t, r=takeup_flange_r, center=false);
@@ -1477,8 +1699,24 @@ module takeup_reel() {
             // Wound-tape pack visual (finished tape coils on the core)
             translate([0, 0, takeup_flange_t])
                 cylinder(h=takeup_core_h - takeup_flange_t, r=takeup_core_r + 3, center=false);
+            // v40 SLIP CLUTCH on the axle (visual clutch discs 31..41):
+            // pressure disc + friction disc (the slip interface: fast when
+            // the reel is empty, slips when full as the pack diameter
+            // grows) + spring + hex nut. Discs r8 < flange r16 so the
+            // station X envelope (210..242) is unchanged; the geared base
+            // ratio stays takeup_angle = 1440*$t (2x crank), the clutch
+            // absorbs the diameter change mechanically (see viewer comment
+            // + GEAR_RATIO.md; animation keeps the geared base speed).
+            translate([0, 0, takeup_core_h + takeup_flange_t])
+                cylinder(h=clutch_disc_t, r=clutch_disc_r, center=false);
+            translate([0, 0, takeup_core_h + takeup_flange_t + clutch_disc_t])
+                cylinder(h=clutch_disc_t, r=clutch_disc_r, center=false);
+            translate([0, 0, takeup_core_h + takeup_flange_t + 2*clutch_disc_t])
+                cylinder(h=clutch_spring_h, r=4.5, center=false);
+            translate([0, 0, takeup_core_h + takeup_flange_t + 2*clutch_disc_t + clutch_spring_h])
+                cylinder(h=clutch_nut_h, r=5, $fn=6, center=false);
         }
-        // Axle bore through the whole reel
+        // Axle bore through the whole reel + clutch
         translate([0, 0, -epsilon])
             cylinder(h=takeup_h_total + 2*epsilon, d=axle_clearance_dia, center=false);
     }
@@ -1559,12 +1797,17 @@ module crank_assembly() {
 //   40:20 mesh, 2:1; +9° half-pitch so the pinion tooth falls into the drum gap)
 //   crank = roller_angle (rigid on the roller shaft, coaxial at roller_axle_x)
 //   upper idler = -720*$t (counter-rotates via tape contact)
-//   v37 downstream chain (all geared to drum/crank, spacing preserved):
-//   twister_angle = -360*$t*twister_orbits_per_drum about X (6 orbits per
-//   drum rev = one thread bind per cavity/seed); pull nip pair spins
-//   about Z at +/-roller_angle (same dia as main roller => 1:1 surface
-//   speed, the spacing driver); takeup_angle = 1440*$t about the reel
-//   axle (core d10: 4 rev per $t winds the same 125.66mm linear tape).
+//   v37 downstream chain (all crank-driven via GEARS ONLY, no belts:
+//   crank->drum 2:1 via the 40:20 mesh; twister 6 orbits per drum rev
+//   about X via idler spur (one thread bind per cavity/seed); pull nip
+//   pair spins about Z at +/-roller_angle (same d20 dia as main roller
+//   => 1:1 surface speed, the spacing driver; cushioned rubber/silicone
+//   sleeve grips firm without crushing); takeup_angle = 1440*$t about
+//   the reel axle (core d10 step-up winds the same 125.66mm linear
+//   tape; slip clutch on the axle slips when the pack is full).
+//   v40 mounts: BOTTOM = 6-turner + wind-up reel; SIDE = twister ring +
+//   pull rollers + drum (axles through the chassis walls); TOP =
+//   hopper+shroud + tape input spools.
 // At $t=0 geometry equals static layout (plus the 9° mesh phase on the roller).
 // ============================================================
 module animated_assembly() {
@@ -1624,10 +1867,12 @@ module animated_assembly() {
     translate([fold_end - 3, chassis_width/2, tape_z + tape_thick])
         former_collar();
 
-    // Folding plow (downstream closer: seals the seeded pocket east,
-    // world x 126..159, v1 precedent kept east of the drum)
+    // Folding plow (v39 REPLACED by the 6-turner/roller former: the
+    // seeded tape rolls through the 6 curl east of the drop, world x
+    // 126..159, v1-precedent footprint kept; seed lands flat at 100
+    // first, then the curl rolls the edges over)
     translate([plow_start, chassis_width/2 - 20, base_thick])
-        folding_plow();
+        six_turner();
 
     // Pull rollers (zoffset=11 compensated in assembly)
     translate([roller_axle_x, chassis_width/2, roller_axle_z])
@@ -1654,10 +1899,12 @@ module animated_assembly() {
         rotate([twister_angle, 0, 0])
             thread_twister();
 
-    // v37 Vertical-nip pull pair (spacing driver): two vertical-axis
-    // rollers stand on the base flanking the finished folded tape at
-    // pull_x, pinching the closed pocket and pulling it at the same
-    // surface speed as the main roller (1:1, spacing preserved).
+    // v37 Vertical-nip pull pair (spacing driver), v39 CUSHIONED:
+    // two vertical-axis rollers stand on the base flanking the finished
+    // folded tape at pull_x (side-mounted: top bridge from the chassis
+    // walls caps the axles), pinching the closed pocket and pulling it
+    // at the same surface speed as the main roller (1:1 d20, spacing
+    // preserved). Soft rubber/silicone sleeve grips without crushing.
     translate([pull_x, chassis_width/2 - vpull_off, base_thick])
         rotate([0, 0, pull_a_angle])
             vpull_roller();
@@ -1665,9 +1912,10 @@ module animated_assembly() {
         rotate([0, 0, pull_b_angle])
             vpull_roller();
 
-    // v37 Take-up spool (wind-up reel east): reel built along Z is
-    // recentred, tilted to axle-Y, spun about its axle by takeup_angle
-    // (core d10 winds the same linear tape the pull nip delivers).
+    // v37 Take-up spool (wind-up reel east, BOTTOM mounted), v40 SLIP
+    // CLUTCH: reel built along Z is recentred, tilted to axle-Y, spun
+    // about its axle by takeup_angle (core d10 step-up winds the same
+    // linear tape the pull nip delivers; clutch discs slip when full).
     translate([takeup_x, chassis_width/2, takeup_z])
         rotate([90, 0, 0])
             rotate([0, 0, takeup_angle])
@@ -1709,8 +1957,8 @@ if (part_to_render == "all") {
     seed_cartridge(seed_dia, seed_depth);
 } else if (part_to_render == "cones") {
     spool_cones();
-} else if (part_to_render == "plow") {
-    folding_plow();
+} else if (part_to_render == "plow" || part_to_render == "turner") {
+    six_turner(); // v39: "plow" kept as compat alias, "turner" is the clean name (same 6-turner GLB)
 } else if (part_to_render == "tape") {
     seed_tape_bend();
 } else if (part_to_render == "rollers") {

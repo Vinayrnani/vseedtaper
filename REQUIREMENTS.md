@@ -1,6 +1,74 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v40**
+**Version: v42**
+
+## v42 True 6-Fold Second Stage (two-stage: U then fold edges inside to roll) - 2026-09-17
+
+1. **Clarification (user)**: tape is ALREADY U-bent by the first
+   stage (forming 37..70 + transit 70..126). The 6-turner is a SECOND
+   bending piece: entry accepts the seeded U-section, then two
+   symmetric curl channels roll the left/right U edges inward/down
+   into an overlapping roll (6 cross-section), exit is a near-closed
+   tube. The old impl wrongly treated the turner as a single
+   U-forming tube (r6.5 bore r4.2 only).
+2. **CAD** (`seed_tape_machine_v2.scad` only): `six_turner()` reworked
+   into a true 6-profile second stage in the same 126..159 zone
+   (mouth still 26 after drop 100, seed lands flat/open-U first):
+   STAGE A entry U-accept channel (x 0..12 side walls, inner faces
+   +-3.9 clear the 7.8 pocket) + low converging guides kept;
+   STAGE B twin edge-curl horns (solid former noses r2.5 at cy+-4.2,
+   x 6..20, bridge fins + foot posts fuse to tube/base) + inner
+   tongue plate diving crown->bore ending in an inner roll (r2.2,
+   x 12..26 inside the bore, post-cut union so the bore void cannot
+   delete it) = the inner loop of the "6", folding edges INSIDE;
+   STAGE C exit ring (r5.5/bore r3.2 necked near-closed) + top
+   seam-overlap lip so the end-on cross-section reads as 6 (outer
+   curl + inner tongue), not a plain round tube. Main bore r4.2
+   offset +1.2 (dia 8.4 clears 7.8) kept; footprint/tabs/posts kept;
+   5 new fail-loud asserts (horns fused, inner roll inside tube,
+   exit in footprint, exit necked, horns clear base); min_z=0,
+   `$fn=60`, `tol=0.3`, gear-only drive/positions unchanged;
+   stations preserved (turner lip 160.35 -> twister 168 gap 7.65,
+   gaps >= 5).
+3. **Viewer** (`web/index.html` only): plow relabelled 6-turner
+   2nd-stage edge fold, legend/tape-path comments rewritten two-stage
+   (U then 6-fold edges inside to roll), `_sixTurner` gains
+   stages/entry/exit hooks; pivots/animation ratios unchanged;
+   `ASSET_V` 25->26, all GLBs rebuilt.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L order, port 9099 only.
+
+## v41 6-Turner + Gear-Only + Mounts + Clutch Build (v39/v40 spec) - 2026-09-17
+
+1. **Goal**: build the v39+v40 spec onto the v38 respaced stations
+   (positions frozen: turner 126..159 -> bind 172 -> pull 194 ->
+   take-up 226/34, edge gaps 9/8/6 >= 5).
+2. **CAD** (`seed_tape_machine_v2.scad` only): new `six_turner()`
+   (6-curl tube r6.5/bore r4.2 offset +1.2 + entry flare + curl-over
+   tongue + posts, same 33x40 footprint; `folding_plow()` kept as a
+   compat wrapper, `part_to_render` "plow" alias + new "turner");
+   turner mouth 126 sits 26 after drop 100 (flat landing first);
+   `vpull_roller()` gains a cushioned rubber/silicone sleeve visual
+   (r10.15, OD ~d20 => 1:1 kept); `takeup_reel()` gains a slip clutch
+   on the axle (2 discs + spring + hex nut, stack 31..41, h_total 41,
+   envelope 210..242 kept); chassis gains pull top bridge (side
+   mount, X 192..196 inside nip), 2 idler spur visuals on back-wall
+   bosses (20T drum drive 110/60, 12T twister layshaft 183/17,
+   gear-only, no belts) + mounting comments (bottom: turner+wind-up;
+   side: twister+pull+drum through walls; top: hopper+shroud+spools);
+   8 new fail-loud asserts (turner aliases/position, 3 edge gaps on
+   turner/sleeve names, sleeve OD, step-up, clutch stack/envelope);
+   min_z=0 all, `$fn=60`, `tol=0.3` kept.
+3. **Viewer** (`web/index.html` only): plow relabelled 6-turner,
+   pull pair dark rubber (metalness 0.05/rough 0.9), take-up child
+   15.5->20.5 (h 41 recenter), legend/tape-path/mounts/gear-only/slip
+   comments, new `_sixTurner/_gearTrain/_slipClutch/_mounts` hooks;
+   pivots/animation ratios unchanged (gear-only sync proof);
+   `ASSET_V` 24->25, all GLBs rebuilt.
+4. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
+   `center_distance` 60, `gear_mesh_phase` 9°, back gears, crank back
+   wall [40,-8,60], R->L order, port 9099 only.
 
 ## v39 6-Turner + Gear-Only Drive + Cushioned Pull - 2026-09-17
 

@@ -147,7 +147,11 @@
     Crank on roller axle (x=40, outside back wall); drum CCW picks up right, drops bottom-center.
     R→L layout: hopper wedge (right, mouth ~183) → drum (100) → shroud tunnel (58-84) → roller/crank (40) → spool (-6, west).
     Single wrap-around hopper: right wedge pickup (level top), 11→6 cover, hover pipe (ID6/OD10 L10, 10 gap) drops seeds at x=100 port.
-    Thread twister (2 arms, 6 orbits/drum rev) binds each seed past the plow → vertical pull nip (1:1, spacing driver) → wind-up reel (core d10).
+    Two-stage forming: first-stage U (forming 37..70 + transit 70..126, seed drops at 100 into the open pocket) →
+    6-turner second stage (126..159: U-in, twin curl horns + inner tongue fold the 2 edges inside into an overlapping roll, near-closed exit reads as 6 end-on).
+    Thread twister (2 arms, 6 orbits/drum rev via idler spur) binds each rolled seed past the 6-turner → cushioned vertical pull nip
+    (rubber sleeve, 1:1, spacing driver) → wind-up reel (core d10 step-up, slip clutch: fast empty, slips full). All crank-driven via gears only, no belts.
+    Mounts — bottom: 6-turner + wind-up reel · side: twister + pull + drum (axles through walls) · top: hopper + shroud + input spools.
   </div>
 </div>
 
@@ -515,6 +519,27 @@
     pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
     pullX: 194, takeupX: 226
   };
+  // v42 proof hooks: 6-turner SECOND stage (first-stage U arrives seeded;
+  // entry accepts the U-section, twin horns + inner tongue fold the 2 edges
+  // inside into an overlapping roll, exit near-closed tube reads as 6 end-on;
+  // mouth 126 sits after drop 100 so the seed lands flat first),
+  // gear-only drive (no belts), slip clutch behaviour, mounting layout.
+  window._sixTurner = { start: 126, end: 159, dropX: 100, curlR: 6.5, boreR: 4.2,
+    stages: 'U-in then 6-fold edges inside to roll', entry: 'U-accept', exit: 'near-closed tube' };
+  window._gearTrain = { chain: 'crank->drum 2:1 -> twister 6x/drum via idler spur -> pull 1:1 -> wind-up step-up', belts: false };
+  window._slipClutch = {
+    pivot: takeupPivot, discs: 2, baseRatio: '-2x crank',
+    // Slip logic: the geared base speed (-2x crank) is constant; the
+    // FRICTION discs absorb the pack-diameter change mechanically —
+    // the reel runs fast when empty and the clutch slips when full, so
+    // the tape tension stays constant without changing the gear ratio.
+    behaviour: 'fast when empty, slips when full'
+  };
+  window._mounts = {
+    bottom: ['six-turner', 'wind-up reel'],
+    side: ['twister ring', 'pull rollers', 'drum'],
+    top: ['hopper+shroud', 'tape input spools']
+  };
 
   // ---------- seed drop effect ----------
   var dropSeed = new THREE.Mesh(
@@ -616,7 +641,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 24;
+  var ASSET_V = 26; // v42: true 6-fold second stage (U-in, twin horns + tongue fold edges inside, near-closed exit)
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -630,8 +655,8 @@
         parent: spoolGroup, pos: [0, 0, 26], rot: [Math.PI, 0, 0] },
       { id: 'cones_b', label: 'Cones B', file: 'stl/cone_b.glb', color: 0xc96a2b,
         parent: spoolGroup, pos: [-50, 0, -26], rot: [0, 0, 0] },
-      { id: 'plow', label: 'Plow', file: 'stl/plow.glb', color: 0x8a8f98,
-        parent: plowPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4 },
+      { id: 'plow', label: '6-turner (2nd-stage edge fold)', file: 'stl/plow.glb', color: 0x8a8f98,
+        parent: plowPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4 }, // v42 two-stage: first-stage U (37..126) arrives seeded, 6-turner (126..159) only folds the 2 U edges inside into an overlapping roll (twin horns + inner tongue, near-closed exit); part_to_render "plow" compat alias; bottom-mounted after the drop (seed lands flat at 100 first)
       { id: 'rollers_lower', label: 'Rollers lower (hidden)', file: 'stl/rollers_lower.glb', color: 0x9aa2ad,
         parent: lowerPivot, pos: [0, 0, 34.95], rot: [Math.PI, 0, 0], // v21: gear-down export (body centre 34.95); Rx(180) lands gear on back plane Y~12.
         metalness: 0.8, roughness: 0.35, visible: false },
@@ -642,12 +667,12 @@
         parent: crankSpinner, pos: [-5, -8.47, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5 },
       { id: 'twister', label: 'Thread twister (2-arm binder)', file: 'stl/twister.glb', color: 0xc9a227,
         parent: twisterPivot, pos: [0, -12, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 },
-      { id: 'pull_a', label: 'Vertical pull A', file: 'stl/pull_a.glb', color: 0x9aa2ad,
-        parent: pullAPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.8, roughness: 0.35 },
-      { id: 'pull_b', label: 'Vertical pull B', file: 'stl/pull_b.glb', color: 0x9aa2ad,
-        parent: pullBPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.8, roughness: 0.35 },
-      { id: 'takeup', label: 'Take-up spool (wind-up)', file: 'stl/takeup.glb', color: 0xc96a2b,
-        parent: takeupPivot, pos: [0, 0, 15.5], rot: [Math.PI, 0, 0], metalness: 0.3 }
+      { id: 'pull_a', label: 'Vertical pull A (cushioned)', file: 'stl/pull_a.glb', color: 0x3f434a,
+        parent: pullAPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.05, roughness: 0.9 }, // v39: soft rubber/silicone cushion sleeve (firm grip, no crush); OD ~d20 => 1:1 spacing driver kept
+      { id: 'pull_b', label: 'Vertical pull B (cushioned)', file: 'stl/pull_b.glb', color: 0x3f434a,
+        parent: pullBPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.05, roughness: 0.9 }, // v39: cushioned mate, counter-rotates
+      { id: 'takeup', label: 'Take-up spool (slip clutch)', file: 'stl/takeup.glb', color: 0xc96a2b,
+        parent: takeupPivot, pos: [0, 0, 20.5], rot: [Math.PI, 0, 0], metalness: 0.3 } // v40: export height 31->41 (clutch discs+spring+nut on top); half 20.5 recentres the reel on the axle
     ];
    // Display order for the parts panel (matches user checklist + tape/seeds extras).
    var PART_ORDER = ['chassis', 'hopper', 'shroud', 'cartridge', 'cones_a',
@@ -886,10 +911,13 @@
     lowerPivot.rotation.z = -crankAngle - GEAR_PHASE;
     upperPivot.rotation.z = crankAngle;
     drumPivot.rotation.z = crankAngle * DRUM_RATIO;
-    // v37 downstream chain (all geared to crank/drum, 6 cavities):
+    // v37 downstream chain, v39/v40 gear-only (NO belts anywhere):
     // twister 6 orbits per drum rev about the tape axis (one bind per
-    // seed), pull nip 1:1 with the roller shaft (spacing driver),
-    // take-up 2x crank (core d10 winds the same linear tape).
+    // seed, driven via idler spur), pull nip 1:1 with the roller shaft
+    // (cushioned rubber sleeve = spacing driver, no crush), take-up 2x
+    // crank (core d10 step-up winds the same linear tape; slip clutch
+    // on the axle slips when the pack is full — animation keeps the
+    // geared base speed, the discs absorb the diameter change).
     var twAngle = -3 * crankAngle;
     twisterPivot.rotation.x = twAngle;
     pullAPivot.rotation.y = 2 * crankAngle + GEAR_PHASE;
@@ -899,10 +927,14 @@
     updateThreadLine(threadLineB, twAngle, Math.PI, advance);
 
     // Tape ribbon: advance per crank rev = PI*20 = 62.83mm
-    // Path: spool(x=-6, v22 west) -> roller nip (40) -> forming (37..70)
-    // -> transit (70..126, under drum with gap, UNDER the hover pipe at 100)
-    // -> closer plow(126-159) -> bind(165..179, threads orbit) ->
-    // pull nip(194, spacing driver) -> wind-up reel(226). Rollers v21 west(x=40).
+    // Path: spool(x=-6, v22 west, TOP-mounted input) -> roller nip (40) -> forming (37..70, first-stage U)
+    // -> transit (70..126, open U under drum with gap, UNDER the hover pipe at 100: seed
+    // drops into the OPEN U-pocket, lands flat first) -> 6-turner second stage (126-159, BOTTOM-mounted: U-in,
+    // twin horns + tongue fold the 2 edges inside to roll, near-closed exit) ->
+    // bind(165..179, SIDE-mounted twister orbits threads) -> cushioned pull nip(194, SIDE-mounted,
+    // spacing driver) -> wind-up reel(226, BOTTOM-mounted, slip clutch). Rollers v21 west(x=40).
+    // Mounts — bottom: 6-turner + wind-up · side: twister + pull + drum (axles through
+    // walls) · top: hopper + shroud + input spools. Drive is gears only (idler spurs, no belts).
     // Drum center root-local y=60, radius 25 -> tape runs at y=13 under
     // the drum (v33 option B lane: hover pipe exit at y=23.4, 10 above
     // the ribbon top 13.4, bore 6 / outer 10, L10).
