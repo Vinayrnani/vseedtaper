@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v55 — 2026-09-17
+- Hollow 6, center fin deleted per Front/Back/Top.jpg (user: bore must be HOLLOW see-through, no center post): six_turner deletes center fin tongue hull (fin_t0/fin_t1), wedge nose top, root rails inside bore (blocked tape); keeps low flat base + outer side curl wings only (7 stations, left 30->270deg, right 20->180deg), bore hollow see-through full length, no geometry above floor_local in center 60% width except side wings (fail-loud center-probe + see-through asserts); base plate + 4 screw tabs, footprint world x126-159, $fn=60, tol=0.3 kept; viewer relabel + ASSET_V bump, plow GLB rebuilt
+
 ## v54 — 2026-09-17
 - Asymmetric inner-curl 6-folder (user REJECTS outer pipe/shell again): tape arrives already bent U, inside that U one side wall curls IN deep, other side curls a little LESS, curls advance along length so paper edges roll together into overlapped roll; six_turner rebuilt as SEPARATE screw-mounted object (open base plate/blade + center fin tongue + two asymmetric curling wings, 6-7 stations x0..33, thin walls 1.2-1.6, lead-in chamfers, 2x M3 tabs at old plow holes, no ring, no bore); $fn=60, tol=0.3, manifold, asserts; tape visual only if trivial; viewer relabel + ASSET_V bump, plow GLB rebuilt
 

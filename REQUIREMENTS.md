@@ -1,5 +1,37 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v55**
+
+## v55 Hollow 6, Center Fin Deleted per Front/Back/Top.jpg (user reviewed cardboard prototype photos at repo root: bore must be HOLLOW see-through, no center post) - 2026-09-17
+
+1. **Concept**: cross-section is an open "6", NOT a closed O.
+    Front = open C entry, Back = 6/9 spiral exit (outer tail
+    360deg + inner free edge 120-180deg hook). Asymmetric: one
+    side deep in-roll ~270deg, other shallow ~180deg, tips
+    overlapped. Length taper: narrow flat/pinched entry ->
+    wide rolled exit. Side walls only, paper self-supports
+    around air. Center EMPTY, bore hollow see-through full
+    length.
+2. **CAD** (`seed_tape_machine_v2.scad` only): `six_turner()`
+    DELETE center fin tongue hull (`fin_t0`/`fin_t1`), wedge
+    nose top, root rails inside the bore (they stabbed into
+    the bore and blocked tape). Keep low flat base + outer
+    side curl wings only (7 stations, left 30->270deg, right
+    20->180deg). No geometry above `floor_local` inside the
+    center 60% width except the side wings (fail-loud
+    asserted: center-60% probe columns above floor must be
+    empty at entry/mid/exit + bore see-through ray assert).
+    Keep: base plate + 4 screw tabs (bx 6,27 -> world
+    132/153, by -4,44 -> world 6/54, M3 clearance), footprint
+    world x126-159, `$fn=60`, `tol=0.3`.
+3. **Tape**: untouched.
+4. **Viewer** (`web/index.html` only): relabel hollow-6 +
+    `ASSET_V` bump, plow GLB rebuilt.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v54**
 
 ## v54 Asymmetric Inner-Curl 6-Folder (user REJECTS outer pipe/shell again; correct spec in their words: tape arrives already bent U, inside that U ONE side wall curls IN deep, OTHER side curls LESS, curls advance along length so paper edges roll together into overlapped roll) - 2026-09-17
