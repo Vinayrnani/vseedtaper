@@ -1527,30 +1527,30 @@ module seed_cradle() {
 
 // ============================================================
 // 7. 6-FOLDER THIN-WALL TAPERED SHELL, v56 (Front/Back/Top.jpg
-// cardboard prototype forensics: single-wall ~1mm cardboard, outer
-// colorful / inner white; entry narrow pinched open-C, exit wide
-// 6-spiral flare; tapered length; lower flat blade full length one
-// side + upper rolled cone other side; dark slit gap; flat underside
-// gravity sit; bore hollow).
+// v58 big-to-small 6-folder (user direction reversal 2026-09-17:
+// entry BIG loose 6 (dia 21) catches the seeded U-tape, exit SMALL
+// tight curled 6 (dia 9); inner hook edge approaches the outer
+// circle but NEVER touches — 1.0mm daylight gap full length).
 // THIN-WALL SHELL ONLY: wall 0.8 (minimum printable single wall),
 // NO thick base plate. 7-station loft local x0..33 (world 126..159):
-// entry outer dia ~12.4 (pinched open-C) -> exit outer dia ~21
-// (wide open flare). Cross-section open-6 full length: outer wrap
-// 300->315deg (gap at TOP, tape shoulders feed through it) + inner
-// hook 20->160deg riding 2.5 off the shell ID (the dark slit,
-// 2-3 full length). Lower flat tail blade full length on the -Y
-// side; tapered skid wedge underneath = flat underside sit.
-// Bore hollow see-through full length. Two SMALL 6x6x1 screw ears
-// (diagonal pair to chassis M3 holes world (132,6)/(153,54)) on
-// thin ground straps + posts — minimal, not a base.
+// entry outer dia 21 (BIG loose open 6) -> exit outer dia 9 (SMALL
+// tight curled 6). Cross-section open-6 full length: outer wrap
+// 300->330deg (slit >=30deg open full length, never a tube) + inner
+// hook 20->160deg riding 1.0 off the shell ID (daylight slit, tape
+// slides, never catches). Lower side tail blade full length on the
+// -Y side (mid-height, fused to shell, clear of bore); tapered skid
+// wedge underneath = flat underside sit (fused to shell, clear of
+// bore). Bore hollow see-through full length. Two SMALL 6x6x1 screw
+// ears (diagonal pair to chassis M3 holes world (132,6)/(153,54))
+// on thin ground straps + bars via the skid — minimal, not a base.
 // Local frame like the old plow: x 0..turner_len (33, world
 // 126..159), y local (tape centre cy=20, world +10), z local
 // (world +4 in assembly), min_z=0. Bore axis (cy,cz)=(20,13).
-// 7 stations interpolated to 17 fine plates (1.9875 apart, 1.2
+// 7 stations interpolated to 17 fine plates (1.925 apart, 2.2
 // thick, hull-bridged; steps small so the wall stays a thin curl):
 //   x:     0    5.5   11   16.5   22   27.5   33
-//   R:    6.2   6.9   7.6   8.3   9.0   9.7   10.5 (outer radius)
-//   wrap: 300   304   307   310   312   314   315 (outer, deg)
+//   R:   10.5   9.5   8.5   7.5   6.5   5.5   4.5 (outer radius)
+//   wrap: 300   305   310   315   320   325   330 (outer, deg)
 //   hook:  20    45    70    95   120   145   160 (inner, deg)
 // part_to_render "plow" (compat) and "turner" both render this.
 // ============================================================
@@ -1567,11 +1567,11 @@ module six_turner() {
     cy = 20;                        // tape centre (local y)
     curl_cz = 13;                   // bore-axis height (v56 datum == turner_curl_cz)
     wall = 0.8;                     // THIN WALL: minimum printable single wall
-    hook_off = 3.3;                 // hook outer radius Rh = R - hook_off (slit = hook_off - wall = 2.5)
+    hook_off = 1.8;                 // hook outer radius Rh = R - hook_off (daylight = hook_off - wall = 1.0)
     // THE station table: outer radius + outer wrap + inner hook span.
     st_x = [0, 5.5, 11, 16.5, 22, 27.5, 33];
-    st_R = [6.2, 6.9, 7.6, 8.3, 9.0, 9.7, 10.5];
-    st_W = [300, 304, 307, 310, 312, 314, 315];
+    st_R = [10.5, 9.5, 8.5, 7.5, 6.5, 5.5, 4.5];
+    st_W = [300, 305, 310, 315, 320, 325, 330];
     st_H = [20, 45, 70, 95, 120, 145, 160];
     n_st = len(st_x);
     // Fine shell/hook plates: 7-station table interpolated to 17
@@ -1580,11 +1580,13 @@ module six_turner() {
     // hull of a 300deg annular sector includes the bore centre and
     // filled the bore solid; last plate ends 30.8+2.2 = 33).
     fpx = [0.0000, 1.9250, 3.8500, 5.7750, 7.7000, 9.6250, 11.5500, 13.4750, 15.4000, 17.3250, 19.2500, 21.1750, 23.1000, 25.0250, 26.9500, 28.8750, 30.8000];
-    fR = [6.200, 6.445, 6.690, 6.935, 7.180, 7.425, 7.670, 7.915, 8.160, 8.405, 8.650, 8.895, 9.140, 9.385, 9.630, 9.900, 10.180];
-    fW = [300.00, 301.40, 302.80, 304.15, 305.20, 306.25, 307.30, 308.35, 309.40, 310.30, 311.00, 311.70, 312.40, 313.10, 313.80, 314.25, 314.60];
-    fH = [20.00, 28.75, 37.50, 46.25, 55.00, 63.75, 72.50, 81.25, 90.00, 98.75, 107.50, 116.25, 125.00, 133.75, 142.50, 148.75, 154.00];
+    fR = [10.500, 10.150, 9.800, 9.450, 9.100, 8.750, 8.400, 8.050, 7.700, 7.350, 7.000, 6.650, 6.300, 5.950, 5.600, 5.250, 4.500];
+    fW = [300.00, 301.75, 303.50, 305.25, 307.00, 308.75, 310.50, 312.25, 314.00, 315.75, 317.50, 319.25, 321.00, 322.75, 324.50, 326.25, 330.00];
+    fH = [20.00, 28.75, 37.50, 46.25, 55.00, 63.75, 72.50, 81.25, 90.00, 98.75, 107.50, 116.25, 125.00, 133.75, 142.50, 148.75, 160.00];
     n_fp = len(fpx);
     plate_t = 2.2;                  // plate thickness along X (must exceed pitch)
+    skid_t0 = 3.0;                  // skid top at entry (fused to big shell, clear of bore)
+    skid_t1 = 8.8;                  // skid top at exit (fused to small shell, clear of bore)
     // Screw ears: 6x6x1 diagonal pair to chassis M3 holes.
     // Ear A entry: local centre (6,-4) -> world (132,6).
     // Ear B exit: local centre (27,44) -> world (153,54).
@@ -1600,14 +1602,14 @@ module six_turner() {
     assert(n_st == 7, str("six_turner: need 7 forming stations, got ", n_st));
     assert(st_x[0] == 0 && st_x[n_st-1] == turner_len,
         "six_turner: stations must span local x0..33 (world 126..159)");
-    assert(2*st_R[0] >= 10 && 2*st_R[0] <= 13,
-        str("six_turner: entry must be narrow pinched open-C (dia ~10-12), got ", 2*st_R[0]));
-    assert(2*st_R[n_st-1] >= 20 && 2*st_R[n_st-1] <= 22,
-        str("six_turner: exit must be wide open flare (dia ~20-22), got ", 2*st_R[n_st-1]));
-    assert(st_R[0] < st_R[1] && st_R[1] < st_R[2] && st_R[2] < st_R[3]
-        && st_R[3] < st_R[4] && st_R[4] < st_R[5] && st_R[5] < st_R[6],
-        "six_turner: radius must grow monotonically (Top.jpg taper)");
-    assert(st_W[0] >= 295 && st_W[n_st-1] <= 330,
+    assert(2*st_R[0] >= 20 && 2*st_R[0] <= 22,
+        str("six_turner: entry must be BIG loose 6 (dia ~20-22), got ", 2*st_R[0]));
+    assert(2*st_R[n_st-1] == 9,
+        str("six_turner: exit must be SMALL tight curled 6 (dia 9), got ", 2*st_R[n_st-1]));
+    assert(st_R[0] > st_R[1] && st_R[1] > st_R[2] && st_R[2] > st_R[3]
+        && st_R[3] > st_R[4] && st_R[4] > st_R[5] && st_R[5] > st_R[6],
+        "six_turner: radius must shrink monotonically (big->small taper)");
+    assert(st_W[0] >= 295 && st_W[n_st-1] <= 340,
         "six_turner: outer wrap must stay open-6 (300-330, never a tube)");
     assert(st_W[0] < st_W[1] && st_W[1] < st_W[2] && st_W[2] < st_W[3]
         && st_W[3] < st_W[4] && st_W[4] < st_W[5] && st_W[5] < st_W[6],
@@ -1616,22 +1618,29 @@ module six_turner() {
         && st_H[3] < st_H[4] && st_H[4] < st_H[5] && st_H[5] < st_H[6],
         "six_turner: inner hook must advance monotonically");
     assert(st_H[n_st-1] >= 120 && st_H[n_st-1] <= 180,
-        "six_turner: exit hook must be 120-180deg (Back.jpg inner curl)");
-    assert(hook_off - wall >= 2 && hook_off - wall <= 3,
-        str("six_turner: slit gap must be 2-3 full length (dark slit), got ", hook_off - wall));
+        "six_turner: exit hook must be 120-180deg (tight inner curl)");
+    // DAYLIGHT GAP: hook outer (R-hook_off) rides 1.0 off the shell
+    // ID (R-wall) full length — approaches but NEVER touches.
+    assert(hook_off > wall,
+        "six_turner: hook must NEVER touch the shell (hook_off > wall)");
+    assert(hook_off - wall >= 0.7 && hook_off - wall <= 1.3,
+        str("six_turner: daylight gap must be ~1.0 full length, got ", hook_off - wall));
     // Seeded pocket core (7.8 wide x ~7 tall U, corner r 5.17 about
-    // the bore axis) must clear the entry inner bore (5.4). Tape
+    // the bore axis) must clear the BIG entry inner bore (9.7). Tape
     // shoulders feed through the top opening (intended, not modelled).
     assert(st_R[0] - wall - sqrt(pow(3.9, 2) + pow(3.4, 2)) >= 0.1,
         "six_turner: seeded pocket core must thread the entry bore");
-    // Hook never reaches the bore axis (see-through ray stays clear).
-    assert(st_R[0] - hook_off - wall >= 1.5,
+    // Hook never reaches the bore axis (see-through ray stays clear);
+    // tightest at the SMALL exit.
+    assert(st_R[n_st-1] - hook_off - wall >= 1.5,
         "six_turner: hook must stay clear of the bore axis (hollow see-through)");
     assert(n_fp == 17, "six_turner: need 17 fine plates");
     assert(fpx[0] == 0 && fpx[n_fp-1] + plate_t == turner_len,
         "six_turner: plates must span the full footprint (0..33)");
     assert(fR[0] == st_R[0] && fW[0] == st_W[0] && fH[0] == st_H[0],
         "six_turner: fine plates must match the station table at entry");
+    assert(fR[n_fp-1] == st_R[n_st-1] && fW[n_fp-1] == st_W[n_st-1] && fH[n_fp-1] == st_H[n_st-1],
+        "six_turner: exit plate must match the station table (dia 9 proof)");
     assert(fH[n_fp-1] >= 120 && fH[n_fp-1] <= 180,
         "six_turner: exit plate hook must stay 120-180deg");
     // Screw ears: 6x6x1 diagonal pair on the chassis M3 holes.
@@ -1642,16 +1651,25 @@ module six_turner() {
     assert(earA[1] + ear/2 + 10 == 6 && earB[1] + ear/2 + 10 == 54,
         "six_turner: ear holes must hit chassis rows (world 6/54)");
     assert(hole_d == bolt_dia + 2*tolerance, "six_turner: ear holes must be M3 clearance");
-    // Skid tops stay below the bore inner bottom (see-through kept).
-    assert(7.0 <= curl_cz - (st_R[0] - wall) - 0.3
-        && 3.0 <= curl_cz - (st_R[n_st-1] - wall) - 0.3,
+    // Skid tops stay below the bore inner bottom (see-through kept)
+    // and overlap the shell outer bottom (fused, single solid).
+    assert(skid_t0 <= curl_cz - (st_R[0] - wall) - 0.3
+        && skid_t1 <= curl_cz - (st_R[n_st-1] - wall) - 0.3,
         "six_turner: skid must stay below the bore (hollow kept)");
-    // v57 THIN SHELL (hollow loft): the voids below are ONLY the
+    assert(skid_t0 >= curl_cz - st_R[0] && skid_t1 >= curl_cz - st_R[n_st-1],
+        "six_turner: skid must fuse into the shell (single solid)");
+    // Side blade: inner edge overlaps the shell outer flank (fused)
+    // but stays clear of the bore inner flank (tape path kept).
+    assert(9.7 > 20 - st_R[0] && 9.7 < 20 - (st_R[0] - wall),
+        "six_turner: entry blade must fuse shell + clear bore");
+    assert(15.8 > 20 - st_R[n_st-1] && 15.8 < 20 - (st_R[n_st-1] - wall),
+        "six_turner: exit blade must fuse shell + clear bore");
+    // v58 THIN SHELL (hollow loft): the voids below are ONLY the
     // 2 M3 ear holes.
-    // Shell + hook + ribs + blade + skid + ears/straps/posts unite
+    // Shell + hook + ribs + blade + skid + ears/straps/bars unite
     // into one solid: plates overlapped consecutively (plate_t exceeds
     // pitch, union only, NO hull — hull of an open annular sector caps
-    // the bore solid), hook roots ribbed to the shell, blade/skid/straps/posts overlapped in.
+    // the bore solid), hook roots ribbed to the shell, blade/skid/straps/bars overlapped in.
     // Center holds only air.
     union() {
         difference() {
@@ -1659,7 +1677,7 @@ module six_turner() {
                 // Outer shell loft: overlapping annular-sector plates
                 // (gap centred at top 90: a0 = 90+(360-W)/2, a1 = a0+W).
                 // Inner hook loft: radius Rh = R-hook_off, span a1-H..a1
-                // (root at the shell a1 edge, 2.5 slit off the shell ID).
+                // (root at the shell a1 edge, 1.0 daylight off the shell ID).
                 // Root rib: annular quad bridging hook root to shell.
                 for (k=[0:n_fp-1]) {
                     translate([fpx[k], cy, curl_cz])
@@ -1675,23 +1693,27 @@ module six_turner() {
                             linear_extrude(height=plate_t)
                                 polygon(curl_strip_pts(fR[k]-hook_off-wall, fR[k], 90+(360-fW[k])/2+fW[k]-4, 90+(360-fW[k])/2+fW[k]+4, 2));
                 }
-                // Lower flat tail blade (-Y side, full length, flat at z~8).
+                // Lower side tail blade (-Y side, full length, mid-height
+                // z12: inner edge fused into the shell flank, clear of
+                // the bore; tapers with the shell big->small).
                 hull() {
-                    translate([0, 8, 7.2]) cube([3, 9.5, 1.2]);
-                    translate([turner_len-3, 3, 7.2]) cube([3, 9, 1.2]);
+                    translate([0, 2, 12]) cube([3, 7.7, 1.2]);
+                    translate([turner_len-3, 8, 12]) cube([3, 7.8, 1.2]);
                 }
-                // Skid wedge (flat underside gravity sit, tops below bore).
+                // Skid wedge (flat underside gravity sit: tops fused to
+                // the shell, clear of the bore, tapering big->small).
                 hull() {
-                    translate([0, 17, 0]) cube([4, 6, 7.0]);
-                    translate([turner_len-4, 17, 0]) cube([4, 6, 3.0]);
+                    translate([0, 17, 0]) cube([4, 6, skid_t0]);
+                    translate([turner_len-4, 17, 0]) cube([4, 6, skid_t1]);
                 }
-                // Screw ears + ground straps + posts (minimal mounts).
+                // Screw ears + ground straps + bars via the skid (all at
+                // z0..1 ground level, far below the bore — minimal mounts).
                 translate([earA[0], earA[1], 0]) cube([ear, ear, ear_t]);
                 translate([earB[0], earB[1], 0]) cube([ear, ear, ear_t]);
-                translate([4, -1, 0]) cube([4, 16, 1]);
+                translate([4, -1, 0]) cube([4, 13, 1]);
+                translate([3, 12, 0]) cube([5, 6, 1]);
                 translate([25, 28, 0]) cube([4, 19, 1]);
-                translate([5, 13, 0]) cube([2, 2, 10]);
-                translate([26, 28, 0]) cube([2, 2, 10]);
+                translate([25, 22, 0]) cube([5, 8, 1]);
             }
             // Ear M3 clearance holes (only voids).
             translate([earA[0]+ear/2, earA[1]+ear/2, -epsilon])
