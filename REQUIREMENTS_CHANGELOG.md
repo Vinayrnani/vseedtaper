@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v56 — 2026-09-17
+- Thin-wall tapered 6-folder matching cardboard prototype (user: isolated views inaccurate vs Front/Back/Top.jpg, wall = minimum printable): six_turner rebuilt as thin-wall shell only (wall 0.8 single wall, no base plate) — 7-station loft x0..33 entry open-C dia ~12 -> exit flare dia ~21, outer wrap 300-315deg + inner hook to 160deg with 2.5 slit, tail blade + skid flat underside, hollow bore, 2 small 6x6x1 ears to chassis holes (132,6)/(153,54); turner_curl_cz 12->13; viewer relabel + ASSET_V 40, plow GLB rebuilt
+
 ## v55 — 2026-09-17
 - Hollow 6, center fin deleted per Front/Back/Top.jpg (user: bore must be HOLLOW see-through, no center post): six_turner deletes center fin tongue hull (fin_t0/fin_t1), wedge nose top, root rails inside bore (blocked tape); keeps low flat base + outer side curl wings only (7 stations, left 30->270deg, right 20->180deg), bore hollow see-through full length, no geometry above floor_local in center 60% width except side wings (fail-loud center-probe + see-through asserts); base plate + 4 screw tabs, footprint world x126-159, $fn=60, tol=0.3 kept; viewer relabel + ASSET_V bump, plow GLB rebuilt
 

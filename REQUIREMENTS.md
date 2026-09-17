@@ -1,5 +1,38 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v56**
+
+## v56 Thin-Wall Tapered 6-Folder Matching Cardboard Prototype (user: isolated views NOT accurate vs Front.jpg Back.jpg Top.jpg, rebuild properly, wall = minimum printable) - 2026-09-17
+
+1. **Concept**: `six_turner()` rebuilt as a THIN-WALL SHELL only
+    (wall 0.8 = minimum printable single wall, no thick base
+    plate): loft of 7 stations local x0..33 (world 126..159,
+    machine-scale former length 33; photo ~60-80 scaled to lane):
+    entry narrow pinched open-C (outer dia ~12) -> exit wide open
+    flare (outer dia ~21) matching the Top.jpg taper; cross-section
+    open-6 full length: outer wrap 300->315deg + inner hook
+    20->160deg (120-180 at exit) riding 2.5 off the shell ID
+    (open slit gap 2-3 full length = the dark slit in the photo);
+    lower flat tail blade full length one side (photo lower half),
+    upper rolled cone other side; tapered skid wedge underneath =
+    flat underside gravity sit; bore hollow see-through; tape
+    shoulders feed through the top opening (intended).
+2. **CAD** (`seed_tape_machine_v2.scad` only): wall 0.8 asserted;
+    station table x/R/wrap/hook (see code); bore axis local
+    (y20,z13); two SMALL screw ears 6x6x1 with M3 clearance
+    (diagonal pair: entry local (6,-4)->world (132,6), exit local
+    (27,44)->world (153,54)) on thin straps + posts — minimal, not
+    a full base; `turner_curl_cz` 12->13 (lane-centred bore);
+    footprint x0..33, ears inside chassis; min_z=0, `$fn=60`,
+    `tol=0.3`, manifold single solid, fail-loud asserts.
+3. **Tape**: untouched.
+4. **Viewer** (`web/index.html` only): relabel thin-wall tapered +
+    `ASSET_V` 39->40, plow GLB rebuilt.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v55**
 
 ## v55 Hollow 6, Center Fin Deleted per Front/Back/Top.jpg (user reviewed cardboard prototype photos at repo root: bore must be HOLLOW see-through, no center post) - 2026-09-17
