@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v57 — 2026-09-17
+- Hollow-loft fix, hull() filled the bore (user: thin-wall six_turner looked SOLID BLOCK + flipped): diagnosed via solo-plow screenshots + GLB volume ~8682 (convex hull of 300deg annular plates includes bore centre); six_turner loft rebuilt as overlapping plates with zero hull on shell/hook/rib (plate_t 1.2->2.2 > 1.925 pitch, 17 plates re-interpolated, union only) — hollow bore, open slit/ends; orientation verified correct with no swap (R grows x0->33 = world 126->159, rigid viewer rot, no mirror); viewer ASSET_V 41, plow GLB rebuilt
+
 ## v56 — 2026-09-17
 - Thin-wall tapered 6-folder matching cardboard prototype (user: isolated views inaccurate vs Front/Back/Top.jpg, wall = minimum printable): six_turner rebuilt as thin-wall shell only (wall 0.8 single wall, no base plate) — 7-station loft x0..33 entry open-C dia ~12 -> exit flare dia ~21, outer wrap 300-315deg + inner hook to 160deg with 2.5 slit, tail blade + skid flat underside, hollow bore, 2 small 6x6x1 ears to chassis holes (132,6)/(153,54); turner_curl_cz 12->13; viewer relabel + ASSET_V 40, plow GLB rebuilt
 

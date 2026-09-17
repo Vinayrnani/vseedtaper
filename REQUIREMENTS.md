@@ -1,5 +1,41 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v57**
+
+## v57 Hollow-Loft Fix: hull() Filled the Bore (user visual check: thin-wall six_turner looked SOLID BLOCK + flipped) - 2026-09-17
+
+1. **Diagnosis** (Playwright solo-plow front/back/top + trimesh GLB
+    ground truth): end-on views were solid discs (no bore, no slit,
+    no hook), top was a capped cone; GLB volume ~8682 vs ~3000
+    expected for a 0.8 shell. Root cause: v56 `hull()`-bridged the
+    300° annular-sector plates — the convex hull of an open annular
+    sector includes the bore centre, so every hull segment filled
+    the bore + slit solid along the full length. Orientation
+    VERIFIED correct, no swap: station R grows local x0->33 =
+    world 126->159 (narrow entry east of drop, wide exit), assembly
+    is a pure +X translate, viewer `rot [-PI/2,0,0]` is a rigid
+    rotation (no mirror), STL->GLB preserves handedness; the
+    "flip" was solid-cap perspective confusion (both ends capped
+    discs, far exit disc reading larger).
+2. **CAD** (`seed_tape_machine_v2.scad` only): `six_turner()` loft
+    rebuilt as overlapping plates, ZERO hull on shell/hook/rib —
+    `plate_t` 1.2->2.2 (> 1.925 pitch, 0.275 overlap, 17 plates
+    re-interpolated x0..30.8+2.2=33) unioned directly so the bore
+    stays hollow, the slit stays open full length, ends stay open;
+    blade/skid/ears/straps/posts untouched; wall 0.8, station
+    table, `turner_curl_cz` 13, footprint x0..33, ears world
+    (132,6)/(153,54), min_z=0, `$fn=60`, `tol=0.3`, manifold
+    single solid, fail-loud asserts kept.
+3. **Tape**: untouched.
+4. **Viewer** (`web/index.html` only): `ASSET_V` 40->41, plow GLB
+    rebuilt; material stays FrontSide (0.8 walls are modelled
+    solids with real inner faces + correct winding — no
+    DoubleSide needed).
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v56**
 
 ## v56 Thin-Wall Tapered 6-Folder Matching Cardboard Prototype (user: isolated views NOT accurate vs Front.jpg Back.jpg Top.jpg, rebuild properly, wall = minimum printable) - 2026-09-17
