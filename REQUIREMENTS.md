@@ -38,7 +38,7 @@
    impossible — product passes through the bore); assert 1.5..4 window.
 6. **D5 pull mid-collar grazed the tape (CAD)**: r11 collar at z 12 (top
    13.5) clipped 0.5 into the ribbon over a ~9 strip. FIX: collar to
-   `vpull_collar_z`=8.5 (top 10, clears ribbon 13 by 3, CAD-asserted).
+   `vpull_collar_z`=5.0 local (CAD top 10.5, clears ribbon 13 by 2.5, CAD-asserted).
    Sleeve/rib grip at the nip (0.15) is intended soft grip, kept.
 7. **Viewer** (`web/index.html` only): static ribbon + leader mesh +
    `_windLeader` hooks + tape-path comment; pivots/ratios/signs/mounts

@@ -1862,9 +1862,9 @@ module vpull_roller() {
                 translate([0, 0, -epsilon])
                     cylinder(h=3 + 2*epsilon, d=axle_clearance_dia, center=false);
             }
-        // v45: mid collar rides LOW (centre vpull_collar_z=8.5, top 10:
-        // clears the ribbon base tape_z=13 by 3; was vpull_h/2=12 with
-        // top 13.5 grazing 0.5 into the tape). Top cap (24..27) is above
+        // v45: mid collar rides LOW (centre vpull_collar_z=5.0 local, CAD top
+        // 4+5+1.5=10.5: clears the ribbon base tape_z=13 by 2.5; was 12
+        // with top 13.5+4 grazing into the tape). Top cap (24..27) is above
         // the tape zone; sleeve/rib grip at the nip is intended (soft).
         translate([0, 0, vpull_collar_z])
             difference() {
