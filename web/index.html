@@ -148,10 +148,10 @@
     R→L layout: hopper wedge (right, mouth ~183) → drum (100) → shroud tunnel (58-84) → roller/crank (40) → spool (-6, west).
     Single wrap-around hopper: right wedge pickup (level top), 11→6 cover, hover pipe (ID6/OD10 L10, 10 gap) drops seeds at x=100 port.
     Two-stage forming: first-stage U (forming 37..70 + transit 70..126, seed drops at 100 into the open pocket) →
-    6-turner second stage (126..159: open-U in, trumpet flare + ramp blade guide the seeded pocket under the floating tongue, 8 lofted stations curl it into an overlapping roll — 2mm seam + daylight gap stay open, exit reads as 6 end-on, never a pipe).
-    Thread twister (hollow ring + 2 rod bobbin holders, 6x at the layshaft via interior parallel-spur + 90° bevel: drum-coaxial spur 50T → parallel counter 10T (5x, beside the drum, high) → Y-bevel 12T → side X-pinion 10T (1.2x) → friction wheel on the ring OD; empty middle, tape passes through) binds each rolled seed past the 6-turner → cushioned vertical pull nip
+    6-folder second stage (126..159: seeded U arrives, open inner-curl tool sits INSIDE the U — deep left wing winds 30→270deg while shallow right wing winds 20→180deg over 7 stations, paper edges roll together overlapped; center fin + wedge nose lead in, no shell, no tube, screw-mounted).
+    Thread twister (hollow ring + 2 rod bobbin holders, 6x at the layshaft via interior parallel-spur + 90° bevel: drum-coaxial spur 50T → parallel counter 10T (5x, beside the drum, high) → Y-bevel 12T → side X-pinion 10T (1.2x) → friction wheel on the ring OD; empty middle, tape passes through) binds each rolled seed past the 6-folder → cushioned vertical pull nip
     (rubber sleeve, tape-coupled 4/3 with the roller, spacing driver, no gears) → wind-up reel (core d10, tape-tension wind-up with slip clutch: fast empty, slips full). Zero exterior gears — back wall clean solid, no floor gears; interior drive only (crank→drum 2:1 + parallel drum spur pair, high).
-    Mounts — bottom: 6-turner + wind-up reel · side: twister + pull + drum (axles through walls) · top: hopper + shroud + input spools.
+    Mounts — bottom: 6-folder + wind-up reel · side: twister + pull + drum (axles through walls) · top: hopper + shroud + input spools.
   </div>
 </div>
 
@@ -535,17 +535,15 @@
     pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
     pullX: 194, takeupX: 226
   };
-  // v53 proof hooks: 6-turner TRUE-6 FLOATING-OVERLAP former (first-stage U arrives seeded;
-  // 8-station hull-loft 126..159: open-U entry + trumpet flare + tall ramp blade -> deeper U -> C-shape
-  // -> 6-overlap (slot NEVER shuts: 2mm open seam at the exit face);
-  // eccentric tongue floats over the crown from +Y with a 1.1mm visible daylight seam
-  // (entry fused shallow -> exit floating overlap) and stops short of the slot (open 6-profile,
-  // never a ring); mouth 126 sits after drop 100 so the seed
-  // lands flat first; pocket threads the 9.2 entry bore, rolls under the floating tongue),
+  // v54 proof hooks: 6-folder ASYMMETRIC INNER-CURL tool (seeded first-stage U arrives;
+  // open object inside the U, no shell/ring/bore: deep left wing 30->270deg + shallow right
+  // wing 20->180deg over 7 lofted stations 126..159, roll tips nest so edges roll together
+  // overlapped; center fin tongue rises into the roll zone, wedge nose leads in;
+  // mouth 126 sits after drop 100 so the seed lands flat first),
   // gear-only drive (no belts), slip clutch behaviour, mounting layout.
-  window._sixTurner = { start: 126, end: 159, dropX: 100, curlR: 6.5, boreR: 4.2,
-    entryBore: 4.6, exitBore: 3.2, seamGap: 1.1,
-    stages: '8-station loft: open-U -> U -> C -> 6-overlap (slot never shuts, tongue floats open)', entry: 'open-U + trumpet flare + ramp blade', exit: 'floating 6-overlap + 2mm seam + 1.1 daylight (no ring)' };
+  window._sixTurner = { start: 126, end: 159, dropX: 100, curlR: 2.5, boreR: 0,
+    entryBore: 0, exitBore: 0, seamGap: 0,
+    stages: '7-station inner-curl: lip -> asymmetric in-rolls -> nested overlap (no shell, no ring)', entry: 'wedge nose + root rails + center fin', exit: '270deg left + 180deg right nested rolls (open tool)' };
   window._gearTrain = { chain: 'crank->drum 2:1 interior -> drum-coaxial spur 50T -> parallel counter spur 10T (5x, beside the drum, high) -> Y-bevel 12T -> side X-pinion 10T (1.2x, 6x at the layshaft) -> friction wheel on the ring OD (slip after, hollow middle); pull nip tape-coupled 4/3 (no gears); take-up tape-tension wind-up 2x crank (no gears)', belts: false, exteriorGears: 0,
     bevel: 'one parallel spur pair (Y-Y, module 2, dist=r1+r2=60) + one 90° bevel pair (Y-X, module 2): spur (50/10) = 5x; bevel (12/10) = 1.2x; total 6.0 at the layshaft = 1 bind/seed nominal; apex I51 (~141.85,45.5,17)',
     mesh: 'parallel spur centres (100,60)-(~141.85,17) dist 60 = 50+10 (CAD-asserted); bevel apex at I51 = Y line ∩ side layshaft, 90° (CAD-asserted intersection + perpendicular + contact); twister driven by friction on the ring OD (wheel r3.5 at 15.5 = 12+3.5, CAD-asserted tangent), nothing coaxial; drum takeoff coaxial with the drum shaft (100,60); one high Y countershaft + one side layshaft, zero exterior gears, no floor contact',
@@ -664,7 +662,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 37; // v53: true-6 floating-overlap turner (eccentric tongue lift + ramp blade + trumpet flare), plow GLB rebuilt
+  var ASSET_V = 38; // v54: asymmetric inner-curl folder (open tool, no shell), plow GLB rebuilt
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -678,8 +676,8 @@
         parent: spoolGroup, pos: [0, 0, 26], rot: [Math.PI, 0, 0] },
       { id: 'cones_b', label: 'Cones B', file: 'stl/cone_b.glb', color: 0xc96a2b,
         parent: spoolGroup, pos: [-50, 0, -26], rot: [0, 0, 0] },
-      { id: 'plow', label: '6-turner (true-6 floating overlap)', file: 'stl/plow.glb', color: 0x8a8f98,
-        parent: plowPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4 }, // v53 true-6: first-stage U (37..126) arrives seeded, 6-turner (126..159) rolls it under the floating tongue along 8 lofted stations (open-U -> C -> 6-overlap, 2mm seam + 1.1 daylight stay open, no ring); part_to_render "plow" compat alias; bottom-mounted after the drop (seed lands flat at 100 first)
+      { id: 'plow', label: '6-folder (asymmetric inner-curl)', file: 'stl/plow.glb', color: 0x8a8f98,
+        parent: plowPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4 }, // v54 inner-curl: seeded first-stage U (37..126) arrives, open tool (126..159) sits INSIDE the U — deep left wing (30->270deg) + shallow right wing (20->180deg) roll the edges together overlapped; part_to_render "plow" compat alias; screw-mounted after the drop (seed lands flat at 100 first)
       { id: 'rollers_lower', label: 'Rollers lower (hidden)', file: 'stl/rollers_lower.glb', color: 0x9aa2ad,
         parent: lowerPivot, pos: [0, 0, 34.95], rot: [Math.PI, 0, 0], // v21: gear-down export (body centre 34.95); Rx(180) lands gear on back plane Y~12.
         metalness: 0.8, roughness: 0.35, visible: false },
@@ -952,12 +950,12 @@
     // Tape ribbon: advance per crank rev = PI*20 = 62.83mm
     // Path: spool(x=-6, v22 west, TOP-mounted input) -> roller nip (40) -> forming (37..70, first-stage U)
     // -> transit (70..126, open U under drum with gap, UNDER the hover pipe at 100: seed
-    // drops into the OPEN U-pocket, lands flat first) -> 6-turner second stage (126-159, BOTTOM-mounted: U-in,
-    // twin horns + tongue fold the 2 edges inside to roll, near-closed exit) ->
+    // drops into the OPEN U-pocket, lands flat first) -> 6-folder second stage (126-159, screw-mounted open tool
+    // INSIDE the U: deep left in-curl + shallow right in-curl advance so edges roll together overlapped) ->
     // bind(165..179, SIDE-mounted twister orbits threads) -> cushioned pull nip(194, SIDE-mounted,
     // spacing driver) -> flat ribbon ends 212 -> wind-up leader climbs to the pack (BOTTOM-mounted reel 226,
     // slip clutch). Rollers v21 west(x=40).
-    // Mounts — bottom: 6-turner + wind-up · side: twister + pull + drum (axles through
+    // Mounts — bottom: 6-folder + wind-up · side: twister + pull + drum (axles through
     // walls) · top: hopper + shroud + input spools. Drive is interior bevels + tape only (module 2, apices CAD-asserted, no belts, zero exterior gears).
     // Drum center root-local y=60, radius 25 -> tape runs at y=13 under
     // the drum (v33 option B lane: hover pipe exit at y=23.4, 10 above
