@@ -1,5 +1,34 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v67**
+
+## v67 Orbital Twister 24:1 Gear Train + 1:1 Bevel Turn (ring stays on X) - 2026-09-18
+
+1. **Why** (user decision, binding): keep the twister ring rotating
+    about the X axis (vertical bobbin orbit) and drive it 24:1 vs
+    drum via spurs + a final bevel turn: Green 72T M1.5 on the drum
+    shaft → layshaft 12T (6:1) → layshaft 48T → countershaft 12T
+    (4:1) → 1:1 bevel 20T/20T M1.5 (Y→X turn) → ring. Ring spins
+    24x drum = 4 revs/seed (6 cavities), 8 cross-wraps (2 bobbins).
+    The 1:1 bevel stage is required: a 12T M1.5 pinion (pitch r9)
+    cannot surround the 18mm bore (r9) — roots would break in.
+2. **CAD** (`seed_tape_machine_v2.scad` only): new M1.5 params +
+    `tw_tol=0.3`5 local; `spur_gear()` takes module + 72T cap;
+    `twister_ring()` (18 bore, fused 20T bevel west, 2 spindles +
+    2 eyelets), `twister_bracket()` (split collar, 0.35 clear),
+    lay/countershaft gears; v53 overhead drive fully removed;
+    chassis mounts new; orbits 6→24; fail-loud asserts (cd ±0.35,
+    ratio 24, bore ≥18, orbit clears bracket). Green top ~115.5
+    pokes above wall 110: accepted exposed gear.
+3. **Viewer** (`web/index.html` only): new PART_DEFS/pivots,
+    twister 24x drum (12x crank), `ASSET_V` 50->51, GLBs rebuilt.
+4. **Visual check**: live animating preview + snapshots while
+    animating, 0 console errors, tape-static.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v66**
 
 ## v66 Twister-Aimed Mounts: axis 13 + chassis feet, exit dead-on the twister bore - 2026-09-18

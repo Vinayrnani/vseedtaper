@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v67 — 2026-09-18
+- Orbital twister 24:1 train + 1:1 bevel turn (user: ring stays on X, 72/12 48/12 spurs M1.5 + 20T/20T bevel, 24x drum = 4 revs/seed, 8 wraps; 12T pinion can't surround 18mm bore so bevel stage required): new twister_ring/bracket/shafts, v53 overhead removed, orbits 24, viewer ASSET_V 51, verify_v67.js
+
 ## v66 — 2026-09-18
 - Twister-aimed mounts (user: hanging in air, fix to chassis + exit facing twister): sheet axis 21->13 (exit bore dead on ring bore world (30,17), CAD-asserted), 2 floor pedestals + straps + 2 ears on chassis M3 holes; single shell (3556); flow re-probed; new down-the-bore align shot; viewer ASSET_V 50, verify_v66.js
 
