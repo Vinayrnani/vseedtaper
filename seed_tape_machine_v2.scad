@@ -1554,10 +1554,12 @@ module seed_cradle() {
 // (132,6)/(153,54). Bore axis (cy,cz)=(20,13), min_z=0.
 // part_to_render "plow" (compat) and "turner" both render this.
 // ============================================================
-// v63 exact spiral scroll folder (user code used VERBATIM, see
-// scroll_sheet()/printable_folder() below; only the demo invocation
-// `rotate([-90,0,0]) printable_folder();` is left out because a
-// top-level render line would print into EVERY part export).
+// v63 exact spiral scroll folder (user scroll_sheet() code used
+// VERBATIM, see below; only the demo invocation `rotate([-90,0,0])
+// printable_folder();` is left out because a top-level render line
+// would print into EVERY part export. v64 deleted the floating right
+// tab, v65 deleted the tape-blocking left tab + wrapper: the part is
+// the bare sheet).
 // The v62 block "didn't work well", so the v62 block/void/wick code
 // is deleted and the folder IS the user's overlapping spiral sheet
 // (0.5-turn U entry R12 -> 1.25-turn overlap exit R5.5 over 45,
@@ -1610,23 +1612,10 @@ module scroll_sheet() {
         }
     }
 }
-// Add mounting tabs so you can screw it to the chassis
-module printable_folder() {
-    union() {
-        scroll_sheet();
-        // Left mounting tab
-        translate([-15, 0, 5])
-            difference() {
-                cube([15, thickness, 10]);
-                translate([7.5, -1, 5]) rotate([-90,0,0]) cylinder(d=3.5, h=5, $fn=20);
-            }
-        // v64: right mounting tab DELETED (user code had it floating
-        // 3+mm off the sheet in every orientation: tube outer max 9.2
-        // < tab inner edge 12, so it printed as a loose scrap island;
-        // trimesh shell probe proved 2 shells -> this deletion makes
-        // the part the single object the user asked to preview).
-    }
-}
+// v65: printable_folder() wrapper + BOTH user tabs DELETED per user
+// (right tab floated disconnected in every orientation, v64 probe;
+// left tab lay across the trench opening and blocked the tape flow).
+// The part is the bare scroll_sheet() placed in six_turner() below.
 // ---- end verbatim user code ----
 
 module six_turner() {
@@ -1661,17 +1650,18 @@ module six_turner() {
     // Seeded pocket core must thread the 24-wide entry mouth.
     assert(12 - sqrt(pow(3.9, 2) + pow(3.4, 2)) >= 0.1,
         "six_turner: seeded pocket core must thread the entry mouth");
-    // v64 solid: verbatim user folder ONLY (oriented + placed). No
-    // added solids, no added voids (user tab holes ship in their code).
-    // The $fn=6 spheres / $fn=20 holes inside the user code stay
-    // untouched (1225 hulls: $fn=60 spheres would not render).
-    // Exact user folder: roll -90 about the tube axis (entry
-    // half-pipe opens UP into a U), +90 about Y (tube axis -> +X,
-    // mouth west), then placed on the lane.
+    // v65 solid: bare user scroll sheet ONLY (oriented + placed). No
+    // tabs (right floated, left blocked the tape path — both deleted
+    // per user), no added solids, no added voids. The $fn=6 spheres
+    // inside the user code stay untouched (1225 hulls: $fn=60 spheres
+    // would not render).
+    // Bare sheet: roll -90 about the tube axis (entry half-pipe opens
+    // UP into a U), +90 about Y (tube axis -> +X, mouth west), then
+    // placed on the lane.
     translate([mouth_x0, cy, axis_z])
         rotate([0, 90, 0])
             rotate([0, 0, -90])
-                printable_folder();
+                scroll_sheet();
 }
 
 // Legacy alias (compat): the old U-plow export name now builds the 6-turner.

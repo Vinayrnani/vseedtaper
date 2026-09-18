@@ -1,5 +1,32 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v65**
+
+## v65 Clear Tape Path: tape-blocking left tab deleted, flow probed end to end - 2026-09-18
+
+1. **Why** (user: "u removed supports and kept some object in the
+    middle which obstructs the tape flow"): the kept left tab lay
+    straight across the trench opening (plate y20..35 at z19.4..21
+    = exactly the tape-wall lane) — deleted with the rest. The plow
+    is now the bare `scroll_sheet()` and nothing else.
+2. **CAD** (`seed_tape_machine_v2.scad` only): `printable_folder()`
+    module deleted, `six_turner()` places `scroll_sheet()` directly;
+    asserts unchanged otherwise (exact-use, placement, threading);
+    ONE watertight shell (3011mm³); ray-probed tape-flow path clear
+    at 15 stations (bowl-deep line mouth->mid, axis line mid->exit,
+    full bore cross at exit). Nothing else touched.
+3. **Viewer** (`web/index.html` only): `ASSET_V` 48->49, plow GLB
+    rebuilt, label + `_sixTurner` hooks (flow-path-clear wording).
+4. **Visual check** (solo part): mouth = wide-open U, no plate
+    across it; top = pure scroll. Machine still assembles and
+    animates, 0 errors. OPEN POINT for user: the part now has no
+    mount of any kind (floats at axis 21) — say how it should be
+    held (tabs back in a new spot, cradle, straps) and it gets built.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v64**
 
 ## v64 Bare Spiral Plow: decluttered to the single watertight shell, checked all 6 sides - 2026-09-18

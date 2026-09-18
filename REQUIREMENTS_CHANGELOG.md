@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v65 — 2026-09-18
+- Clear tape path (user: kept object in the middle obstructs tape flow): deleted the left tab (lay across the trench at the tape-wall lane); plow is the bare scroll_sheet, ONE shell (3011); tape-flow path ray-probed clear at 15 stations mouth->exit; solo mouth/top visual check clean; viewer ASSET_V 49, plow GLB rebuilt, verify_v65.js; open: part has no mount — user to say how it is held
+
 ## v64 — 2026-09-18
 - Bare spiral plow (user: remove unnecessary objects in/arounds it; check single object from all angles): deleted all wrapper solids (pedestals/straps/ears/post/tray/nose) + the floating right tab (disjoint in every orientation, shell probe proved 2 shells); part is now ONE watertight shell (3210); solo 6-side visual check (mouth/exit/top/bottom/near/far) clean; viewer ASSET_V 48, plow GLB rebuilt, verify_v64.js
 
