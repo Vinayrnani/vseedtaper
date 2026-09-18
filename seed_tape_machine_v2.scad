@@ -26,8 +26,8 @@ animate_assembly = true;
 // Kinematics / derived parameters (v2)
 // ============================================================
 gear_module   = 2;
-roller_teeth  = 20;
-drum_teeth    = 40;
+roller_teeth  = 16;
+drum_teeth    = 44;
 center_distance = (roller_teeth + drum_teeth) * gear_module / 2; // 60
 
 // Gear tooth proportions (20 PA trapezoidal)
@@ -36,12 +36,12 @@ dedendum   = 1.25 * gear_module;  // 2.5
 tooth_arc_frac = 0.47;            // ~47% tooth thickness at pitch circle
 
 // Derived gear dimensions
-roller_pitch_dia = gear_module * roller_teeth;   // 40
-drum_pitch_dia   = gear_module * drum_teeth;     // 80
-roller_outer_dia = roller_pitch_dia + 2*addendum; // 44
-roller_root_dia  = roller_pitch_dia - 2*dedendum; // 35
-drum_outer_dia   = drum_pitch_dia + 2*addendum;   // 84
-drum_root_dia    = drum_pitch_dia - 2*dedendum;   // 75
+roller_pitch_dia = gear_module * roller_teeth;   // 32
+drum_pitch_dia   = gear_module * drum_teeth;     // 88
+roller_outer_dia = roller_pitch_dia + 2*addendum; // 36
+roller_root_dia  = roller_pitch_dia - 2*dedendum; // 27
+drum_outer_dia   = drum_pitch_dia + 2*addendum;   // 92
+drum_root_dia    = drum_pitch_dia - 2*dedendum;   // 83
 roller_outer_r = roller_outer_dia/2;
 roller_root_r  = roller_root_dia/2;
 drum_outer_r   = drum_outer_dia/2;
@@ -51,12 +51,12 @@ drum_root_r    = drum_root_dia/2;
 roller_dia = 20;
 roller_body_r = roller_dia/2;
 
-// Gear mesh phase (v21): half-pitch of the 20T roller pinion (360/20/2 = 9°).
-// The drum (40T) has a tooth centered on the line of centers at $t=0, so the
+// Gear mesh phase (v21, v70: 16T): half-pitch of the 16T roller pinion (360/16/2 = 11.25°).
+// The drum (44T) has a tooth centered on the line of centers at $t=0, so the
 // roller needs a half-pitch offset for tooth-into-gap mesh. Applied to the
 // roller shaft rotation (lower roller + crank, one rigid shaft) in
 // animated_assembly; mirrored in the viewer as GEAR_PHASE.
-gear_mesh_phase = 360/roller_teeth/2;   // 9
+gear_mesh_phase = 360/roller_teeth/2;   // 11.25
 
 // Circumference for tooth angular spacing
 roller_circ_pitch = PI * gear_module;
@@ -65,13 +65,13 @@ tooth_arc_roller = tooth_arc_frac * roller_circ_pitch;
 tooth_arc_drum   = tooth_arc_frac * drum_circ_pitch;
 
 // Kinematics (v14 MVP: 6 cavities fixed, spacing 6 inch = 152.4 fixed;
-// tape driven by pull roller via 40:20 mesh, drum geared slower vs roller)
+// tape driven by pull roller via 44:16 mesh, drum geared slower vs roller)
 tape_per_crank_rev = PI * roller_dia;         // ~62.83 (roller 1 rev)
-drum_rot_per_crank = 0.5;
+drum_rot_per_crank = roller_teeth/drum_teeth; // 16/44 ≈ 0.3636 (crank/roller spins 44/16 = 2.75x drum)
 tape_per_drum_rev  = PI * drum_dia;           // ~157.08 (drum circumference, reference only)
-tape_per_drum_rev_roller = PI * roller_dia * (drum_teeth / roller_teeth); // 125.66 actual tape/drum rev via pull roller
+tape_per_drum_rev_roller = PI * roller_dia * (drum_teeth / roller_teeth); // 172.79 actual tape/drum rev via pull roller
 num_divots         = 6;                       // v14 MVP fixed: 6 cavities (wheels interchangeable by hand 1-6mm, count stays 6)
-achieved_spacing   = tape_per_drum_rev_roller / num_divots; // ~20.94 with stock 20/40 gears; target 152.4 via future swap-gears (see GEAR_RATIO.md)
+achieved_spacing   = tape_per_drum_rev_roller / num_divots; // ~28.80 with 16/44 gears; target 152.4 via future swap-gears (see GEAR_RATIO.md)
 target_spacing     = 152.4;                   // v14 MVP: fixed 6 inch spacing
 
 // ============================================================
@@ -101,7 +101,7 @@ spool_axle_z  = 65;  // 120mm max roll OD, height 65mm above base
 chassis_x0    = -14; // v22: west edge (was 0); east edge stays chassis_x0+chassis_len=248 (v38: 200->248 seats take-up 226+16=242 + 6 margin)
 chassis_len   = 262; // v38: 214->262, east extension seats the wind-up reel clear of the pull nip (X gap 6)
 chassis_width = 60;
-chassis_height = 110;  // > max(spool top=90, drum top=102) + 5 = 107 ✓
+chassis_height = 112;  // v70: > max(spool top=90, drum top=106) + 5 = 111 ✓ (was 110 for the 40T gear)
 base_thick    = 4;
 wall_thick    = 3;
 
@@ -198,7 +198,7 @@ shroud_h   = 23;                  // v33 enclosed tunnel height (tape slot 0..21
 // user moved it to the OTHER side -> outside the BACK wall (Y=-8, grip mirrored -Y).
 // Coaxial kept: [roller_axle_x=40, axle z=60], grip orbit r=crank_throw=45.
 // Back gears (drum Y~12 + roller pinion Y~12) untouched; center_distance 60,
-// gear_mesh_phase 9deg, $fn=60, tol=0.3 all kept.
+// gear_mesh_phase 11.25deg, $fn=60, tol=0.3 all kept.
 // ============================================================
 crank_throw     = 45;
 crank_mount_x   = roller_axle_x; // 40: coaxial with roller axle (was 77.5 drum-left)
@@ -295,7 +295,7 @@ tape_n_x         = 12;           // taper steps along X (progressive entry->exit
 bind_x   = plow_end + 13;   // 172: thread orbit station east of the plow (rotor X half 4 -> 168..176, gap 9)
 pull_x   = plow_end + 35;   // 194: vertical-nip pull station (sleeve r7.65 -> 186.35..201.65, gap 10.35 to twister east)
 takeup_x = 226;             // wind-up reel east (flange r16 -> 210..242, gap 6 to pull east; chassis east 248)
-takeup_z = 34;              // reel axle height (flange 18..50: bottom >= 0, top < 110)
+takeup_z = 34;              // reel axle height (flange 18..50: bottom >= 0, top < 112)
 twister_axle_z = tape_z + 4;      // 17: ring centre over the folded pocket (pocket top ~21)
 twister_ring_r = 10;              // guide ring radius (tape pocket 7.8 passes through)
 twister_ring_tube = 2;
@@ -356,16 +356,16 @@ turner_curl_cz = 13;              // v56 bore-axis height (lane-centred; was 12)
 // ============================================================
 // v53 OVERHEAD twister drive (user: duplicate drum gear + bottom
 // bevels blocking the tape): the v48/v51 drum-coaxial 50T takeoff
-// is DELETED; takeoff reuses the EXISTING drum40 gear (back plane
+// is DELETED; takeoff reuses the EXISTING drum gear 44T (back plane
 // y 9..15, no new drum parts). One HIGH countershaft at (cx,44)
-// carries a 10T counter (same back plane y=12, dist 50 = 40+10
-// from (100,60), 4x) + a 12T Y-bevel; 90deg bevel to a 10T
+// carries a 10T counter (same back plane y=12, dist 54 = 44+10
+// from (100,60), 4.4x) + a 12T Y-bevel; 90deg bevel to a 10T
 // X-pinion (1.2x) on a HIGH side layshaft (y=45.5,z=44, cx->183,
 // overhead, clears the tape by >=5); a thin 15T/12T spur drop at
 // x=181 (dz=27=15+12, 1.25x) feeds the LOW side layshaft
 // (y=45.5,z=17, 165..183) + the kept r3.5 friction wheel on the
 // ring OD (slip after, hollow middle). Total
-// (40/10)*(12/10)*(15/12) = 4*1.2*1.25 = 6.0 at the low shaft.
+// (44/10)*(12/10)*(15/12) = 4.4*1.2*1.25 = 6.6 at the low shaft.
 // Lowest overhead steel 27 (drop-high bottom) clears tape top 22
 // by 5; only the small 12T drop-low (bottom 3) stays low in a
 // 2-floor pocket (1.0 rolling clearance, v51 precedent).
@@ -376,23 +376,23 @@ turner_curl_cz = 13;              // v56 bore-axis height (lane-centred; was 12)
 // Pull/takeup stay tape-coupled (no gears, documented, zero
 // exterior clutter). Stations/gaps untouched (turner lip 160.35 ->
 // twister gap 7.65, gaps >= 5). Speeds (rev per crank rev):
-// crank +1, drum -0.5, counter +2.0 (about Y), twister -3 (about X),
+// crank +1, drum -16/44≈-0.36, counter +1.6 (about Y), twister -2.18 (about X),
 // pull +4/3 (about Z, tape-coupled), takeup +2 (about Y, tape/clutch).
 // vpull cushioned (v39): soft rubber/silicone sleeve visual over the
 // steel core (v52 OD stays ~d15 => 4/3 spin keeps surface speed), firm grip without crushing.
 // ============================================================
 // v53 OVERHEAD take-off (duplicate 50T DELETED; takeoff reuses the
-// EXISTING drum40 gear, y 9..15 back plane). Module 2 single,
-// teeth all in [10,60]. Ratio (40/10)*(12/10)*(15/12) = 6.0.
+// EXISTING drum gear 44T, y 9..15 back plane). Module 2 single,
+// teeth all in [10,60]. Ratio (44/10)*(12/10)*(15/12) = 6.6.
 drive53_mod = 2;
-// Stage 1 (parallel spur Y-Y): drum40 (r40 at (100,60)) -> overhead
-// counter 10T (r10) at (cx,44): dist = 50 = 40+10, same Y plane.
+// Stage 1 (parallel spur Y-Y): drum44 (r44 at (100,60)) -> overhead
+// counter 10T (r10) at (cx,44): dist = 54 = 44+10, same Y plane.
 cnt53_Zc = 10;
-cnt53_rd = gear_module*drum_teeth/2;   // 40 (existing drum40, reused)
+cnt53_rd = gear_module*drum_teeth/2;   // 44 (existing drum gear 44T, reused)
 cnt53_rc = drive53_mod*cnt53_Zc/2;     // 10
 cnt53_cz = 44;   // overhead: bottom 44-12=32 clears tape top 22 by 10
-cnt53_cx = drum_axle_x + sqrt(pow(cnt53_rd + cnt53_rc, 2) - pow(drum_axle_z - cnt53_cz, 2)); // ~147.37
-cnt53_y = 12;    // mesh plane = drum40 gear plane (back, y 9..15)
+cnt53_cx = drum_axle_x + sqrt(pow(cnt53_rd + cnt53_rc, 2) - pow(drum_axle_z - cnt53_cz, 2)); // ~151.58
+cnt53_y = 12;    // mesh plane = drum gear plane (back, y 9..15)
 cnt53_y0 = 1; cnt53_y1 = 59;  // hidden in wall/block bores, never exterior
 spur53_t = 6;
 // Stage 2 (90deg bevel, overhead): Y 12T (r12, countershaft) ->
@@ -465,13 +465,13 @@ assert(seed_depth > 0 && seed_depth < drum_radius, "seed_depth must be >0 and < 
 assert(seed_spacing == 152.4, "v14 MVP: seed_spacing fixed at 6 inch (152.4mm)");
 assert(gear_module > 0, "gear_module must be >0");
 assert(center_distance == (roller_teeth + drum_teeth) * gear_module / 2,
-       str("center_distance must be 60 for 20T/40T module=2, got ", center_distance));
+       str("center_distance must be 60 for 16T/44T module=2, got ", center_distance));
 assert(num_divots == 6, "v14 MVP: num_divots fixed at 6 cavities");
 assert(roller_axle_z >= roller_outer_dia/2 + 1, str("roller_axle_z must clear base: need >= ", roller_outer_dia/2+1, " got ", roller_axle_z));
 assert(drum_axle_z >= drum_radius + base_thick + tolerance, str("drum_axle_z must clear cradle+tape: need >= ", drum_radius+base_thick+tolerance, " got ", drum_axle_z));
 assert(abs(sqrt(pow(roller_axle_x - drum_axle_x,2)+pow(roller_axle_z - drum_axle_z,2)) - center_distance) < 0.5,
        str("gear center distance must be ~60mm, got ", sqrt(pow(roller_axle_x-drum_axle_x,2)+pow(roller_axle_z-drum_axle_z,2))));
-// v53 OVERHEAD drive (drum40 takeoff, no duplicate, no low bevels):
+// v53 OVERHEAD drive (drum 44T takeoff, no duplicate, no low bevels):
 // single module 2 + exact 6.0 at the low shaft + parallel mesh
 // dist=r1+r2 + true 90deg bevel + spur drop + side friction on
 // the ring OD (nothing coaxial). Zero exterior, zero floor gears.
@@ -479,10 +479,10 @@ assert(drive53_mod == 2 && gear_module == 2, "v53: drive must stay single module
 assert(cnt53_Zc >= 10 && cnt53_Zc <= 60 && bev53_Zy >= 10 && bev53_Zy <= 60
     && bev53_Zx >= 10 && bev53_Zx <= 60 && drop53_Zh >= 10 && drop53_Zh <= 60
     && drop53_Zl >= 10 && drop53_Zl <= 60, "v53: drive teeth must stay in [10,60]");
-assert((drum_teeth/cnt53_Zc)*(bev53_Zy/bev53_Zx)*(drop53_Zh/drop53_Zl) == 6, "v53: step-up must be exactly 6x ((40/10)*(12/10)*(15/12))");
-// Stage-1 mesh: centre distance = r_drum40 + r_counter (same Y plane).
-assert(abs(sqrt(pow(cnt53_cx - drum_axle_x, 2) + pow(cnt53_cz - drum_axle_z, 2)) - (cnt53_rd + cnt53_rc)) <= tolerance + 0.01, "v53: drum40->counter mesh must satisfy dist=r1+r2 (50)");
-assert(cnt53_y == 12, "v53: counter must share the drum40 gear plane (back, y 9..15)");
+assert(abs((drum_teeth/cnt53_Zc)*(bev53_Zy/bev53_Zx)*(drop53_Zh/drop53_Zl) - 6.6) <= 0.001, "v53: step-up must be exactly 6.6x ((44/10)*(12/10)*(15/12))");
+// Stage-1 mesh: centre distance = r_drum44 + r_counter (same Y plane).
+assert(abs(sqrt(pow(cnt53_cx - drum_axle_x, 2) + pow(cnt53_cz - drum_axle_z, 2)) - (cnt53_rd + cnt53_rc)) <= tolerance + 0.01, "v53: drum44->counter mesh must satisfy dist=r1+r2 (54)");
+assert(cnt53_y == 12, "v53: counter must share the drum gear plane (back, y 9..15)");
 // Bevel axes intersect at the overhead apex + perpendicular (Y vs X).
 assert(apex53_x == cnt53_cx && apex53_z == cnt53_cz, "v53: apex must sit on the Y countershaft (cx,44)");
 assert(apex53_y == hi53_y && apex53_z == hi53_z, "v53: apex must sit on the high layshaft (45.5,44)");
@@ -879,15 +879,15 @@ module chassis() {
             // v53 OVERHEAD twister drive (v51 hollow kept: ZERO coaxial
             // parts, ZERO exterior gears, NO belts, NO floor gears, NO
             // duplicate takeoff): back wall is clean solid. EXISTING
-            // drum40 (axis Y, back plane y 9..15) -> overhead counter
-            // 10T (axis Y, same plane y=12, dist 50 = 40+10) at
-            // (~147.37,12,44) = 4x, high above the tape (bottom 32);
+            // drum gear 44T (axis Y, back plane y 9..15) -> overhead counter
+            // 10T (axis Y, same plane y=12, dist 54 = 44+10) at
+            // (~151.58,12,44) = 4.4x, high above the tape (bottom 32);
             // Y-bevel 12T (same high countershaft, axis Y) -> X-pinion
             // 10T (high layshaft, axis X) = 1.2x at I53 (cx,45.5,44),
             // Y vs X 90deg, both bottoms >= 30 (overhead); thin 15T/12T
             // spur drop (parallel X-X, dz=27, 1.25x at x=181, bottoms
             // 27/3, low one pocketed) -> low layshaft + side friction
-            // wheel (r3.5) touching the ring OD (slip after) = 6x at
+            // wheel (r3.5) touching the ring OD (slip after) = 6.6x at
             // the low shaft. One high Y countershaft (cx,44, y 1..59,
             // through-wall) + high/low X layshafts (y=45.5, z=44/17)
             // + 2 hanger posts replace the v51 low apex works.
@@ -895,7 +895,7 @@ module chassis() {
             // support both roller ends; bridge kept SOLID (no tube
             // hole); cup B kept (bored).
             // Counter spur (axis Y, back plane y=12: meshes the
-            // existing drum40 gear; bored, slips on the high
+            // existing drum gear 44T; bored, slips on the high
             // countershaft; overhead, never near the tape).
             translate([cnt53_cx, cnt53_y, cnt53_cz])
                 rotate([90, 0, 0])
@@ -1334,7 +1334,7 @@ module hopper_body() {
 //    0..shroud_len = world 58..84, centroid ~71, Y centred on the track).
 //    Side walls stand on the base (flat print base min_z=0) + sole
 //    flanges; top plate clears the tape (v33 ends open 0..21, tape at ~13);
-//    top (23) stays below the roller gear bottom (38) and the hopper
+//    top (23) stays below the roller gear bottom (42) and the hopper
 //    cover bottom lip (~36.4 at x=84). Round side view-ports (d10) show
 //    the tape. Inner width = paper_width + 2*tol; curves use $fn=60.
 //    Local frame: x 0..len, y centred 0, z 0..shroud_h. Assembly places
@@ -1347,7 +1347,7 @@ module u_channel_shroud() {
     assert(shroud_x0 >= roller_axle_x + roller_outer_r - 4,
            str("u_channel_shroud: west end must stay near the roller nip, got ", shroud_x0));
     assert(shroud_h < roller_axle_z - roller_outer_r,
-           str("u_channel_shroud: top must stay below the roller gear bottom (38), got ", shroud_h));
+           str("u_channel_shroud: top must stay below the roller gear bottom (42), got ", shroud_h));
     wall = shroud_wall;                          // 2
     inner_hw = (paper_width + 2*tolerance)/2;    // 13
     outer_hw = inner_hw + wall;                  // 15
@@ -1444,7 +1444,7 @@ module seed_cartridge(sdia = seed_dia, sdepth = seed_depth) {
                         translate([0, 0, -epsilon])
                             cylinder(h=1.5 + 2*epsilon, d=drum_dia - 6, center=false);
                     }
-            // Drum gear (lightened, 40T) — v20 BACK/BOTTOM side, chamfer-aware base
+            // Drum gear (lightened, 44T) — v20 BACK/BOTTOM side, chamfer-aware base
             translate([0,0, gear_z])
                 spur_gear(teeth=drum_teeth, module_mm=gear_module, thickness=gear_thick,
                           bore_flat=hex_axle_flat, is_hex=true,
@@ -2216,38 +2216,38 @@ module crank_assembly() {
 // Sign convention (v23: crank drives the ROLLER shaft from the back wall side):
 //   drum_angle = -360*$t ANTI-CLOCKWISE about +Y (top surface moves -X/left,
 //   viewed +X right, +Z up): picks up RIGHT, carries over top, drops bottom-center
-//   roller_angle = +720*$t + gear_mesh_phase CLOCKWISE (driven by drum via
-//   40:20 mesh, 2:1; +9° half-pitch so the pinion tooth falls into the drum gap)
+//   roller_angle = +990*$t + gear_mesh_phase CLOCKWISE (driven by drum via
+//   44:16 mesh, 2.75:1; +11.25° half-pitch so the pinion tooth falls into the drum gap)
 //   crank = roller_angle (rigid on the roller shaft, coaxial at roller_axle_x)
-//   upper idler = -720*$t (counter-rotates via tape contact)
+//   upper idler = -990*$t (counter-rotates via tape contact)
 //   v53 OVERHEAD twister drive (zero exterior gears, module 2,
-//   asserted): crank->drum 2:1 interior (40:20, dist 60, phase 9°);
-//   EXISTING drum40 -> overhead counter 10T (4x, back plane y=12,
-//   dist 50, high) -> Y-bevel 12T -> high X-pinion 10T (1.2x, 90°
-//   at I53, overhead) -> thin 15T/12T drop (1.25x at x=181) = 6x
+//   asserted): crank->drum 2.75:1 interior (44:16, dist 60, phase 11.25°);
+//   EXISTING drum44 -> overhead counter 10T (4.4x, back plane y=12,
+//   dist 54, high) -> Y-bevel 12T -> high X-pinion 10T (1.2x, 90°
+//   at I53, overhead) -> thin 15T/12T drop (1.25x at x=181) = 6.6x
 //   at the low shaft (1 bind per seed, 6 cavities). Flips keep the twister sign
-//   (animation: twister -3x crank = 6x drum at 0.5x crank).
+//   (animation: twister -2.18x crank = 6x drum at 16/44x crank).
 //   Pull nip pair spins about Z at +/-roller_angle*vpull_spin (tape-coupled
 //   4/3 vs the main roller, v52 d15 dia => same surface speed,
 //   the spacing driver; cushioned rubber/silicone sleeve grips firm
 //   without crushing); takeup_angle
 //   = -1440*$t about the reel axle (tape-tension wind-up, core d10
-//   base speed winds the same 125.66mm linear tape; slip clutch on
+//   base speed winds the same 172.79mm linear tape; slip clutch on
 //   the axle slips when full). No belts, no exterior gears.
 //   v40 mounts: BOTTOM = 6-turner + wind-up reel; SIDE = twister ring +
 //   pull rollers + drum (axles through the chassis walls); TOP =
 //   hopper+shroud + tape input spools.
-// At $t=0 geometry equals static layout (plus the 9° mesh phase on the roller).
+// At $t=0 geometry equals static layout (plus the 11.25° mesh phase on the roller).
 // ============================================================
 module animated_assembly() {
     drum_angle = -360*$t;    // ANTI-CLOCKWISE about +Y
-    crank_angle = 720*$t;    // lower roller + crank orbit (CW, opposite drum)
-    idler_angle = -720*$t;   // upper idler counter-rotates
+    crank_angle = 990*$t;    // v70: lower roller + crank orbit (CW, opposite drum; 44/16 = 2.75x drum magnitude)
+    idler_angle = -990*$t;   // upper idler counter-rotates
     roller_angle = crank_angle + gear_mesh_phase; // mesh-phased roller shaft
     twister_angle = -360*$t*twister_orbits_per_drum; // v37: 6 orbits/drum rev about X
     pull_a_angle = roller_angle*vpull_spin;   // v52: nip side A spin-compensated 4/3 (same surface speed)
     pull_b_angle = -roller_angle*vpull_spin;  // v52: nip side B counter-rotates 4/3
-    takeup_angle = -1440*$t;       // v48: tape-tension wind-up (no take-up gears — exterior TU removed): base speed -2 = 2x crank (sense unchanged vs v43-v47; winds the same 125.66mm linear tape)
+    takeup_angle = -1440*$t;       // v48: tape-tension wind-up (no take-up gears — exterior TU removed): base speed -2 = 2x crank (sense unchanged vs v43-v47; winds the same 172.79mm linear tape per drum rev)
 
     // Chassis
     chassis();
