@@ -22,8 +22,8 @@
     orbit clears bracket). Green top ~115.5 exposed above wall
     110 (accepted).
 3. **Viewer** (`web/index.html` only): new PART_DEFS/pivots
-    (twister_ring/twister_bracket/layshaft_gears), twister 24x
-    drum (12x crank), `ASSET_V` 51->52, GLBs rebuilt, stale v53
+    (twister_ring/    twister_bracket/layshaft_gears/countershaft_gears/green_gear), twister 24x
+    drum (12x crank), `ASSET_V` 50->51, GLBs rebuilt, stale v53
     artefacts removed.
 4. **Visual check**: live animating preview + snapshots while
     animating, 0 console errors, tape-static.

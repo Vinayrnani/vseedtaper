@@ -1,6 +1,6 @@
 ---
-status: in-progress
-phase: 1
+status: done
+phase: 5
 updated: 2026-09-18
 ---
 
@@ -65,45 +65,45 @@ twister to a gear-driven hollow ring (18mm bore, dual bobbin spindles).
   friction wheel (r3.5) on ring OD. Ring r10/tube2, bore r8, 6 orbits/drum rev.
 
 ## Phase 1: Parameters [IN PROGRESS]
-- [ ] 1.1 New gear-train params (M1.5 pairs, tw_tol=0.35 local): twister_mod=1.5,
+- [x] 1.1 New gear-train params (M1.5 pairs, tw_tol=0.35 local): twister_mod=1.5,
       twister_Zg=72, twister_Zp1=12 (6:1), twister_Zg2=48, twister_Zp2=12 (4:1),
       bevel 20T/20T 1:1; pitch radii 54/9/36/9/15/15; cd1=63, cd2=45.
-- [ ] 1.2 Ring params: bore 18 ID, ring-side bevel 20T, 2 bobbin spindles 6mm dia ×
+- [x] 1.2 Ring params: bore 18 ID, ring-side bevel 20T, 2 bobbin spindles 6mm dia ×
       14mm 180° apart on front face, 2× 2mm guide eyelets near bore.
-- [ ] 1.3 Layout positions: Green plane y44..50 on drum shaft; layshaft (163,62)
+- [x] 1.3 Layout positions: Green plane y44..50 on drum shaft; layshaft (163,62)
       Y-span + bearing posts; countershaft (163,17) Y-span + posts; 48T/12T mesh
       y plane; bevel apex (163,30,17).
-- [ ] 1.4 twister_orbits_per_drum 6 → 24.
+- [x] 1.4 twister_orbits_per_drum 6 → 24.
 
 ## Phase 2: New Modules [PENDING]
-- [ ] 2.1 spur_gear(): accept module (local addendum=module, dedendum=1.25*module —
+- [x] 2.1 spur_gear(): accept module (local addendum=module, dedendum=1.25*module —
       identical for existing M2 gears); raise teeth cap 60→72+ for Green72.
-- [ ] 2.2 Rewrite thread_twister() → twister_ring(): hollow ring, 18mm clear bore,
+- [x] 2.2 Rewrite thread_twister() → twister_ring(): hollow ring, 18mm clear bore,
       fused 20T bevel on west face, 2 bobbin spindles + 2 guide eyelets.
-- [ ] 2.3 twister_bracket(): split-collar/slotted, 0.35 clearances, base-mounted,
+- [x] 2.3 twister_bracket(): split-collar/slotted, 0.35 clearances, base-mounted,
       coaxial y=30/z=17, window for bevel pinion.
-- [ ] 2.4 layshaft_gears() + countershaft gears (shafts + spur pairs + bevel pinion).
+- [x] 2.4 layshaft_gears() + countershaft gears (shafts + spur pairs + bevel pinion).
 
 ## Phase 3: Assembly & Animation [PENDING]
-- [ ] 3.1 animated_assembly(): drum 1x, layshaft -6x, countershaft +24x equiv,
+- [x] 3.1 animated_assembly(): drum 1x, layshaft -6x, countershaft +24x equiv,
       ring ±24x about X with correct relative senses; remove 6→24 orbits const.
-- [ ] 3.2 chassis(): mounts/bearings for new shafts; remove v53 wall holes, drop
+- [x] 3.2 chassis(): mounts/bearings for new shafts; remove v53 wall holes, drop
       pocket, hanger posts, friction parts.
-- [ ] 3.3 Replace twister cradle posts with bracket geometry.
+- [x] 3.3 Replace twister cradle posts with bracket geometry.
 
 ## Phase 4: Dispatch & Removal [PENDING]
-- [ ] 4.1 part_to_render: add twister_ring, twister_bracket, layshaft_gears
+- [x] 4.1 part_to_render: add twister_ring, twister_bracket, layshaft_gears
       (+green_gear/countershaft as needed); drop removed v53 parts.
-- [ ] 4.2 Remove ALL v53 overhead drive code + asserts (counter/bevel/drop gears,
+- [x] 4.2 Remove ALL v53 overhead drive code + asserts (counter/bevel/drop gears,
       friction wheel, shafts, posts, wall holes, pockets).
-- [ ] 4.3 Assertions: centre distances ±0.35, ratio 24, bore ≥18, bracket
+- [x] 4.3 Assertions: centre distances ±0.35, ratio 24, bore ≥18, bracket
       clearances, bobbin orbit clears bracket.
 
 ## Phase 5: Viewer & GLB [PENDING]
-- [ ] 5.1 regenerate_glbs.sh: new parts in PARTS; remove stale v53 artefacts.
-- [ ] 5.2 web/index.html PART_DEFS/pivots (drop v53 entries, add new); twister spin
+- [x] 5.1 regenerate_glbs.sh: new parts in PARTS; remove stale v53 artefacts.
+- [x] 5.2 web/index.html PART_DEFS/pivots (drop v53 entries, add new); twister spin
       24x drum (12x crank); ASSET_V bump + ?v= cache.
-- [ ] 5.3 Serve :9099 + Playwright (pool) live animating preview + snapshots.
+- [x] 5.3 Serve :9099 + Playwright (pool) live animating preview + snapshots.
 
 ## Key Geometry Summary
 ```
@@ -124,6 +124,19 @@ Ring (X): centre x=172, axis y=30/z=17, 20T bevel M1.5 west face, 1:1 turn
 ```
 
 ## Notes
+- 2026-09-18: IMPLEMENTED as v69 (commit feat). Final numbers: Green plane
+  y46..52 (centre 49, clears shroud wall 45 by 1); 48T/12T plane y16..22
+  (centre 19, clears drum40 plane by 1, hopper cheek 22.2 by 0.2 —
+  tight, documented); pinion cone_h 4 (top y40, clears Green by 6);
+  ring bevel hub-less cone x163..168.5 fused to ring west face 168;
+  collar plates x169..171/173..175 (bore 16.85, bridge z34..37, legs
+  y11..15/45..49 on feet z4..5.5); countershaft waist r2.5 y22..38
+  (clears scroll rim 159.8 by 0.7); layshaft cheek notches in hopper
+  (local x63, z58, slip d8.6). Bevel pitch-centre vs ring-face offset:
+  ring-gear cone runs apex->168.5 (0.5 fuse into west face 168);
+  pinion disc r16.5 threads the collar bore r16.85 (0.35).
+  Animation: drum 1x, layshaft -6x, countershaft +24x equiv, ring 24x
+  about X (bevel-consistent: twister_angle == cnt_angle).
 - 2026-09-18: plan rewritten per binding user decision — X-axis ring kept, 1:1 bevel
   turn replaces the direct 12T-on-ring mesh (bore/root interference). Earlier Y-axis
   all-spur draft (rev 1) superseded.
