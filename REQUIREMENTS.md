@@ -1,6 +1,34 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v69**
+**Version: v70**
+
+## v70 Step 1: bigger drum gear 44T / roller pinion 16T - 2026-09-18
+
+1. **Why** (user step-by-step twister redesign, STEP 1 ONLY, one
+    piece at a time — option B: resize the drum gear first):
+    drum gear 40T→44T M2 (pitch r40→r44), roller pinion 20T→16T
+    M2 (pitch r20→r16). Centre distance stays 44+16=60 exact
+    (drum x=100 z=60, roller x=40 z=60 — positions UNCHANGED).
+    Crank/roller speed becomes 44/16=2.75x drum (was 2x).
+2. **CAD** (`seed_tape_machine_v2.scad` only): `roller_teeth`
+    20→16, `drum_teeth` 40→44; `gear_mesh_phase` 9→11.25deg
+    (16T half-pitch, formula-derived); `drum_rot_per_crank`
+    0.5→16/44; `crank_angle` 720*$t→990*$t (2.75x drum
+    magnitude, senses kept), idler −990*$t, takeup stays
+    −1440*$t (2x crank, tape-tension); mesh assert stays 60;
+    v53 step-up assert 6→6.6 ((44/10)*(12/10)*(15/12), counter
+    shaft auto-shifts with the bigger drum gear). NO new
+    twister/layshaft/countershaft/bevel gears added.
+3. **Viewer** (`web/index.html` only): `DRUM_RATIO` 0.5→16/44,
+    `GEAR_PHASE` PI/20→PI/16 (11.25deg), twister stays 6x
+    drum-relative, labels 16/44T + 2.75:1, `ASSET_V` 50->51,
+    affected GLBs (cartridge/rollers/rollers_lower/
+    rollers_upper/chassis) rebuilt.
+4. **Visual check**: live animating preview + snapshots while
+    animating, 0 console errors, tape-static.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; axle positions unchanged, back gears, crank
+    back wall [40,-8,60], R->L order, port 9099 only.
 
 ## v69 Orbital Twister 24:1 Gear Train IMPLEMENTATION (v67/v68 spec built) - 2026-09-18
 

@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v70 — 2026-09-18
+- STEP 1 of step-by-step twister redesign (one piece at a time): bigger drum gear 44T/roller pinion 16T M2 (pitch r44/r16, cd 60 exact, axles x=100/40 z=60 unchanged); gear_mesh_phase 9->11.25deg, crank 2x->2.75x drum (990*$t, senses kept); v53 step-up assert 6->6.6; viewer DRUM_RATIO 16/44, GEAR_PHASE PI/16, ASSET_V 50->51; NO new gears added
+
 ## v69 — 2026-09-18
 - Orbital twister 24:1 IMPLEMENTATION (v67/v68 spec built for real): Green72 M1.5 on drum shaft (y44..50) -> layshaft 12T (163,62) -> 48T -> countershaft 12T (163,17) -> 20T/20T bevel (apex 163,30,17) -> twister_ring (bore 18, X axis 172,30,17); twister_bracket split-collar + layshaft_gears/countershaft parts; v53 overhead fully removed; orbits 6->24; viewer ASSET_V 51->52, verify_v69.js
 
