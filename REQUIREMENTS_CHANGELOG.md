@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v72 — 2026-09-18
+- Gear-driven Orbital Thread Twister BUILT (user: all at once, twister EAST, chassis/pull/takeup shift as needed, nothing touches tape): drum44 -> compound 12T/38T M2 (y=12 back plane, C=(156,57)) -> Y drive shaft at x=186 (12T spur + 12T M1.5 pinion) -> 16T M1.5 ring bevel (west face, bore 18) -> ring about X at 418/27 = 15.4815x drum; stations bind 172->186 / pull 194->210 / takeup 226->242 / chassis 262->278 / tape flat 208->224 + leader +16; DEVIATION: 30T M1.5 ring bevel physically impossible (bottom -7 under base) so 16T M1.5 (bottom 3.5, pocket gap 1.5) + truncated pinion (tip y24, tape gap 2); v53 overhead/friction fully deleted; new intermediate_compound + drive_shaft parts; viewer pivots/ratios/PART_DEFS, ASSET_V 51->52
+
 ## v71 — 2026-09-18
 - STEP 2 of step-by-step twister redesign (one piece at a time): ONE 11T M2 intermediate pinion at (155,12,60) meshing the 44T drum (cd 55 = (44+11)*2/2 exact, same y=12 plane); spins 4x drum, counter-rotates vs drum (external mesh physics); new twister_pinion_11t part + dispatch + mesh assert + assembly + animation; shaft deferred; viewer pinionPivot/PINION_RATIO 16/11/ASSET_V 51->52; collisions: hopper/tube/chassis clear, v53 counter+countershaft interference FOUND and deferred; STEP 2 ONLY, no further gears
 

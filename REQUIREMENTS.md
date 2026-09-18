@@ -1,6 +1,69 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v71**
+**Version: v72**
+
+## v72 Gear-driven Orbital Thread Twister (twister east + minimal drum44 chain, y=12 back plane) - 2026-09-18
+
+1. **Why** (user: build the gear-driven Orbital Thread Twister all at
+    once; twister moves EAST away from the drum, chassis stretches as
+    needed, pull/takeup shift east as needed; nothing may interfere
+    with the tape): ring gets direct gear teeth + minimal drive chain
+    from the existing drum44T M2, all spur stages in the y=12 back
+    plane behind the tape (tape faces y26..34 east of the plow, so
+    back-plane steel clears it by 11 in Y). Chain: drum44 (r44 at
+    (100,60)) -> compound 12T M2 (r12, same y=12 plane, dist 56.08 =
+    44+12 within tol) coaxial 38T M2 (r38, low stack y3..9) ->
+    shaft spur 12T M2 (r12 at (186,17), dist 50 = 38+12 exact) on a
+    Y-axis drive shaft at x=bind_x -> 12T M1.5 bevel pinion (r9) ->
+    ring bevel (west face, axis X) -> ring about X. Ratio
+    (44/12)*(38/12)*(16/12) = 418/27 = 15.4815x drum (in the
+    15-18x brief window). Senses: drum -360*$t about Y, compound
+    counter (+1320*$t + 15deg phase), shaft same-sense as drum
+    (-4180*$t + 15deg), ring about X (+5573.33*$t, bevel reversal).
+    Stations: bind_x 172->186 (+14), pull_x 194->210 (+16),
+    takeup_x 226->242 (+16), chassis_len 262->278 (east edge 264 =
+    flange 258 + 6 margin). Tape flat end 208->224 + leader shifts
+    +16 (x0 222 / x1 240.5, inside pack r8: dist 7.65).
+2. **DEVIATION (fail-loud, physics-forced)**: brief asked 30T M1.5
+    bevel teeth on the ring west face, but 30T M1.5 has pitch r22.5
+    (outer ~24) and the ring axis sits at z17 — the gear bottom
+    would hang at -7, 7mm under the print base / through the table.
+    No pocket can fix below-z0 steel. Built instead: 16T M1.5 ring
+    bevel (pitch r12, outer 13.5, bottom 3.5, pocket floor 2 ->
+    1.5 rolling clearance), bore stays dia 18 clear for the tube,
+    2 bobbin rods kept. Bevel pinion is a truncated visual (apex
+    nominal at (bind_x,30,17), physical tip set back to y24 so the
+    cone never enters the tape tube; front-to-tape-wall gap 2).
+    Stale v53 overhead/friction drive fully deleted (params,
+    asserts, chassis steel, pockets).
+3. **CAD** (`seed_tape_machine_v2.scad` only): `thread_twister()`
+    = ring + 16T M1.5 west-face bevel (bore 18) + 2 rods;
+    `intermediate_compound()` (12T y9..15 + 38T y3..9, bore 8.6,
+    rides a static wall-fused Y pin at (156,57) y0..18.5);
+    `twister_drive_shaft()` (Y shaft y1..25 + 12T M2 spur y3..9 +
+    12T M1.5 pinion, apex nominal y30 tip y24, fused one spinner);
+    `animated_assembly()` spins compound/shaft/ring at the ratios
+    above; `chassis()` adds compound pin, drive-shaft back-wall
+    bore at (186,17), twister pocket (floor 2, gap 1.5) + spur
+    pocket (floor 2, gap 1.0, y3..11.5 so the back wall keeps full
+    section), twister posts moved east of the ring (x bind_x+3,
+    y s*14, rod-sweep gap 1.1); `part_to_render` gains
+    `intermediate_compound` + `drive_shaft`; wall/chassis_height
+    112, $fn=60, tol=0.3 kept; fail-loud mesh asserts
+    (dist=r1+r2: drum-compound <=tol+0.01, spur-compound exact,
+    bevel apex nominal + truncation) + clearance asserts (back-plane
+    Y gap 11, spur-vs-pull-X 2.35, pinion-front-to-tape 2, all
+    >=1.5; pockets/turner-envelope >=1.0/0.5 documented).
+4. **Viewer** (`web/index.html` only): pivots move with stations
+    (twister 186, pull 210, takeup 242) + new compound/shaft
+    pivots with crank-unit ratios (compound -4/3, shaft +38/9,
+    ring -(418/27)*DRUM_RATIO about X); PART_DEFS gains the two
+    new gears; `ASSET_V` 51->52; rebuilt GLBs: chassis, twister,
+    tape, intermediate_compound, drive_shaft.
+5. **Visual check**: live animating preview + snapshots while
+    animating, status=ready, 0 console errors, tape static.
+6. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; drum/roller axles unchanged, port 9099 only.
 
 ## v71 Step 2: 11T M2 intermediate pinion meshing the 44T drum - 2026-09-18
 
