@@ -56,13 +56,11 @@ fi
 
 # Usage: ./regenerate_glbs.sh [--force] [part ...]
 #   --force   ignore skip-unchanged cache, regenerate everything selected
-#   part ...  optional subset of the GLB names to (re)generate;
+#   part ...  optional subset of the 12 GLB names to (re)generate;
 #             default is all parts. Valid names:
 #             chassis hopper shroud cartridge plow crank cones rollers
 #             cone_a cone_b rollers_lower rollers_upper tape
-#             twister_ring twister_bracket layshaft_gears countershaft_gears
-#             green_gear pull_a pull_b takeup
-#             (v69: twister_ring replaces twister; v53 overhead removed)
+#             twister pull_a pull_b takeup
 FORCE=0
 FILTER=()
 for arg in "$@"; do
@@ -73,7 +71,7 @@ for arg in "$@"; do
     fi
 done
 
-ALL_GLB="chassis hopper shroud cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister_ring twister_bracket layshaft_gears countershaft_gears green_gear pull_a pull_b takeup"
+ALL_GLB="chassis hopper shroud cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister pull_a pull_b takeup"
 if [ "${#FILTER[@]}" -gt 0 ]; then
     for p in "${FILTER[@]}"; do
         case " $ALL_GLB " in
