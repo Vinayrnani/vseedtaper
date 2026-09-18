@@ -1007,6 +1007,14 @@ module chassis() {
             cube([24, wall_thick+2*epsilon, 22]);
         translate([90, chassis_width - wall_thick - epsilon, 18])
             cube([30, wall_thick+2*epsilon, 22]);
+        // v72 viewing windows in back wall (y=0..3) to see the
+        // interior gears at y=12: compound (x=156) and drive shaft
+        // (x=186). Windows start at the wall outer face and extend
+        // inward past the gear plane.
+        translate([140, -epsilon, 45])
+            cube([30, wall_thick + 10, 20]);
+        translate([170, -epsilon, 10])
+            cube([30, wall_thick + 10, 20]);
     }
 }
 
@@ -1981,10 +1989,6 @@ module thread_twister() {
             rotate_extrude(convexity=10)
                 translate([twister_ring_r, 0, 0])
                     square([twister_ring_tube*2, twister_ring_tube*2], center=true);
-        // Ø18 hollow bore through the ring axis (clear for the scroll tube).
-        translate([0, 0, 0])
-            rotate([90, 0, 0])
-                cylinder(h=(twister_ring_r + twister_ring_tube)*2 + 2*epsilon, d=bev72_bore + 2*tolerance, center=true);
         // v51: NO hub, NO arms to the centre (middle stays empty for
         // the tape). 2 rod-like bobbin holders 180 apart: rods
         // parallel to X fused through the ring, thread bobbins ride
@@ -2025,22 +2029,21 @@ module intermediate_compound() {
     assert(cmp72_cz - (cmp72_rb + 2) >= 0, "intermediate_compound: compound big must keep min_z above 0");
     union() {
         // Static Y pin (wall-fused, slip-fit in the compound bore).
-        translate([cmp72_cx, (cmp72_pin_y0 + cmp72_pin_y1)/2, cmp72_cz])
+        // Local origin is at (cmp72_cx, cmp72_y, cmp72_cz); pin at y=(pin_y0+pin_y1)/2
+        translate([0, (cmp72_pin_y0 + cmp72_pin_y1)/2 - cmp72_y, 0])
             rotate([90, 0, 0])
                 cylinder(h=cmp72_pin_y1 - cmp72_pin_y0, r=cmp72_pin_r, center=true);
         // Compound small gear (12T M2, meshes drum44 at y=12).
-        translate([cmp72_cx, cmp72_y, cmp72_cz])
+        rotate([0, 90, 0])
+            spur_gear(cmp72_Za, drive72_mod, cmp72_t,
+                       bore_dia=axle_clearance_dia,
+                       hub_dia=0, hub_len=0);
+        // Compound big gear (38T M2, low stack y3..9, drives shaft spur).
+        translate([0, 0, cmp72_t])
             rotate([0, 90, 0])
-                spur_gear(cmp72_Za, drive72_mod, cmp72_t,
+                spur_gear(cmp72_Zb, drive72_mod, cmp72_t,
                            bore_dia=axle_clearance_dia,
                            hub_dia=0, hub_len=0);
-        // Compound big gear (38T M2, low stack y3..9, drives shaft spur).
-        translate([cmp72_cx, cmp72_y, cmp72_cz])
-            rotate([0, 90, 0])
-                translate([0, 0, cmp72_t])
-                    spur_gear(cmp72_Zb, drive72_mod, cmp72_t,
-                               bore_dia=axle_clearance_dia,
-                               hub_dia=0, hub_len=0);
     }
 }
 
@@ -2058,17 +2061,17 @@ module twister_drive_shaft() {
     assert(sft72_z - sft72_r >= 0, "twister_drive_shaft: must keep min_z above 0");
     union() {
         // Y-axis drive shaft (back-wall bore .. pinion tip).
-        translate([sft72_x, (sft72_y0 + sft72_y1)/2, sft72_z])
-            rotate([90, 0, 0])
-                cylinder(h=sft72_y1 - sft72_y0, r=sft72_r, center=true);
+        // Local origin at shaft centre; shaft along local Y.
+        rotate([90, 0, 0])
+            cylinder(h=sft72_y1 - sft72_y0, r=sft72_r, center=true);
         // Shaft spur (12T M2, low plane y3..9).
-        translate([sft72_x, sft72_y0 + 3, sft72_z])
+        translate([0, sft72_y0 + 3 - (sft72_y0 + sft72_y1)/2, 0])
             rotate([0, 90, 0])
                 spur_gear(sft72_Zs, drive72_mod, sft72_t,
                            bore_dia=axle_clearance_dia,
                            hub_dia=0, hub_len=0);
         // Bevel pinion (12T M1.5, apex nominal y30, tip y24).
-        translate([sft72_x, bev72_apex_y, bev72_apex_z])
+        translate([0, bev72_apex_y - (sft72_y0 + sft72_y1)/2, 0])
             rotate([90, 0, 0])
                 bevel_gear(bev72_Zp, bev72_mod, bev72_t, bore_dia=0);
     }
@@ -2272,8 +2275,7 @@ module animated_assembly() {
 
     // v72 intermediate compound (static, driven by drum gear).
     translate([cmp72_cx, cmp72_y, cmp72_cz])
-        rotate([0, 90, 0])
-            intermediate_compound();
+        intermediate_compound();
 
     // v72 drive shaft (Y-axis at x=bind_x, spins same-sense as drum).
     translate([sft72_x, (sft72_y0 + sft72_y1)/2, sft72_z])
@@ -2433,8 +2435,7 @@ if (part_to_render == "all") {
 } else if (part_to_render == "drive_shaft") {
     // v72: Y drive shaft at x=bind_x, printable at min_z=0.
     translate([sft72_x, (sft72_y0 + sft72_y1)/2, sft72_z])
-        rotate([90, 0, 0])
-            twister_drive_shaft();
+        twister_drive_shaft();
 } else if (part_to_render == "pull_a") {
     vpull_roller(); // base at z=0 already
 } else if (part_to_render == "pull_b") {
