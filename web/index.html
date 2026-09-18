@@ -170,9 +170,6 @@
   var DRUM_RATIO = 16 / 44;               // v70: roller_teeth / drum_teeth = 16/44 ≈ 0.3636 (was 20/40 = 0.5)
   var GEAR_PHASE = Math.PI / 16;            // v70: 11.25deg = gear_mesh_phase (16T half-pitch,
                                             // tooth-into-gap); applied to the roller shaft
-  var PINION_RATIO = 4 * 16 / 44;           // v71: pinion spins 4x drum magnitude (44/11),
-                                            // = 16/11 ≈ 1.4545 in crank units, opposite drum sign
-  var PINION_PHASE = Math.PI / 11;          // v71: ~16.36deg = pinion2 half-pitch (11T tooth-into-gap)
   var PULL_SPIN = 4 / 3;                    // v52: roller_body_r/vpull_r = 10/7.5 (d15 pullers, same surface speed)
   var CRANK_ANGLE_PER_REV = Math.PI * 2;
 
@@ -325,11 +322,6 @@
   var upperPivot = new THREE.Group();
   upperPivot.position.set(40, 81.2, -30);
   root.add(upperPivot);
-
-  // v71 STEP 2: intermediate 11T pinion at OpenSCAD (155, 12, 60) -> Three.js (155, 60, -12)
-  var pinionPivot = new THREE.Group();
-  pinionPivot.position.set(155, 60, -12);
-  root.add(pinionPivot);
 
    // Crank mount at OpenSCAD (40, -8, 60) = roller axle, outside BACK wall
    // (x = crank_mount_x = roller_axle_x, y = crank_mount_y = -8) ->
@@ -606,8 +598,7 @@
     drum: drumPivot, hopper: hopperPivot, shroud: shroudPivot, spool: spoolGroup,
     cradle: cradlePivot, plow: plowPivot, lower: lowerPivot, upper: upperPivot,
     crankMount: crankMount, crankSpinner: crankSpinner,
-    twister: twisterPivot, pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
-    pinion: pinionPivot // v71: 11T intermediate pinion (155,12,60), 4x drum
+    twister: twisterPivot, pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot
   };
     window._getPivotData = function() {
     	const data = {
@@ -649,7 +640,6 @@
     lowerPivot.rotation.z = -crankAngle - GEAR_PHASE;   // v70: scad roller_angle = +990t + 11.25deg
     upperPivot.rotation.z = crankAngle;
     drumPivot.rotation.z = crankAngle * DRUM_RATIO;
-    pinionPivot.rotation.z = -PINION_RATIO * crankAngle - PINION_PHASE; // v71: 4x drum, opposite drum (external mesh, same sense as crank); scad +1440t + 16.36deg
     twisterPivot.rotation.x = -6 * DRUM_RATIO * crankAngle; // v70: 6 orbits/drum rev about X (drum-relative, was literal -3x crank at 0.5x)
     pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE); // v52: nip side A spin-compensated 4/3
     pullBPivot.rotation.y = -PULL_SPIN * (2 * crankAngle + GEAR_PHASE);// v52: nip side B counter-rotates 4/3
@@ -672,7 +662,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 52; // v71: step 2 new 11T intermediate pinion GLB (twister_pinion_11t)
+  var ASSET_V = 51; // v70: step 1 bigger drum gear 44T/roller 16T, chassis/cartridge/rollers GLBs rebuilt
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -703,14 +693,12 @@
       { id: 'pull_b', label: 'Vertical pull B (cushioned)', file: 'stl/pull_b.glb', color: 0x3f434a,
         parent: pullBPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.05, roughness: 0.9 }, // v52: cushioned mate, counter-rotates 4/3
       { id: 'takeup', label: 'Take-up spool (slip clutch)', file: 'stl/takeup.glb', color: 0xc96a2b,
-        parent: takeupPivot, pos: [0, 0, 20.5], rot: [Math.PI, 0, 0], metalness: 0.3 }, // v40: export height 31->41 (clutch discs+spring+nut on top); half 20.5 recentres the reel on the axle
-      { id: 'twister_pinion_11t', label: 'Twister pinion 11T (drum x4)', file: 'stl/twister_pinion_11t.glb', color: 0x7fb069,
-        parent: pinionPivot, pos: [0, -3.6, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.8, roughness: 0.35 }, // v71: export lifts +3.6 (base min_z=0, tip chamfer); -3.6 Y recentres the gear on the pivot
+        parent: takeupPivot, pos: [0, 0, 20.5], rot: [Math.PI, 0, 0], metalness: 0.3 } // v40: export height 31->41 (clutch discs+spring+nut on top); half 20.5 recentres the reel on the axle
     ];
    // Display order for the parts panel (matches user checklist + tape/seeds extras).
-    var PART_ORDER = ['chassis', 'hopper', 'shroud', 'cartridge', 'cones_a',
-       'cones_b', 'plow', 'rollers_lower', 'rollers_upper', 'crank',
-       'twister', 'pull_a', 'pull_b', 'takeup', 'twister_pinion_11t', 'tape', 'seeds'];
+   var PART_ORDER = ['chassis', 'hopper', 'shroud', 'cartridge', 'cones_a',
+      'cones_b', 'plow', 'rollers_lower', 'rollers_upper', 'crank',
+      'twister', 'pull_a', 'pull_b', 'takeup', 'tape', 'seeds'];
 
   var toggleGroups = {};
   var togglesDiv = document.getElementById('toggles');

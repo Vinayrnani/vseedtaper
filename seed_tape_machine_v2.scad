@@ -30,19 +30,6 @@ roller_teeth  = 16;
 drum_teeth    = 44;
 center_distance = (roller_teeth + drum_teeth) * gear_module / 2; // 60
 
-// v71 STEP 2: ONE intermediate 11T M2 pinion meshing the 44T drum gear.
-// Same Y plane as drum+roller gears (y=12, behind the tape path), right
-// of the drum. Mesh: |155-100|=55 = (44+11)*2/2 exact. Spins 4x drum
-// (44/11), counter-rotating vs drum (external mesh). Support shaft is
-// a later step (layshaft-class) — this step is the gear only.
-pinion2_teeth = 11;
-pinion2_pitch_r = gear_module * pinion2_teeth / 2; // 11
-pinion2_outer_r = pinion2_pitch_r + 2;             // 13 (addendum M2)
-pinion2_root_r  = pinion2_pitch_r - 2.5;          // 8.5 (dedendum M2)
-pinion2_x = 155; pinion2_y = 12; pinion2_z = 60;
-pinion2_t = 6;   // same thickness as drum/roller gears (same y 9..15 plane)
-pinion2_phase = 360 / pinion2_teeth / 2; // ~16.36: 11T half-pitch tooth-into-gap
-
 // Gear tooth proportions (20 PA trapezoidal)
 addendum   = 1.0 * gear_module;   // 2.0
 dedendum   = 1.25 * gear_module;  // 2.5
@@ -479,9 +466,6 @@ assert(seed_spacing == 152.4, "v14 MVP: seed_spacing fixed at 6 inch (152.4mm)")
 assert(gear_module > 0, "gear_module must be >0");
 assert(center_distance == (roller_teeth + drum_teeth) * gear_module / 2,
        str("center_distance must be 60 for 16T/44T module=2, got ", center_distance));
-assert(abs(sqrt(pow(pinion2_x - drum_axle_x, 2) + pow(pinion2_z - drum_axle_z, 2)) - (gear_module*drum_teeth/2 + pinion2_pitch_r)) <= tolerance + 0.01,
-       "v71: pinion2 11T->drum44 mesh must satisfy dist=r1+r2 (55=44+11)");
-assert(pinion2_y == 12, "v71: pinion2 must share the drum gear plane (back, y 9..15)");
 assert(num_divots == 6, "v14 MVP: num_divots fixed at 6 cavities");
 assert(roller_axle_z >= roller_outer_dia/2 + 1, str("roller_axle_z must clear base: need >= ", roller_outer_dia/2+1, " got ", roller_axle_z));
 assert(drum_axle_z >= drum_radius + base_thick + tolerance, str("drum_axle_z must clear cradle+tape: need >= ", drum_radius+base_thick+tolerance, " got ", drum_axle_z));
@@ -2029,27 +2013,6 @@ module pull_rollers() {
 }
 
 // ============================================================
-// v71 STEP 2: intermediate 11T M2 pinion (standalone printable +
-// assembly). Meshes the 44T drum gear at (155,12,60); axis Y.
-// Export branch prints flat (axis Z, base min_z=0); assembly branch
-// is Y-axis centred at the origin (caller places + spins it).
-// Bore = axle_dia slip fit (support shaft is a later step).
-// ============================================================
-module twister_pinion_11t() {
-    if (part_to_render == "twister_pinion_11t") {
-        // +0.6 like the drum gear: tip chamfer dips 0.6 below the web, so
-        // 3.6 keeps the print base at min_z=0.
-        translate([0, 0, pinion2_t/2 + 0.6])
-            spur_gear(teeth=pinion2_teeth, module_mm=gear_module,
-                      thickness=pinion2_t, bore_dia=axle_dia);
-    } else {
-        rotate([90, 0, 0])
-            spur_gear(teeth=pinion2_teeth, module_mm=gear_module,
-                      thickness=pinion2_t, bore_dia=axle_dia);
-    }
-}
-
-// ============================================================
 // v37 Thread-bind + vertical pull + wind-up (v36 MVP backfill).
 // Allowed modules only; $fn=60 inherited; tol=0.3 clearances.
 // - thread_twister(): HOLLOW rotor CENTRED at origin, axis along X:
@@ -2281,7 +2244,6 @@ module animated_assembly() {
     crank_angle = 990*$t;    // v70: lower roller + crank orbit (CW, opposite drum; 44/16 = 2.75x drum magnitude)
     idler_angle = -990*$t;   // upper idler counter-rotates
     roller_angle = crank_angle + gear_mesh_phase; // mesh-phased roller shaft
-    pinion2_angle = -drum_angle*(drum_teeth/pinion2_teeth) + pinion2_phase; // v71: +1440t + 16.36deg (external mesh: opposite drum = same sense as crank, 4x drum)
     twister_angle = -360*$t*twister_orbits_per_drum; // v37: 6 orbits/drum rev about X
     pull_a_angle = roller_angle*vpull_spin;   // v52: nip side A spin-compensated 4/3 (same surface speed)
     pull_b_angle = -roller_angle*vpull_spin;  // v52: nip side B counter-rotates 4/3
@@ -2359,13 +2321,6 @@ module animated_assembly() {
         rotate([0, roller_angle, 0])
             translate([-crank_pivot_x, 0, -crank_pivot_z])
                 crank_assembly();
-
-    // v71 STEP 2: intermediate 11T pinion at (155,12,60) meshing the
-    // drum gear (spins 4x drum, opposite sense; support shaft is a
-    // later step — gear only, no layshaft/countershaft here).
-    translate([pinion2_x, pinion2_y, pinion2_z])
-        rotate([0, pinion2_angle, 0])
-            twister_pinion_11t();
 
     // v37 Thread twister (v51 HOLLOW: ring + 2 rod bobbin holders
     // orbit the tape axis just east of the plow, binding each seed
@@ -2450,8 +2405,6 @@ if (part_to_render == "all") {
     takeup_reel(); // built along Z, base at z=0 already
 } else if (part_to_render == "crank") {
     crank_assembly();
-} else if (part_to_render == "twister_pinion_11t") {
-    twister_pinion_11t(); // v71 STEP 2: flat print, base min_z=0
 } else {
     echo(str("ERROR: unknown part_to_render='", part_to_render, "'."));
     cube([1,1,1]);
