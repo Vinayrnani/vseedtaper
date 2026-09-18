@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v68 — 2026-09-18
+- Orbital twister 24:1 build (v67 spec): side spur train 72/12 48/12 M1.5 + 20T/20T bevel turn, ring on X 24x drum, twister_ring/bracket/layshaft/countershaft parts, v53 overhead removed, orbits 24, viewer ASSET_V 51, verify_v68.js
+
 ## v67 — 2026-09-18
 - Orbital twister 24:1 train + 1:1 bevel turn (user: ring stays on X, 72/12 48/12 spurs M1.5 + 20T/20T bevel, 24x drum = 4 revs/seed, 8 wraps; 12T pinion can't surround 18mm bore so bevel stage required): new twister_ring/bracket/shafts, v53 overhead removed, orbits 24, viewer ASSET_V 51, verify_v67.js
 
