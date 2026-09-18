@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v71 — 2026-09-18
+- STEP 2 of step-by-step twister redesign (one piece at a time): ONE 11T M2 intermediate pinion at (155,12,60) meshing the 44T drum (cd 55 = (44+11)*2/2 exact, same y=12 plane); spins 4x drum, counter-rotates vs drum (external mesh physics); new twister_pinion_11t part + dispatch + mesh assert + assembly + animation; shaft deferred; viewer pinionPivot/PINION_RATIO 16/11/ASSET_V 51->52; collisions: hopper/tube/chassis clear, v53 counter+countershaft interference FOUND and deferred; STEP 2 ONLY, no further gears
+
 ## v70 — 2026-09-18
 - STEP 1 of step-by-step twister redesign (one piece at a time): bigger drum gear 44T/roller pinion 16T M2 (pitch r44/r16, cd 60 exact, axles x=100/40 z=60 unchanged); gear_mesh_phase 9->11.25deg, crank 2x->2.75x drum (990*$t, senses kept); v53 step-up assert 6->6.6; viewer DRUM_RATIO 16/44, GEAR_PHASE PI/16, ASSET_V 50->51; NO new gears added
 

@@ -1,6 +1,46 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v70**
+**Version: v71**
+
+## v71 Step 2: 11T M2 intermediate pinion meshing the 44T drum - 2026-09-18
+
+1. **Why** (user step-by-step twister redesign, STEP 2 ONLY, one
+    piece at a time): ONE 11T M2 spur pinion (pitch r11, outer
+    r13) at (155,12,60) — same Y plane as the drum+roller gears
+    (y≈12, behind the tape path), right of the drum. Mesh:
+    |155-100|=55 = (44+11)*2/2 exact. Spins 4x drum magnitude
+    (44/11); EXTERNAL mesh so it counter-rotates vs the drum
+    (same sense as crank/roller — brief's "same direction" line
+    corrected to real spur-mesh physics).
+2. **CAD** (`seed_tape_machine_v2.scad` only): `pinion2_teeth`
+    11, `pinion2_x/y/z` 155/12/60, `pinion2_t` 6,
+    `pinion2_phase` 360/11/2; new `twister_pinion_11t()`
+    (spur_gear direct, bore axle_dia, flat print base min_z=0 +
+    Y-axis assembly branch); fail-loud mesh assert (dist 55 =
+    44+11); assembly placement in `animated_assembly()` only
+    (chassis() untouched); `pinion2_angle` +1440*$t + phase
+    (opposite drum, 4x). NO support shaft yet (layshaft-class
+    part — deferred to a later step); NO further gears,
+    countershaft, bevels, ring/bracket.
+3. **Viewer** (`web/index.html` only): new `pinionPivot` at
+    M(155,12,60)=(155,60,-12), `PINION_RATIO` 16/11 (4x drum in
+    crank units, opposite drum sign) + `PINION_PHASE` PI/11,
+    PART_DEFS `twister_pinion_11t` entry, `ASSET_V` 51->52, new
+    GLB only (other GLBs untouched).
+4. **Collisions**: hopper cheeks clear (pinion top y=15 vs
+    cheek inner y=19.7, gap 4.7 — NO relief); tube z=17 far
+    below (gap 30); chassis walls y 0..3/57..60 clear (NO
+    notch); chassis top 112 clears gear top 73. FINDING (no
+    fix this step): v53 counter 10T at (~151.58,12,44) +
+    its Y countershaft (r4, top z=48) interpenetrate the new
+    pinion envelope (centres 16.36 apart vs 25 outer-sum;
+    tips graze the shaft) — v53 drive removal/rework is a
+    later-step decision.
+5. **Visual check**: live animating preview + snapshots while
+    animating (1 close-up pinion/drum mesh + 1 wide vs tape
+    path), 0 console errors, tape-static.
+6. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; drum/roller axles unchanged, port 9099 only.
 
 ## v70 Step 1: bigger drum gear 44T / roller pinion 16T - 2026-09-18
 
