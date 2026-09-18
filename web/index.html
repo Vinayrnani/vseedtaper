@@ -535,17 +535,14 @@
     pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
     pullX: 194, takeupX: 226
   };
-  // v62 proof hooks: 6-folder tubular scroll block (solid former
-  // 28x33x20, open-trench entry dia 25.4 = full tape width -> shut
-  // tube exit dia 8 = finished roll over 5 hull-lofted stages
-  // 126..159, axis ramp 14->13, blind wick bore d4 from the top at
-  // (152,51); flat entry tray 13.8x16x0.8 west of mouth + nose shelf,
-  // 2 small ears to the chassis holes; mouth 126 sits after
-  // drop 100 so the seed lands flat first),
+  // v63 proof hooks: 6-folder exact overlapping spiral sheet (user
+  // code verbatim: 0.5-turn U entry R12, 24 wide -> 1.25-turn overlap
+  // exit R5.5, 11 tube over 45, mouth world 114 / exit 159, axis 21;
+  // user tabs (left welded, right posted) + tray/nose/ears/pedestals),
   // gear-only drive (no belts), slip clutch behaviour, mounting layout.
-  window._sixTurner = { start: 126, end: 159, dropX: 100, wall: 1.0, boreR: 0,
-    entryBore: 25.4, exitBore: 8, seamGap: 0, tray: [112, 125.8, 16], wick: [152, 51, 4],
-    stages: '5-stage tubular scroll: open-trench entry dia 25.4 (190deg bowl, open sky) -> shut tube exit dia 8 (closed disks, axis 14->13)', entry: 'open trench dia 25.4 + flat entry tray 13.8x16x0.8 west of mouth (tall U walls pass through the open top)', exit: 'shut 8mm tube + blind d4 wick bore from the top (water-weld the PVA overlap)' };
+  window._sixTurner = { start: 114, end: 159, dropX: 100, wall: 1.6, boreR: 0,
+    entryBore: 24, exitBore: 11, seamGap: 0, tray: [112, 125.8, 16],
+    stages: 'exact overlapping spiral: 0.5-turn U entry (R12, 24 wide) -> 1.25-turn overlap exit (R5.5, 11 tube) over 45 (world 114..159, axis 21)', entry: 'spiral mouth R12 + flat entry tray 13.8x16x0.8 + nose shelf (telescopes over the transit end)', exit: 'overlapping 1.25-turn spiral tube R5.5 + user mount tabs' };
   window._gearTrain = { chain: 'crank->drum 2:1 interior -> drum-coaxial spur 50T -> parallel counter spur 10T (5x, beside the drum, high) -> Y-bevel 12T -> side X-pinion 10T (1.2x, 6x at the layshaft) -> friction wheel on the ring OD (slip after, hollow middle); pull nip tape-coupled 4/3 (no gears); take-up tape-tension wind-up 2x crank (no gears)', belts: false, exteriorGears: 0,
     bevel: 'one parallel spur pair (Y-Y, module 2, dist=r1+r2=60) + one 90° bevel pair (Y-X, module 2): spur (50/10) = 5x; bevel (12/10) = 1.2x; total 6.0 at the layshaft = 1 bind/seed nominal; apex I51 (~141.85,45.5,17)',
     mesh: 'parallel spur centres (100,60)-(~141.85,17) dist 60 = 50+10 (CAD-asserted); bevel apex at I51 = Y line ∩ side layshaft, 90° (CAD-asserted intersection + perpendicular + contact); twister driven by friction on the ring OD (wheel r3.5 at 15.5 = 12+3.5, CAD-asserted tangent), nothing coaxial; drum takeoff coaxial with the drum shaft (100,60); one high Y countershaft + one side layshaft, zero exterior gears, no floor contact',
@@ -664,7 +661,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 46; // v62: tubular scroll folder block (25.4 trench -> 8 tube + wick), plow GLB rebuilt
+  var ASSET_V = 47; // v63: exact overlapping spiral folder (user code verbatim, 45 long), plow GLB rebuilt
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -678,8 +675,8 @@
         parent: spoolGroup, pos: [0, 0, 26], rot: [Math.PI, 0, 0] },
       { id: 'cones_b', label: 'Cones B', file: 'stl/cone_b.glb', color: 0xc96a2b,
         parent: spoolGroup, pos: [-50, 0, -26], rot: [0, 0, 0] },
-      { id: 'plow', label: '6-folder (scroll 25.4->8 + wick)', file: 'stl/plow.glb', color: 0x8a8f98,
-        parent: plowPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4 }, // v62 tubular scroll: solid block 28x33x20, open-trench entry dia 25.4 (full tape, tall U walls pass through the open top) -> shut tube exit dia 8 (finished roll); blind wick bore d4 from the top at local (26,21) to water-weld the PVA overlap; flat entry tray world 112..125.8 + nose shelf; 2 small ears to chassis holes; part_to_render "plow" compat alias; mouth 126 sits after drop 100 (seed lands flat first)
+      { id: 'plow', label: '6-folder (exact spiral 45 + tabs)', file: 'stl/plow.glb', color: 0x8a8f98,
+        parent: plowPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4 }, // v63 exact spiral: user scroll_sheet()/printable_folder() verbatim (0.5-turn R12 mouth -> 1.25-turn R5.5 overlap tube, 1.6 wall), rolled U-up, axis +X, mouth world 114 (telescopes over transit) exit 159, axis 21; user tabs + tray/nose/ears/pedestals; part_to_render "plow" compat alias; mouth sits after drop 100 (seed lands flat first)
       { id: 'rollers_lower', label: 'Rollers lower (hidden)', file: 'stl/rollers_lower.glb', color: 0x9aa2ad,
         parent: lowerPivot, pos: [0, 0, 34.95], rot: [Math.PI, 0, 0], // v21: gear-down export (body centre 34.95); Rx(180) lands gear on back plane Y~12.
         metalness: 0.8, roughness: 0.35, visible: false },

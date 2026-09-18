@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v63 — 2026-09-18
+- Exact spiral plow (user: v62 "didn't work well", use spiral code exactly as plow replacement): six_turner = scroll_sheet()/printable_folder() embedded byte-identical (0.5-turn R12 entry -> 1.25-turn R5.5 overlap exit, 45 long, 1.6 wall, user tabs; demo rotate line omitted; $fn=6/20 kept as documented exception) + placement wrapper (mouth world 114 telescoping over transit, exit exactly 159, axis 21) + 2 floor pedestals + straps/ears + tray/nose + tab post; fail-loud exact-use/placement asserts; viewer ASSET_V 47, plow GLB rebuilt, verify_v63.js
+
 ## v62 — 2026-09-18
 - Tubular scroll folder (user-supplied scroll concept for 25.4mm tape -> 8mm tube): six_turner rebuilt as solid former block 28x33x20 with hull-lofted scroll tunnel (5 stages, open trench dia 25.4 -> shut tube dia 8, axis 14->13, hull on void only) + blind wick bore d4 from top (water-weld); fixed supplied snippet (capped ends -> plates poke past faces; chord roof blocking tall U walls -> open-sky trench); tray/nose/ears/straps kept, footprint world 126..159; fail-loud scroll asserts; viewer ASSET_V 46, plow GLB rebuilt, verify_v62.js
 

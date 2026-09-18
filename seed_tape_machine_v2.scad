@@ -1554,49 +1554,98 @@ module seed_cradle() {
 // (132,6)/(153,54). Bore axis (cy,cz)=(20,13), min_z=0.
 // part_to_render "plow" (compat) and "turner" both render this.
 // ============================================================
-// v62 tubular scroll folder (user scroll concept, fixed + fitted):
-// SOLID former block with the hollow tunnel lofted through it in
-// 5 morphing stages (hull-chained thin void plates, subtracted)
-// + a blind wick bore from the top for water-welding the PVA tape
-// right before it closes. Entry = wide open U dia 25.4
-// (= paper_width, full tape); exit = closed tube dia 8
-// (= leader_w, finished roll). Stage tables (station x along
-// local 0..33; first plate pokes 0.5 west for a clean open mouth,
-// last plate pokes 0.5 east for a clean tube exit):
-function scroll_sx(k) = [-0.5, 8.625, 16.75, 24.875, 33.5][k];
-function scroll_R(k) = [12.7, 9.0, 6.0, 4.25, 4.0][k];
-function scroll_W(k) = [190, 220, 260, 360, 360][k];
-function scroll_cz(k) = [14.0, 13.74, 13.49, 13.25, 13.0][k];
-// Void section polygon (hollow, absolute y/z): open trough = arc R
-// over a0..a1 (a=270 channel bottom, gap centred top 90) with both
-// ends extended straight up past the block top (open sky trench so
-// the tall seeded U walls thread the mouth); closed disk when
-// W>=360 (shut tube exit). Pre-mapped to 2D [x2d,y2d] = [-z, y]
-// so rotate([0,90,0]) + linear_extrude lays the plate across X with
-// y = r*cos(a), z = r*sin(a).
-function scroll_void_pts(R, W, cy, cz, n, top=22) =
-    W >= 360
-    ? [for (i=[0:n-1]) [-(cz + R*sin(360*i/n)), cy + R*cos(360*i/n)]]
-    : concat(
-        [for (i=[0:n]) let (a=270-W/2+W*i/n) [-(cz + R*sin(a)), cy + R*cos(a)]],
-        [[-top, cy + R*cos(270+W/2)], [-top, cy + R*cos(270-W/2)]]);
+// v63 exact spiral scroll folder (user code used VERBATIM, see
+// scroll_sheet()/printable_folder() below; only the demo invocation
+// `rotate([-90,0,0]) printable_folder();` is left out because a
+// top-level render line would print into EVERY part export).
+// The v62 block "didn't work well", so the v62 block/void/wick code
+// is deleted and the folder IS the user's overlapping spiral sheet
+// (0.5-turn U entry R12 -> 1.25-turn overlap exit R5.5 over 45,
+// placed mouth-west so the 45 length ends exactly on the slot end
+// 159: mouth world 114, telescoping over the transit end).
+// ----------------------------------------------------
+// EXACT MATCH FOR CARDBOARD MOCKUP
+// Overlapping Spiral Scroll Folder for 25.4mm Tape
+// ----------------------------------------------------
+length = 45;            // Total length of the folder
+thickness = 1.6;        // Wall thickness (4 perimeters of 0.4mm nozzle)
+steps_length = 35;      // Resolution along the length
+steps_arc = 35;         // Resolution around the curve
+module scroll_sheet() {
+    for (z = [0 : steps_length - 1]) {
+        // t goes from 0.0 (entrance) to 1.0 (exit)
+        t1 = z / steps_length;
+        t2 = (z + 1) / steps_length;
+        // How much it wraps around:
+        // 0.5 = half circle (U-shape)
+        // 1.25 = full circle + quarter overlap (The Spiral)
+        turns1 = 0.5 + 0.75 * t1;
+        turns2 = 0.5 + 0.75 * t2;
+        for (a = [0 : steps_arc - 1]) {
+            // Calculate angles for the 4 corners of this polygon patch
+            angle1_1 = (a / steps_arc) * (turns1 * 360);
+            angle1_2 = ((a + 1) / steps_arc) * (turns1 * 360);
+            angle2_1 = (a / steps_arc) * (turns2 * 360);
+            angle2_2 = ((a + 1) / steps_arc) * (turns2 * 360);
+            // Base radius shrinks from 12mm (24mm wide U) down to 5.5mm (11mm tube)
+            base_r1 = 12 - 6.5 * t1;
+            base_r2 = 12 - 6.5 * t2;
+            // Spiral offset: the radius shrinks slightly as it wraps around so it tucks INSIDE itself without colliding
+            r1_1 = base_r1 - (angle1_1 / 360) * 2.5 * t1;
+            r1_2 = base_r1 - (angle1_2 / 360) * 2.5 * t1;
+            r2_1 = base_r2 - (angle2_1 / 360) * 2.5 * t2;
+            r2_2 = base_r2 - (angle2_2 / 360) * 2.5 * t2;
+            // Convert to 3D Cartesian coordinates
+            p1 = [ r1_1 * cos(angle1_1), r1_1 * sin(angle1_1), t1 * length ];
+            p2 = [ r1_2 * cos(angle1_2), r1_2 * sin(angle1_2), t1 * length ];
+            p3 = [ r2_1 * cos(angle2_1), r2_1 * sin(angle2_1), t2 * length ];
+            p4 = [ r2_2 * cos(angle2_2), r2_2 * sin(angle2_2), t2 * length ];
+            // Create a solid sheet segment between the 4 points
+            hull() {
+                translate(p1) sphere(d=thickness, $fn=6);
+                translate(p2) sphere(d=thickness, $fn=6);
+                translate(p3) sphere(d=thickness, $fn=6);
+                translate(p4) sphere(d=thickness, $fn=6);
+            }
+        }
+    }
+}
+// Add mounting tabs so you can screw it to the chassis
+module printable_folder() {
+    union() {
+        scroll_sheet();
+        // Left mounting tab
+        translate([-15, 0, 5])
+            difference() {
+                cube([15, thickness, 10]);
+                translate([7.5, -1, 5]) rotate([-90,0,0]) cylinder(d=3.5, h=5, $fn=20);
+            }
+        // Right mounting tab
+        translate([12, 0, 25])
+            difference() {
+                cube([15, thickness, 10]);
+                translate([7.5, -1, 5]) rotate([-90,0,0]) cylinder(d=3.5, h=5, $fn=20);
+            }
+    }
+}
+// ---- end verbatim user code ----
 
 module six_turner() {
-    // ---- v62 scroll-block parameters (interface dims kept) ----
-    cy = 20;                        // tape centre (local y)
-    cz0 = 14;                       // entry axis height (exit lands on datum 13)
-    wall = 1.0;                     // former wall (printable, >=0.8)
-    blk_y0 = 6;                     // block west side (w28 centred on cy)
-    blk_y1 = 34;                    // block east side
-    blk_z1 = 20;                    // block top (entry mouth stays open above)
-    n_st = 5;                       // scroll stages (user concept)
-    plate_t = 0.6;                  // void plate thickness (hull endpoints)
-    wick_x = 26;                    // wick bore plan X (over the shut tube)
-    wick_y = 21;                    // wick bore plan Y (near-tube-centre)
-    wick_d = 4;                     // wick bore dia (wet felt wick)
-    wick_z0 = 15;                   // wick bore bottom (inside the void band)
-    wick_z1 = 21;                   // wick bore top (open above the block)
-    ch_x0 = 0;                      // channel west face (clean open mouth)
+    // ---- v63 exact-scroll placement (wrapper around verbatim user code) ----
+    // Orientation: roll -90 about the tube axis (entry half-pipe opens
+    // UP into a U) then +90 about Y (tube axis -> +X, mouth west).
+    // Placement: mouth 12 west of the slot so the exact 45 length ends
+    // precisely on the slot end 159 (twister gap untouched); axis 21
+    // (entry floor ~9.8 under the ribbon, exit tube ~15..27 threading
+    // toward the twister ring). Supports: 2 ground pedestals fused
+    // under the sheet floor + straps to the chassis ears + tray/nose
+    // kept + a drop post catching the user's right tab.
+    cy = 20;                        // sheet centre (local y, world tape centre 30)
+    axis_z = 21;                    // sheet axis height
+    mouth_x0 = -12;                 // sheet mouth (world 114, exit lands 159)
+    ped1 = [-4, -2.4, 10, 30, 10.3];// entry pedestal: x0,x1,y0,y1,top (floor ~9.8)
+    ped2 = [24, 25.6, 14, 26, 15.6];// exit pedestal: x0,x1,y0,y1,top (floor ~15.1)
+    post = [12, 24, -8, 9, 19.4];   // right-tab drop post: x0,x1,y0,y1,top
     tray_x0 = -14;                  // tray west tip (world 112, on chassis)
     tray_x1 = -0.2;                 // tray east end (0.2 air gap to the cradle face)
     tray_w = 16;                    // tray width (centred on the bore axis cy)
@@ -1608,36 +1657,31 @@ module six_turner() {
     earB = [24, 41];                // ear B corner (x,y), centre (27,44) -> world (153,54)
     hole_d = bolt_dia + 2*tolerance; // M3 clearance 3.6
     nose_x0 = -2;                   // nose west end (tray mortise shelf)
-    // ---- v62 fail-loud: scroll-block shape ----
-    assert(turner_len > 15, str("six_turner: turner_len must exceed 15, got ", turner_len));
-    assert(n_st == 5, "six_turner: need 5 scroll stages");
-    assert(scroll_cz(4) == turner_curl_cz, "six_turner: exit axis must land on the lane datum (13)");
-    assert(cz0 == 14, "six_turner: entry axis must sit 1 above datum (printable floor)");
-    assert(wall >= 0.8, str("six_turner: wall must stay printable (>=0.8), got ", wall));
-    assert(2*scroll_R(0) == paper_width,
-        str("six_turner: entry must catch the full tape width (25.4), got ", 2*scroll_R(0)));
-    assert(2*scroll_R(4) == leader_w,
-        str("six_turner: exit must be the finished 8mm tube, got ", 2*scroll_R(4)));
-    assert(scroll_W(0) < 360 && 360 - scroll_W(0) >= 150,
-        "six_turner: entry must be a wide-open U (slit >=150deg)");
-    assert(scroll_W(4) >= 360, "six_turner: exit must be a closed tube");
-    assert((blk_y1 - blk_y0 - 2*scroll_R(0))/2 >= 0.8,
-        "six_turner: block side walls must stay printable");
-    assert(cz0 - scroll_R(0) >= 0.8,
-        "six_turner: entry floor must stay printable (void bottom above z0)");
-    assert(blk_z1 - (scroll_cz(4) + scroll_R(4)) >= 0.8,
-        "six_turner: exit roof must stay printable");
-    // Wick bore: inside the block in plan, blind from the top down
-    // into the closing tube (floor never pierced).
-    assert(wick_x - wick_d/2 > 0 && wick_x + wick_d/2 < turner_len,
-        "six_turner: wick must sit inside the block in X");
-    assert(wick_y - wick_d/2 > blk_y0 && wick_y + wick_d/2 < blk_y1,
-        "six_turner: wick must sit inside the block in Y");
-    assert(wick_z1 > blk_z1, "six_turner: wick must open above the block top");
-    assert(wick_z0 > 9.5 && wick_z0 < 17.0,
-        "six_turner: wick bottom must land inside the shut-tube void band");
-    // Seeded pocket core must thread the BIG entry mouth.
-    assert(scroll_R(0) - sqrt(pow(3.9, 2) + pow(3.4, 2)) >= 0.1,
+    // ---- v63 fail-loud: exact-scroll placement ----
+    assert(turner_len == 33 && plow_start == 126 && turner_end == 159,
+        "six_turner: slot datum must stay 126..159");
+    // Exact-use proofs (user code must stay byte-identical).
+    assert(length == 45, "six_turner: folder length must stay exactly 45");
+    assert(thickness == 1.6, "six_turner: sheet must stay exactly 1.6");
+    assert(steps_length == 35 && steps_arc == 35, "six_turner: resolution must stay 35/35");
+    assert(12 - 6.5 == 5.5, "six_turner: exit base radius must be 5.5 (11mm tube)");
+    assert(0.5 + 0.75 == 1.25, "six_turner: exit must wrap 1.25 turns (spiral overlap)");
+    // Placement: mouth 14 after the drop (flat landing kept), exit
+    // exactly on the slot end (twister gap untouched).
+    assert(mouth_x0 + plow_start == 114, "six_turner: mouth must sit at world 114");
+    assert(mouth_x0 + length + plow_start == turner_end, "six_turner: exit must land on 159");
+    assert(cy == 20, "six_turner: sheet must stay centred on the tape (local 20)");
+    assert(axis_z == 21, "six_turner: axis must stay 21 (entry floor ~9.8, exit tube ~15..27)");
+    // Pedestal fuse: tops embed ~0.5 into the sheet floor wall
+    // (floor outer ~9.8 entry / ~15.1 exit, wall 1.6, void stays clear).
+    assert(ped1[4] >= 9.5 && ped1[4] <= 11.5, "six_turner: entry pedestal top must land in the floor wall");
+    assert(ped2[4] >= 15.0 && ped2[4] <= 16.8, "six_turner: exit pedestal top must land in the floor wall");
+    assert(ped1[0] >= mouth_x0 && ped1[1] <= mouth_x0 + length, "six_turner: entry pedestal must sit under the sheet");
+    assert(ped2[0] >= mouth_x0 && ped2[1] <= mouth_x0 + length, "six_turner: exit pedestal must sit under the sheet");
+    // Right-tab drop post meets the user tab underside (~19.4).
+    assert(post[4] >= 19 && post[4] <= 20, "six_turner: tab post must meet the tab underside");
+    // Seeded pocket core must thread the 24-wide entry mouth.
+    assert(12 - sqrt(pow(3.9, 2) + pow(3.4, 2)) >= 0.1,
         "six_turner: seeded pocket core must thread the entry mouth");
     // Screw ears: 6x6x1 diagonal pair on the chassis M3 holes.
     assert(ear == 6 && ear_t == 1, "six_turner: ears must stay 6x6x1 (small, minimal)");
@@ -1647,67 +1691,50 @@ module six_turner() {
     assert(earA[1] + ear/2 + 10 == 6 && earB[1] + ear/2 + 10 == 54,
         "six_turner: ear holes must hit chassis rows (world 6/54)");
     assert(hole_d == bolt_dia + 2*tolerance, "six_turner: ear holes must be M3 clearance");
-    // Tray (Top.jpg flat sheet west of the mouth): same dims, top
-    // flush with the nose shelf; ends west of the mouth face so it
-    // never touches the channel; tip stays on the chassis.
+    // Tray (Top.jpg flat sheet feeding the mouth): same dims, top
+    // far below the sheet floor (never touches); tip on chassis.
     assert(tray_top == 3.0, "six_turner: tray top must stay 3.0");
     assert(tray_top - tray_z0 >= 0.75 && tray_top - tray_z0 <= 0.85,
         "six_turner: tray must keep the 0.8 minimum-printable wall");
-    assert(tray_x1 < ch_x0 - 0.1, "six_turner: tray must end west of the mouth face");
+    assert(tray_top + 4 <= axis_z - 12 - thickness/2,
+        "six_turner: tray must clear the sheet floor");
     assert(tray_x0 + plow_start >= chassis_x0, "six_turner: tray tip must stay on the chassis");
-    assert(tray_w <= 2*scroll_R(0), "six_turner: tray must be no wider than the mouth");
-    assert(cy - tray_w/2 >= blk_y0 && cy + tray_w/2 <= blk_y1,
-        "six_turner: tray must span within the block width (nose fuse)");
-    // Nose shelf: west-face fuse to the block, top flush with the
-    // tray (mortise). The first void plate may nip its top edge as
-    // a tape lead-in (documented, fuse kept below the void).
-    // Per-station ramp proofs: bore shrinks, wrap closes (open trench
-    // -> shut tube), axis falls.
-    for (k=[1:n_st-1]) {
-        assert(scroll_R(k) < scroll_R(k-1), "six_turner: bore must shrink monotonically (25.4->8)");
-        assert(scroll_W(k) >= scroll_W(k-1), "six_turner: wrap must close monotonically (U->tube)");
-        assert(scroll_cz(k) < scroll_cz(k-1), "six_turner: axis must fall monotonically (14->13)");
-        assert(scroll_sx(k) > scroll_sx(k-1), "six_turner: stations must advance in +X");
-    }
-    assert(scroll_W(3) >= 360, "six_turner: tube must shut before the exit segment");
-    // v62 solid: former block + nose/tray/ears/straps (union) minus
-    // the hull-lofted scroll tunnel, the blind wick bore and the 2
-    // M3 ear holes. Hull is used ONLY on the void plates (the loft),
-    // never on shell geometry, so no bore gets capped.
+    assert(tray_w <= 24, "six_turner: tray must be no wider than the mouth");
+    // Nose shelf: feed lip under the mouth + tray mortise (stays far
+    // below the sheet floor, fuse kept).
+    // v63 solid: verbatim user folder (oriented + placed) + tray/nose/
+    // ears/straps/pedestals/post (union); only added voids are the 2
+    // M3 ear holes (user tab holes ship inside their code). The $fn=6
+    // spheres / $fn=20 holes inside the user code stay untouched
+    // (1225 hulls: $fn=60 spheres would not render).
     union() {
         difference() {
             union() {
-                // Former block (flat underside gravity sit, min_z=0).
-                translate([0, blk_y0, 0]) cube([turner_len, blk_y1 - blk_y0, blk_z1]);
-                // Nose shelf (west-face fuse + tray mortise).
+                // Exact user folder: roll -90 about the tube axis (entry
+                // half-pipe opens UP into a U), +90 about Y (tube axis
+                // -> +X, mouth west), then placed on the lane.
+                translate([mouth_x0, cy, axis_z])
+                    rotate([0, 90, 0])
+                        rotate([0, 0, -90])
+                            printable_folder();
+                // Nose shelf (feed lip under the mouth + tray mortise).
                 translate([nose_x0, cy - tray_w/2, 0]) cube([0 - nose_x0, tray_w, tray_top]);
-                // Flat entry tray (Top.jpg sheet west of the mouth).
+                // Flat entry tray (Top.jpg sheet feeding the mouth).
                 translate([tray_x0, cy - tray_w/2, tray_z0])
                     cube([tray_x1 - tray_x0, tray_w, tray_top - tray_z0]);
-                // Screw ears + ground straps (z0..1, fuse into block/ears).
+                // Screw ears + ground straps (z0..1, ears to chassis,
+                // straps tie the pedestal feet).
                 translate([earA[0], earA[1], 0]) cube([ear, ear, ear_t]);
                 translate([earB[0], earB[1], 0]) cube([ear, ear, ear_t]);
-                translate([4, -1, 0]) cube([4, 13, 1]);
-                translate([3, 12, 0]) cube([5, 6, 1]);
-                translate([25, 28, 0]) cube([4, 19, 1]);
-                translate([25, 22, 0]) cube([5, 8, 1]);
+                translate([ped1[0], -7, 0]) cube([ped1[1] - ped1[0] + 13, 17, 1]);
+                translate([ped2[0], 26, 0]) cube([ped2[1] - ped2[0] + 6, 21, 1]);
+                // Support pedestals (tops fused into the sheet floor wall).
+                translate([ped1[0], ped1[2], 0]) cube([ped1[1] - ped1[0], ped1[3] - ped1[2], ped1[4]]);
+                translate([ped2[0], ped2[2], 0]) cube([ped2[1] - ped2[0], ped2[3] - ped2[2], ped2[4]]);
+                // Right-tab drop post (catches the user tab underside).
+                translate([post[0], post[2], 0]) cube([post[1] - post[0], post[3] - post[2], post[4]]);
             }
-            // Scroll tunnel void: hull-chained thin plates (the loft).
-            for (k=[0:n_st-2])
-                hull() {
-                    translate([scroll_sx(k), 0, 0])
-                        rotate([0, 90, 0])
-                            linear_extrude(height=plate_t)
-                                polygon(scroll_void_pts(scroll_R(k), scroll_W(k), cy, scroll_cz(k), 48));
-                    translate([scroll_sx(k+1), 0, 0])
-                        rotate([0, 90, 0])
-                            linear_extrude(height=plate_t)
-                                polygon(scroll_void_pts(scroll_R(k+1), scroll_W(k+1), cy, scroll_cz(k+1), 48));
-                }
-            // Wick access port (blind bore from the top into the tube).
-            translate([wick_x, wick_y, wick_z0])
-                cylinder(h=wick_z1 - wick_z0 + 0.2, d=wick_d);
-            // Ear M3 clearance holes (only other voids).
+            // Ear M3 clearance holes (only added voids).
             translate([earA[0]+ear/2, earA[1]+ear/2, -epsilon])
                 cylinder(h=ear_t+2*epsilon, d=hole_d, center=false);
             translate([earB[0]+ear/2, earB[1]+ear/2, -epsilon])
@@ -2298,10 +2325,11 @@ module animated_assembly() {
     translate([fold_end - 3, chassis_width/2, tape_z + tape_thick])
         former_collar();
 
-    // Folding plow (v39 REPLACED by the 6-turner scroll folder: the
-    // seeded tape runs through the scroll tunnel east of the drop,
-    // world x 126..159, v1-precedent footprint kept; seed lands flat
-    // at 100 first, then the trench closes round it into the 8mm tube)
+    // Folding plow (v39 REPLACED by the 6-turner exact spiral scroll:
+    // the user's overlapping sheet (verbatim) guides the seeded tape
+    // east of the drop, mouth world 114 (telescoping over the transit
+    // end) to exit 159, v1-precedent slot end kept; seed lands flat
+    // at 100 first, then the spiral closes round it into the tube)
     translate([plow_start, chassis_width/2 - 20, base_thick])
         six_turner();
 

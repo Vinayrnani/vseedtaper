@@ -1,5 +1,46 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v63**
+
+## v63 Exact Spiral Plow: user overlapping-spiral code replaces the folder verbatim - 2026-09-18
+
+1. **Why** (user: v62 block "didn't work well", "use this code
+    exactly", "this is replacement of the plow"): the v62 block/
+    trench/wick code is deleted and the plow IS the user's
+    overlapping spiral sheet (`scroll_sheet()` 0.5-turn R12 U entry
+    -> 1.25-turn R5.5 overlap exit over 45, 1.6 wall, user tabs),
+    embedded byte-identical (only its demo `rotate()` invocation is
+    left out — a top-level render line would print into every part
+    export). `length`/`thickness` globals are collision-free (only
+    module-param names elsewhere); user `$fn=6/20` kept (1225 hulls:
+    `$fn=60` spheres would not render — documented exception).
+2. **Placement** (wrapper only, geometry untouched): roll -90 about
+    the tube axis (mouth opens UP) + 90 about Y (axis -> +X, mouth
+    west); mouth 12 west of the slot so the exact 45 ends precisely
+    on the slot end 159 (mouth world 114, 14 after the drop — flat
+    landing kept; telescopes over the transit end; twister gap kept);
+    axis 21 (entry floor ~9.8 under the ribbon, exit tube ~15..27).
+    Supports: 2 ground pedestals fused ~0.5 into the sheet floor
+    wall + straps to the chassis ears (world 132/6, 153/54) + tray
+    13.8x16x0.8 + nose shelf (both clear below the sheet) + a drop
+    post catching the user's floating right tab (left tab welds to
+    the shell). Mid-length sections are asymmetric by construction
+    (wrap grows 0..259°+: one tall wall, one low) — the overlap seam
+    side, verified live in entry/exit/top/34 views.
+3. **CAD** (`seed_tape_machine_v2.scad` only): verbatim user block +
+    placement wrapper in `six_turner()`; fail-loud exact-use proofs
+    (45/1.6/35/35/5.5/1.25), mouth/exit/axis/centre, pedestal-band,
+    post-band, pocket-threading, ear/tray asserts; `folding_plow()`
+    alias kept; `$fn=60`, `tol=0.3` (user-code exception noted),
+    watertight single solid, min_z=0. Nothing else touched.
+4. **Viewer** (`web/index.html` only): `ASSET_V` 46->47, plow GLB
+    rebuilt, label + `_sixTurner` hooks (mouth 114, entryBore 24,
+    exitBore 11, wall 1.6).
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v62**
 
 ## v62 Tubular Scroll Folder: user scroll concept rebuilds the 6-folder as a solid former block - 2026-09-18
