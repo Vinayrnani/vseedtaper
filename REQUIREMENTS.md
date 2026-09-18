@@ -1,5 +1,37 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v69**
+
+## v69 Orbital Twister 24:1 Gear Train IMPLEMENTATION (v67/v68 spec built) - 2026-09-18
+
+1. **Why** (implement v67/v68 spec for real): side-mounted 24:1
+    compound spur train + final 1:1 bevel turn replaces the v53
+    overhead drive; ring stays on X (centre x=172, axis y=30
+    z=17). Green 72T M1.5 on drum shaft (y44..50) → layshaft 12T
+    at (163,62) (6:1, −6x, cd 63.03 vs 63) → layshaft 48T →
+    countershaft 12T at (163,17) (4:1, +24x, cd 45 exact) →
+    20T/20T bevel (apex 163,30,17, Y→X turn) → ring (±24x = 4
+    revs/seed, 8 cross-wraps).
+2. **CAD** (`seed_tape_machine_v2.scad` only): M1.5 params +
+    local `tw_tol=0.35`; `spur_gear()` module param + 72T cap;
+    `twister_ring()` (bore 18, fused 20T bevel west, 2×6mm
+    spindles + 2×2mm eyelets), `twister_bracket()` (split
+    collar, 0.35 clear, bevel window), `layshaft_gears()` +
+    countershaft gears; v53 overhead fully removed; orbits
+    6→24; fail-loud asserts (cd ±0.35, ratio 24, bore ≥18,
+    orbit clears bracket). Green top ~115.5 exposed above wall
+    110 (accepted).
+3. **Viewer** (`web/index.html` only): new PART_DEFS/pivots
+    (twister_ring/twister_bracket/layshaft_gears), twister 24x
+    drum (12x crank), `ASSET_V` 51->52, GLBs rebuilt, stale v53
+    artefacts removed.
+4. **Visual check**: live animating preview + snapshots while
+    animating, 0 console errors, tape-static.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v68**
 
 ## v68 Orbital Twister 24:1 Gear Train Build (v67 spec) - 2026-09-18

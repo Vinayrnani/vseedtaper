@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v69 — 2026-09-18
+- Orbital twister 24:1 IMPLEMENTATION (v67/v68 spec built for real): Green72 M1.5 on drum shaft (y44..50) -> layshaft 12T (163,62) -> 48T -> countershaft 12T (163,17) -> 20T/20T bevel (apex 163,30,17) -> twister_ring (bore 18, X axis 172,30,17); twister_bracket split-collar + layshaft_gears/countershaft parts; v53 overhead fully removed; orbits 6->24; viewer ASSET_V 51->52, verify_v69.js
+
 ## v68 — 2026-09-18
 - Orbital twister 24:1 build (v67 spec): side spur train 72/12 48/12 M1.5 + 20T/20T bevel turn, ring on X 24x drum, twister_ring/bracket/layshaft/countershaft parts, v53 overhead removed, orbits 24, viewer ASSET_V 51, verify_v68.js
 
