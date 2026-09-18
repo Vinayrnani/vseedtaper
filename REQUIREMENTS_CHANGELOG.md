@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v62 — 2026-09-18
+- Tubular scroll folder (user-supplied scroll concept for 25.4mm tape -> 8mm tube): six_turner rebuilt as solid former block 28x33x20 with hull-lofted scroll tunnel (5 stages, open trench dia 25.4 -> shut tube dia 8, axis 14->13, hull on void only) + blind wick bore d4 from top (water-weld); fixed supplied snippet (capped ends -> plates poke past faces; chord roof blocking tall U walls -> open-sky trench); tray/nose/ears/straps kept, footprint world 126..159; fail-loud scroll asserts; viewer ASSET_V 46, plow GLB rebuilt, verify_v62.js
+
 ## v60 — 2026-09-17
 - U-to-swirl forming plow (user: "6 = U bent transforming to swirl, tape folded round"): six_turner entry rebuilt as open U-channel (wrap 300->180, hook 20->0, no hook/rib at the mouth) winding along 33 to the tight 6-swirl exit (330 + hook 160, dia 9, 1.0 gap kept); 7 stations 180/210/240/270/300/320/330 + hook 0/30/60/90/120/145/160, 17 plates re-interpolated, entry-U/exit-swirl asserts; tray/skid/blade/ears untouched; viewer ASSET_V 44, plow GLB rebuilt
 

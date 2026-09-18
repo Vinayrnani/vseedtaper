@@ -1,5 +1,53 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v62**
+
+## v62 Tubular Scroll Folder: user scroll concept rebuilds the 6-folder as a solid former block - 2026-09-18
+
+1. **Why rebuild** (user supplied the scroll-folder concept:
+    solid block + hull-lofted morphing tunnel + wick port for
+    25.4mm PVA tape -> 8mm overlapped tube): the v61 thin shell
+    is deleted and `six_turner()` is rewritten around that
+    concept, fixed for printability and fitted to the machine.
+    Two defects in the supplied snippet are fixed: the channel
+    (30 long) never broke the block faces (40 long) so the bore
+    would have been capped solid at both ends (first/last void
+    plates now poke 0.5 past the faces = clean open mouth +
+    clean tube exit), and a pure chord roof would have blocked
+    the tall seeded U walls at the mouth face (open sections now
+    extend past the block top = open-sky entry trench).
+2. **Concept**: SOLID former block 28x33x20 (flat gravity sit,
+    min_z=0, wall 1.0) with the scroll tunnel subtracted as 4
+    hull-chained void segments over 5 stages (local x -0.5..33.5,
+    world 126..159 kept): open trench entry dia 25.4
+    (= paper_width, full tape, 190deg bowl) -> shut tube exit
+    dia 8 (= leader_w, finished roll, closed disks from stage 3);
+    bore axis ramps 14->13 (entry floor keeps 1.3 printable wall,
+    exit lands on the lane datum `turner_curl_cz`); blind wick
+    bore d4 from the block top down into the shut tube at local
+    (26,21) (world x152, floor never pierced) for water-welding
+    the PVA overlap. Interface kept: flat entry tray
+    13.8x16x0.8 west of the mouth (top 3.0, tip world 112),
+    nose shelf fused to the block west face + tray mortise, 2
+    small 6x6x1 ears to chassis M3 holes (world 132/6, 153/54)
+    + ground straps.
+3. **CAD** (`seed_tape_machine_v2.scad` only): new
+    `scroll_sx/R/W/cz` stage tables + `scroll_void_pts` helper
+    (arc+sky-extension pre-mapped so rotate+extrude lays plates
+    across X) + fresh `six_turner()` (hull used ONLY on the void
+    loft, never on shell); fail-loud entry/exit dia, shut-tube,
+    wall/floor/roof, wick-band, pocket-threading, tray/nose/ear
+    and per-station monotonic asserts; `folding_plow()` alias
+    kept; `$fn=60`, `tol=0.3`, manifold single solid, min_z=0.
+    Nothing else touched.
+4. **Viewer** (`web/index.html` only): `ASSET_V` 45->46, plow GLB
+    rebuilt, label + `_sixTurner` hooks relabelled scroll
+    (entryBore 25.4, exitBore 8, wick [152,51,4]).
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v61**
 
 ## v61 Clean-Sheet 6-Folder Rebuild: parametric U-to-spiral-swirl plow, zero inherited loft code - 2026-09-17
