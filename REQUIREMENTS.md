@@ -1,5 +1,41 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v64**
+
+## v64 Bare Spiral Plow: decluttered to the single watertight shell, checked all 6 sides - 2026-09-18
+
+1. **Why** (user: "unnecessary objects inside or around it,
+    remove them", then "check visually as single object from all
+    angles"): all v63 wrapper solids deleted (2 pedestals, 2
+    straps, 2 ears, tab post, tray, nose). Trimesh shell probe then
+    proved the part was still 2 shells: the user's right tab floats
+    3+mm off the sheet in EVERY orientation (tube outer max 9.2 <
+    tab inner edge 12 — a loose scrap island even in their own print
+    orientation), so it is deleted too — the one documented exception
+    to verbatim. Result: exactly ONE watertight shell (3210mm³).
+2. **CAD** (`seed_tape_machine_v2.scad` only): `six_turner()` is now
+    placement + `printable_folder()` and nothing else (params cy /
+    axis_z / mouth_x0 kept); pedestal/post/ear/tray/nose params and
+    asserts deleted; exact-use proofs (45/1.6/35/35/5.5/1.25),
+    mouth-114/exit-159/axis-21/centre-20 and pocket-threading asserts
+    kept; `$fn=60`, `tol=0.3` (user `$fn=6/20` exception kept),
+    min_z≈8.3 (sheet floats — screws via its own left tab).
+    Nothing else touched.
+3. **Viewer** (`web/index.html` only): `ASSET_V` 47->48, plow GLB
+    rebuilt (163KB->~120KB single shell), label + `_sixTurner`
+    hooks (tray field gone).
+4. **Visual check** (solo part, all 6 sides + iso, animating rig):
+    mouth = clean U bowl + overlap curl; exit = textbook spiral-6
+    with open bore; top = smooth scroll closing to tube; bottom =
+    clean tapered underside, nothing hanging; near = open trench +
+    holed tab; far = smooth outer shell. NOTED for user: their own
+    left tab crosses the upper mouth opening (fused, intentional —
+    say the word to cut it back).
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v63**
 
 ## v63 Exact Spiral Plow: user overlapping-spiral code replaces the folder verbatim - 2026-09-18

@@ -1620,43 +1620,28 @@ module printable_folder() {
                 cube([15, thickness, 10]);
                 translate([7.5, -1, 5]) rotate([-90,0,0]) cylinder(d=3.5, h=5, $fn=20);
             }
-        // Right mounting tab
-        translate([12, 0, 25])
-            difference() {
-                cube([15, thickness, 10]);
-                translate([7.5, -1, 5]) rotate([-90,0,0]) cylinder(d=3.5, h=5, $fn=20);
-            }
+        // v64: right mounting tab DELETED (user code had it floating
+        // 3+mm off the sheet in every orientation: tube outer max 9.2
+        // < tab inner edge 12, so it printed as a loose scrap island;
+        // trimesh shell probe proved 2 shells -> this deletion makes
+        // the part the single object the user asked to preview).
     }
 }
 // ---- end verbatim user code ----
 
 module six_turner() {
-    // ---- v63 exact-scroll placement (wrapper around verbatim user code) ----
+    // ---- v64 bare folder (verbatim user code only, no added solids) ----
     // Orientation: roll -90 about the tube axis (entry half-pipe opens
     // UP into a U) then +90 about Y (tube axis -> +X, mouth west).
     // Placement: mouth 12 west of the slot so the exact 45 length ends
     // precisely on the slot end 159 (twister gap untouched); axis 21
     // (entry floor ~9.8 under the ribbon, exit tube ~15..27 threading
-    // toward the twister ring). Supports: 2 ground pedestals fused
-    // under the sheet floor + straps to the chassis ears + tray/nose
-    // kept + a drop post catching the user's right tab.
+    // toward the twister ring). All v63 wrapper solids (pedestals,
+    // straps, ears, tab post, tray, nose) deleted per user: the part
+    // is exactly printable_folder(), screwed down via its own tabs.
     cy = 20;                        // sheet centre (local y, world tape centre 30)
     axis_z = 21;                    // sheet axis height
     mouth_x0 = -12;                 // sheet mouth (world 114, exit lands 159)
-    ped1 = [-4, -2.4, 10, 30, 10.3];// entry pedestal: x0,x1,y0,y1,top (floor ~9.8)
-    ped2 = [24, 25.6, 14, 26, 15.6];// exit pedestal: x0,x1,y0,y1,top (floor ~15.1)
-    post = [12, 24, -8, 9, 19.4];   // right-tab drop post: x0,x1,y0,y1,top
-    tray_x0 = -14;                  // tray west tip (world 112, on chassis)
-    tray_x1 = -0.2;                 // tray east end (0.2 air gap to the cradle face)
-    tray_w = 16;                    // tray width (centred on the bore axis cy)
-    tray_z0 = 2.2;                  // tray bottom (0.8 wall with top 3.0)
-    tray_top = 3.0;                 // tray top (flush with nose shelf)
-    ear = 6;                        // ear edge length (6x6x1)
-    ear_t = 1;                      // ear thickness
-    earA = [3, -7];                 // ear A corner (x,y), centre (6,-4) -> world (132,6)
-    earB = [24, 41];                // ear B corner (x,y), centre (27,44) -> world (153,54)
-    hole_d = bolt_dia + 2*tolerance; // M3 clearance 3.6
-    nose_x0 = -2;                   // nose west end (tray mortise shelf)
     // ---- v63 fail-loud: exact-scroll placement ----
     assert(turner_len == 33 && plow_start == 126 && turner_end == 159,
         "six_turner: slot datum must stay 126..159");
@@ -1672,75 +1657,21 @@ module six_turner() {
     assert(mouth_x0 + length + plow_start == turner_end, "six_turner: exit must land on 159");
     assert(cy == 20, "six_turner: sheet must stay centred on the tape (local 20)");
     assert(axis_z == 21, "six_turner: axis must stay 21 (entry floor ~9.8, exit tube ~15..27)");
-    // Pedestal fuse: tops embed ~0.5 into the sheet floor wall
-    // (floor outer ~9.8 entry / ~15.1 exit, wall 1.6, void stays clear).
-    assert(ped1[4] >= 9.5 && ped1[4] <= 11.5, "six_turner: entry pedestal top must land in the floor wall");
-    assert(ped2[4] >= 15.0 && ped2[4] <= 16.8, "six_turner: exit pedestal top must land in the floor wall");
-    assert(ped1[0] >= mouth_x0 && ped1[1] <= mouth_x0 + length, "six_turner: entry pedestal must sit under the sheet");
-    assert(ped2[0] >= mouth_x0 && ped2[1] <= mouth_x0 + length, "six_turner: exit pedestal must sit under the sheet");
-    // Right-tab drop post meets the user tab underside (~19.4).
-    assert(post[4] >= 19 && post[4] <= 20, "six_turner: tab post must meet the tab underside");
+    // No added solids: the part is exactly printable_folder().
     // Seeded pocket core must thread the 24-wide entry mouth.
     assert(12 - sqrt(pow(3.9, 2) + pow(3.4, 2)) >= 0.1,
         "six_turner: seeded pocket core must thread the entry mouth");
-    // Screw ears: 6x6x1 diagonal pair on the chassis M3 holes.
-    assert(ear == 6 && ear_t == 1, "six_turner: ears must stay 6x6x1 (small, minimal)");
-    assert(earA[0] + ear/2 == 6 && earB[0] + ear/2 == turner_len - 6
-        && earA[0] + ear/2 + plow_start == 132 && earB[0] + ear/2 + plow_start == 153,
-        "six_turner: ear holes must hit chassis X (world 132/153)");
-    assert(earA[1] + ear/2 + 10 == 6 && earB[1] + ear/2 + 10 == 54,
-        "six_turner: ear holes must hit chassis rows (world 6/54)");
-    assert(hole_d == bolt_dia + 2*tolerance, "six_turner: ear holes must be M3 clearance");
-    // Tray (Top.jpg flat sheet feeding the mouth): same dims, top
-    // far below the sheet floor (never touches); tip on chassis.
-    assert(tray_top == 3.0, "six_turner: tray top must stay 3.0");
-    assert(tray_top - tray_z0 >= 0.75 && tray_top - tray_z0 <= 0.85,
-        "six_turner: tray must keep the 0.8 minimum-printable wall");
-    assert(tray_top + 4 <= axis_z - 12 - thickness/2,
-        "six_turner: tray must clear the sheet floor");
-    assert(tray_x0 + plow_start >= chassis_x0, "six_turner: tray tip must stay on the chassis");
-    assert(tray_w <= 24, "six_turner: tray must be no wider than the mouth");
-    // Nose shelf: feed lip under the mouth + tray mortise (stays far
-    // below the sheet floor, fuse kept).
-    // v63 solid: verbatim user folder (oriented + placed) + tray/nose/
-    // ears/straps/pedestals/post (union); only added voids are the 2
-    // M3 ear holes (user tab holes ship inside their code). The $fn=6
-    // spheres / $fn=20 holes inside the user code stay untouched
-    // (1225 hulls: $fn=60 spheres would not render).
-    union() {
-        difference() {
-            union() {
-                // Exact user folder: roll -90 about the tube axis (entry
-                // half-pipe opens UP into a U), +90 about Y (tube axis
-                // -> +X, mouth west), then placed on the lane.
-                translate([mouth_x0, cy, axis_z])
-                    rotate([0, 90, 0])
-                        rotate([0, 0, -90])
-                            printable_folder();
-                // Nose shelf (feed lip under the mouth + tray mortise).
-                translate([nose_x0, cy - tray_w/2, 0]) cube([0 - nose_x0, tray_w, tray_top]);
-                // Flat entry tray (Top.jpg sheet feeding the mouth).
-                translate([tray_x0, cy - tray_w/2, tray_z0])
-                    cube([tray_x1 - tray_x0, tray_w, tray_top - tray_z0]);
-                // Screw ears + ground straps (z0..1, ears to chassis,
-                // straps tie the pedestal feet).
-                translate([earA[0], earA[1], 0]) cube([ear, ear, ear_t]);
-                translate([earB[0], earB[1], 0]) cube([ear, ear, ear_t]);
-                translate([ped1[0], -7, 0]) cube([ped1[1] - ped1[0] + 13, 17, 1]);
-                translate([ped2[0], 26, 0]) cube([ped2[1] - ped2[0] + 6, 21, 1]);
-                // Support pedestals (tops fused into the sheet floor wall).
-                translate([ped1[0], ped1[2], 0]) cube([ped1[1] - ped1[0], ped1[3] - ped1[2], ped1[4]]);
-                translate([ped2[0], ped2[2], 0]) cube([ped2[1] - ped2[0], ped2[3] - ped2[2], ped2[4]]);
-                // Right-tab drop post (catches the user tab underside).
-                translate([post[0], post[2], 0]) cube([post[1] - post[0], post[3] - post[2], post[4]]);
-            }
-            // Ear M3 clearance holes (only added voids).
-            translate([earA[0]+ear/2, earA[1]+ear/2, -epsilon])
-                cylinder(h=ear_t+2*epsilon, d=hole_d, center=false);
-            translate([earB[0]+ear/2, earB[1]+ear/2, -epsilon])
-                cylinder(h=ear_t+2*epsilon, d=hole_d, center=false);
-        }
-    }
+    // v64 solid: verbatim user folder ONLY (oriented + placed). No
+    // added solids, no added voids (user tab holes ship in their code).
+    // The $fn=6 spheres / $fn=20 holes inside the user code stay
+    // untouched (1225 hulls: $fn=60 spheres would not render).
+    // Exact user folder: roll -90 about the tube axis (entry
+    // half-pipe opens UP into a U), +90 about Y (tube axis -> +X,
+    // mouth west), then placed on the lane.
+    translate([mouth_x0, cy, axis_z])
+        rotate([0, 90, 0])
+            rotate([0, 0, -90])
+                printable_folder();
 }
 
 // Legacy alias (compat): the old U-plow export name now builds the 6-turner.

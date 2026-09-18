@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v64 — 2026-09-18
+- Bare spiral plow (user: remove unnecessary objects in/arounds it; check single object from all angles): deleted all wrapper solids (pedestals/straps/ears/post/tray/nose) + the floating right tab (disjoint in every orientation, shell probe proved 2 shells); part is now ONE watertight shell (3210); solo 6-side visual check (mouth/exit/top/bottom/near/far) clean; viewer ASSET_V 48, plow GLB rebuilt, verify_v64.js
+
 ## v63 — 2026-09-18
 - Exact spiral plow (user: v62 "didn't work well", use spiral code exactly as plow replacement): six_turner = scroll_sheet()/printable_folder() embedded byte-identical (0.5-turn R12 entry -> 1.25-turn R5.5 overlap exit, 45 long, 1.6 wall, user tabs; demo rotate line omitted; $fn=6/20 kept as documented exception) + placement wrapper (mouth world 114 telescoping over transit, exit exactly 159, axis 21) + 2 floor pedestals + straps/ears + tray/nose + tab post; fail-loud exact-use/placement asserts; viewer ASSET_V 47, plow GLB rebuilt, verify_v63.js
 
