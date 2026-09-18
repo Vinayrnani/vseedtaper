@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v73 — 2026-09-18
+- FIXED 5 visual failures in v72 gear-driven twister: (1) twister ring now HOLLOW with Ø18 bore via `difference()` cut in `thread_twister()` — removed solid plug blocking tape; (2) `intermediate_compound` GLB fixed by adding dedicated `ensure_scad_for_base` cases in `regenerate_glbs.sh` that strip the `if (part_to_render=="all")` block and append the specific module call with min_z=0 translate; (3) `drive_shaft` GLB fixed same way — now exports 12T spur + 12T M1.5 bevel pinion correctly; (4) chassis back/front/top wall windows added so gear chain (compound at x=156, shaft at x=186) is visible from crank side; (5) gear chain connectivity verified in `animated_assembly()` — all gears connect in drum44->compound->shaft spur->pinion->ring chain; ASSET_V 53->54
+
 ## v72 — 2026-09-18
 - Gear-driven Orbital Thread Twister BUILT (user: all at once, twister EAST, chassis/pull/takeup shift as needed, nothing touches tape): drum44 -> compound 12T/38T M2 (y=12 back plane, C=(156,57)) -> Y drive shaft at x=186 (12T spur + 12T M1.5 pinion) -> 16T M1.5 ring bevel (west face, bore 18) -> ring about X at 418/27 = 15.4815x drum; stations bind 172->186 / pull 194->210 / takeup 226->242 / chassis 262->278 / tape flat 208->224 + leader +16; DEVIATION: 30T M1.5 ring bevel physically impossible (bottom -7 under base) so 16T M1.5 (bottom 3.5, pocket gap 1.5) + truncated pinion (tip y24, tape gap 2); v53 overhead/friction fully deleted; new intermediate_compound + drive_shaft parts; viewer pivots/ratios/PART_DEFS, ASSET_V 51->52
 

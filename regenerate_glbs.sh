@@ -132,6 +132,16 @@ ensure_scad_for_base() {
                 sed '/^if (part_to_render == "all") {$/,/^}$/d' > "$out"
             echo "knurled_roller(is_lower=false);" >> "$out"
             ;;
+        intermediate_compound)
+            sed "s/part_to_render = \"all\"/part_to_render = \"intermediate_compound\"/" "$SCAD_SRC" | \
+                sed '/^if (part_to_render == "all") {$/,/^}$/d' > "$out"
+            echo "translate([cmp72_cx, cmp72_y, cmp72_cz - (cmp72_rb + addendum)]) intermediate_compound();" >> "$out"
+            ;;
+        drive_shaft)
+            sed "s/part_to_render = \"all\"/part_to_render = \"drive_shaft\"/" "$SCAD_SRC" | \
+                sed '/^if (part_to_render == "all") {$/,/^}$/d' > "$out"
+            echo "translate([sft72_x, (sft72_y0 + sft72_y1)/2, sft72_z - (sft72_rs + 2)]) twister_drive_shaft();" >> "$out"
+            ;;
         *)
             make_scad "$base" "$out"
             ;;

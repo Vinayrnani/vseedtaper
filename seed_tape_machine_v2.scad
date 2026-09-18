@@ -1009,12 +1009,23 @@ module chassis() {
             cube([30, wall_thick+2*epsilon, 22]);
         // v72 viewing windows in back wall (y=0..3) to see the
         // interior gears at y=12: compound (x=156) and drive shaft
-        // (x=186). Windows start at the wall outer face and extend
-        // inward past the gear plane.
+        // (x=186). Windows extend past the gear plane (y>20) so
+        // both gears are visible from the crank side.
         translate([140, -epsilon, 45])
-            cube([30, wall_thick + 10, 20]);
+            cube([30, wall_thick + 20, 25]);
         translate([170, -epsilon, 10])
-            cube([30, wall_thick + 10, 20]);
+            cube([30, wall_thick + 20, 25]);
+        // Front wall windows for gear chain visibility from the
+        // opposite side (compound at z57, shaft at z17).
+        translate([140, chassis_width - wall_thick + epsilon, 45])
+            cube([30, wall_thick + 10, 25]);
+        translate([170, chassis_width - wall_thick + epsilon, 10])
+            cube([30, wall_thick + 10, 25]);
+        // Top wall windows for overhead gear-chain view.
+        translate([150, wall_thick + 5, chassis_height - epsilon])
+            cube([40, wall_thick + 10, 15]);
+        translate([175, wall_thick + 5, chassis_height - epsilon])
+            cube([30, wall_thick + 10, 15]);
     }
 }
 
@@ -1982,34 +1993,39 @@ module thread_twister() {
     assert(twister_arms == 2, "thread_twister: must carry exactly 2 holders");
     assert(rod51_orbit - rod51_r >= 8, "thread_twister: middle must stay empty (rods clear the bore)");
     assert(rod51_orbit + bob51_r <= twister_ring_r + twister_ring_tube, "thread_twister: bobbins must stay in the ring envelope");
-    union() {
-        // Outer guide ring in the YZ plane (axis X): rotate_extrude
-        // ring about Z then tilt so its axis lies along X.
+    difference() {
+        union() {
+            // Outer guide ring in the YZ plane (axis X): rotate_extrude
+            // ring about Z then tilt so its axis lies along X.
+            rotate([0, 90, 0])
+                rotate_extrude(convexity=10)
+                    translate([twister_ring_r, 0, 0])
+                        square([twister_ring_tube*2, twister_ring_tube*2], center=true);
+            // v51: NO hub, NO arms to the centre (middle stays empty for
+            // the tape). 2 rod-like bobbin holders 180 apart: rods
+            // parallel to X fused through the ring, thread bobbins ride
+            // the rods and orbit with the rotor, clear of the bore.
+            for (k=[0:twister_arms-1])
+                rotate([k*180, 0, 0]) {
+                    translate([0, rod51_orbit, 0])
+                        rotate([0, 90, 0])
+                            cylinder(h=rod51_h, r=rod51_r, center=true);
+                    translate([0, rod51_orbit, 0])
+                        rotate([0, 90, 0])
+                            cylinder(h=bob51_h, r=bob51_r, center=true);
+                }
+            // v72: 16T M1.5 bevel teeth on the west face (physics-deviated
+            // from the brief's 30T: 30T M1.5 pitch r22.5 would hang at z-7
+            // under the print base; 16T pitch r12, outer 13.5, bottom 3.5,
+            // pocket floor 2 -> 1.5 rolling clearance). The bevel meshes
+            // the pinion at the ring centre, driving the ring about X.
+            translate([-(twister_ring_r + twister_ring_tube), 0, 0])
+                rotate([90, 0, 0])
+                    bevel_gear(bev72_Zr, bev72_mod, bev72_t, bore_dia=bev72_bore);
+        }
+        // Ø18 bore through ring centre (along X axis after rotation)
         rotate([0, 90, 0])
-            rotate_extrude(convexity=10)
-                translate([twister_ring_r, 0, 0])
-                    square([twister_ring_tube*2, twister_ring_tube*2], center=true);
-        // v51: NO hub, NO arms to the centre (middle stays empty for
-        // the tape). 2 rod-like bobbin holders 180 apart: rods
-        // parallel to X fused through the ring, thread bobbins ride
-        // the rods and orbit with the rotor, clear of the bore.
-        for (k=[0:twister_arms-1])
-            rotate([k*180, 0, 0]) {
-                translate([0, rod51_orbit, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h=rod51_h, r=rod51_r, center=true);
-                translate([0, rod51_orbit, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h=bob51_h, r=bob51_r, center=true);
-            }
-        // v72: 16T M1.5 bevel teeth on the west face (physics-deviated
-        // from the brief's 30T: 30T M1.5 pitch r22.5 would hang at z-7
-        // under the print base; 16T pitch r12, outer 13.5, bottom 3.5,
-        // pocket floor 2 -> 1.5 rolling clearance). The bevel meshes
-        // the pinion at the ring centre, driving the ring about X.
-        translate([-(twister_ring_r + twister_ring_tube), 0, 0])
-            rotate([90, 0, 0])
-                bevel_gear(bev72_Zr, bev72_mod, bev72_t, bore_dia=bev72_bore);
+            cylinder(h=200, d=18, center=true);
     }
 }
 
@@ -2430,11 +2446,11 @@ if (part_to_render == "all") {
     translate([0, 0, twister_lift]) thread_twister();
 } else if (part_to_render == "intermediate_compound") {
     // v72: compound at (156,57), printable at min_z=0.
-    translate([cmp72_cx, cmp72_y, cmp72_cz])
+    translate([cmp72_cx, cmp72_y, cmp72_cz - (cmp72_rb + addendum)])
         intermediate_compound();
 } else if (part_to_render == "drive_shaft") {
     // v72: Y drive shaft at x=bind_x, printable at min_z=0.
-    translate([sft72_x, (sft72_y0 + sft72_y1)/2, sft72_z])
+    translate([sft72_x, (sft72_y0 + sft72_y1)/2, sft72_z - (sft72_rs + 2)])
         twister_drive_shaft();
 } else if (part_to_render == "pull_a") {
     vpull_roller(); // base at z=0 already
