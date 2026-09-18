@@ -1,5 +1,35 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v66**
+
+## v66 Twister-Aimed Mounts: axis 13 + chassis feet, exit dead-on the twister bore - 2026-09-18
+
+1. **Why** (user: "hanging in air, no support to fix it to
+    chassis and align it properly so that exit properly faces the
+    twister"): sheet axis 21->13 so the exit bore lands DEAD on the
+    twister ring bore (world (30,17) = ring centre; CAD-proved by
+    `axis_z + base_thick == twister_axle_z`), and the part gets real
+    feet: 2 floor pedestals fused ~0.4 into the sheet floor wall +
+    ground straps + 2 small 6x6x1 ears on the chassis M3 holes
+    (world 132/6, 153/54). Entry side-effect (accepted): mouth rims
+    now at lane height, floor 0.2 above the base — tape threads the
+    middle straight, drum still clears by 5+, cradle starts 12 east
+    of the mouth (no steel clash).
+2. **CAD** (`seed_tape_machine_v2.scad` only): `axis_z` 13,
+    pedA/pedB/ear/strap params + pedestal-band, exit-aim, ear asserts;
+    single watertight shell (3556); tape-flow path re-probed clear at
+    the new lane; min_z=0. Nothing else touched.
+3. **Viewer** (`web/index.html` only): `ASSET_V` 49->50, plow GLB
+    rebuilt, label + `_sixTurner` hooks (`exitAim` [172,30,17]).
+4. **Visual check**: new align shot straight down the twister bore —
+    folder exit tube centred in the ring; exit closeup shows the tube
+    cradled on its pedestal with straps/ears; mouth/top/bottom/sides
+    re-shot clean; machine assembles + animates, 0 errors.
+5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`,
+    `tol=0.3`; `center_distance` 60, `gear_mesh_phase` 9°,
+    back gears, crank back wall [40,-8,60], R->L order, port
+    9099 only.
+
 **Version: v65**
 
 ## v65 Clear Tape Path: tape-blocking left tab deleted, flow probed end to end - 2026-09-18

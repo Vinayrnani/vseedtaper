@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v66 — 2026-09-18
+- Twister-aimed mounts (user: hanging in air, fix to chassis + exit facing twister): sheet axis 21->13 (exit bore dead on ring bore world (30,17), CAD-asserted), 2 floor pedestals + straps + 2 ears on chassis M3 holes; single shell (3556); flow re-probed; new down-the-bore align shot; viewer ASSET_V 50, verify_v66.js
+
 ## v65 — 2026-09-18
 - Clear tape path (user: kept object in the middle obstructs tape flow): deleted the left tab (lay across the trench at the tape-wall lane); plow is the bare scroll_sheet, ONE shell (3011); tape-flow path ray-probed clear at 15 stations mouth->exit; solo mouth/top visual check clean; viewer ASSET_V 49, plow GLB rebuilt, verify_v65.js; open: part has no mount — user to say how it is held
 

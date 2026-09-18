@@ -1628,9 +1628,23 @@ module six_turner() {
     // toward the twister ring). All v63 wrapper solids (pedestals,
     // straps, ears, tab post, tray, nose) deleted per user: the part
     // is exactly printable_folder(), screwed down via its own tabs.
+    // ---- v66 twister-aimed mounts (bare sheet kept) ----
+    // Axis 13: exit bore lands DEAD on the twister bore (assembly
+    // lifts +4 -> world 17 = twister_axle_z, y 20+10=30 = ring
+    // centre), so the exit faces the twister straight; entry mouth
+    // rims sit at lane height, floor 0.2 above the base. Supports:
+    // 2 ground pedestals fused under the sheet floor + straps to 2
+    // chassis ears on the M3 holes (world 132/6, 153/54).
     cy = 20;                        // sheet centre (local y, world tape centre 30)
-    axis_z = 21;                    // sheet axis height
+    axis_z = 13;                    // sheet axis height (exit = twister bore height)
     mouth_x0 = -12;                 // sheet mouth (world 114, exit lands 159)
+    pedA = [6, 8, 12, 28, 4.3];     // mid pedestal x0,x1,y0,y1,top (floor ~3.9)
+    pedB = [24.5, 26.5, 14, 26, 7.7]; // exit pedestal x0,x1,y0,y1,top (floor ~7.3)
+    ear = 6;                        // ear edge length (6x6x1)
+    ear_t = 1;                      // ear thickness
+    earA = [3, -7];                 // ear A corner, centre (6,-4) -> world (132,6)
+    earB = [24, 41];                // ear B corner, centre (27,44) -> world (153,54)
+    hole_d = bolt_dia + 2*tolerance; // M3 clearance 3.6
     // ---- v63 fail-loud: exact-scroll placement ----
     assert(turner_len == 33 && plow_start == 126 && turner_end == 159,
         "six_turner: slot datum must stay 126..159");
@@ -1644,24 +1658,60 @@ module six_turner() {
     // exactly on the slot end (twister gap untouched).
     assert(mouth_x0 + plow_start == 114, "six_turner: mouth must sit at world 114");
     assert(mouth_x0 + length + plow_start == turner_end, "six_turner: exit must land on 159");
-    assert(cy == 20, "six_turner: sheet must stay centred on the tape (local 20)");
-    assert(axis_z == 21, "six_turner: axis must stay 21 (entry floor ~9.8, exit tube ~15..27)");
+    assert(cy == 20, "six_turner: sheet must stay centred on the tape (local 20, world 30 = ring centre)");
+    assert(axis_z == 13, "six_turner: axis must stay 13 (exit bore meets twister bore)");
+    assert(axis_z + base_thick == twister_axle_z, "six_turner: exit axis must meet the twister bore height (world 17)");
+    assert(axis_z - 12 - thickness/2 >= 0.1, "six_turner: mouth floor must stay above the base");
+    // Pedestal fuse: tops embed ~0.4 into the sheet floor wall
+    // (floor outer ~3.9 mid / ~7.3 exit, wall 1.6, void stays clear).
+    assert(pedA[4] >= 3.5 && pedA[4] <= 5.0, "six_turner: mid pedestal top must land in the floor wall");
+    assert(pedB[4] >= 6.8 && pedB[4] <= 8.9, "six_turner: exit pedestal top must land in the floor wall");
+    assert(pedA[0] >= mouth_x0 && pedA[1] <= mouth_x0 + length, "six_turner: mid pedestal must sit under the sheet");
+    assert(pedB[0] >= mouth_x0 && pedB[1] <= mouth_x0 + length, "six_turner: exit pedestal must sit under the sheet");
+    // Screw ears: 6x6x1 diagonal pair on the chassis M3 holes, straps
+    // tie the pedestal feet (volumetric overlaps).
+    assert(ear == 6 && ear_t == 1, "six_turner: ears must stay 6x6x1 (small, minimal)");
+    assert(earA[0] + ear/2 == 6 && earB[0] + ear/2 == turner_len - 6
+        && earA[0] + ear/2 + plow_start == 132 && earB[0] + ear/2 + plow_start == 153,
+        "six_turner: ear holes must hit chassis X (world 132/153)");
+    assert(earA[1] + ear/2 + 10 == 6 && earB[1] + ear/2 + 10 == 54,
+        "six_turner: ear holes must hit chassis rows (world 6/54)");
+    assert(hole_d == bolt_dia + 2*tolerance, "six_turner: ear holes must be M3 clearance");
     // No added solids: the part is exactly printable_folder().
     // Seeded pocket core must thread the 24-wide entry mouth.
     assert(12 - sqrt(pow(3.9, 2) + pow(3.4, 2)) >= 0.1,
         "six_turner: seeded pocket core must thread the entry mouth");
-    // v65 solid: bare user scroll sheet ONLY (oriented + placed). No
-    // tabs (right floated, left blocked the tape path — both deleted
-    // per user), no added solids, no added voids. The $fn=6 spheres
-    // inside the user code stay untouched (1225 hulls: $fn=60 spheres
-    // would not render).
-    // Bare sheet: roll -90 about the tube axis (entry half-pipe opens
-    // UP into a U), +90 about Y (tube axis -> +X, mouth west), then
-    // placed on the lane.
-    translate([mouth_x0, cy, axis_z])
-        rotate([0, 90, 0])
-            rotate([0, 0, -90])
-                scroll_sheet();
+    // v66 solid: bare user scroll sheet (oriented + placed) + 2 floor
+    // pedestals + 2 ground straps + 2 chassis ears (union); only voids
+    // are the 2 M3 ear holes. The $fn=6 spheres inside the user code
+    // stay untouched (1225 hulls: $fn=60 spheres would not render).
+    union() {
+        difference() {
+            union() {
+                // Bare sheet: roll -90 about the tube axis (entry
+                // half-pipe opens UP into a U), +90 about Y (tube axis
+                // -> +X, mouth west), then placed on the lane.
+                translate([mouth_x0, cy, axis_z])
+                    rotate([0, 90, 0])
+                        rotate([0, 0, -90])
+                            scroll_sheet();
+                // Screw ears (z0..1, M3 holes to the chassis).
+                translate([earA[0], earA[1], 0]) cube([ear, ear, ear_t]);
+                translate([earB[0], earB[1], 0]) cube([ear, ear, ear_t]);
+                // Ground straps (z0..1, tie ears to pedestal feet).
+                translate([3, -7, 0]) cube([6, 21, 1]);
+                translate([24, 20, 0]) cube([6, 27, 1]);
+                // Support pedestals (tops fused into the sheet floor wall).
+                translate([pedA[0], pedA[2], 0]) cube([pedA[1] - pedA[0], pedA[3] - pedA[2], pedA[4]]);
+                translate([pedB[0], pedB[2], 0]) cube([pedB[1] - pedB[0], pedB[3] - pedB[2], pedB[4]]);
+            }
+            // Ear M3 clearance holes (only voids).
+            translate([earA[0]+ear/2, earA[1]+ear/2, -epsilon])
+                cylinder(h=ear_t+2*epsilon, d=hole_d, center=false);
+            translate([earB[0]+ear/2, earB[1]+ear/2, -epsilon])
+                cylinder(h=ear_t+2*epsilon, d=hole_d, center=false);
+        }
+    }
 }
 
 // Legacy alias (compat): the old U-plow export name now builds the 6-turner.
