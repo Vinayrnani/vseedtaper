@@ -2020,7 +2020,7 @@ module thread_twister() {
             // pocket floor 2 -> 1.5 rolling clearance). The bevel meshes
             // the pinion at the ring centre, driving the ring about X.
             translate([-(twister_ring_r + twister_ring_tube), 0, 0])
-                rotate([90, 0, 0])
+                rotate([0, 90, 0])
                     bevel_gear(bev72_Zr, bev72_mod, bev72_t, bore_dia=bev72_bore);
         }
         // Ø18 bore through ring centre (along X axis after rotation)

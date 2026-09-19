@@ -133,9 +133,7 @@ ensure_scad_for_base() {
             echo "knurled_roller(is_lower=false);" >> "$out"
             ;;
         intermediate_compound)
-            sed "s/part_to_render = \"all\"/part_to_render = \"intermediate_compound\"/" "$SCAD_SRC" | \
-                sed '/^if (part_to_render == "all") {$/,/^}$/d' > "$out"
-            echo "intermediate_compound();" >> "$out"
+            make_scad "$base" "$out"
             ;;
         drive_shaft)
             sed "s/part_to_render = \"all\"/part_to_render = \"drive_shaft\"/" "$SCAD_SRC" | \

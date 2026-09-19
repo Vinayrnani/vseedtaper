@@ -346,7 +346,7 @@
     // The compound GLB has rotate([0,90,0]) baked in from SCAD; viewer applies
     // rot [-PI/2,0,0] to align teeth to Z (matching drum orientation).
     var compoundPivot = new THREE.Group();
-    compoundPivot.position.set(156, 30, -12);
+    compoundPivot.position.set(156, 57, -12);
     root.add(compoundPivot);
     // Shaft pivot at OpenSCAD (186, 12, 17) -> (186, 17, -12) in root-local.
     var shaftPivot = new THREE.Group();
@@ -678,7 +678,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-   var ASSET_V = 58; // v77: double-transform fix, animation wiring, rot axis fixes, ASSET_V 57->58
+   var ASSET_V = 59; // v78: compound pivot y-fix, twister bevel Y-rot, intermediate_compound regen, ASSET_V 58->59
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
