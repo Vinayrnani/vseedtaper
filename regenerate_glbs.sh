@@ -71,7 +71,7 @@ for arg in "$@"; do
     fi
 done
 
-ALL_GLB="chassis hopper shroud cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister pull_a pull_b takeup intermediate_compound drive_shaft"
+ALL_GLB="chassis hopper shroud cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister pull_a pull_b takeup"
 if [ "${#FILTER[@]}" -gt 0 ]; then
     for p in "${FILTER[@]}"; do
         case " $ALL_GLB " in
@@ -131,14 +131,6 @@ ensure_scad_for_base() {
             sed "s/part_to_render = \"all\"/part_to_render = \"rollers\"/" "$SCAD_SRC" | \
                 sed '/^if (part_to_render == "all") {$/,/^}$/d' > "$out"
             echo "knurled_roller(is_lower=false);" >> "$out"
-            ;;
-        intermediate_compound)
-            make_scad "$base" "$out"
-            ;;
-        drive_shaft)
-            sed "s/part_to_render = \"all\"/part_to_render = \"drive_shaft\"/" "$SCAD_SRC" | \
-                sed '/^if (part_to_render == "all") {$/,/^}$/d' > "$out"
-            echo "twister_drive_shaft();" >> "$out"
             ;;
         *)
             make_scad "$base" "$out"
