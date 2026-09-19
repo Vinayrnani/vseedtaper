@@ -1,5 +1,16 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
+**Version: v72**
+
+## v72 Step 3: enlarged twister ring with bevel teeth, bobbin spindles, mating pinion, bracket - 2026-09-19
+
+1. **Why** (user: extend twister diameter so bevel teeth mesh with mating bevel, room for 2 thread bobbins + 8mm folded tape through bore): ring_r 10->15, bore Ø18 (r9) for 8mm folded tape, tube=6 (wall>=2mm). Bevel teeth on west face via bevel_gear() with rotate([0,90,0]) so teeth go full 360 about X axis (previous bug was rotate([90,0,0])). 2x bobbin spindles 6mm dia x14mm on front face 180deg apart, orbit radius inside outer rim but outside bore + clearance; 2mm guide eyelets near bore. Mating bevel pinion M1.5 (12T vs 28T ring, ~2.3x) meshes at back plane y=12, axes intersect at (bind_x,30,17). twister_bracket() flat-on-base split-collar/slotted bracket coaxial with scroll_folder() exit, 0.35mm clearances, printable min_z=0; `twister_lift=23` (ring bottom z=11 + bevel OD margin ~2).
+2. **CAD** (`seed_tape_machine_v2.scad` only): `twister_ring_r` 10->15, `twister_ring_tube` 2->6 (bore Ø18), `twister_lift` updated; `thread_twister()` gains bevel teeth (28T M1.5 west face, rotate([0,90,0])), 2x bobbin spindles (6mm dia x14mm, orbit r12, 180deg apart), 2mm guide eyelets near bore; new `twister_bracket()` split-collar/slotted bracket coaxial with six_turner() exit, 0.35mm clearances, min_z=0; new bevel pinion module (12T M1.5) positioned at back plane y=12, axes intersect (bind_x,30,17); fail-loud mesh assert dist=r1+r2 ±(tol+0.01); `twister_orbits_per_drum` updated to 18/7 (~2.57x drum via 28T/12T bevel); `part_to_render` "twister" keeps min_z=0; `animated_assembly()` keeps drum -360*$t, ring ratio matching new bevel; no frozen gears; tape clearance >=1.5mm everywhere; gears at y=12 back plane clear of tape (tape y 17.3-42.7).
+3. **Viewer** (`web/index.html` only): `ASSET_V` 51->52, twister pivot pos updated for new twister_lift, `twisterRatio` updated to 18/7, PART_DEFS twister entry updated; new GLB: twister (+ chassis if bracket holes changed).
+4. **Collisions**: tape clearance >=1.5mm everywhere; gears at y=12 back plane clear of tape (tape y 17.3-42.7); bore Ø18 clears 8mm folded tape + 2 bobbins; bracket coaxial with scroll exit.
+5. **Visual check**: live animating preview + snapshots while animating, 0 console errors, tape-static.
+6. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`; drum/roller axles unchanged, port 9099 only.
+
 **Version: v71**
 
 ## v71 Step 2: 11T M2 intermediate pinion meshing the 44T drum - 2026-09-18

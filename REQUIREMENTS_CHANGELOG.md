@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v72 — 2026-09-19
+- Step 3 twister redesign: enlarged ring (r10->15, bore Ø18 for 8mm folded tape, tube=6 wall>=2mm); bevel teeth on west face via bevel_gear() rotate([0,90,0]) full 360 about X (fixes previous rotate([90,0,0]) bug); 2x bobbin spindles 6mm dia x14mm at orbit r12 180deg apart + 2mm guide eyelets near bore; mating bevel pinion M1.5 12T vs 28T ring (~2.3x) at back plane y=12, axes intersect (bind_x,30,17); fail-loud mesh assert dist=r1+r2 ±(tol+0.01); twister_bracket() flat-on-base split-collar/slotted coaxial with scroll exit, 0.35mm clearances, min_z=0; twister_lift=23 (bevel OD margin); twister_orbits_per_drum updated to 18/7 (~2.57x drum); viewer ASSET_V 51->52, twister pivot/ratio updated; verify_v72.js
+
 ## v71 — 2026-09-18
 - STEP 2 of step-by-step twister redesign (one piece at a time): ONE 11T M2 intermediate pinion at (155,12,60) meshing the 44T drum (cd 55 = (44+11)*2/2 exact, same y=12 plane); spins 4x drum, counter-rotates vs drum (external mesh physics); new twister_pinion_11t part + dispatch + mesh assert + assembly + animation; shaft deferred; viewer pinionPivot/PINION_RATIO 16/11/ASSET_V 51->52; collisions: hopper/tube/chassis clear, v53 counter+countershaft interference FOUND and deferred; STEP 2 ONLY, no further gears
 
