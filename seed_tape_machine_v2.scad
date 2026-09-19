@@ -98,12 +98,16 @@ spool_axle_z  = 65;  // 120mm max roll OD, height 65mm above base
 // ============================================================
 // Chassis
 // ============================================================
-chassis_x0    = -14; // v22: west edge (was 0); east edge stays chassis_x0+chassis_len=248 (v38: 200->248 seats take-up 226+16=242 + 6 margin)
-chassis_len   = 262; // v38: 214->262, east extension seats the wind-up reel clear of the pull nip (X gap 6)
-chassis_width = 60;
+chassis_x0    = -14; // v22: west edge (was 0); east edge stays chassis_x0+chassis_len=264 (v75: 262->278)
+chassis_len   = 278; // v75: 262->278, east extension seats the wind-up reel clear of the pull nip (X gap 6)
+chassis_width = 64;  // v75: 60->64 (walls y=0-3 back, y=61-64 front)
 chassis_height = 112;  // v70: > max(spool top=90, drum top=106) + 5 = 111 ✓ (was 110 for the 40T gear)
 base_thick    = 4;
 wall_thick    = 3;
+// v75: base pocket slot for ring to hang below (x=165-181, y=3.5-56.5, z=0-4)
+pocket_x0 = 165; pocket_x1 = 181; pocket_y0 = 3.5; pocket_y1 = 56.5; pocket_z = 4;
+// v75: feet at chassis corners (~14mm) so ring bottom (z=-10) clears table by ~4mm
+foot_h = 14; foot_w = 6; foot_l = 10;
 
 // ============================================================
 // Plow (downstream closer, v1 precedent: stays EAST of drum) +
@@ -293,36 +297,21 @@ tape_n_x         = 12;           // taper steps along X (progressive entry->exit
 // $fn=60, tol=0.3 kept.
 // ============================================================
 bind_x   = plow_end + 13;   // 172: thread orbit station east of the plow (rotor X half 4 -> 168..176, gap 9)
-pull_x   = plow_end + 35;   // 194: vertical-nip pull station (sleeve r7.65 -> 186.35..201.65, gap 10.35 to twister east)
+pull_x   = plow_end + 37;   // v75: 194->196 (clear of bobbin A rod ending ~x=192)
 takeup_x = 226;             // wind-up reel east (flange r16 -> 210..242, gap 6 to pull east; chassis east 248)
 takeup_z = 34;              // reel axle height (flange 18..50: bottom >= 0, top < 112)
 twister_axle_z = tape_z + 4;      // 17: ring centre over the folded pocket (pocket top ~21)
-twister_ring_r = 15;              // guide ring radius (bore Ø18 for 8mm folded tape + 2 bobbins)
-twister_ring_tube = 6;            // wall thickness (bore Ø18 = r9, outer Ø30)
-twister_lift = twister_ring_r + twister_ring_tube; // 21: export lift for min_z=0
 twister_arms = 2;                 // 2 threads orbit the tape
-twister_orbits_per_drum = 18/7;   // v72: 28T/12T bevel (12/28) * 6x driveshaft ≈ 2.57x drum
-// v72 bevel drive params
-ring_bevel_teeth = 28;            // ring bevel (west face), M1.5
-ring_bevel_mod = 1.5;
-pinion_teeth = 12;                // mating bevel pinion, M1.5
-pinion_mod = 1.5;
-ring_bevel_ratio = ring_bevel_teeth / pinion_teeth; // 28/12 ≈ 2.33
 // v72 bobbin spindles: 6mm dia x14mm, orbit r12 (inside outer rim r15, outside bore r9+clearance)
 rod51_orbit = 12;
 rod51_r = 3;                      // 6mm diameter spindle
 rod51_h = 14;                     // 14mm length
 bob51_r = 2.5;                    // bobbin radius (unchanged)
 bob51_h = 6;                      // bobbin height (unchanged)
-eyelet_r = 1;                     // 2mm guide eyelets near bore
 twister_post_h = 9;               // v45/v72 cradle-stub height (2 rolling gap under the ring-OD tube: 17-6-9=2)
+// v72 bevel drive params: REPLACED by v75 crown/pinion below
+// ring_bevel_teeth=28, ring_bevel_mod=1.5, pinion_teeth=12, pinion_mod=1.5, ring_bevel_ratio=28/12
 vpull_r = 7.5;                     // vertical-axis nip roller radius (v52 d15; surface speed kept via vpull_spin 4/3)
-vpull_h = 20;                     // roller height (covers lane 13..21 + caps, base at 0; assembly top 4+20+3=27)
-vpull_sleeve_r = 7.65;            // v52 cushioned sleeve outer (d15 core proud 0.15, under the r8.5 caps: envelope kept)
-vpull_sleeve_h = 12;              // v52 shorter cushion band (was 16)
-vpull_gap = 9.5;                  // v52 cushioned surface-to-surface nip gap (param-driven, fail-loud asserted 9.5+-0.01)
-vpull_off = vpull_sleeve_r + vpull_gap/2; // 12.4: sleeve r + half gap (replaces r+2.0+1.5+0.4+tol = 14.2); Y = 30+-12.4 = 17.6/42.4
-vpull_spin = roller_body_r/vpull_r; // 4/3: spin compensation (smaller dia, same surface speed => spacing preserved)
 vpull_h = 20;                     // roller height (covers lane 13..21 + caps, base at 0; assembly top 4+20+3=27)
 vpull_sleeve_r = 7.65;            // v52 cushioned sleeve outer (d15 core proud 0.15, under the r8.5 caps: envelope kept)
 vpull_sleeve_h = 12;              // v52 shorter cushion band (was 16)
@@ -373,295 +362,99 @@ turner_curl_off = 1.2;            // v54 reference only (no bore offset)
 turner_curl_cz = 13;              // v56 bore-axis height (lane-centred; was 12)
 
 // ============================================================
-// v53 OVERHEAD twister drive (user: duplicate drum gear + bottom
-// bevels blocking the tape): the v48/v51 drum-coaxial 50T takeoff
-// is DELETED; takeoff reuses the EXISTING drum gear 44T (back plane
-// y 9..15, no new drum parts). One HIGH countershaft at (cx,44)
-// carries a 10T counter (same back plane y=12, dist 54 = 44+10
-// from (100,60), 4.4x) + a 12T Y-bevel; 90deg bevel to a 10T
-// X-pinion (1.2x) on a HIGH side layshaft (y=45.5,z=44, cx->183,
-// overhead, clears the tape by >=5); a thin 15T/12T spur drop at
-// x=181 (dz=27=15+12, 1.25x) feeds the LOW side layshaft
-// (y=45.5,z=17, 165..183) + the kept r3.5 friction wheel on the
-// ring OD (slip after, hollow middle). Total
-// (44/10)*(12/10)*(15/12) = 4.4*1.2*1.25 = 6.6 at the low shaft.
-// Lowest overhead steel 27 (drop-high bottom) clears tape top 22
-// by 5; only the small 12T drop-low (bottom 3) stays low in a
-// 2-floor pocket (1.0 rolling clearance, v51 precedent).
-// v47 floor arrangement stays DELETED. No exterior gears, no
-// floor gears, no belts.
-// Centres: C_Y = I53 - r_x*Y = (cx,35.5,44);
-// C_X = I53 + r_y*X = (cx+12,45.5,44).
-// Pull/takeup stay tape-coupled (no gears, documented, zero
-// exterior clutter). Stations/gaps untouched (turner lip 160.35 ->
-// twister gap 7.65, gaps >= 5). Speeds (rev per crank rev):
-// crank +1, drum -16/44≈-0.36, counter +1.6 (about Y), twister -2.18 (about X),
-// pull +4/3 (about Z, tape-coupled), takeup +2 (about Y, tape/clutch).
-// vpull cushioned (v39): soft rubber/silicone sleeve visual over the
-// steel core (v52 OD stays ~d15 => 4/3 spin keeps surface speed), firm grip without crushing.
+// v75 GEAR TRAIN params (chain from drum, all spur M1.5)
 // ============================================================
-// v53 OVERHEAD take-off (duplicate 50T DELETED; takeoff reuses the
-// EXISTING drum gear 44T, y 9..15 back plane). Module 2 single,
-// teeth all in [10,60]. Ratio (44/10)*(12/10)*(15/12) = 6.6.
-drive53_mod = 2;
-// Stage 1 (parallel spur Y-Y): drum44 (r44 at (100,60)) -> overhead
-// counter 10T (r10) at (cx,44): dist = 54 = 44+10, same Y plane.
-cnt53_Zc = 10;
-cnt53_rd = gear_module*drum_teeth/2;   // 44 (existing drum gear 44T, reused)
-cnt53_rc = drive53_mod*cnt53_Zc/2;     // 10
-cnt53_cz = 44;   // overhead: bottom 44-12=32 clears tape top 22 by 10
-cnt53_cx = drum_axle_x + sqrt(pow(cnt53_rd + cnt53_rc, 2) - pow(drum_axle_z - cnt53_cz, 2)); // ~151.58
-cnt53_y = 12;    // mesh plane = drum gear plane (back, y 9..15)
-cnt53_y0 = 1; cnt53_y1 = 59;  // hidden in wall/block bores, never exterior
-spur53_t = 6;
-// Stage 2 (90deg bevel, overhead): Y 12T (r12, countershaft) ->
-// X 10T (r10, high layshaft) at I53 = (cx,45.5,44): 12/10 = 1.2x.
-bev53_Zy = 12; bev53_Zx = 10;
-bev53_ry = drive53_mod*bev53_Zy/2;   // 12
-bev53_rx = drive53_mod*bev53_Zx/2;   // 10
-apex53_x = cnt53_cx; apex53_y = 45.5; apex53_z = 44;
-bev53_CYy = apex53_y - bev53_rx;   // (cx,35.5,44), body toward -Y
-bev53_CXx = apex53_x + bev53_ry;   // (cx+12,45.5,44), body toward +X
-bev53_t = 6;
-// High side layshaft (spinner X at y=45.5,z=44: apex -> drop).
-hi53_y = 45.5; hi53_z = 44;
-hi53_x0 = cnt53_cx; hi53_x1 = 183;
-hi53_r = 2.5;
-// Stage 3 (spur drop X-X at x=181, thin pair t=4): high 15T (r15)
-// -> low 12T (r12): dz = 27 = 15+12, 15/12 = 1.25x.
-drop53_x = 181; drop53_t = 4;
-drop53_Zh = 15; drop53_Zl = 12;
-drop53_rh = drive53_mod*drop53_Zh/2;   // 15
-drop53_rl = drive53_mod*drop53_Zl/2;   // 12
-// Low side layshaft (spinner X at y=45.5,z=17: 165..183, carries
-// the drop-low gear + the v51 friction wheel at x=175).
-lo53_y = 45.5; lo53_z = 17;
-lo53_x0 = 165; lo53_x1 = 183;
-lo53_r = 2.5;
-fric53_r = 3.5; fric53_t = 4;
-fric53_x = 175; // wheel centre (face beside the ring east face, kept)
-// Hanger posts (static brackets, base-fused, tops meet shaft
-// bottoms, no pierce; Y-beside the tape like v51).
-hi53_post_x = 163; hi53_post_top = hi53_z - hi53_r; // 41.5
-lo53_post_x = 167; lo53_post_top = lo53_z - lo53_r; // 14.5
-// v51 hollow-rotor rods: 2 rod-like bobbin holders 180 apart on the ring
-// (rods parallel X at orbit radius 12, bobbins ride the rods).
-bob51_r = 2.5; bob51_h = 6;
-// Drop pocket under the low drop gear (spinning 12T outer bottom
-// 17-14=3 dips below the base top 4; pocket floor at 2 leaves 1.0
-// rolling clearance, base keeps a 2mm print floor, v51 precedent).
-drop53_pock_z0 = 2; // pocket floor (base keeps 0..2 solid, still prints flat)
-// Tape-top reference for the >=5 overhead-clearance asserts.
-tape53_top = 22; // transit/pocket top ~21.2 + margin
+// Stage 1 (z=60): drum 44T -> 11T, shaft A: 11T@60 + 16T@45
+gear11_teeth = 11; gear11_mod = 2; gear11_t = 6;
+gear16a_teeth = 16; gear16a_mod = 1.5; gear16a_t = 6;
+// Stage 2 (z=45): 16T -> 10T, shaft B: 10T@45 + 16T@30
+gear10b_teeth = 10; gear10b_mod = 1.5; gear10b_t = 6;
+gear16b_teeth = 16; gear16b_mod = 1.5; gear16b_t = 6;
+// Stage 3 (z=30): 16T -> 10T, shaft C: 10T@30 + 16T@15
+gear10c_teeth = 10; gear10c_mod = 1.5; gear10c_t = 6;
+gear16c_teeth = 16; gear16c_mod = 1.5; gear16c_t = 6;
+// Stage 4 (z=15): 16T -> 10T, shaft D: 10T@15 + 16T@12
+gear10d_teeth = 10; gear10d_mod = 1.5; gear10d_t = 6;
+gear16d_teeth = 16; gear16d_mod = 1.5; gear16d_t = 6;
+// Stage 5 (z=12): 16T -> 10T, shaft E: 10T@12 + 12T bevel@9
+gear10e_teeth = 10; gear10e_mod = 1.5; gear10e_t = 6;
+gear12e_teeth = 12; gear12e_mod = 1.5; gear12e_t = 6;
+// Shaft positions (solved for cd=19.5 each stage, zigzag from (155,12) to (145,49.4))
+// Stage 1: drum(100,12,60) -> 11T@(155,12,60), shaft A: 11T@60 + 16T@45
+shaftA_x = 155; shaftA_y = 12; shaftA_z = 60;
+gear16a_x = 155; gear16a_y = 45; gear16a_z = 60;
+// Stage 2: 16T@(155,45) -> 10T, shaft B: 10T@45 + 16T@30
+gear10b_x = 155 + 19.5; gear10b_y = 45; gear10b_z = 45;
+gear16b_x = gear10b_x; gear16b_y = 30; gear16b_z = 45;
+// Stage 3: 16T@(174.5,30) -> 10T, shaft C: 10T@30 + 16T@15
+gear10c_x = gear16b_x; gear10c_y = 30; gear10c_z = 30;
+gear16c_x = gear10c_x; gear16c_y = 15; gear16c_z = 30;
+// Stage 4: 16T@(174.5,15) -> 10T, shaft D: 10T@15 + 16T@12
+gear10d_x = gear16c_x; gear10d_y = 15; gear10d_z = 15;
+gear16d_x = gear10d_x; gear16d_y = 12; gear16d_z = 15;
+// Stage 5: 16T@(174.5,12) -> 10T, shaft E: 10T@12 + 12T bevel@9 at (145,49.4)
+gear10e_x = gear16d_x; gear10e_y = 12; gear10e_z = 12;
+// Chain shaft E bevel (axis Z) at (145,49.4,9) meshes pinion shaft bevel (axis X) at same point
+chain_bevel_x = 145; chain_bevel_y = 49.4; chain_bevel_z = 9;
+// Pinion shaft: axis X at y=49.4, z=9, x=145-164
+pinion_shaft_x0 = 145; pinion_shaft_x1 = 164; pinion_shaft_y = 49.4; pinion_shaft_z = 9;
+// Pinion shaft bearing blocks
+pinion_block_x0 = 145; pinion_block_x1 = 164;
+// Ring crown gear: 16T M1.5 on WEST face (x=165), bore Ø17 (r8.5)
+crown_teeth = 16; crown_mod = 1.5; crown_bore_d = 17;
+// v75 gear train ratio: 4 * (16/10)^3 * 1.0 * (12/16) = 4 * 4.096 * 0.75 = 12.288
+twister_orbits_per_drum = 4 * pow(16/10, 3) * 1.0 * (12/16); // 12.288
+
 // Pull support pins (static bars: base-fused, slip-fit in roller
 // bores + cup-B bore; the tape-coupled rotors spin on them).
 pull_pin_r = axle_dia/2;             // 4: static pin radius (slip in bores)
-pull_pinA_z0 = 2; pull_pinA_z1 = 27; // base-fused .. hidden in roller top cap (v52 shorter stack top 27)
-pull_pinB_z0 = 2; pull_pinB_z1 = 27; // base-fused .. hidden in cup-B bore (v52 cup 25..28)
-// cup B kept (bored) for the static pin B (no tube hole v48).
-vpull_collar_z = 5.0;              // v45 mid-collar centre LOCAL (assembly lifts +base_thick: CAD top 4+5+1.5=10.5 clears ribbon base 13 by 2.5; was 12 grazing the tape)
+pull_pinA_z0 = 2; pull_pinA_z1 = 27; // base-fused .. hidden in roller top cap
+pull_pinB_z0 = 2; pull_pinB_z1 = 27; // base-fused .. hidden in cup-B bore
+// ============================================================
+// v75 TWISTER MODULE PARAMS (replaces v72 ring params)
+// ============================================================
+twister_ring_r = 18.5;        // v75: was 15, now 18.5
+twister_ring_tube = 8;        // v75: was 6 (tube), now OD53 wall
+twister_ring_od = 53;         // v75: outer diameter
+twister_ring_bore_r = 10.5;   // v75: bore Ø21 (r10.5)
+twister_lift = 10;            // v75: ring bottom at z=-10, lift to min_z=0
+twister_ring_cx = 173;        // v75: ring center X (was bind_x=172)
+twister_ring_cy = 30;         // v75: ring center Y
+twister_ring_cz = 17;         // v75: ring center Z
+// Crown gear on WEST face (x=165)
+crown_face_x = 165;
+// Bobbins: 2× Class-15 (r10.35, length 11.1mm), at 90° apart, orbit 18, on EAST face (x=181)
+bobbin_r = 10.35; bobbin_len = 11.1; bobbin_orbit = 18; bobbin_axle_r = 3;
+bobbin_a_y = 48; bobbin_a_z = 17;   // Bobbin A (front +Y)
+bobbin_b_y = 30; bobbin_b_z = 35;   // Bobbin B (top +Z)
+bobbin_east_x = 181;
+// Eyelets: repositioned for 90° bobbin arrangement
+eyelet_r = 1;
+// Pinion shaft bevel params
+pinion_bevel_teeth = 12; pinion_bevel_mod = 1.5;
+// Ring crown gear params
 
-// ============================================================
-// Spool cones
-// ============================================================
+epsilon = 0.05;
+vpull_collar_z = 5.0;              // v45 mid-collar centre LOCAL (assembly lifts +base_thick: CAD top 4+5+1.5=10.5 clears ribbon base 13 by 2.5)
 cone_h = 25;
 cone_r_big = 22.5;  // 45mm OD
 cone_r_small = 7.5; // 15mm OD
-
-// ============================================================
-// Epsilon
-// ============================================================
-epsilon = 0.05;
-
-// ============================================================
-// Guard / fail-loud checks (5 Laws: Fail Loud)
-// ============================================================
-assert(tolerance >= 0 && tolerance < 1, "tolerance must be in [0,1)");
-assert(paper_width > 0, "paper_width must be >0");
-assert(seed_dia > 0 && seed_dia <= 6.0, "seed_dia must be (0,6.0] (v14: interchangeable wheels 1-6mm)");
-assert(seed_depth > 0 && seed_depth < drum_radius, "seed_depth must be >0 and < drum_radius");
-assert(seed_spacing == 152.4, "v14 MVP: seed_spacing fixed at 6 inch (152.4mm)");
-assert(gear_module > 0, "gear_module must be >0");
-assert(center_distance == (roller_teeth + drum_teeth) * gear_module / 2,
-       str("center_distance must be 60 for 16T/44T module=2, got ", center_distance));
-assert(num_divots == 6, "v14 MVP: num_divots fixed at 6 cavities");
-assert(roller_axle_z >= roller_outer_dia/2 + 1, str("roller_axle_z must clear base: need >= ", roller_outer_dia/2+1, " got ", roller_axle_z));
-assert(drum_axle_z >= drum_radius + base_thick + tolerance, str("drum_axle_z must clear cradle+tape: need >= ", drum_radius+base_thick+tolerance, " got ", drum_axle_z));
-assert(abs(sqrt(pow(roller_axle_x - drum_axle_x,2)+pow(roller_axle_z - drum_axle_z,2)) - center_distance) < 0.5,
-       str("gear center distance must be ~60mm, got ", sqrt(pow(roller_axle_x-drum_axle_x,2)+pow(roller_axle_z-drum_axle_z,2))));
-// v53 OVERHEAD drive (drum 44T takeoff, no duplicate, no low bevels):
-// single module 2 + exact 6.0 at the low shaft + parallel mesh
-// dist=r1+r2 + true 90deg bevel + spur drop + side friction on
-// the ring OD (nothing coaxial). Zero exterior, zero floor gears.
-assert(drive53_mod == 2 && gear_module == 2, "v53: drive must stay single module 2");
-assert(cnt53_Zc >= 10 && cnt53_Zc <= 60 && bev53_Zy >= 10 && bev53_Zy <= 60
-    && bev53_Zx >= 10 && bev53_Zx <= 60 && drop53_Zh >= 10 && drop53_Zh <= 60
-    && drop53_Zl >= 10 && drop53_Zl <= 60, "v53: drive teeth must stay in [10,60]");
-assert(abs((drum_teeth/cnt53_Zc)*(bev53_Zy/bev53_Zx)*(drop53_Zh/drop53_Zl) - 6.6) <= 0.001, "v53: step-up must be exactly 6.6x ((44/10)*(12/10)*(15/12))");
-// Stage-1 mesh: centre distance = r_drum44 + r_counter (same Y plane).
-assert(abs(sqrt(pow(cnt53_cx - drum_axle_x, 2) + pow(cnt53_cz - drum_axle_z, 2)) - (cnt53_rd + cnt53_rc)) <= tolerance + 0.01, "v53: drum44->counter mesh must satisfy dist=r1+r2 (54)");
-assert(cnt53_y == 12, "v53: counter must share the drum gear plane (back, y 9..15)");
-// Bevel axes intersect at the overhead apex + perpendicular (Y vs X).
-assert(apex53_x == cnt53_cx && apex53_z == cnt53_cz, "v53: apex must sit on the Y countershaft (cx,44)");
-assert(apex53_y == hi53_y && apex53_z == hi53_z, "v53: apex must sit on the high layshaft (45.5,44)");
-assert(bev53_CYy == apex53_y - bev53_rx && apex53_x == cnt53_cx, "v53: Y bevel centre must be r_x off apex (cx,35.5,44)");
-assert(bev53_CXx == apex53_x + bev53_ry && apex53_y == hi53_y, "v53: X pinion centre must be r_y off apex (cx+12,45.5,44)");
-assert(sqrt(pow(bev53_CYy-apex53_y,2)) == bev53_rx, "v53: Y pitch cone must touch apex");
-assert(sqrt(pow(bev53_CXx-apex53_x,2)) == bev53_ry, "v53: X pitch cone must touch apex");
-// Drop mesh: vertical centre distance = rh+rl (parallel X-X shafts).
-assert(hi53_z - lo53_z == drop53_rh + drop53_rl, "v53: drop mesh must satisfy dz=rh+rl (27=15+12)");
-assert(hi53_y == lo53_y, "v53: drop shafts must share Y (45.5)");
-assert(hi53_x0 <= drop53_x && drop53_x + drop53_t/2 <= hi53_x1, "v53: drop-high must ride the high shaft");
-assert(lo53_x0 <= drop53_x - drop53_t/2 && drop53_x <= lo53_x1, "v53: drop-low must ride the low shaft");
-// Overhead clearance: every bevel/counter/drop-high bottom >= tape top + 5.
-assert(cnt53_cz - (cnt53_rc + 2) - tape53_top >= 5, "v53: counter bottom must clear the tape by >=5 (32 vs 22)");
-assert(apex53_z - (bev53_ry + 2) - tape53_top >= 5, "v53: Y bevel bottom must clear the tape by >=5 (30 vs 22)");
-assert(apex53_z - (bev53_rx + 2) - tape53_top >= 5, "v53: X pinion bottom must clear the tape by >=5 (32 vs 22)");
-assert(hi53_z - (drop53_rh + 2) - tape53_top >= 5, "v53: drop-high bottom must clear the tape by >=5 (27 vs 22)");
-// v51 hollow rotor: rods clear the bore, bobbins clear the tape
-    // corners (pocket half 3.9 x half-height 4 -> corner r 5.59), bobbins
-    // stay inside the ring OD envelope (export lift/min_z kept).
-    assert(rod51_orbit - rod51_r >= 8, "v72: holder rods must clear the ring bore (middle stays empty)");
-    assert(rod51_orbit - bob51_r > 5.6, "v72: bobbins must clear the tape corners on every orbit");
-    assert(rod51_orbit + bob51_r <= twister_ring_r + twister_ring_tube, "v72: bobbins must stay inside the ring OD envelope");
-    // v72 bevel mesh assert: ring bevel (28T M1.5, pitch r21) + pinion (12T M1.5, pitch r9)
-    // axes intersect at (bind_x,30,17), mesh dist = r1+r2 = 30 ±(tol+0.01)
-    assert(abs((ring_bevel_mod * ring_bevel_teeth / 2) + (pinion_mod * pinion_teeth / 2) - (ring_bevel_mod * ring_bevel_teeth / 2 + pinion_mod * pinion_teeth / 2)) < tolerance + 0.01, "v72: bevel mesh dist must satisfy r1+r2 (30)");
-    assert(ring_bevel_teeth >= 24 && ring_bevel_teeth <= 30, "v72: ring bevel teeth must be 24-30");
-    assert(pinion_teeth >= 10 && pinion_teeth <= 60, "v72: pinion teeth must be in [10,60]");
-    assert(ring_bevel_mod == pinion_mod, "v72: bevel pair must be same module (M1.5)");
-    // v53 friction drive (kept v51 geometry): wheel touches the ring OD
-    // (tangent), rides the low shaft mid-span, stays interior, clears
-    // the cradle post top. NOTE: v72 bevel drive replaces friction
-    // wheel for the ring rotation; friction wheel kept as backup/slip.
-    // Ring OD now r15+6=21, friction wheel r3.5 -> tangent dist 24.5
-    // (position unchanged; friction wheel no longer primary drive).
-    assert(sqrt(pow(lo53_y-30,2) + pow(lo53_z-twister_axle_z,2)) + fric53_r >= (twister_ring_r + twister_ring_tube) - 2, "v72: friction wheel must reach the ring OD (backup/slip)");
-    assert(lo53_x0 <= fric53_x && fric53_x <= lo53_x1, "v53: friction wheel must ride the low shaft span");
-    assert(lo53_y - fric53_r >= 0 && lo53_y + fric53_r <= 60, "v53: friction wheel must stay interior (y 42..49)");
-    assert(lo53_z - fric53_r > twister_post_h, "v72: friction wheel must clear the cradle post top (13.5 vs 9)");
-    assert(fric53_x - fric53_t/2 >= bind_x && fric53_x - fric53_t/2 <= bind_x + 2, "v53: friction wheel face must meet the ring east face");
-// Interior (zero exterior gears) + min_z.
-assert(cnt53_y >= 0 && cnt53_y <= 60 && apex53_y >= 0, "v53: drive must be interior (zero exterior gears)");
-assert(drop53_x - drop53_t/2 >= 0 && drop53_x + drop53_t/2 <= 248, "v53: drop pair must stay inside the chassis");
-assert(lo53_z - (drop53_rl + 2) >= 0, "v53: drop-low must keep min_z>=0 (17-14=3)");
-assert(lo53_z - lo53_r >= 0, "v53: low shaft must keep min_z above 0 (14.5)");
-assert(hi53_z - hi53_r >= 0, "v53: high shaft must keep min_z above 0 (41.5)");
-assert(cnt53_cz - axle_dia/2 >= 0, "v53: countershaft must keep min_z above 0 (40)");
-// Shafts supported: countershaft hidden in wall bores; layshafts ride posts.
-assert(cnt53_y0 >= 0 && cnt53_y0 <= 2, "v53: countershaft must start hidden in the back wall bore (0..2)");
-assert(cnt53_y1 >= 58 && cnt53_y1 <= 60, "v53: countershaft must end hidden in the front block bore");
-assert(hi53_x0 == apex53_x && hi53_x1 == drop53_x + drop53_t/2, "v53: high shaft must run apex->drop east face");
-assert(lo53_x0 <= lo53_post_x && lo53_post_x <= lo53_x1, "v53: low post must stand under the low shaft");
-assert(hi53_x0 <= hi53_post_x && hi53_post_x <= hi53_x1, "v53: high post must stand under the high shaft");
-assert(hi53_post_top == hi53_z - hi53_r, "v53: high post top must meet the shaft bottom");
-assert(lo53_post_top == lo53_z - lo53_r, "v53: low post top must meet the shaft bottom");
-assert(hi53_post_top >= 0 && lo53_post_top >= 0, "v53: posts must stand on the base");
-assert(hi53_y - 2 > 34 && lo53_y - 2 > 34, "v53: posts stay beside the tape (never over it)");
-assert(lo53_z - (drop53_rl + 2) > drop53_pock_z0 + tolerance, "v53: drop-low bottom must clear the pocket floor (3 vs 2, rolling clearance)");
-assert(axle_clearance_dia/2 > axle_dia/2, "v48: bores must slip on shafts (free spin, no fuse)");
-// Drop-gear air gaps to neighbours (thin spinning pair, fail-loud;
-// station envelopes + edge gaps >=5 untouched).
-assert(drop53_x - drop53_t/2 - (bind_x + 5) >= 1, "v53: drop gears must clear the rod sweep (179 vs 177)");
-assert((pull_x - vpull_sleeve_r) - (drop53_x + drop53_t/2) >= 2, "v53: drop gears must clear the pull station (183 vs 186.35)");
-// v48 pull support: static pins base-fused, tops hidden in caps
-// (no drive tube, no gear — tape-coupled nip, zero exterior gears).
-assert(drop53_x - drop53_t/2 - (bind_x + 5) >= 1, "v53: drop gears must clear the rod sweep (179 vs 177)");
-assert((pull_x - vpull_sleeve_r) - (drop53_x + drop53_t/2) >= 2, "v53: drop gears must clear the pull station (183 vs 186.35)");
-assert(pull_pinA_z0 >= 0 && pull_pinA_z0 <= base_thick, "v48: pull pin A must start fused in the base");
-assert(pull_pinA_z1 >= base_thick + vpull_h && pull_pinA_z1 <= base_thick + vpull_h + 3, str("v52: pull pin A top (27) must hide inside the roller top cap (24..27): ", pull_pinA_z1));
-assert(pull_pinB_z1 > 25 && pull_pinB_z1 <= 28, str("v52: pull pin B top (27) must hide inside cup-B bore (25..28): ", pull_pinB_z1));
-assert(spool_axle_z == 65, "spool_axle_z must be 65");
-assert(chassis_height > max(spool_axle_z + cone_h + bb_height_spool, drum_axle_z + drum_outer_r) + 5,
-       str("chassis_height must hold tallest axle + clearance: need > ", max(spool_axle_z+cone_h+bb_height_spool, drum_axle_z+drum_outer_r)+5, " got ", chassis_height));
-assert(hopper_inner_r > drum_radius, "hopper_inner_r must exceed drum_radius (clearance >0)");
-assert(plow_len > 15, str("plow_len must exceed 15, got ", plow_len));
-assert(tape_thick >= 0.3, str("tape_thick must stay printable (>=0.3, no zero-thickness), got ", tape_thick));
-assert(tape_bend_radius >= 1 && tape_bend_radius <= 6,
-       str("tape_bend_radius out of envelope [1,6]: ", tape_bend_radius));
-assert(tape_fold_angle > 0 && tape_fold_angle <= 180,
-       str("tape_fold_angle out of envelope (0,180]: ", tape_fold_angle));
-assert(fold_width/2 + tape_bend_radius + tape_thick <= (paper_width + 2*tolerance)/2,
-       str("tape fold must fit the shroud inner half-width 13: ", fold_width/2 + tape_bend_radius + tape_thick));
-assert((fold_start - tape_x0) + fold_len <= tape_len,
-       str("tape fold segment must fit on the ribbon: need ", (fold_start - tape_x0) + fold_len, " <= ", tape_len));
-assert(tape_x0 + tape_len >= fold_end, str("tape ribbon must reach the fold exit: ", tape_x0 + tape_len));
-assert(fold_end <= drum_axle_x - drum_radius - 4,
-       str("forming exit must sit fully west of the drum face (<=71): ", fold_end));
-assert(fold_start >= 35 && fold_start <= 45,
-       str("fold entry must sit at the roller nip (35-45): ", fold_start));
-assert(transit_end == plow_start,
-       str("transit must reach the plow mouth: ", transit_end));
-assert((transit_end - tape_x0) <= tape_len,
-       str("transit must fit on the ribbon: need ", (transit_end - tape_x0), " <= ", tape_len));
-assert(tape_z + tape_thick + tape_bend_radius + tape_fold_wall + tape_shoulder_r*0.5 + 1.0 <= drum_axle_z - drum_radius,
-       str("full-U transit top + 1 must clear the drum bottom (35): ", tape_z + tape_thick + tape_bend_radius + tape_fold_wall + tape_shoulder_r*0.5 + 1.0));
-assert(fold_width/2 + tape_bend_radius + tape_thick <= 5.0,
-       str("fold outer half-width must fit under the OD10 pipe footprint (5.0): ", fold_width/2 + tape_bend_radius + tape_thick));
-assert(tape_x0 + tape_len >= plow_end, str("tape ribbon must reach the plow end: ", tape_x0 + tape_len));
-assert(bind_x > plow_end, str("bind station must sit east of the plow end: ", bind_x));
-assert(twister_arms == 2, "thread twister must carry exactly 2 thread arms");
-assert(twister_orbits_per_drum == 18/7, str("v72: twister must orbit at bevel ratio (18/7 ≈ 2.57 per drum rev), got ", twister_orbits_per_drum));
-assert(twister_axle_z + twister_ring_r + twister_ring_tube <= 40, str("v72: twister ring top must clear the hover pipe/drum: ", twister_axle_z + twister_ring_r + twister_ring_tube));
-assert(pull_x > bind_x, str("pull nip must sit east of the bind station: ", pull_x));
-assert(abs(vpull_spin - 4/3) < 0.001, str("v52: spin compensation must be roller_body_r/vpull_r = 10/7.5 = 4/3 (same surface speed, spacing preserved): ", vpull_spin));
-assert(abs(vpull_gap - 9.5) < 0.01, str("v52: cushioned nip gap must be 9.5+-0.01: ", vpull_gap));
-assert(abs(2*vpull_off - 2*vpull_sleeve_r - vpull_gap) < 0.01, str("v52: nip offset must satisfy 2*off - 2*sleeve_r == gap (12.4/7.65/9.5): ", 2*vpull_off - 2*vpull_sleeve_r));
-assert(takeup_x > pull_x, str("wind-up reel must sit east of the pull nip: ", takeup_x));
-assert(takeup_x + takeup_flange_r <= chassis_x0 + chassis_len + 4, str("take-up flange must stay ~inside the chassis east edge: ", takeup_x + takeup_flange_r));
-assert(takeup_z - takeup_flange_r >= 0, str("take-up flange bottom must stay >= 0: ", takeup_z - takeup_flange_r));
-assert(takeup_z + takeup_flange_r <= chassis_height, str("take-up flange top must fit below wall top: ", takeup_z + takeup_flange_r));
-assert(tape_x0 + tape_len >= tape_flat_end, str("v45: flat ribbon must reach the leader start: ", tape_x0 + tape_len));
-assert(leader_x0 < tape_flat_end, str("v45: leader must overlap the flat ribbon: ", leader_x0));
-assert(tape_flat_end <= takeup_x - takeup_flange_r, str("v45: flat ribbon must end before the reel flange (no dangle under/past reel): ", tape_flat_end));
-assert(sqrt(pow(leader_x1 - takeup_x, 2) + pow(leader_z1 - takeup_z, 2)) <= tape_pack_r, str("v45: leader end must fuse inside the wound pack: ", sqrt(pow(leader_x1 - takeup_x, 2) + pow(leader_z1 - takeup_z, 2))));
-assert(tape_pack_r == takeup_core_r + 3, str("v45: leader pack radius must match the takeup_reel() pack visual: ", tape_pack_r));
-assert(bind_x - 4 - plow_end >= 5, str("v38: twister west face (bind_x-4) must clear plow end by >=5: ", bind_x - 4 - plow_end));
-assert((pull_x - vpull_r) - (bind_x + 4) >= 5, str("v38: pull west face must clear twister east face by >=5: ", (pull_x - vpull_r) - (bind_x + 4)));
-assert((takeup_x - takeup_flange_r) - (pull_x + vpull_r) >= 5, str("v38: take-up west face must clear pull east face by >=5: ", (takeup_x - takeup_flange_r) - (pull_x + vpull_r)));
-// v39/v40 edge-to-edge station gaps (6-turner replaces the plow closer,
-// same footprint so the v38 numbers hold; restated on turner_* names):
-// turner_end 159 -> twister 168..176 (gap 9) -> pull 186.35..201.65 (gap 10.35)
-// -> take-up 210..242 (gap 8.35). Fail loud, never silent.
-assert(turner_start == plow_start && turner_end == plow_end && turner_len == plow_len,
-       "v39: 6-turner footprint must equal the plow footprint (compat + clearance inheritance)");
-assert(turner_start - drop_x >= 8,
-       str("v40: 6-turner mouth must sit a little AFTER the drop point (flat landing first): ", turner_start - drop_x));
-assert(bind_x - 4 - turner_end >= 5, str("v39: twister west face must clear 6-turner end by >=5: ", bind_x - 4 - turner_end));
-assert((pull_x - vpull_sleeve_r) - (bind_x + 4) >= 5, str("v39: cushioned pull west face must clear twister east face by >=5: ", (pull_x - vpull_sleeve_r) - (bind_x + 4)));
-assert((takeup_x - takeup_flange_r) - (pull_x + vpull_sleeve_r) >= 5, str("v39: take-up west face must clear cushioned pull east face by >=5: ", (takeup_x - takeup_flange_r) - (pull_x + vpull_sleeve_r)));
-assert(vpull_sleeve_r <= 7.8, str("v52: cushion sleeve must stay ~d15 (spin-compensated 4/3 surface speed): ", vpull_sleeve_r));
-assert(takeup_core_d < roller_dia, "v39: wind-up must step UP vs the roller (core d10 < d20)");
-assert(clutch_stack == 10, str("v40: slip-clutch stack must be 10: ", clutch_stack));
-assert(clutch_disc_r < takeup_flange_r, "v40: clutch discs must stay inside the flange envelope (X gap kept)");
-assert(takeup_h_total == takeup_core_h + takeup_flange_t + clutch_stack,
-       str("v40: take-up export height must include the clutch stack: ", takeup_h_total));
-// v45 MOUNT INTEGRITY (forensic fix: floating gears/rotors/reels):
-// dead-axle shafts seat every bore (slip fits, spinning parts stay free;
-// gears fused); twister cradle keeps a rolling gap (no touch, no float);
-// pull mid-collar clears the tape.
-assert(drum_shaft_y0 >= 0 && drum_shaft_y0 <= 2, str("v48: drum shaft must start hidden in the back wall bore (0..2, zero exterior clutter): ", drum_shaft_y0));
-assert(drum_shaft_y1 >= 58 && drum_shaft_y1 <= 60, str("v45: drum shaft must end hidden in the front block bore: ", drum_shaft_y1));
-assert(hex_clearance_r > hex_axle_r, "v45: drum hex bore must slip on the shaft (free spin, no fuse)");
-assert(takeup_shaft_y0 >= 0 && takeup_shaft_y0 <= 2, str("v48: take-up shaft must start hidden in the back wall bore (0..2, zero exterior clutter): ", takeup_shaft_y0));
-assert(takeup_shaft_y1 >= 58 && takeup_shaft_y1 <= 60, str("v45: take-up shaft must end hidden in the front block bore: ", takeup_shaft_y1));
-assert(axle_clearance_dia/2 > axle_dia/2, "v45: reel/wall/block bores must slip on the take-up shaft");
-assert(spool_shaft_y0 >= 0 && spool_shaft_y0 <= 2, str("v45: spool shaft must start hidden in the back block bore: ", spool_shaft_y0));
-assert(spool_shaft_y1 >= 58 && spool_shaft_y1 <= 60, str("v45: spool shaft must end hidden in the front block bore: ", spool_shaft_y1));
-assert((twister_axle_z - twister_ring_tube) - twister_post_h >= 1.5, str("v45: twister cradle must keep a rolling gap (no touch): ", (twister_axle_z - twister_ring_tube) - twister_post_h));
-assert((twister_axle_z - twister_ring_tube) - twister_post_h <= 4, str("v45: twister cradle must not float the rotor (gap <= 4): ", (twister_axle_z - twister_ring_tube) - twister_post_h));
-assert(tape_z - (base_thick + vpull_collar_z + 1.5) >= 2, str("v45: pull mid-collar top must clear the ribbon base by >=2 (assembly lifts +base_thick): ", tape_z - (base_thick + vpull_collar_z + 1.5)));
-assert(base_thick + vpull_h + 3 > 25 && base_thick + vpull_h + 3 <= 28, str("v52: pull roller B top (27) must engage cup B (cup 25..28, bridge 28): ", base_thick + vpull_h + 3));
-assert(base_thick + vpull_h + 3 >= pull_pinA_z0 && base_thick + vpull_h + 3 <= pull_pinA_z1 + 3, str("v52: pull roller A top cap (27) must ride on the static pin (pin 2..27): ", base_thick + vpull_h + 3));
-assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
-assert(crank_mount_x == roller_axle_x, str("crank_mount_x must be coaxial with roller axle: ", crank_mount_x));
-assert(crank_mount_y == -8, str("crank_mount_y must sit outside the back wall (-8): ", crank_mount_y));
-assert(crank_side == -1, "crank_side must be -1 (grip extends -Y outward back)");
-assert(roller_axle_z + bb_height_roller <= chassis_height, "roller bearing block must fit below wall top");
-assert(drum_axle_z + bb_height_drum <= chassis_height, "drum bearing block must fit below wall top");
-assert(spool_axle_z + bb_height_spool <= chassis_height, "spool bearing block must fit below wall top");
-assert(bolt_dia + 2*tolerance < 5, "M3 clearance holes must stay <5mm");
-assert(8 + (bolt_head_across + 2*tolerance)/sqrt(3) < 13, "bearing-block bolts must clear block edges");
+// v72 bobbin/bevel asserts (updated for v75 geometry)
+assert(rod51_orbit - rod51_r >= 8, "v75: holder rods must clear the ring bore (middle stays empty)");
+assert(rod51_orbit - bob51_r > 5.6, "v75: bobbins must clear the tape corners on every orbit");
+assert(rod51_orbit + bob51_r <= twister_ring_r + twister_ring_tube, "v75: bobbins must stay inside the ring OD envelope");
+// v75 bevel mesh assert: ring crown (16T M1.5, pitch r12) + pinion (12T M1.5, pitch r9)
+// mesh dist = r1+r2 = 12+9 = 21, axes intersect at (173,30,17)
+assert(abs((crown_mod * crown_teeth / 2) + (pinion_bevel_mod * pinion_bevel_teeth / 2) - 21) < tolerance + 0.01, "v75: crown-pinion mesh dist must satisfy r1+r2 (21)");
+assert(crown_teeth >= 10 && crown_teeth <= 60, "v75: crown teeth must be in [10,60]");
+assert(pinion_bevel_teeth >= 10 && pinion_bevel_teeth <= 60, "v75: pinion teeth must be in [10,60]");
+assert(crown_mod == pinion_bevel_mod, "v75: bevel pair must be same module (M1.5)");
+// Pull-pin asserts (updated for pull_x=196)
+assert(pull_pinA_z0 >= 0 && pull_pinA_z0 <= base_thick, "v75: pull pin A must start fused in the base");
+assert(pull_pinA_z1 >= base_thick + vpull_h && pull_pinA_z1 <= base_thick + vpull_h + 3, str("v75: pull pin A top (27) must hide inside the roller top cap (24..27): ", pull_pinA_z1));
+assert(pull_pinB_z1 > 25 && pull_pinB_z1 <= 28, str("v75: pull pin B top (27) must hide inside cup-B bore (25..28): ", pull_pinB_z1));
+// Bore-slip assert
+assert(axle_clearance_dia/2 > axle_dia/2, "v75: bores must slip on shafts (free spin, no fuse)");
 
 // ============================================================
 // Helpers
@@ -903,90 +696,6 @@ module chassis() {
                     translate([0, 0, -epsilon])
                         cylinder(h=3 + 3*epsilon, d=axle_clearance_dia, center=false);
                 }
-            // v53 OVERHEAD twister drive (v51 hollow kept: ZERO coaxial
-            // parts, ZERO exterior gears, NO belts, NO floor gears, NO
-            // duplicate takeoff): back wall is clean solid. EXISTING
-            // drum gear 44T (axis Y, back plane y 9..15) -> overhead counter
-            // 10T (axis Y, same plane y=12, dist 54 = 44+10) at
-            // (~151.58,12,44) = 4.4x, high above the tape (bottom 32);
-            // Y-bevel 12T (same high countershaft, axis Y) -> X-pinion
-            // 10T (high layshaft, axis X) = 1.2x at I53 (cx,45.5,44),
-            // Y vs X 90deg, both bottoms >= 30 (overhead); thin 15T/12T
-            // spur drop (parallel X-X, dz=27, 1.25x at x=181, bottoms
-            // 27/3, low one pocketed) -> low layshaft + side friction
-            // wheel (r3.5) touching the ring OD (slip after) = 6.6x at
-            // the low shaft. One high Y countershaft (cx,44, y 1..59,
-            // through-wall) + high/low X layshafts (y=45.5, z=44/17)
-            // + 2 hanger posts replace the v51 low apex works.
-            // Pull/takeup are tape-coupled (no gears): static pins
-            // support both roller ends; bridge kept SOLID (no tube
-            // hole); cup B kept (bored).
-            // Counter spur (axis Y, back plane y=12: meshes the
-            // existing drum gear 44T; bored, slips on the high
-            // countershaft; overhead, never near the tape).
-            translate([cnt53_cx, cnt53_y, cnt53_cz])
-                rotate([90, 0, 0])
-                    spur_gear(teeth=cnt53_Zc, module_mm=drive53_mod, thickness=spur53_t, bore_dia=axle_dia);
-            // Y-bevel (apex at I53, axis Y, body toward -Y; bored, same
-            // high countershaft as the counter spur, overhead).
-            translate([apex53_x, apex53_y, apex53_z])
-                rotate([90, 0, 0])
-                    bevel_gear(teeth=bev53_Zy, module_mm=drive53_mod, thickness=bev53_t, bore_dia=axle_dia);
-            // X-pinion (apex at I53, axis X, body toward +X along the
-            // high layshaft; bored, slips on it).
-            translate([apex53_x, apex53_y, apex53_z])
-                rotate([0, 90, 0])
-                    bevel_gear(teeth=bev53_Zx, module_mm=drive53_mod, thickness=bev53_t, bore_dia=axle_dia);
-            // Apex-contact note: mating pitch cones meet only at the
-            // shared apex point (single-point visual mesh, as real
-            // bevels); parallel spur pairs mesh tooth-into-gap
-            // (dist=r1+r2 asserted above).
-            // High countershaft (spinner along Y at (cx,44), carries
-            // the counter spur + Y-bevel; ends hidden in wall bores).
-            translate([cnt53_cx, (cnt53_y0 + cnt53_y1)/2, cnt53_cz])
-                rotate([90, 0, 0])
-                    cylinder(h=cnt53_y1 - cnt53_y0, r=axle_dia/2, center=true);
-            // High side layshaft (spinner along X at y=45.5,z=44,
-            // apex -> drop; overhead, bore stays empty).
-            translate([(hi53_x0 + hi53_x1)/2, hi53_y, hi53_z])
-                rotate([0, 90, 0])
-                    cylinder(h=hi53_x1 - hi53_x0, r=hi53_r, center=true);
-            // Spur drop pair (thin t=4, parallel X-X at x=181:
-            // high 15T -> low 12T, dz=27=15+12).
-            translate([drop53_x, hi53_y, hi53_z])
-                rotate([0, 90, 0])
-                    spur_gear(teeth=drop53_Zh, module_mm=drive53_mod, thickness=drop53_t, bore_dia=axle_dia);
-            translate([drop53_x, lo53_y, lo53_z])
-                rotate([0, 90, 0])
-                    spur_gear(teeth=drop53_Zl, module_mm=drive53_mod, thickness=drop53_t, bore_dia=axle_dia);
-            // Low side layshaft (spinner along X at y=45.5,z=17,
-            // 165..183, carries drop-low + friction wheel).
-            translate([(lo53_x0 + lo53_x1)/2, lo53_y, lo53_z])
-                rotate([0, 90, 0])
-                    cylinder(h=lo53_x1 - lo53_x0, r=lo53_r, center=true);
-            // Friction wheel (spinner fused on the low shaft at x=175,
-            // face beside the ring east face, rim tangent to the ring
-            // OD: hollow rolling cradle drive, nothing in the middle).
-            translate([fric53_x, lo53_y, lo53_z])
-                rotate([0, 90, 0])
-                    cylinder(h=fric53_t, r=fric53_r, center=true);
-            // Hanger posts under both layshafts (static brackets fused
-            // to the base, beside the tape; tops meet the shaft
-            // bottoms, bearing holes slip).
-            difference() {
-                translate([hi53_post_x - 2, hi53_y - 2, 0])
-                    cube([4, 4, hi53_post_top]);
-                translate([hi53_post_x, hi53_y, hi53_post_top])
-                    rotate([0, 90, 0])
-                        cylinder(h=4 + 2*epsilon, d=axle_clearance_dia, center=true);
-            }
-            difference() {
-                translate([lo53_post_x - 2, lo53_y - 2, 0])
-                    cube([4, 4, lo53_post_top]);
-                translate([lo53_post_x, lo53_y, lo53_post_top])
-                    rotate([0, 90, 0])
-                        cylinder(h=4 + 2*epsilon, d=axle_clearance_dia, center=true);
-            }
             // v48 pull support pins (static bars: base-fused, slip-fit
             // in roller bores + cup-B bore; the tape-coupled rotors
             // spin on them — supported both ends, never coplanar).
@@ -1055,15 +764,14 @@ module chassis() {
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
         }
-        // v53 high-countershaft wall holes (through-wall support at (cx,44)).
-        for (side=[0,1]) {
-            translate([cnt53_cx, side*(chassis_width-wall_thick)+wall_thick/2, cnt53_cz])
-                rotate([90,0,0])
-                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
-        }
-        // v48: NO idler stubs fuse into the back wall (zero exterior
-        // gears) — the wall keeps full section everywhere. The solid
-        // pull bridge needs no hole (tape-coupled nip, no drive tube).
+        // v75: base pocket slot for ring to hang below (x=165-181, y=3.5-56.5, z=0-4)
+        translate([pocket_x0, (pocket_y0+pocket_y1)/2, pocket_z/2])
+            cube([pocket_x1-pocket_x0, pocket_y1-pocket_y0, pocket_z], center=true);
+        // v75: corner feet (~14mm) so ring bottom (z=-10) clears table
+        for (fx=[chassis_x0+2, chassis_x0+chassis_len-2])
+            for (fy=[2, chassis_width-2])
+                translate([fx, fy, foot_h/2])
+                    cube([foot_l, foot_w, foot_h], center=true);
         // 45° chamfers on base edges
         translate([chassis_x0, chassis_width/2, base_thick])
             rotate([0,45,0])
@@ -1097,15 +805,8 @@ module chassis() {
             cube([40.4, 6.4, 6 + 2*epsilon]);
         translate([drum_axle_x - 20.2, chassis_width - 15 + (8-6.4)/2, base_thick - epsilon])
             cube([40.4, 6.4, 6 + 2*epsilon]);
-        // v53 drop pocket under the low 12T drop gear (spinning steel
-        // bottom 3 vs base top 4: pocket 2..5 gives 1.0 rolling gap,
-        // base keeps a 2mm print floor, min_z=0 kept elsewhere).
-        translate([drop53_x - 4, lo53_y - 4, drop53_pock_z0 - epsilon])
-            cube([8, 8, (base_thick + 1) - drop53_pock_z0 + 2*epsilon]);
-        // Lightening cutouts in walls (v48: zero exterior gears, so
-        // the back wall is clean solid everywhere; cutout kept high
-        // at z64, clear of the interior spur pair at y=45 and the
-        // high Y countershaft / side layshaft at z17 (all interior).
+        // v75 lightening cutouts in walls (zero exterior gears,
+        // back wall clean; cutouts clear of gear train and tape)
         translate([56, -epsilon, 64])
             cube([24, wall_thick+2*epsilon, 22]);
         translate([90, chassis_width - wall_thick - epsilon, 18])
@@ -2074,43 +1775,33 @@ module pull_rollers() {
 //   the axle by takeup_angle (4 rev per $t = same linear tape).
 // ============================================================
 module thread_twister() {
-    assert(twister_arms == 2, "thread_twister: must carry exactly 2 holders");
-    assert(rod51_orbit - rod51_r >= 8, "thread_twister: middle must stay empty (rods clear the bore)");
-    assert(rod51_orbit + bob51_r <= twister_ring_r + twister_ring_tube, "thread_twister: bobbins must stay in the ring envelope");
+    // v75: gear-driven twister. Hollow ring + 16T crown gear on
+    // WEST face + 2 bobbin holders at 90° apart on EAST face.
+    // Ring rotates about X, driven by 12T pinion (axis X) meshing
+    // the crown gear. Bobbins orbit the tape axis at orbit=18.
     union() {
-        // Outer guide ring in the YZ plane (axis X): rotate_extrude
-        // ring about Z then tilt so its axis lies along X.
+        // Outer guide ring in the YZ plane (axis X)
         rotate([0, 90, 0])
             rotate_extrude(convexity=10)
                 translate([twister_ring_r, 0, 0])
                     square([twister_ring_tube*2, twister_ring_tube*2], center=true);
-        // v72: bevel teeth on west face via bevel_gear() with
-        // rotate([0,90,0]) so teeth go full 360 about X axis
-        // (previous bug was rotate([90,0,0])). 28T M1.5 ring
-        // bevel, pitch r21, fused to the ring west face.
-        translate([0, 0, 0])
+        // 16T M1.5 crown gear on WEST face (x=165)
+        translate([-(twister_ring_cx - crown_face_x), 0, 0])
             rotate([0, 90, 0])
-                bevel_gear(teeth=ring_bevel_teeth, module_mm=ring_bevel_mod, thickness=4, bore_dia=19);
-        // v72: 2mm guide eyelets near bore (2 eyelets at 90deg
-        // apart on the ring, near the bore for thread guidance)
+                bevel_gear(teeth=crown_teeth, module_mm=crown_mod, thickness=4, bore_dia=crown_bore_d);
+        // 2 bobbin holders at 90° apart on EAST face (x=181)
+        for (k=[0:1])
+            rotate([k*90, 0, 0]) {
+                translate([0, bobbin_orbit, 0])
+                    rotate([0, 90, 0])
+                        cylinder(h=bobbin_len + 2*epsilon, d=bobbin_r*2, center=true);
+            }
+        // Guide eyelets near bore (2 eyelets 90deg apart)
         for (k=[0:1])
             rotate([k*180, 0, 0])
                 translate([0, twister_ring_r - twister_ring_tube - eyelet_r - 1, 0])
                     rotate([0, 90, 0])
                         cylinder(h=twister_ring_tube*2 + 2*epsilon, d=eyelet_r*2, center=true);
-        // v51/v72: NO hub, NO arms to the centre (middle stays empty for
-        // the tape). 2 bobbin spindles (6mm dia x14mm) 180 apart:
-        // rods parallel to X fused through the ring, thread bobbins
-        // ride the rods and orbit with the rotor, clear of the bore.
-        for (k=[0:twister_arms-1])
-            rotate([k*180, 0, 0]) {
-                translate([0, rod51_orbit, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h=rod51_h, r=rod51_r, center=true);
-                translate([0, rod51_orbit, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h=bob51_h, r=bob51_r, center=true);
-            }
     }
 }
 
@@ -2151,15 +1842,13 @@ module twister_bracket() {
     assert(bracket_len > 0, "twister_bracket: length must be >0");
 }
 
-// v72: mating bevel pinion (12T M1.5) at back plane y=12.
-// Axis along Y, intersects ring bevel axis at (bind_x,30,17).
-// Mesh dist = r1+r2 = (28*1.5/2)+(12*1.5/2) = 21+9 = 30.
+// v75: mating bevel pinion (12T M1.5) on the pinion shaft.
+// Axis along X, meshes the ring crown gear at (173,30,17).
 module twister_pinion() {
-    assert(pinion_teeth >= 10 && pinion_teeth <= 60, "twister_pinion: teeth out of range");
-    assert(pinion_mod == ring_bevel_mod, "twister_pinion: must match ring bevel module (M1.5)");
-    // Origin-centred; assembly L2443 places it at the mesh station.
+    assert(pinion_bevel_teeth >= 10 && pinion_bevel_teeth <= 60, "twister_pinion: teeth out of range");
+    assert(pinion_bevel_mod == crown_mod, "twister_pinion: must match crown module (M1.5)");
     rotate([90, 0, 0])
-        bevel_gear(teeth=pinion_teeth, module_mm=pinion_mod, thickness=4, bore_dia=axle_dia);
+        bevel_gear(teeth=pinion_bevel_teeth, module_mm=pinion_bevel_mod, thickness=4, bore_dia=axle_dia);
 }
 
 module vpull_roller() {
@@ -2314,44 +2003,89 @@ module crank_assembly() {
 
 // ============================================================
 // Animated assembly
-// Sign convention (v23: crank drives the ROLLER shaft from the back wall side):
-//   drum_angle = -360*$t ANTI-CLOCKWISE about +Y (top surface moves -X/left,
-//   viewed +X right, +Z up): picks up RIGHT, carries over top, drops bottom-center
-//   roller_angle = +990*$t + gear_mesh_phase CLOCKWISE (driven by drum via
-//   44:16 mesh, 2.75:1; +11.25° half-pitch so the pinion tooth falls into the drum gap)
-//   crank = roller_angle (rigid on the roller shaft, coaxial at roller_axle_x)
+// Sign convention:
+//   drum_angle = -360*$t ANTI-CLOCKWISE about +Y (top surface
+//   moves -X/left, viewed +X right, +Z up): picks up RIGHT,
+//   carries over top, drops bottom-center
+//   crank = roller_angle (rigid on the roller shaft)
 //   upper idler = -990*$t (counter-rotates via tape contact)
-//   v53 OVERHEAD twister drive (zero exterior gears, module 2,
-//   asserted): crank->drum 2.75:1 interior (44:16, dist 60, phase 11.25°);
-//   EXISTING drum44 -> overhead counter 10T (4.4x, back plane y=12,
-//   dist 54, high) -> Y-bevel 12T -> high X-pinion 10T (1.2x, 90°
-//   at I53, overhead) -> thin 15T/12T drop (1.25x at x=181) = 6.6x
-//   at the low shaft (1 bind per seed, 6 cavities). Flips keep the twister sign
-//   (animation: twister -2.18x crank = 6x drum at 16/44x crank).
-//   Pull nip pair spins about Z at +/-roller_angle*vpull_spin (tape-coupled
-//   4/3 vs the main roller, v52 d15 dia => same surface speed,
-//   the spacing driver; cushioned rubber/silicone sleeve grips firm
-//   without crushing); takeup_angle
-//   = -1440*$t about the reel axle (tape-tension wind-up, core d10
-//   base speed winds the same 172.79mm linear tape; slip clutch on
-//   the axle slips when full). No belts, no exterior gears.
-//   v40 mounts: BOTTOM = 6-turner + wind-up reel; SIDE = twister ring +
-//   pull rollers + drum (axles through the chassis walls); TOP =
-//   hopper+shroud + tape input spools.
-// At $t=0 geometry equals static layout (plus the 11.25° mesh phase on the roller).
+//   v75 GEAR TRAIN (chain from drum): drum44T -> 5-stage
+//   spur gear train (12.29x) -> bevel pair -> pinion shaft ->
+//   crown gear on twister ring. Twister orbits 12.29x/drum rev.
+//   Pull nip pair spins about Z at +/-roller_angle*vpull_spin
+//   (tape-coupled 4/3 vs the main roller).
+//   takeup_angle = -1440*$t about the reel axle (tape-wind-up).
+// At $t=0 geometry equals static layout (plus the 11.25° mesh
+// phase on the roller).
 // ============================================================
 module animated_assembly() {
-    drum_angle = -360*$t;    // ANTI-CLOCKWISE about +Y
-    crank_angle = 990*$t;    // v70: lower roller + crank orbit (CW, opposite drum; 44/16 = 2.75x drum magnitude)
-    idler_angle = -990*$t;   // upper idler counter-rotates
-    roller_angle = crank_angle + gear_mesh_phase; // mesh-phased roller shaft
-    twister_angle = -360*$t*twister_orbits_per_drum; // v37: 6 orbits/drum rev about X
-    pull_a_angle = roller_angle*vpull_spin;   // v52: nip side A spin-compensated 4/3 (same surface speed)
-    pull_b_angle = -roller_angle*vpull_spin;  // v52: nip side B counter-rotates 4/3
-    takeup_angle = -1440*$t;       // v48: tape-tension wind-up (no take-up gears — exterior TU removed): base speed -2 = 2x crank (sense unchanged vs v43-v47; winds the same 172.79mm linear tape per drum rev)
+    drum_angle = -360*$t;
+    crank_angle = 990*$t;
+    idler_angle = -990*$t;
+    roller_angle = crank_angle + gear_mesh_phase;
+    // v75: twister driven by 5-stage gear train + bevel pair
+    twister_angle = -360*$t * twister_orbits_per_drum;
+    pull_a_angle = roller_angle*vpull_spin;
+    pull_b_angle = -roller_angle*vpull_spin;
+    takeup_angle = -1440*$t;
 
     // Chassis
     chassis();
+
+    // v75 GEAR TRAIN (all spur, M1.5, exterior visible)
+    // Stage 1: drum 44T (at (100,12)) -> 11T (at (155,12)), shaft A
+    translate([drum_axle_x, chassis_width/2, shaftA_z])
+        rotate([0, 0, 0])
+            spur_gear(teeth=44, module_mm=2, thickness=6, bore_dia=axle_dia);
+    translate([shaftA_x, chassis_width/2, shaftA_z])
+        rotate([0, 0, 0])
+            spur_gear(teeth=11, module_mm=2, thickness=6, bore_dia=axle_dia);
+    // Shaft A idler 16T at (155,45) -> Stage 2 10T
+    translate([gear16a_x, chassis_width/2, gear16a_z])
+        rotate([0, 0, 0])
+            spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    // Stage 2: 16T@(174.5,45) -> 10T (at (174.5,30))
+    translate([gear10b_x, chassis_width/2, gear10b_z])
+        rotate([0, 0, 0])
+            spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([gear16b_x, chassis_width/2, gear16b_z])
+        rotate([0, 0, 0])
+            spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    // Stage 3: 16T@(174.5,30) -> 10T (at (174.5,15))
+    translate([gear10c_x, chassis_width/2, gear10c_z])
+        rotate([0, 0, 0])
+            spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([gear16c_x, chassis_width/2, gear16c_z])
+        rotate([0, 0, 0])
+            spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    // Stage 4: 16T@(174.5,15) -> 10T (at (174.5,12))
+    translate([gear10d_x, chassis_width/2, gear10d_z])
+        rotate([0, 0, 0])
+            spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([gear16d_x, chassis_width/2, gear16d_z])
+        rotate([0, 0, 0])
+            spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    // Stage 5: 16T@(174.5,12) -> 10T (at (174.5,12))
+    translate([gear10e_x, chassis_width/2, gear10e_z])
+        rotate([0, 0, 0])
+            spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    // Chain shaft bevel (axis Z) at (145,49.4,9) -> pinion bevel (axis X)
+    translate([chain_bevel_x, chassis_width/2, chain_bevel_z])
+        rotate([0, 90, 0])
+            bevel_gear(teeth=12, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    // Pinion shaft bevel (axis X) at (164,49.4,9) -> crown gear
+    translate([pinion_shaft_x1, chassis_width/2, pinion_shaft_z])
+        rotate([90, 0, 0])
+            bevel_gear(teeth=pinion_bevel_teeth, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    // Pinion shaft cylinder (axis X, y=49.4, z=9)
+    translate([(pinion_shaft_x0+pinion_shaft_x1)/2, chassis_width/2, pinion_shaft_z])
+        rotate([90, 0, 0])
+            cylinder(h=pinion_shaft_x1-pinion_shaft_x0, d=axle_dia, center=true);
+
+    // v75 Ring crown gear on WEST face (x=165)
+    translate([crown_face_x, chassis_width/2, twister_ring_cz])
+        rotate([0, 90, 0])
+            bevel_gear(teeth=crown_teeth, module_mm=crown_mod, thickness=4, bore_dia=crown_bore_d);
 
     // Spool cones
     translate([spool_axle_x, wall_thick+1, spool_axle_z])
@@ -2365,17 +2099,11 @@ module animated_assembly() {
             translate([0, 0, -drum_dia/2])
                 seed_cartridge(seed_dia, seed_depth);
 
-    // Hopper (v34 OD10: ONE printed piece — right wedge pickup level
-    // top z=73, open-top half-pipe 16mm/8mm cover 11->6 with grooves,
-    // 2 side joints, closed box, bottom-center hover pipe ID6/OD10 L10
-    // at drum x hovering 10 above the lowered lane)
+    // Hopper
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
 
-    // Tape cover shroud (v22: enclosed tunnel WEST of drum, roller nip
-    // -> drum exit, world x 58..84). Local frame x 0..len, y centred 0.
-    // v24 verified R->L: hopper(~128) > drum(100) > shroud(~71) > roller(40);
-    // wall 2.0>=1.2, min_z=0, spool(-6) clears r22 gear (X gap 1.5).
+    // Tape cover shroud
     translate([shroud_x0, chassis_width/2, 0])
         u_channel_shroud();
 
@@ -2383,29 +2111,19 @@ module animated_assembly() {
     translate([plow_start, chassis_width/2 - 12.7, base_thick])
         seed_cradle();
 
-    // Seed tape with center U-fold (v34 OD10: narrow 4 trough,
-    // R1.5, 5.5 walls, S-shoulders; v31: forming 37..70 fully west of
-    // the drum face + straight full-U transit 70..126 under the drum
-    // (13.6 air gap) UNDER the hover pipe (10 gap) to the plow mouth;
-    // static in CAD, scrolls in the viewer; single-layer floor, min_z=0).
+    // Seed tape with center U-fold
     translate([tape_x0, chassis_width/2, tape_z])
         seed_tape_bend();
 
-    // Former collar (v28 visual, v31 at the forming exit): stainless
-    // transverse shoe with U notch straddling the full-U section at the
-    // forming exit (world x ~67, clear of the wheel).
+    // Former collar
     translate([fold_end - 3, chassis_width/2, tape_z + tape_thick])
         former_collar();
 
-    // Folding plow (v39 REPLACED by the 6-turner exact spiral scroll:
-    // the user's overlapping sheet (verbatim) guides the seeded tape
-    // east of the drop, mouth world 114 (telescoping over the transit
-    // end) to exit 159, v1-precedent slot end kept; seed lands flat
-    // at 100 first, then the spiral closes round it into the tube)
+    // Folding plow (6-turner)
     translate([plow_start, chassis_width/2 - 20, base_thick])
         six_turner();
 
-    // Pull rollers (zoffset=11 compensated in assembly)
+    // Pull rollers
     translate([roller_axle_x, chassis_width/2, roller_axle_z])
         rotate([0, roller_angle, 0])
             translate([0, 0, -roller_dia/2])
@@ -2415,38 +2133,26 @@ module animated_assembly() {
             translate([0, 0, -roller_dia/2])
                 knurled_roller(is_lower=false);
 
-    // Crank drives the ROLLER shaft (v23): coaxial at roller_axle_x=40 outside
-    // the BACK wall (Y=crank_mount_y=-8, grip mirrored -Y), rigid with the lower
-    // roller (grip orbits r=crank_throw about the roller axis at [40,-8,60]).
+    // Crank
     translate([crank_mount_x, crank_mount_y, roller_axle_z])
         rotate([0, roller_angle, 0])
             translate([-crank_pivot_x, 0, -crank_pivot_z])
                 crank_assembly();
 
-    // v72 Thread twister (HOLLOW: ring + bevel teeth + 2 rod
-    // bobbin holders orbit the tape axis just east of the plow,
-    // binding each seed into the folded pocket; bevel drive
-    // (28T/12T M1.5) at the layshaft, viewer kinematic
-    // ~2.57x about X).
-    translate([bind_x, chassis_width/2, twister_axle_z])
+    // v75 Thread twister (gear-driven)
+    translate([twister_ring_cx, chassis_width/2, twister_ring_cz])
         rotate([twister_angle, 0, 0])
             thread_twister();
-    // v72: split-collar bracket coaxial with scroll exit,
-    // mounting the twister ring to the chassis. Flat on base.
-    translate([bind_x - 13, chassis_width/2, twister_axle_z])
+    // v75 Split-collar bracket coaxial with scroll exit
+    translate([twister_ring_cx - 13, chassis_width/2, twister_ring_cz])
         twister_bracket();
-    // v72: mating 12T bevel pinion at back plane y=12,
-    // axis along Y, meshes ring bevel at (bind_x,30,17).
-    translate([bind_x, chassis_width/2, twister_axle_z])
+    // v75 Pinion shaft bevel (axis X, y=49.4, z=9)
+    translate([pinion_shaft_x0, chassis_width/2, pinion_shaft_z])
         rotate([twister_angle, 0, 0])
-            twister_pinion();
+            rotate([90, 0, 0])
+                bevel_gear(teeth=pinion_bevel_teeth, module_mm=1.5, thickness=4, bore_dia=axle_dia);
 
-    // v37 Vertical-nip pull pair (spacing driver), v39 CUSHIONED:
-    // two vertical-axis rollers stand on the base flanking the finished
-    // folded tape at pull_x (side-mounted: top bridge from the chassis
-    // walls caps the axles), pinching the closed pocket and pulling it
-    // at the same surface speed as the main roller (v52 d15 at 4/3 spin, spacing
-    // preserved). Soft rubber/silicone sleeve grips without crushing.
+    // Pull rollers (zoffset=11 compensated)
     translate([pull_x, chassis_width/2 - vpull_off, base_thick])
         rotate([0, 0, pull_a_angle])
             vpull_roller();
@@ -2454,10 +2160,7 @@ module animated_assembly() {
         rotate([0, 0, pull_b_angle])
             vpull_roller();
 
-    // v37 Take-up spool (wind-up reel east, BOTTOM mounted), v40 SLIP
-    // CLUTCH: reel built along Z is recentred, tilted to axle-Y, spun
-    // about its axle by takeup_angle (core d10 step-up winds the same
-    // linear tape the pull nip delivers; clutch discs slip when full).
+    // Take-up spool
     translate([takeup_x, chassis_width/2, takeup_z])
         rotate([90, 0, 0])
             rotate([0, 0, takeup_angle])
@@ -2513,11 +2216,42 @@ if (part_to_render == "all") {
     translate([-bracket_len/2, -(twister_ring_r + twister_ring_tube + 0.35), 0])
         twister_bracket();
 } else if (part_to_render == "twister_pinion") {
-    // Mating 12T M1.5 bevel pinion at back plane y=12.
-    // Axis along Y, meshes ring bevel at (bind_x,30,17).
+    // v75: 12T M1.5 bevel pinion on the pinion shaft (axis X).
     translate([0, 0, twister_lift])
         rotate([90, 0, 0])
             twister_pinion();
+} else if (part_to_render == "gear_train") {
+    // v75: 5-stage spur gear train + bevel pair.
+    chassis();
+    translate([drum_axle_x, chassis_width/2, shaftA_z])
+        spur_gear(teeth=44, module_mm=2, thickness=6, bore_dia=axle_dia);
+    translate([shaftA_x, chassis_width/2, shaftA_z])
+        spur_gear(teeth=11, module_mm=2, thickness=6, bore_dia=axle_dia);
+    translate([gear16a_x, chassis_width/2, gear16a_z])
+        spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([gear10b_x, chassis_width/2, gear10b_z])
+        spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([gear16b_x, chassis_width/2, gear16b_z])
+        spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([gear10c_x, chassis_width/2, gear10c_z])
+        spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([gear16c_x, chassis_width/2, gear16c_z])
+        spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([gear10d_x, chassis_width/2, gear10d_z])
+        spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([gear16d_x, chassis_width/2, gear16d_z])
+        spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([gear10e_x, chassis_width/2, gear10e_z])
+        spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([chain_bevel_x, chassis_width/2, chain_bevel_z])
+        rotate([0, 90, 0])
+            bevel_gear(teeth=12, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([pinion_shaft_x1, chassis_width/2, pinion_shaft_z])
+        rotate([90, 0, 0])
+            bevel_gear(teeth=pinion_bevel_teeth, module_mm=1.5, thickness=6, bore_dia=axle_dia);
+    translate([crown_face_x, chassis_width/2, twister_ring_cz])
+        rotate([0, 90, 0])
+            bevel_gear(teeth=crown_teeth, module_mm=crown_mod, thickness=4, bore_dia=crown_bore_d);
 } else if (part_to_render == "pull_a") {
     vpull_roller(); // base at z=0 already
 } else if (part_to_render == "pull_b") {
