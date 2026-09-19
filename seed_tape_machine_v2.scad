@@ -2508,13 +2508,10 @@ if (part_to_render == "all") {
 } else if (part_to_render == "twister") {
     // Rotor centred at origin; lift to print base (min_z=0).
     translate([0, 0, twister_lift]) thread_twister();
-    // v72: split-collar bracket coaxial with scroll exit
-    // (scroll exit at world x=159, ring at bind_x=172;
-    // bracket positioned 13mm west of ring centre, along X).
-    // Flat on print base (Z-up), min_z=0.
-    translate([-13, 0, 0])
-        rotate([0, 90, 0])
-            twister_bracket();
+} else if (part_to_render == "twister_bracket") {
+    // Standalone split-collar bracket: origin-centred, min_z=0.
+    translate([-bracket_len/2, -(twister_ring_r + twister_ring_tube + 0.35), 0])
+        twister_bracket();
 } else if (part_to_render == "twister_pinion") {
     // Mating 12T M1.5 bevel pinion at back plane y=12.
     // Axis along Y, meshes ring bevel at (bind_x,30,17).
