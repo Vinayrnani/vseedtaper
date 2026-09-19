@@ -651,6 +651,10 @@
     lowerPivot.rotation.z = -crankAngle - GEAR_PHASE;   // v70: scad roller_angle = +990t + 11.25deg
     upperPivot.rotation.z = crankAngle;
     drumPivot.rotation.z = crankAngle * DRUM_RATIO;
+    // Compound meshes drum 44T via its 12T pinion (external mesh, counter-rotate)
+    compoundPivot.rotation.z = -(44/12) * drumPivot.rotation.z;
+    // Shaft 12T meshes compound 38T (external mesh, counter-rotate again)
+    shaftPivot.rotation.z = -(38/12) * compoundPivot.rotation.z;
     // v72: ring orbits at 418/27x drum about X (bevel reversal).
     twisterPivot.rotation.x = -DRUM_RATIO * (418/27) * crankAngle;
     pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE); // v52: nip side A spin-compensated 4/3
