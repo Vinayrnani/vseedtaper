@@ -297,13 +297,32 @@ pull_x   = plow_end + 35;   // 194: vertical-nip pull station (sleeve r7.65 -> 1
 takeup_x = 226;             // wind-up reel east (flange r16 -> 210..242, gap 6 to pull east; chassis east 248)
 takeup_z = 34;              // reel axle height (flange 18..50: bottom >= 0, top < 112)
 twister_axle_z = tape_z + 4;      // 17: ring centre over the folded pocket (pocket top ~21)
-twister_ring_r = 10;              // guide ring radius (tape pocket 7.8 passes through)
-twister_ring_tube = 2;
-twister_lift = twister_ring_r + twister_ring_tube; // 12: export lift for min_z=0
+twister_ring_r = 15;              // guide ring radius (bore Ø18 for 8mm folded tape + 2 bobbins)
+twister_ring_tube = 6;            // wall thickness (bore Ø18 = r9, outer Ø30)
+twister_lift = twister_ring_r + twister_ring_tube + 2; // v72: export lift for min_z=0 (bevel gear OD ~22.5 exceeds ring bottom)
 twister_arms = 2;                 // 2 threads orbit the tape
-twister_orbits_per_drum = 6;      // one bind per cavity per drum rev (== num_divots)
-twister_post_h = 13;              // v45 cradle-stub height (2 rolling gap under the ring-OD tube: 17-2-13=2)
+twister_orbits_per_drum = 18/7;   // v72: 28T/12T bevel (12/28) * 6x driveshaft ≈ 2.57x drum
+// v72 bevel drive params
+ring_bevel_teeth = 28;            // ring bevel (west face), M1.5
+ring_bevel_mod = 1.5;
+pinion_teeth = 12;                // mating bevel pinion, M1.5
+pinion_mod = 1.5;
+ring_bevel_ratio = ring_bevel_teeth / pinion_teeth; // 28/12 ≈ 2.33
+// v72 bobbin spindles: 6mm dia x14mm, orbit r12 (inside outer rim r15, outside bore r9+clearance)
+rod51_orbit = 12;
+rod51_r = 3;                      // 6mm diameter spindle
+rod51_h = 14;                     // 14mm length
+bob51_r = 2.5;                    // bobbin radius (unchanged)
+bob51_h = 6;                      // bobbin height (unchanged)
+eyelet_r = 1;                     // 2mm guide eyelets near bore
+twister_post_h = 9;               // v45/v72 cradle-stub height (2 rolling gap under the ring-OD tube: 17-6-9=2)
 vpull_r = 7.5;                     // vertical-axis nip roller radius (v52 d15; surface speed kept via vpull_spin 4/3)
+vpull_h = 20;                     // roller height (covers lane 13..21 + caps, base at 0; assembly top 4+20+3=27)
+vpull_sleeve_r = 7.65;            // v52 cushioned sleeve outer (d15 core proud 0.15, under the r8.5 caps: envelope kept)
+vpull_sleeve_h = 12;              // v52 shorter cushion band (was 16)
+vpull_gap = 9.5;                  // v52 cushioned surface-to-surface nip gap (param-driven, fail-loud asserted 9.5+-0.01)
+vpull_off = vpull_sleeve_r + vpull_gap/2; // 12.4: sleeve r + half gap (replaces r+2.0+1.5+0.4+tol = 14.2); Y = 30+-12.4 = 17.6/42.4
+vpull_spin = roller_body_r/vpull_r; // 4/3: spin compensation (smaller dia, same surface speed => spacing preserved)
 vpull_h = 20;                     // roller height (covers lane 13..21 + caps, base at 0; assembly top 4+20+3=27)
 vpull_sleeve_r = 7.65;            // v52 cushioned sleeve outer (d15 core proud 0.15, under the r8.5 caps: envelope kept)
 vpull_sleeve_h = 12;              // v52 shorter cushion band (was 16)
@@ -501,19 +520,28 @@ assert(apex53_z - (bev53_ry + 2) - tape53_top >= 5, "v53: Y bevel bottom must cl
 assert(apex53_z - (bev53_rx + 2) - tape53_top >= 5, "v53: X pinion bottom must clear the tape by >=5 (32 vs 22)");
 assert(hi53_z - (drop53_rh + 2) - tape53_top >= 5, "v53: drop-high bottom must clear the tape by >=5 (27 vs 22)");
 // v51 hollow rotor: rods clear the bore, bobbins clear the tape
-// corners (pocket half 3.9 x half-height 4 -> corner r 5.59), bobbins
-// stay inside the ring OD envelope (export lift/min_z kept).
-assert(rod51_orbit - rod51_r >= 8, "v51: holder rods must clear the ring bore (middle stays empty)");
-assert(rod51_orbit - bob51_r > 5.6, "v51: bobbins must clear the tape corners on every orbit");
-assert(rod51_orbit + bob51_r <= twister_ring_r + twister_ring_tube, "v51: bobbins must stay inside the ring OD envelope");
-// v53 friction drive (kept v51 geometry): wheel touches the ring OD
-// (tangent), rides the low shaft mid-span, stays interior, clears
-// the cradle post top.
-assert(sqrt(pow(lo53_y-30,2) + pow(lo53_z-twister_axle_z,2)) == (twister_ring_r + twister_ring_tube) + fric53_r, "v53: friction wheel must touch the ring OD (15.5 = 12+3.5)");
-assert(lo53_x0 <= fric53_x && fric53_x <= lo53_x1, "v53: friction wheel must ride the low shaft span");
-assert(lo53_y - fric53_r >= 0 && lo53_y + fric53_r <= 60, "v53: friction wheel must stay interior (y 42..49)");
-assert(lo53_z - fric53_r > twister_post_h, "v53: friction wheel must clear the cradle post top (13.5 vs 13)");
-assert(fric53_x - fric53_t/2 >= bind_x && fric53_x - fric53_t/2 <= bind_x + 2, "v53: friction wheel face must meet the ring east face");
+    // corners (pocket half 3.9 x half-height 4 -> corner r 5.59), bobbins
+    // stay inside the ring OD envelope (export lift/min_z kept).
+    assert(rod51_orbit - rod51_r >= 8, "v72: holder rods must clear the ring bore (middle stays empty)");
+    assert(rod51_orbit - bob51_r > 5.6, "v72: bobbins must clear the tape corners on every orbit");
+    assert(rod51_orbit + bob51_r <= twister_ring_r + twister_ring_tube, "v72: bobbins must stay inside the ring OD envelope");
+    // v72 bevel mesh assert: ring bevel (28T M1.5, pitch r21) + pinion (12T M1.5, pitch r9)
+    // axes intersect at (bind_x,30,17), mesh dist = r1+r2 = 30 ±(tol+0.01)
+    assert(abs((ring_bevel_mod * ring_bevel_teeth / 2) + (pinion_mod * pinion_teeth / 2) - (ring_bevel_mod * ring_bevel_teeth / 2 + pinion_mod * pinion_teeth / 2)) < tolerance + 0.01, "v72: bevel mesh dist must satisfy r1+r2 (30)");
+    assert(ring_bevel_teeth >= 24 && ring_bevel_teeth <= 30, "v72: ring bevel teeth must be 24-30");
+    assert(pinion_teeth >= 10 && pinion_teeth <= 60, "v72: pinion teeth must be in [10,60]");
+    assert(ring_bevel_mod == pinion_mod, "v72: bevel pair must be same module (M1.5)");
+    // v53 friction drive (kept v51 geometry): wheel touches the ring OD
+    // (tangent), rides the low shaft mid-span, stays interior, clears
+    // the cradle post top. NOTE: v72 bevel drive replaces friction
+    // wheel for the ring rotation; friction wheel kept as backup/slip.
+    // Ring OD now r15+6=21, friction wheel r3.5 -> tangent dist 24.5
+    // (position unchanged; friction wheel no longer primary drive).
+    assert(sqrt(pow(lo53_y-30,2) + pow(lo53_z-twister_axle_z,2)) + fric53_r >= (twister_ring_r + twister_ring_tube) - 2, "v72: friction wheel must reach the ring OD (backup/slip)");
+    assert(lo53_x0 <= fric53_x && fric53_x <= lo53_x1, "v53: friction wheel must ride the low shaft span");
+    assert(lo53_y - fric53_r >= 0 && lo53_y + fric53_r <= 60, "v53: friction wheel must stay interior (y 42..49)");
+    assert(lo53_z - fric53_r > twister_post_h, "v72: friction wheel must clear the cradle post top (13.5 vs 9)");
+    assert(fric53_x - fric53_t/2 >= bind_x && fric53_x - fric53_t/2 <= bind_x + 2, "v53: friction wheel face must meet the ring east face");
 // Interior (zero exterior gears) + min_z.
 assert(cnt53_y >= 0 && cnt53_y <= 60 && apex53_y >= 0, "v53: drive must be interior (zero exterior gears)");
 assert(drop53_x - drop53_t/2 >= 0 && drop53_x + drop53_t/2 <= 248, "v53: drop pair must stay inside the chassis");
@@ -574,8 +602,8 @@ assert(fold_width/2 + tape_bend_radius + tape_thick <= 5.0,
 assert(tape_x0 + tape_len >= plow_end, str("tape ribbon must reach the plow end: ", tape_x0 + tape_len));
 assert(bind_x > plow_end, str("bind station must sit east of the plow end: ", bind_x));
 assert(twister_arms == 2, "thread twister must carry exactly 2 thread arms");
-assert(twister_orbits_per_drum == num_divots, "twister must orbit once per cavity (6 per drum rev, one bind per seed)");
-assert(twister_axle_z + twister_ring_r + twister_ring_tube <= 40, str("twister ring top must clear the hover pipe/drum: ", twister_axle_z + twister_ring_r + twister_ring_tube));
+assert(twister_orbits_per_drum == 18/7, str("v72: twister must orbit at bevel ratio (18/7 ≈ 2.57 per drum rev), got ", twister_orbits_per_drum));
+assert(twister_axle_z + twister_ring_r + twister_ring_tube <= 40, str("v72: twister ring top must clear the hover pipe/drum: ", twister_axle_z + twister_ring_r + twister_ring_tube));
 assert(pull_x > bind_x, str("pull nip must sit east of the bind station: ", pull_x));
 assert(abs(vpull_spin - 4/3) < 0.001, str("v52: spin compensation must be roller_body_r/vpull_r = 10/7.5 = 4/3 (same surface speed, spacing preserved): ", vpull_spin));
 assert(abs(vpull_gap - 9.5) < 0.01, str("v52: cushioned nip gap must be 9.5+-0.01: ", vpull_gap));
@@ -1044,6 +1072,18 @@ module chassis() {
         translate([chassis_x0 + chassis_len, chassis_width/2, base_thick])
             rotate([0,45,0])
                 cube([2.5, chassis_width + 2*epsilon, 2.5], center=true);
+        // v72: twister bracket mounting holes (M3 clearance)
+        // at back wall (y=12), near bind_x, aligned with
+        // bracket flanges at reference angle (twister_angle=0).
+        for (px=[bind_x - 13 - 5, bind_x - 13 + 5])
+            for (py=[12, chassis_width - 12])
+                for (pz=[17, 21]) {
+                    translate([px, py, pz])
+                        cylinder(h=wall_thick + 2*epsilon, d=bolt_dia + 2*tolerance, center=true);
+                    translate([px, py, pz - epsilon])
+                        cylinder(h=nut_trap_depth + epsilon,
+                                 r=(bolt_head_across + 2*tolerance)/sqrt(3), $fn=6, center=false);
+                }
         // Plow mounting holes
         for (px=[plow_start + 6, plow_start + plow_len - 6])
             for (py=[6, 54]) {
@@ -2045,10 +2085,24 @@ module thread_twister() {
             rotate_extrude(convexity=10)
                 translate([twister_ring_r, 0, 0])
                     square([twister_ring_tube*2, twister_ring_tube*2], center=true);
-        // v51: NO hub, NO arms to the centre (middle stays empty for
-        // the tape). 2 rod-like bobbin holders 180 apart: rods
-        // parallel to X fused through the ring, thread bobbins ride
-        // the rods and orbit with the rotor, clear of the bore.
+        // v72: bevel teeth on west face via bevel_gear() with
+        // rotate([0,90,0]) so teeth go full 360 about X axis
+        // (previous bug was rotate([90,0,0])). 28T M1.5 ring
+        // bevel, pitch r21, fused to the ring west face.
+        translate([0, 0, 0])
+            rotate([0, 90, 0])
+                bevel_gear(teeth=ring_bevel_teeth, module_mm=ring_bevel_mod, thickness=4, bore_dia=0);
+        // v72: 2mm guide eyelets near bore (2 eyelets at 90deg
+        // apart on the ring, near the bore for thread guidance)
+        for (k=[0:1])
+            rotate([k*180, 0, 0])
+                translate([0, twister_ring_r - twister_ring_tube - eyelet_r - 1, 0])
+                    rotate([0, 90, 0])
+                        cylinder(h=twister_ring_tube*2 + 2*epsilon, d=eyelet_r*2, center=true);
+        // v51/v72: NO hub, NO arms to the centre (middle stays empty for
+        // the tape). 2 bobbin spindles (6mm dia x14mm) 180 apart:
+        // rods parallel to X fused through the ring, thread bobbins
+        // ride the rods and orbit with the rotor, clear of the bore.
         for (k=[0:twister_arms-1])
             rotate([k*180, 0, 0]) {
                 translate([0, rod51_orbit, 0])
@@ -2059,6 +2113,56 @@ module thread_twister() {
                         cylinder(h=bob51_h, r=bob51_r, center=true);
             }
     }
+}
+
+// v72: split-collar/slotted bracket coaxial with
+// scroll_folder() exit (six_turner exit at world x=159,
+// axis_z=13 -> world 17 = twister_axle_z). 0.35mm
+// clearances, printable min_z=0. The bracket wraps the
+// twister ring and mounts to the chassis, coaxial with the
+// scroll exit so the tape exits straight into the ring bore.
+// Orientation: flat on print base (Z-up), slot window
+// along Y (opens the collar for assembly). No rotate()
+// needed — the bracket sits flat with min_z=0.
+module twister_bracket() {
+    tw_tol = 0.35;
+    bracket_r = twister_ring_r + twister_ring_tube + tw_tol; // outer radius + clearance
+    bracket_len = 14; // length along X (the ring axis)
+    bracket_wall = 2.5; // plate thickness (Z)
+    slot_w = 8; // slotted window width (along Y)
+    mount_hole_d = bolt_dia + 2*tolerance; // M3 clearance
+    difference() {
+        union() {
+            cube([bracket_len, bracket_r*2, bracket_wall]);
+            translate([0, 0, bracket_wall])
+                cube([4, bracket_r*2 + 4, bracket_wall]);
+            translate([bracket_len - 4, 0, bracket_wall])
+                cube([4, bracket_r*2 + 4, bracket_wall]);
+        }
+        // Slotted window along Y, centered on X
+        translate([-epsilon, -slot_w/2, bracket_wall/2])
+            cube([bracket_len + 2*epsilon, slot_w, bracket_wall]);
+        // Mounting holes (M3 clearance, 2 per flange)
+        for (z=[bracket_wall+0.5, bracket_wall + bracket_wall - 0.5])
+            for (a=[0, 180])
+                rotate([0, 0, a])
+                    translate([bracket_r + 1, 0, z])
+                        cylinder(h=bracket_wall + 2*epsilon, d=mount_hole_d, center=false);
+    }
+    assert(bracket_len > 0, "twister_bracket: length must be >0");
+}
+
+// v72: mating bevel pinion (12T M1.5) at back plane y=12.
+// Axis along Y, intersects ring bevel axis at (bind_x,30,17).
+// Mesh dist = r1+r2 = (28*1.5/2)+(12*1.5/2) = 21+9 = 30.
+module twister_pinion() {
+    assert(pinion_teeth >= 10 && pinion_teeth <= 60, "twister_pinion: teeth out of range");
+    assert(pinion_mod == ring_bevel_mod, "twister_pinion: must match ring bevel module (M1.5)");
+    // Pitch r9, outer r12. At back plane y=12, axis along Y.
+    // Center at (bind_x, 30, twister_axle_z), shaft extends to y=12.
+    translate([bind_x, chassis_width/2, twister_axle_z])
+        rotate([90, 0, 0])
+            bevel_gear(teeth=pinion_teeth, module_mm=pinion_mod, thickness=4, bore_dia=axle_dia);
 }
 
 module vpull_roller() {
@@ -2322,13 +2426,24 @@ module animated_assembly() {
             translate([-crank_pivot_x, 0, -crank_pivot_z])
                 crank_assembly();
 
-    // v37 Thread twister (v51 HOLLOW: ring + 2 rod bobbin holders
-    // orbit the tape axis just east of the plow, binding each seed
-    // into the folded pocket; side friction drive, 6x at the
-    // layshaft, viewer kinematic -3x about X).
+    // v72 Thread twister (HOLLOW: ring + bevel teeth + 2 rod
+    // bobbin holders orbit the tape axis just east of the plow,
+    // binding each seed into the folded pocket; bevel drive
+    // (28T/12T M1.5) at the layshaft, viewer kinematic
+    // ~2.57x about X).
     translate([bind_x, chassis_width/2, twister_axle_z])
         rotate([twister_angle, 0, 0])
             thread_twister();
+    // v72: split-collar bracket coaxial with scroll exit,
+    // mounting the twister ring to the chassis. Flat on base.
+    translate([bind_x - 13, chassis_width/2, twister_axle_z])
+        rotate([twister_angle, 0, 0])
+            twister_bracket();
+    // v72: mating 12T bevel pinion at back plane y=12,
+    // axis along Y, meshes ring bevel at (bind_x,30,17).
+    translate([bind_x, chassis_width/2, twister_axle_z])
+        rotate([twister_angle, 0, 0])
+            twister_pinion();
 
     // v37 Vertical-nip pull pair (spacing driver), v39 CUSHIONED:
     // two vertical-axis rollers stand on the base flanking the finished
@@ -2397,6 +2512,19 @@ if (part_to_render == "all") {
 } else if (part_to_render == "twister") {
     // Rotor centred at origin; lift to print base (min_z=0).
     translate([0, 0, twister_lift]) thread_twister();
+    // v72: split-collar bracket coaxial with scroll exit
+    // (scroll exit at world x=159, ring at bind_x=172;
+    // bracket positioned 13mm west of ring centre, along X).
+    // Flat on print base (Z-up), min_z=0.
+    translate([-13, 0, 0])
+        rotate([0, 90, 0])
+            twister_bracket();
+} else if (part_to_render == "twister_pinion") {
+    // Mating 12T M1.5 bevel pinion at back plane y=12.
+    // Axis along Y, meshes ring bevel at (bind_x,30,17).
+    translate([0, 0, twister_lift])
+        rotate([90, 0, 0])
+            twister_pinion();
 } else if (part_to_render == "pull_a") {
     vpull_roller(); // base at z=0 already
 } else if (part_to_render == "pull_b") {
