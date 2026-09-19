@@ -1,6 +1,9 @@
 # Requirements Change Log
 
-## v72 — 2026-09-19
+## v75 — 2026-09-19
+- Step 4 full gear-driven chain: drum 44T → 5-stage compound spur train → 1:1 bevel miter → ring crown 16T, total ratio 12.29× drum (user range 12-18 ✓). V53 friction/overhead drive surgically removed. Chassis widened 60→64, lengthened 262→278, base pocket slot x=165-181 y=3.5-56.5 z=0-4, ~14mm feet at corners, pull_x 194→196. Twister ring rebuilt: center (173,30,17), ring_r=18.5, tube=8→OD53, bore Ø21 (r10.5), X extent 165-181, Y 3.5-56.5, Z -10-44. Crown gear 16T M1.5 on WEST face (x=165), bore Ø17. Bobbins 2× Class-15 (r10.35, len 11.1mm) at 90° apart, orbit 18, on EAST face (x=181). Pinion shaft: 12T bevels at (145,49.4,9) and (164,49.4,9), axis X, 1mm gap. Gear train stages at z=60/45/30/15/12, all cd=19.5, shafts B/C/D solved to zigzag (155,12)→(145,49.4) staying west of x=165. Viewer ASSET_V 54→55, orbitsPerDrum 12.29, new PART_DEFs/pivots/rotation rates. verify_v75.js
+
+## v74 — 2026-09-19
 - Step 3 twister redesign: enlarged ring (r10->15, bore Ø18 for 8mm folded tape, tube=6 wall>=2mm); bevel teeth on west face via bevel_gear() rotate([0,90,0]) full 360 about X (fixes previous rotate([90,0,0]) bug); 2x bobbin spindles 6mm dia x14mm at orbit r12 180deg apart + 2mm guide eyelets near bore; mating bevel pinion M1.5 12T vs 28T ring (~2.3x) at back plane y=12, axes intersect (bind_x,30,17); fail-loud mesh assert dist=r1+r2 ±(tol+0.01); twister_bracket() flat-on-base split-collar/slotted coaxial with scroll exit, 0.35mm clearances, min_z=0; twister_lift=23 (bevel OD margin); twister_orbits_per_drum updated to 18/7 (~2.57x drum); viewer ASSET_V 51->52, twister pivot/ratio updated; verify_v72.js
 
 ## v71 — 2026-09-18
