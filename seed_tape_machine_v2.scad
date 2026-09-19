@@ -2157,11 +2157,9 @@ module twister_bracket() {
 module twister_pinion() {
     assert(pinion_teeth >= 10 && pinion_teeth <= 60, "twister_pinion: teeth out of range");
     assert(pinion_mod == ring_bevel_mod, "twister_pinion: must match ring bevel module (M1.5)");
-    // Pitch r9, outer r12. At back plane y=12, axis along Y.
-    // Center at (bind_x, 30, twister_axle_z), shaft extends to y=12.
-    translate([bind_x, chassis_width/2, twister_axle_z])
-        rotate([90, 0, 0])
-            bevel_gear(teeth=pinion_teeth, module_mm=pinion_mod, thickness=4, bore_dia=axle_dia);
+    // Origin-centred; assembly L2443 places it at the mesh station.
+    rotate([90, 0, 0])
+        bevel_gear(teeth=pinion_teeth, module_mm=pinion_mod, thickness=4, bore_dia=axle_dia);
 }
 
 module vpull_roller() {
