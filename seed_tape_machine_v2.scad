@@ -299,7 +299,7 @@ takeup_z = 34;              // reel axle height (flange 18..50: bottom >= 0, top
 twister_axle_z = tape_z + 4;      // 17: ring centre over the folded pocket (pocket top ~21)
 twister_ring_r = 15;              // guide ring radius (bore Ø18 for 8mm folded tape + 2 bobbins)
 twister_ring_tube = 6;            // wall thickness (bore Ø18 = r9, outer Ø30)
-twister_lift = twister_ring_r + twister_ring_tube + 2; // v72: export lift for min_z=0 (bevel gear OD ~22.5 exceeds ring bottom)
+twister_lift = twister_ring_r + twister_ring_tube; // 21: export lift for min_z=0
 twister_arms = 2;                 // 2 threads orbit the tape
 twister_orbits_per_drum = 18/7;   // v72: 28T/12T bevel (12/28) * 6x driveshaft ≈ 2.57x drum
 // v72 bevel drive params
@@ -445,8 +445,7 @@ fric53_x = 175; // wheel centre (face beside the ring east face, kept)
 hi53_post_x = 163; hi53_post_top = hi53_z - hi53_r; // 41.5
 lo53_post_x = 167; lo53_post_top = lo53_z - lo53_r; // 14.5
 // v51 hollow-rotor rods: 2 rod-like bobbin holders 180 apart on the ring
-// (rods parallel X at orbit radius 9.5, bobbins ride the rods).
-rod51_orbit = 9.5; rod51_r = 1.2; rod51_h = 10;
+// (rods parallel X at orbit radius 12, bobbins ride the rods).
 bob51_r = 2.5; bob51_h = 6;
 // Drop pocket under the low drop gear (spinning 12T outer bottom
 // 17-14=3 dips below the base top 4; pocket floor at 2 leaves 1.0
