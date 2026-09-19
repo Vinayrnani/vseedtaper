@@ -704,10 +704,10 @@
         parent: crankSpinner, pos: [-5, -8.47, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5 },
       { id: 'twister', label: 'Thread twister (hollow 2-rod binder + 16T bevel)', file: 'stl/twister.glb', color: 0xc9a227,
         parent: twisterPivot, pos: [0, -12, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 },
-      { id: 'intermediate_compound', label: 'Intermediate compound (12T+38T M2)', file: 'stl/intermediate_compound.glb', color: 0x8a7a3a,
-        parent: compoundPivot, pos: [156, 30, -12], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4, visible: true },
-      { id: 'drive_shaft', label: 'Twister drive shaft (12T spur+bevel)', file: 'stl/drive_shaft.glb', color: 0x6a8a5a,
-        parent: shaftPivot, pos: [0, 0, 0], rot: [-Math.PI/2, 0, 0], metalness: 0.6, roughness: 0.4, visible: true },
+       { id: 'intermediate_compound', label: 'Intermediate compound (12T+38T M2)', file: 'stl/intermediate_compound.glb', color: 0x8a7a3a,
+         parent: compoundPivot, pos: [0, 0, 0], rot: [0, -Math.PI / 2, 0], metalness: 0.6, roughness: 0.4, visible: true },
+       { id: 'drive_shaft', label: 'Twister drive shaft (12T spur+bevel)', file: 'stl/drive_shaft.glb', color: 0x6a8a5a,
+         parent: shaftPivot, pos: [0, 0, 0], rot: [Math.PI/2, 0, 0], metalness: 0.6, roughness: 0.4, visible: true },
       { id: 'pull_a', label: 'Vertical pull A (cushioned)', file: 'stl/pull_a.glb', color: 0x3f434a,
         parent: pullAPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.05, roughness: 0.9 }, // v52: soft rubber/silicone cushion sleeve (firm grip, no crush); OD ~d15 => 4/3 spin keeps surface speed, spacing driver
       { id: 'pull_b', label: 'Vertical pull B (cushioned)', file: 'stl/pull_b.glb', color: 0x3f434a,
@@ -952,6 +952,8 @@
     lowerPivot.rotation.z = -crankAngle - GEAR_PHASE;
     upperPivot.rotation.z = crankAngle;
     drumPivot.rotation.z = crankAngle * DRUM_RATIO;
+    compoundPivot.rotation.z = -(44/12) * drumPivot.rotation.z;
+    shaftPivot.rotation.z = -(38/12) * compoundPivot.rotation.z;
     // v72 GEAR TWISTER drive (3-stage minimal chain, zero exterior gears, module 2):
     // EXISTING drum44 -> overhead counter 10T (4.4x, back plane, high)
     // -> Y-bevel 12T -> high X-pinion 10T (1.2x, overhead) ->
