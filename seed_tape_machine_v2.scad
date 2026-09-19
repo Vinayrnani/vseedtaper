@@ -2090,7 +2090,7 @@ module thread_twister() {
         // bevel, pitch r21, fused to the ring west face.
         translate([0, 0, 0])
             rotate([0, 90, 0])
-                bevel_gear(teeth=ring_bevel_teeth, module_mm=ring_bevel_mod, thickness=4, bore_dia=0);
+                bevel_gear(teeth=ring_bevel_teeth, module_mm=ring_bevel_mod, thickness=4, bore_dia=19);
         // v72: 2mm guide eyelets near bore (2 eyelets at 90deg
         // apart on the ring, near the bore for thread guidance)
         for (k=[0:1])
@@ -2434,8 +2434,7 @@ module animated_assembly() {
     // v72: split-collar bracket coaxial with scroll exit,
     // mounting the twister ring to the chassis. Flat on base.
     translate([bind_x - 13, chassis_width/2, twister_axle_z])
-        rotate([twister_angle, 0, 0])
-            twister_bracket();
+        twister_bracket();
     // v72: mating 12T bevel pinion at back plane y=12,
     // axis along Y, meshes ring bevel at (bind_x,30,17).
     translate([bind_x, chassis_width/2, twister_axle_z])
