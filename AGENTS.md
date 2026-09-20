@@ -25,7 +25,7 @@
 - Playwright browser reuse: verify scripts use `playwright_pool.js` (one shared browser, idle-kill after 10min). Never `browser.close()` per script — use `pool.releaseBrowser(browser)`. Full teardown only via `node playwright_pool.js stop` (does the pkill); check `node playwright_pool.js status` before starting new session.
 - Serve on port 9099 only (iptables rule); don't change port.
 - CAD conventions: `$fn=60` for curves, `tol=0.3` (`tolerance`, clearances derive from it) — keep both.
-- Preview folders (`web/v*/`, `web/history/*/`) must contain only `index.html`, `js/`, `stl/*.glb` — never commit or keep `.stl` intermediates there; the viewer loads GLB only.
+- Preview folders (`web/v*/`) must contain only `index.html`, `js/`, `stl/*.glb` — never commit or keep `.stl` intermediates there; the viewer loads GLB only.
 
 ## Workflow (mandatory, condensed from prior AGENTS.md)
 - Requirements-first: tune REQUIREMENTS.md before code; every edit bumps version (vN→vN+1) + changelog entry; commit & push before editing requirements.
