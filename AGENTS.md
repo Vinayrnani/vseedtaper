@@ -30,3 +30,4 @@
 ## Workflow (mandatory, condensed from prior AGENTS.md)
 - Requirements-first: tune REQUIREMENTS.md before code; every edit bumps version (vN→vN+1) + changelog entry; commit & push before editing requirements.
 - Live animating preview for every change + snapshot checks while animating; layman wording to user; short messages; fix loop max 3 iterations then ask; max parallelism, never let browsers pile up.
+- **Per-version snapshot:** on every successful version advance (vN→vN+1), copy working `web/index.html` + `web/js/` + `web/stl/*.glb` into `web/vNN/` (GLB only, never `.stl`) before proceeding — keeps a live preview per version at `http://localhost:9099/vNN/`.
