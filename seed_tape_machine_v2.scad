@@ -1,6 +1,9 @@
 /*
     Modular Hand-Cranked Seed Tape Machine - v2 Authoritative Spec
     ===========================================================
+    v79: crank at x=160 (20T meshing drum 40T, 2:1), drum gear front plane,
+         rollers removed (upper deleted, lower replaced by crank axle),
+         shroud east (116..124) moves with hopper as one unit.
     Parametric OpenSCAD 2021.01 - zero-error, manifold, flat-base parts.
     Allowed: diff/union/hull/cube/cylinder/sphere/rotate_extrude + transforms/for/if/echo/assert.
     NO minkowski/intersection/polygon/linear_extrude of text.
@@ -76,22 +79,21 @@ target_spacing     = 152.4;                   // v14 MVP: fixed 6 inch spacing
 
 // ============================================================
 // Axle layout (X,Z in OpenSCAD coords: X=tape travel, Z=up)
-// v22 R->L order: hopper wedge (mouth ~100-183) > drum (100) >
-//   shroud tunnel (58-84, centroid ~71) > roller/crank (40) >
-//   spool (-6, far west, clear of the roller back gear).
-// Gear mesh: |100-40|=60 = center_distance exact, same Z, same back-side plane.
+// v79 R->L order: crank (160, front) > six_turner (126..159) >
+//   shroud tunnel (116-124, east of drum) > drum (100) >
+//   spool (-6, far west).
+// Gear mesh: crank(160) 20T -> drum(100) 40T, dist=60=center_distance,
+//   crank rotates 2:1 vs drum (crank_angle = 2*drum_angle).
+//   Drum gear on FRONT plane (y=47.95) for crank mesh.
 // Plow stays EAST of drum (126->159, v1 precedent); tape scroll unchanged.
-// v22 spool: x 10->-6 moves cone A (tapered r~19.5 at the gear plane)
-//   46 off the roller gear centre in X -> real mesh gap ~4.5, and even
-//   the conservative full-envelope boxes clear by 1.5 in X, fixing the
-//   v21 graze with the r22 back gear (Y 9-15); chassis extends west to
-//   seat the bearing block (-13..1 on the -14 edge).
+// v79: rollers REMOVED; crank carries the 20T pinion at x=160, front wall.
 // ============================================================
 drum_axle_x  = 100;
 drum_axle_z  = 60;   // ≥ drum_radius + base_thick + clearance = 29.3 ✓
-roller_axle_x = 40;  // v21: 100-60, WEST of drum, coaxial mesh with drum gear
-roller_axle_z = 60;  // same Z as drum for gear mesh; ≥ roller_outer_dia/2+1=23 ✓
-// Gear mesh: drum(100,60) to roller(40,60) → distance=60mm ✓
+crank_axle_x = 160;  // v79: crank (20T) meshes drum (40T), dist=60=center_distance
+crank_axle_z = 60;  // same Z as drum for gear mesh
+roller_axle_x = crank_axle_x;  // v79: alias (old roller position, now crank axle)
+roller_axle_z = crank_axle_z;  // v79: alias
 spool_axle_x  = -6;  // v22: 10->-6, clears roller back gear (box-level X gap 1.5)
 spool_axle_z  = 65;  // 120mm max roll OD, height 65mm above base
 
@@ -116,9 +118,8 @@ wall_thick    = 3;
 // on to the plow mouth at 126 which closes/seals it downstream)
 // ============================================================
 plow_start    = drum_axle_x + drum_radius + 1; // 126 (east of drum, unchanged)
-plow_len      = 33; // v21 FIXED: decoupled from roller_axle_x (roller moved west
-                     // of drum, so the old roller-based end 39-126 went negative
-                     // and tripped the plow_len assert). Plow stays east (v1 precedent).
+plow_len      = 33; // v79 FIXED: decoupled from old roller_axle_x.
+                     // Plow stays east (v1 precedent).
 plow_end      = plow_start + plow_len; // 159
 fold_len      = 33;   // forming length kept (same taper count as v30)
 fold_end      = 70;   // v31: forming exit 5 clear of the drum west face (75)
@@ -181,29 +182,27 @@ shroud_wall     = 2;     // preserved v12 wall
 shroud_gap      = 1.5;   // preserved v12 gap (within 1.5-2 smooth channel, no ribs/steps)
 groove_w        = 7;     // inner-face groove width, matches drum cavity track (fits 6mm cavities d6.6)
 groove_d        = 0.7;   // v27 printable: 0.8 left only 1.175 wall (<1.2); 0.7 leaves ~1.275, still clears cavity protrusion 0.6
-// v22 tape-cover shroud segment WEST of drum (roller nip -> drum exit).
-// World x shroud_x0..shroud_x1 = 58..84 (centroid ~71): drum(100) >
-// shroud(~71) > roller(40) R->L. Top (23) stays below the roller gear
-// bottom (60-22=38) and the hopper cover bottom lip (~36.4 at x=84).
+// v79 tape-cover shroud segment EAST of drum (drum exit -> six_turner).
+// World x shroud_x0..shroud_x1 = 116..124 (centroid 120): drum(100) <
+// shroud(120) < six_turner(126) R->L. Moves with hopper as one unit.
+// Top (23) stays below the drum bottom (60-25=35).
 // v33: roof lowered 34->23 for the 13 lane (transit top 21.4 + 1.6
 // cover clearance, ends open 0..21, tape at ~13).
-shroud_x0  = roller_axle_x + 18;  // 58: gear-X overlap <=4, z-separated (top 23 < 38)
-shroud_x1  = drum_axle_x - 16;    // 84: tucks to drum tangent, clears cover lip + drop tube (91+)
-shroud_len = shroud_x1 - shroud_x0; // 26
+shroud_x0  = drum_axle_x + 16;  // 116: tucks to drum tangent on east
+shroud_x1  = drum_axle_x + 24;  // 124: ends before six_turner at 126
+shroud_len = shroud_x1 - shroud_x0; // 8
 shroud_h   = 23;                  // v33 enclosed tunnel height (tape slot 0..21, tape at ~13; was 34)
 
 // ============================================================
-// Crank (v23: drives the ROLLER shaft, coaxial at roller_axle_x, outside BACK wall)
-// v23 side fix: crank was outside the FRONT wall (Y=chassis_width+8=68, grip +Y);
-// user moved it to the OTHER side -> outside the BACK wall (Y=-8, grip mirrored -Y).
-// Coaxial kept: [roller_axle_x=40, axle z=60], grip orbit r=crank_throw=45.
-// Back gears (drum Y~12 + roller pinion Y~12) untouched; center_distance 60,
-// gear_mesh_phase 9deg, $fn=60, tol=0.3 all kept.
+// Crank (v79: at x=160, 20T gear meshes drum 40T at dist=60)
+// Crank carries a 20T spur gear at the FRONT plane that meshes
+// the drum's 40T gear. Handle at front y=68, near twist gears.
+// grip orbit r=crank_throw=45, $fn=60, tol=0.3 all kept.
 // ============================================================
 crank_throw     = 45;
-crank_mount_x   = roller_axle_x; // 40: coaxial with roller axle (was 77.5 drum-left)
-crank_mount_y   = -8; // v23: outside BACK wall (0-8); was chassis_width+8=68 front
-crank_side      = -1; // v23: grip/arm mirror sign (-1 = extends -Y outward back; was +1 front)
+crank_mount_x   = crank_axle_x; // v79: 160: meshes drum 40T at dist 60 (was drum_axle_x=100)
+crank_mount_y   = chassis_width + 8; // v79: 68: outside FRONT wall
+crank_side      = +1; // v79: grip/arm extend +Y outward front
 crank_arm_t     = 4;
 crank_arm_w     = 10;
 grip_len        = 30;
@@ -467,10 +466,10 @@ assert(gear_module > 0, "gear_module must be >0");
 assert(center_distance == (roller_teeth + drum_teeth) * gear_module / 2,
        str("center_distance must be 60 for 20T/40T module=2, got ", center_distance));
 assert(num_divots == 6, "v14 MVP: num_divots fixed at 6 cavities");
-assert(roller_axle_z >= roller_outer_dia/2 + 1, str("roller_axle_z must clear base: need >= ", roller_outer_dia/2+1, " got ", roller_axle_z));
+assert(crank_axle_z >= roller_outer_dia/2 + 1, str("crank_axle_z must clear base: need >= ", roller_outer_dia/2+1, " got ", crank_axle_z));
 assert(drum_axle_z >= drum_radius + base_thick + tolerance, str("drum_axle_z must clear cradle+tape: need >= ", drum_radius+base_thick+tolerance, " got ", drum_axle_z));
-assert(abs(sqrt(pow(roller_axle_x - drum_axle_x,2)+pow(roller_axle_z - drum_axle_z,2)) - center_distance) < 0.5,
-       str("gear center distance must be ~60mm, got ", sqrt(pow(roller_axle_x-drum_axle_x,2)+pow(roller_axle_z-drum_axle_z,2))));
+assert(abs(sqrt(pow(crank_axle_x - drum_axle_x,2)+pow(crank_axle_z - drum_axle_z,2)) - center_distance) < 0.5,
+       str("gear center distance must be ~60mm, got ", sqrt(pow(crank_axle_x-drum_axle_x,2)+pow(crank_axle_z-drum_axle_z,2))));
 // v53 OVERHEAD drive (drum40 takeoff, no duplicate, no low bevels):
 // single module 2 + exact 6.0 at the low shaft + parallel mesh
 // dist=r1+r2 + true 90deg bevel + spur drop + side friction on
@@ -627,10 +626,10 @@ assert(tape_z - (base_thick + vpull_collar_z + 1.5) >= 2, str("v45: pull mid-col
 assert(base_thick + vpull_h + 3 > 25 && base_thick + vpull_h + 3 <= 28, str("v52: pull roller B top (27) must engage cup B (cup 25..28, bridge 28): ", base_thick + vpull_h + 3));
 assert(base_thick + vpull_h + 3 >= pull_pinA_z0 && base_thick + vpull_h + 3 <= pull_pinA_z1 + 3, str("v52: pull roller A top cap (27) must ride on the static pin (pin 2..27): ", base_thick + vpull_h + 3));
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
-assert(crank_mount_x == roller_axle_x, str("crank_mount_x must be coaxial with roller axle: ", crank_mount_x));
-assert(crank_mount_y == -8, str("crank_mount_y must sit outside the back wall (-8): ", crank_mount_y));
-assert(crank_side == -1, "crank_side must be -1 (grip extends -Y outward back)");
-assert(roller_axle_z + bb_height_roller <= chassis_height, "roller bearing block must fit below wall top");
+assert(crank_mount_x == crank_axle_x, str("crank_mount_x must equal crank_axle_x (160): ", crank_mount_x));
+assert(crank_mount_y == chassis_width + 8, str("crank_mount_y must sit outside the front wall (68): ", crank_mount_y));
+assert(crank_side == +1, "crank_side must be +1 (grip extends +Y outward front)");
+assert(crank_axle_z + bb_height_roller <= chassis_height, "crank bearing block must fit below wall top");
 assert(drum_axle_z + bb_height_drum <= chassis_height, "drum bearing block must fit below wall top");
 assert(spool_axle_z + bb_height_spool <= chassis_height, "spool bearing block must fit below wall top");
 assert(bolt_dia + 2*tolerance < 5, "M3 clearance holes must stay <5mm");
@@ -841,8 +840,8 @@ module chassis() {
             translate([drum_axle_x - 22, chassis_width - 15, base_thick - 0.15])
                 cube([44, 8, 6 + 0.15]);
             // Bearing blocks (pillow-block style)
-            for (spec=[[roller_axle_x, roller_axle_z, bb_height_roller, 0],
-                       [drum_axle_x,   drum_axle_z,   bb_height_drum,   1],
+            for (spec=[[drum_axle_x,   drum_axle_z,   bb_height_drum,   1],
+                       [crank_axle_x,  crank_axle_z,  bb_height_roller, 1],
                        [spool_axle_x,  spool_axle_z,  bb_height_spool,  0]])
                 for (side=[0,1]) {
                     // v27 printable: fuse blocks to BOTH walls (front y_off=0
@@ -1018,10 +1017,11 @@ module chassis() {
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
         }
+        // v79: crank shaft hex hole at x=160 through both walls
         for (side=[0,1]) {
-            translate([roller_axle_x, side*(chassis_width-wall_thick)+wall_thick/2, roller_axle_z])
+            translate([crank_axle_x, side*(chassis_width-wall_thick)+wall_thick/2, crank_axle_z])
                 rotate([90,0,0])
-                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+                    cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
         }
         for (side=[0,1]) {
             translate([drum_axle_x, side*(chassis_width-wall_thick)+wall_thick/2, drum_axle_z])
@@ -1188,6 +1188,11 @@ module hopper_body() {
     // v16: NO full-width step tab (it sat ON the drum and rubbed). Joint is
     // SIDES ONLY (see 2 SIDE JOINTS below): middle stays open for drum.
 
+    // v78: mirror about Y axis — wedge swings to west (mouth LEFT), bore stays at x=0.
+    // Mirrored wedge world x: drum_axle_x + [-83..-14] = [17..86].
+    // Collision checks: shroud Z 0..23, forming Z~13, pull roller Z~4..28 —
+    // all below wedge Z≥49 → no 3D collision despite X overlap.
+    mirror([1, 0, 0])
     difference() {
         union() {
             // Triangular cheek plates (v19 SEAL: bottom edge deepened to
@@ -1323,9 +1328,15 @@ module hopper_body() {
         // wheel-to-frame positioning ONLY, NOT seed drive).
         translate(tilt_pivot)
             rotate([0, -LOW_TILT, 0])
-                translate([-9, -groove_w/2, -groove_d])
+                translate([-9, -groove_w/2, - groove_d])
                     cube([(x_tip + 1) - 16, groove_w, groove_d + epsilon]);
     }
+    // v78 collision asserts: mirrored wedge (local x -83..-14, world 17..86)
+    // must not reach below Z=49 where obstacles live (shroud Z≤23, tape Z~13, pull Z≤28).
+    assert(cheek_bot_root >= 49, "v78: mirrored hopper wedge bottom must stay above obstacles (Z≥49)");
+    // Wedge must not extend west beyond the chassis
+    assert(x_tip >= -chassis_len + chassis_x0 + 10,
+           str("v78: mirrored hopper nose must stay inside chassis (x_tip=", x_tip, ")"));
 }
 
 // ============================================================
@@ -1341,13 +1352,13 @@ module hopper_body() {
 //    it at [shroud_x0, chassis_width/2, 0]; export is standalone min_z=0.
 // ============================================================
 module u_channel_shroud() {
-    assert(shroud_len > 15, str("u_channel_shroud: shroud_len must exceed 15, got ", shroud_len));
-    assert(shroud_x1 <= drum_axle_x - 16,
-           str("u_channel_shroud: east end must stay clear of the hopper cover lip, got ", shroud_x1));
-    assert(shroud_x0 >= roller_axle_x + roller_outer_r - 4,
-           str("u_channel_shroud: west end must stay near the roller nip, got ", shroud_x0));
-    assert(shroud_h < roller_axle_z - roller_outer_r,
-           str("u_channel_shroud: top must stay below the roller gear bottom (38), got ", shroud_h));
+    assert(shroud_len > 5, str("u_channel_shroud: shroud_len must exceed 5, got ", shroud_len));
+    assert(shroud_x0 >= drum_axle_x + 16,
+           str("u_channel_shroud: west end must tuck to drum tangent east, got ", shroud_x0));
+    assert(shroud_x1 <= plow_start - 2,
+           str("u_channel_shroud: east end must stay west of six_turner, got ", shroud_x1));
+    assert(shroud_h < drum_axle_z - drum_radius,
+           str("u_channel_shroud: top must stay below drum bottom (35), got ", shroud_h));
     wall = shroud_wall;                          // 2
     inner_hw = (paper_width + 2*tolerance)/2;    // 13
     outer_hw = inner_hw + wall;                  // 15
@@ -1484,9 +1495,8 @@ module seed_cartridge(sdia = seed_dia, sdepth = seed_depth) {
                                 cylinder(h=1.5, d=drum_dia + 3, center=true);
                                 cylinder(h=1.5 + 2*epsilon, d=drum_dia - 6, center=true);
                             }
-                // v20: gear on BACK side (-gear_off); mirrored rotation so hub
-                // still points AT the drum (else gear floats un-fused).
-                translate([0, -gear_off, 0])
+                // v79: gear on FRONT side (+gear_off); hub points toward the drum.
+                translate([0, +gear_off, 0])
                     rotate([-90,0,0])
                         spur_gear(teeth=drum_teeth, module_mm=gear_module, thickness=gear_thick,
                                   bore_flat=hex_axle_flat, is_hex=true,
@@ -1996,8 +2006,9 @@ module knurled_roller(is_lower=true) {
 }
 
 module pull_rollers() {
+    // v79: upper roller REMOVED; lower roller becomes the crank axle at x=160
+    // (20T gear meshes drum 40T). Only the lower roller body is exported.
     knurled_roller(is_lower=true);
-    translate([40, 0, 0]) knurled_roller(is_lower=false);
 }
 
 // ============================================================
@@ -2201,41 +2212,23 @@ module crank_assembly() {
 
 // ============================================================
 // Animated assembly
-// Sign convention (v23: crank drives the ROLLER shaft from the back wall side):
-//   drum_angle = -360*$t ANTI-CLOCKWISE about +Y (top surface moves -X/left,
-//   viewed +X right, +Z up): picks up RIGHT, carries over top, drops bottom-center
-//   roller_angle = +720*$t + gear_mesh_phase CLOCKWISE (driven by drum via
-//   40:20 mesh, 2:1; +9° half-pitch so the pinion tooth falls into the drum gap)
-//   crank = roller_angle (rigid on the roller shaft, coaxial at roller_axle_x)
-//   upper idler = -720*$t (counter-rotates via tape contact)
-//   v53 OVERHEAD twister drive (zero exterior gears, module 2,
-//   asserted): crank->drum 2:1 interior (40:20, dist 60, phase 9°);
-//   EXISTING drum40 -> overhead counter 10T (4x, back plane y=12,
-//   dist 50, high) -> Y-bevel 12T -> high X-pinion 10T (1.2x, 90°
-//   at I53, overhead) -> thin 15T/12T drop (1.25x at x=181) = 6x
-//   at the low shaft (1 bind per seed, 6 cavities). Flips keep the twister sign
-//   (animation: twister -3x crank = 6x drum at 0.5x crank).
-//   Pull nip pair spins about Z at +/-roller_angle*vpull_spin (tape-coupled
-//   4/3 vs the main roller, v52 d15 dia => same surface speed,
-//   the spacing driver; cushioned rubber/silicone sleeve grips firm
-//   without crushing); takeup_angle
-//   = -1440*$t about the reel axle (tape-tension wind-up, core d10
-//   base speed winds the same 125.66mm linear tape; slip clutch on
-//   the axle slips when full). No belts, no exterior gears.
-//   v40 mounts: BOTTOM = 6-turner + wind-up reel; SIDE = twister ring +
-//   pull rollers + drum (axles through the chassis walls); TOP =
-//   hopper+shroud + tape input spools.
-// At $t=0 geometry equals static layout (plus the 9° mesh phase on the roller).
+// Sign convention (v79: crank at x=160, 20T meshes drum 40T at x=100):
+//   crank_angle = 720*$t (2:1 vs drum, CW about +Y).
+//   drum_angle = 360*$t (driven by crank via 40:20 mesh).
+//   twister_angle = -360*$t*twister_orbits_per_drum (6x/drum, about X).
+//   pull nip pair spins about Z at ±roller_angle*vpull_spin (tape-coupled
+//   4/3 vs the main roller, v52 d15 dia => same surface speed).
+//   takeup_angle = -1440*$t about the reel axle.
+//   v79: rollers REMOVED; crank carries the 20T pinion at x=160.
 // ============================================================
 module animated_assembly() {
-    drum_angle = -360*$t;    // ANTI-CLOCKWISE about +Y
-    crank_angle = 720*$t;    // lower roller + crank orbit (CW, opposite drum)
-    idler_angle = -720*$t;   // upper idler counter-rotates
-    roller_angle = crank_angle + gear_mesh_phase; // mesh-phased roller shaft
+    drum_angle = 360*$t;    // v79: CW about +Y, driven by crank 2:1
+    crank_angle = 720*$t;   // v79: crank 20T spins 2x drum (CW, meshes drum 40T)
+    roller_angle = crank_angle + gear_mesh_phase; // mesh-phased crank gear
     twister_angle = -360*$t*twister_orbits_per_drum; // v37: 6 orbits/drum rev about X
-    pull_a_angle = roller_angle*vpull_spin;   // v52: nip side A spin-compensated 4/3 (same surface speed)
+    pull_a_angle = roller_angle*vpull_spin;   // v52: nip side A spin-compensated 4/3
     pull_b_angle = -roller_angle*vpull_spin;  // v52: nip side B counter-rotates 4/3
-    takeup_angle = -1440*$t;       // v48: tape-tension wind-up (no take-up gears — exterior TU removed): base speed -2 = 2x crank (sense unchanged vs v43-v47; winds the same 125.66mm linear tape)
+    takeup_angle = -1440*$t;       // v48: tape-tension wind-up
 
     // Chassis
     chassis();
@@ -2259,10 +2252,9 @@ module animated_assembly() {
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
 
-    // Tape cover shroud (v22: enclosed tunnel WEST of drum, roller nip
-    // -> drum exit, world x 58..84). Local frame x 0..len, y centred 0.
-    // v24 verified R->L: hopper(~128) > drum(100) > shroud(~71) > roller(40);
-    // wall 2.0>=1.2, min_z=0, spool(-6) clears r22 gear (X gap 1.5).
+    // Tape cover shroud (v79: EAST of drum, moves with hopper as one unit,
+    // world x 116..124, centroid 120). Local frame x 0..len, y centred 0.
+    // v79: shroud sits between drum(100) and six_turner(126), east side.
     translate([shroud_x0, chassis_width/2, 0])
         u_channel_shroud();
 
@@ -2291,21 +2283,12 @@ module animated_assembly() {
     translate([plow_start, chassis_width/2 - 20, base_thick])
         six_turner();
 
-    // Pull rollers (zoffset=11 compensated in assembly)
-    translate([roller_axle_x, chassis_width/2, roller_axle_z])
-        rotate([0, roller_angle, 0])
-            translate([0, 0, -roller_dia/2])
-                knurled_roller(is_lower=true);
-    translate([roller_axle_x, chassis_width/2, roller_axle_z + roller_dia + 1.2])
-        rotate([0, idler_angle, 0])
-            translate([0, 0, -roller_dia/2])
-                knurled_roller(is_lower=false);
+    // v79: rollers REMOVED; upper/lower roller lines deleted.
 
-    // Crank drives the ROLLER shaft (v23): coaxial at roller_axle_x=40 outside
-    // the BACK wall (Y=crank_mount_y=-8, grip mirrored -Y), rigid with the lower
-    // roller (grip orbits r=crank_throw about the roller axis at [40,-8,60]).
-    translate([crank_mount_x, crank_mount_y, roller_axle_z])
-        rotate([0, roller_angle, 0])
+    // Crank drives from x=160 (v79): 20T gear meshes drum 40T at dist=60.
+    // Front wall (Y=68), grip +Y outward. Crank rotates 2x drum (720*$t).
+    translate([crank_mount_x, crank_mount_y, drum_axle_z])
+        rotate([0, crank_angle, 0])
             translate([-crank_pivot_x, 0, -crank_pivot_z])
                 crank_assembly();
 

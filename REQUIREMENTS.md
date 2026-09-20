@@ -1,8 +1,36 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v77**
+**Version: v79**
 
-## v77 Lifted twister assembly — rotor w/ 2 real Class-15 bobbins + crown drive, pinion TOP - 2026-09-20 (build pending)
+## v79 Crank gear mesh at 160 / Drum gear front plane / Rollers removed / Shroud east — 2026-09-20
+
+1. **Why** (user: 20T crank meshes drum 40T, drum gear front, rollers gone, shroud east): Move crank to x=160 so 20T gear meshes drum 40T at distance 60 (= center_distance). Move drum gear from back plane to front plane (+gear_off). Remove rollers (upper deleted, lower replaced by crank axle as through-shaft). Mirror shroud to east (x 116..124) between drum (100) and six_turner (126). Hopper stays as one unit with shroud.
+2. **CAD** (`seed_tape_machine_v2.scad` only):
+   - **Crank params**: `crank_axle_x=160`, `crank_axle_z=60`; `crank_mount_x=crank_axle_x`; `roller_axle_x/z` become aliases for backward compat.
+   - **Shroud params**: `shroud_x0=drum_axle_x+16=116`, `shroud_x1=drum_axle_x+24=124`, `shroud_len=8`.
+   - **Drum gear front plane**: `translate([0, +gear_off, 0])` (was `-gear_off`).
+   - **Rollers removed**: `pull_rollers()` simplified to only `knurled_roller(is_lower=true)`; upper roller deleted.
+   - **Crank at x=160 in animated_assembly()**: `translate([crank_axle_x, ...])`, `rotate([0, crank_angle, 0])`.
+   - **Chassis**: crank bearing block + hex hole at x=160; roller through-hole removed.
+   - **Asserts**: `crank_mount_x == crank_axle_x` (was `== drum_axle_x`); gear center distance assert uses `crank_axle_x/z`.
+3. **Viewer** (`web/index.html` only): `crankMount.position.set(160,60,-68)`; `shroudPivot.position.set(116,0,-30)`; lower/upper pivots removed; `_setRotations` + animation loop updated (crank positive, drum 0.5x, twister 3x, takeup -2x); `ASSET_V` 42→43; legend updated with v79 R→L layout.
+4. **Collisions**: drum gear at y=44.95..50.95 (front plane), hopper front cheek at y~45 — near-clearance, no hard collision. Shroud east (116..124) clears six_turner start at 126.
+5. **Visual check**: live animating preview + snapshots while animating, 0 console errors, verify_v79.js PASSED (pivots ±0.15mm, ratios ±3% with signs, 0 console errors, ASSET_V=43, no rollers loaded).
+6. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`; port 9099 only.
+
+## v78 Crank RIGHT / Hopper MIRRORED — seed box mouth faces LEFT - 2026-09-20
+
+1. **Why** (user: move crank to right, flip hopper): user wanted the crank handle on the RIGHT (front) side and the seed box mouth facing LEFT (west). Move crank assembly from left wall (x=0) to front wall (x=100, drum-coaxial), mirror hopper 180° about Y so wedge swings west.
+2. **CAD** (`seed_tape_machine_v2.scad` only):
+   - **Crank mount moved**: `crank_mount_x` 0→`drum_axle_x`(100), `crank_mount_y` `chassis_width+8`(68), `crank_side` −1→+1; crank asserts updated.
+   - **Hopper mirrored**: `mirror([1,0,0])` wrapping the `difference()` block in `hopper_body()`; mirrored wedge world x range [17..86]; collision asserts added (Z≥49 threshold vs obstacles below).
+   - **Drum angle flipped**: `drum_angle = 360*$t` (was −360*$t) so animation direction matches new layout.
+   - **Crank assembly in animated_assembly()**: position set to `(crank_mount_x, chassis_width/2, -crank_side*22)` with correct axis params.
+   - **Sign convention comment** updated to reflect new crank_side.
+3. **Viewer** (`web/index.html` only): `crankMount.position.set(100,60,-68)`; `_setRotations` updated (crankSpinner = crankAngle, twister = 3×crankAngle, takeup = −2×crankAngle); `ASSET_V` 41→42; legend updated with "v78: Crank handle RIGHT / seed box mouth LEFT".
+4. **Collisions**: mirrored hopper wedge (world x 17..86) overlaps shroud/tape/pull in X but all obstacles are below Z=49 → no 3D collision. Two SCAD asserts enforce this.
+5. **Visual check**: live animating preview + snapshots while animating, 0 console errors, tape-static, verify_v78.js PASSED (pivots ±0.15mm, ratios ±3% with signs, 0 console errors).
+6. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`; drum/roller axles unchanged; port 9099 only.
 
 1. **Why** (user: "Lift all up" + pinion "Top"): lift the downstream tape line so two REAL Class-15 sewing bobbins on a rotor clear the floor. Replace v76's v53 friction drive + 2 dummy spindles with a printable assembly: fixed hollow axle (Ø10 bore carries the tape pocket through the rotor centre along X), rotor disc spinning on it via slip-fit bore, crown teeth on the rotor's WEST face, pinion at the TOP (axis Y), driven by a compound spur chain from the seed drum gear. Ratio **15** (target inside user range 12-18; 6 seeds/rev × 2.5 turns/seed).
 2. **CAD** (`seed_tape_machine_v2.scad` only):
