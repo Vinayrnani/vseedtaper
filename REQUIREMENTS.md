@@ -1,6 +1,22 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v76**
+**Version: v77**
+
+## v77 Lifted twister assembly — rotor w/ 2 real Class-15 bobbins + crown drive, pinion TOP - 2026-09-20 (build pending)
+
+1. **Why** (user: "Lift all up" + pinion "Top"): lift the downstream tape line so two REAL Class-15 sewing bobbins on a rotor clear the floor. Replace v76's v53 friction drive + 2 dummy spindles with a printable assembly: fixed hollow axle (Ø10 bore carries the tape pocket through the rotor centre along X), rotor disc spinning on it via slip-fit bore, crown teeth on the rotor's WEST face, pinion at the TOP (axis Y), driven by a compound spur chain from the seed drum gear. Ratio **15** (target inside user range 12-18; 6 seeds/rev × 2.5 turns/seed).
+2. **CAD** (`seed_tape_machine_v2.scad` only):
+   - **Tape line lifted**: carry z 13→**32**; tape climbs from ~17 (turner exit x≈159) to 32 at rotor x=176; pull station bridge raised (z≈49 at pull_x=194); `takeup_z` 34→32; corresponding seed_tape_bend()/six_turner-placement/tape_viewer constants updated.
+   - **Rotor** (thread_twister() rewrite): disc centre **(176,30,32)**, disc r22, bore Ø14.2, rotates about X; carries 2× REAL Class-15 bobbins (Ø20.7 × 11.1) on split-collet snap-fit spindles at **orbit 19, 180° apart** (bottoms at z=13 — clear base top z=4 by ~9mm), with thread-guide handles.
+   - **Crown** 24T M1.5 (pitch r18) on rotor WEST face; **pinion 12T M1.5 (pitch r9) at TOP of rotor "under-tape-side" up** — axis Y, centre ≈(176,30,59), mesh dist 18+9=27, clear of the tape bore; fail-loud mesh assert.
+   - **Fixed hollow axle**: Ø10 bore / OD 14, cantilevered off back wall (y≈0), inserted from front, push-lock via snap ring in a groove at the front end; rotor disc rides the OD14 axle (Ø14.2 slip fit); tape pocket (outer ≈7.8) passes through the 10mm axle bore.
+   - **Gear chain (target 15 = 4×3×2.5×0.5)**: drum 40T M2 at (100,60) → 10T M2 (×4) → compound 30T→10T M1.5 (×3; M2→M1.5 transition) → compound 25T→10T M1.5 (×2.5) → pinion 12T M1.5 → crown 24T (×0.5). All spur stages axis-Y on the back plane y≈12 (clear of tape lane y≥17.3); compound shaft X-Z stations solved in CAD with fail-loud centre-distance asserts; chain stays WEST of x=165 (clear of disc); M2 drum stage as-is.
+   - **Low friction**: slip-fit shaft bores (tol 0.3), ring/bracket split-collar (tw_tol=0.35) + cradle posts; the drive train and ring ride on plain bores.
+   - **v53 drive DELETED surgically**: v53 params, asserts, chassis geometry, wall holes removed (v76's drum-coaxial 50T→10T→bevel→pinion→friction-wheel chain). KEEP pull-pin / bore-slip asserts, update values to pass.
+3. **Viewer** (`web/index.html` only): ASSET_V 41→**42**, `orbitsPerDrum` 6→**15**; `twisterPivot` (172,17,−30)→**(176,32,−30)**; pull/takeup pivots raised; tape mesh raised to z=32 + climb; PART_DEFs/exports for the new rotor (disc+crown+bobbins), ring axle/bracket, pinion, chain shafts; web/stl GLBs regenerated.
+4. **Collisions**: chain gears west of x=165 clear of ring/disc; tape lane clear; bobbin bottom z=13 > base 4; pinion top z≈68 < chassis top 112; walls y 0..3/57..60 clear.
+5. **Visual check**: live animating preview + snapshots while animating, 0 console errors, tape-static, verify_v77.js PASSED (pivots ±0.15mm, ratios ±3% with signs, 0 console errors).
+6. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`; drum/roller axles unchanged; port 9099 only.
 
 ## v75 Step 4: full gear-driven chain (drum→5-stage spur→bevel→ring crown) - 2026-09-19 (final build: commits 56059a4 CAD, b1ed937 viewer/GLBs)
 
