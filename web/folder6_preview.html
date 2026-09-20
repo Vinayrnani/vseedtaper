@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>folder6 sample preview</title>
+<style>html,body{margin:0;height:100%;background:#111;color:#eee;font-family:monospace}
+#hud{position:fixed;left:8px;top:8px;background:rgba(0,0,0,.6);padding:8px;font-size:12px;white-space:pre}</style>
+<script src="js/three.min.js"></script>
+<script src="js/GLTFLoader.js"></script>
+</head><body>
+<div id="hud">loading…</div>
+<script>
+const q = new URLSearchParams(location.search);
+const view = q.get('view') || 'side';
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x111111);
+const cam = new THREE.PerspectiveCamera(40, innerWidth/innerHeight, 0.1, 5000);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+scene.add(new THREE.GridHelper(100, 20, 0x444444, 0x333333));
+scene.add(new THREE.AxesHelper(40));
+scene.add(new THREE.HemisphereLight(0xffffff, 0x222222, 1.1));
+const dl = new THREE.DirectionalLight(0xffffff, 0.9);
+dl.position.set(60, 80, 40); scene.add(dl);
+const dl2 = new THREE.DirectionalLight(0xffffff, 0.4);
+dl2.position.set(-50, -30, -60); scene.add(dl2);
+new THREE.GLTFLoader().load('stl/folder6_sample.glb?v=' + Date.now(), gltf => {
+  const g = gltf.scene;
+  g.scale.setScalar(25.4); // SketchUp inches -> mm
+  // centre on origin
+  const box = new THREE.Box3().setFromObject(g);
+  const c = box.getCenter(new THREE.Vector3());
+  g.position.sub(c);
+  g.traverse(o => { if (o.isMesh) {
+    o.material = new THREE.MeshBasicMaterial({color: 0xdddddd, side: THREE.DoubleSide});
+    o.material.needsUpdate = true;
+    const w = new THREE.LineSegments(
+      new THREE.WireframeGeometry(o.geometry),
+      new THREE.LineBasicMaterial({color: 0x000000}));
+    w.scale.copy(o.scale); w.position.copy(o.position); w.rotation.copy(o.rotation);
+    o.parent.add(w);
+  } });
+  scene.add(g);
+  window._folder = g;
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const size = box.getSize(new THREE.Vector3()); // already mm (scaled scene)
+  document.getElementById('hud').textContent =
+    'size mm: X=' + size.x.toFixed(1) + ' Y=' + size.y.toFixed(1) + ' Z=' + size.z.toFixed(1) +
+    '\nview=' + view + ' (X=tape travel, Y=width, Z=up)';
+  const R = Math.max(size.x, size.y, size.z) * 1.9;
+  const views = {
+    side:  [[0, -R, 0.35*R], [0,0,0]],     // elevation: X right, Z up
+    end:   [[R, 0, 0.25*R], [0,0,0]],       // down the tape path (entry view)
+    end2:  [[-R, 0, 0.25*R], [0,0,0]],      // exit view
+    top:   [[0, 0, R], [0,0,0]],            // plan
+    iso:   [[R*0.8, -R*0.8, R*0.6], [0,0,0]]
+  };
+  const v = views[view] || views.side;
+  cam.position.set(v[0][0], v[0][1], v[0][2]);
+  cam.up.set(0,0,1);
+  cam.lookAt(v[1][0], v[1][1], v[1][2]);
+  window._ready = true;
+}, undefined, e => {
+  document.getElementById('hud').textContent = 'LOAD ERROR ' + e;
+});
+(function anim(){ requestAnimationFrame(anim); renderer.render(scene, cam); })();
+</script>
+</body></html>
