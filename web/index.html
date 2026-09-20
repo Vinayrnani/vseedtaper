@@ -149,7 +149,7 @@
     Single wrap-around hopper: right wedge pickup (level top), 11→6 cover, hover pipe (ID6/OD10 L10, 10 gap) drops seeds at x=100 port.
     Two-stage forming: first-stage U (forming 37..70 + transit 70..126, seed drops at 100 into the open pocket) →
     6-folder second stage (126..159: seeded U arrives, thin-wall tapered shell sits AROUND the tape — pinched open-C entry dia ~12 flaring to wide dia ~21 exit, outer wrap 300->315deg + inner hook to 160deg with a 2.5 open slit full length, tail blade + flat skid sit; hollow bore, 2 small screw ears).
-     Thread twister (hollow ring + 16T crown gear on west face + 2 bobbin holders at 90° orbit 18, 12.29x at the layshaft via 5-stage spur + bevel drive; empty middle, tape passes through Ø21 bore) binds each rolled seed past the 6-folder -> cushioned vertical pull nip
+     Thread twister (hollow ring + 16T crown gear on west face + 2 bobbin holders at 90° orbit 16.25, 17.2032x at the layshaft via 5-stage spur + bevel drive; empty middle, tape passes through Ø21 bore) binds each rolled seed past the 6-folder -> cushioned vertical pull nip
      (rubber sleeve, tape-coupled 4/3 with the roller, spacing driver, no gears) → wind-up reel (core d10, tape-tension wind-up with slip clutch: fast empty, slips full). Zero exterior gears — back wall clean solid, no floor gears; interior drive only (crank→drum 2.75:1 + parallel drum spur pair, high).
     Mounts — bottom: 6-folder + wind-up reel · side: twister + pull + drum (axles through walls) · top: hopper + shroud + input spools.
   </div>
@@ -345,6 +345,33 @@
     var twisterPinionPivot = new THREE.Group();
     twisterPinionPivot.position.set(164, 9, -30);
     root.add(twisterPinionPivot);
+    // v75: per-shaft gear train pivots (root-local M-frame, shafts at
+    // chassis_width/2=32 -> z=-32). All spur gears are axis-Y discs on
+    // Y-rods (spin rotation.z); pinion + ring are axis-X (spin rotation.x).
+    var gearDrumPivot = new THREE.Group();
+    gearDrumPivot.position.set(100, 60, -14.05);   // 44T drum gear (100,14.05,60)
+    root.add(gearDrumPivot);
+    var gearAPivot = new THREE.Group();
+    gearAPivot.position.set(155, 60, -32);         // shaft A (155,32,60)
+    root.add(gearAPivot);
+    var gearBPivot = new THREE.Group();
+    gearBPivot.position.set(135.5, 59.79, -32);    // shaft B (135.5,32,59.79)
+    root.add(gearBPivot);
+    var gearCPivot = new THREE.Group();
+    gearCPivot.position.set(125.5, 43.04, -32);    // shaft C (125.5,32,43.04)
+    root.add(gearCPivot);
+    var gearDPivot = new THREE.Group();
+    gearDPivot.position.set(145, 43.04, -32);      // shaft D (145,32,43.04)
+    root.add(gearDPivot);
+    var gearEPivot = new THREE.Group();
+    gearEPivot.position.set(145, 25.04, -32);      // shaft E (145,32,25.04)
+    root.add(gearEPivot);
+    var gearPinionPivot = new THREE.Group();
+    gearPinionPivot.position.set(149.5, 25.04, -49.4); // pinion shaft (149.5,49.4,25.04), axis-X
+    root.add(gearPinionPivot);
+    var gearRingPivot = new THREE.Group();
+    gearRingPivot.position.set(173, 17, -30);      // twister ring (173,30,17), axis-X
+    root.add(gearRingPivot);
     // v75: pinion shaft bevel (axis X) at (164, 49.4, 9) -> (164, 9, -49.4)
     // v75: vertical-nip pull pair at OpenSCAD (196, 30-/+12.4, 4) ->
     // (196, 4, -17.6) / (196, 4, -42.4): vertical axes stay vertical
@@ -534,7 +561,7 @@
     p.needsUpdate = true;
   }
 window._twister = {
-      pivot: twisterPivot, bindX: BIND_X, arms: 2, orbitsPerDrum: 12.288,
+      pivot: twisterPivot, bindX: BIND_X, arms: 2, orbitsPerDrum: 17.2032,
       lines: [threadLineA, threadLineB],
       pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
       pullX: 196, takeupX: 226
@@ -548,12 +575,12 @@ window._twister = {
   window._sixTurner = { start: 114, end: 159, dropX: 100, wall: 1.6, boreR: 0,
     entryBore: 24, exitBore: 11, seamGap: 0, exitAim: [173, 30, 17],
     stages: 'twister-aimed spiral: 0.5-turn U entry (R12, 24 wide) -> 1.25-turn overlap exit (R5.5, 11 tube) over 45, axis 13 = twister bore height', entry: 'spiral mouth R12, rims at lane height, floor on the base', exit: 'overlap tube R5.5 dead-on the twister bore (machine 172,30,17)' };
-window._gearTrain = {      chain: 'crank->drum 2.75:1 interior (44:16) -> 5-stage spur gear train (12.29x) -> bevel pair (1:1) -> pinion shaft -> crown gear on ring. Total 12.29x drum. All M1.5 spur, cd=19.5 each stage.', belts: false, exteriorGears: 0,
-      bevel: '5-stage spur: drum44T->11T (cd=55), 16T->10T (cd=19.5) x3, 16T->10T (cd=19.5) x1; shaft E 10T@12 + 12T bevel@9 (axis Z) -> pinion 12T (axis X) at (164,49.4,9) -> crown 16T on WEST face. Ratio 4*(16/10)^3*1.0*(12/16)=12.288',
-      mesh: '5-stage spur all cd=19.5 (M1.5): 44T/11T at (100,12)/(155,12), 16T/10T at (155,45)/(174.5,45), 16T/10T at (174.5,30)/(174.5,15), 16T/10T at (174.5,15)/(174.5,12), 16T/10T at (174.5,12)/(174.5,12); bevel z=9 at (145,49.4) -> pinion x at (164,49.4,9) -> crown 16T at (165,30,17). All west of x=165, clear of tape lane (y=30,z=17) and walls (y=3..61)',
-     mounts: { shaftA: [155,12,60], shaftB: [174.5,45,45], shaftC: [174.5,30,30], shaftD: [174.5,15,15], shaftE: [174.5,12,12], chainBevel: [145,49.4,9], pinionBevel: [164,49.4,9], crown: [165,30,17] } };
+window._gearTrain = {      chain: 'crank->drum 2.75:1 interior (44:16) -> 5-stage spur gear train (17.2032x) -> bevel pair (1:1) -> pinion shaft -> crown gear on ring. Total 17.2032x drum. All M1.5 spur.', belts: false, exteriorGears: 0,
+      bevel: '5-stage spur (ALL axis-Y): drum44T M2 r44 at (100,14.05,60) -> 11T M2 r11 at (155,14.05,60) (cd=55); 16T->10T (cd=19.5) x3 + 14T->10T (cd=19.5) x1; shaft E 10T@30 + 12T bevel@49.4 (axis-Y) -> pinion 12T (axis-X) at (149.5,49.4,25.04) -> crown 16T on WEST face. Ratio 4*(16/10)^3*(14/10)*1.0*(12/16)=17.2032',
+      mesh: 'per-shaft pivots: gearDrum(100,60,-14.05) gearA(155,60,-32) gearB(135.5,59.79,-32) gearC(125.5,43.04,-32) gearD(145,43.04,-32) gearE(145,25.04,-32) gearPinion(149.5,25.04,-49.4) gearRing(173,17,-30)',
+     mounts: { shaftA: [155,32,60], shaftB: [135.5,32,59.79], shaftC: [125.5,32,43.04], shaftD: [145,32,43.04], shaftE: [145,32,25.04], chainBevel: [145,49.4,25.04], pinionBevel: [149.5,49.4,25.04], crown: [173,30,17] } };
   window._slipClutch = {
-    pivot: takeupPivot, discs: 2, baseRatio: '+12.29x crank (gear train; CAD -1440t * 12.29)',
+    pivot: takeupPivot, discs: 2, baseRatio: '+17.2032x crank (gear train; CAD -1440t * 17.2032)',
     // Slip logic: the geared base speed (+2x crank viewer sense) is constant; the
     // FRICTION discs absorb the pack-diameter change mechanically —
     // the reel runs fast when empty and the clutch slips when full, so
@@ -602,7 +629,9 @@ window._gearTrain = {      chain: 'crank->drum 2.75:1 interior (44:16) -> 5-stag
     drum: drumPivot, hopper: hopperPivot, shroud: shroudPivot, spool: spoolGroup,
     cradle: cradlePivot, plow: plowPivot, lower: lowerPivot, upper: upperPivot,
     crankMount: crankMount, crankSpinner: crankSpinner,
-    twister: twisterPivot, twisterPinion: twisterPinionPivot, pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot
+    twister: twisterPivot, twisterPinion: twisterPinionPivot, pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
+    gearDrum: gearDrumPivot, gearA: gearAPivot, gearB: gearBPivot, gearC: gearCPivot,
+    gearD: gearDPivot, gearE: gearEPivot, gearPinion: gearPinionPivot, gearRing: gearRingPivot
   };
     window._getPivotData = function() {
     	const data = {
@@ -639,12 +668,24 @@ window._gearTrain = {      chain: 'crank->drum 2.75:1 interior (44:16) -> 5-stag
     	});
     	return data;
     };
+  function applyGearRotations(crankAngle) {
+    var drumAngle = crankAngle * DRUM_RATIO;
+    gearDrumPivot.rotation.z = drumAngle;              // 44T rigid on drum (1:1)
+    gearAPivot.rotation.z = 4.0 * drumAngle;           // 11T/16T shaft A
+    gearBPivot.rotation.z = -6.4 * drumAngle;          // 10T/16T shaft B
+    gearCPivot.rotation.z = 10.24 * drumAngle;         // 10T/16T shaft C
+    gearDPivot.rotation.z = -16.384 * drumAngle;       // 10T/14T shaft D
+    gearEPivot.rotation.z = 22.94 * drumAngle;         // 10T + bevel shaft E
+    gearPinionPivot.rotation.x = -22.94 * drumAngle;   // 2x12T bevel pinion (axis-X)
+    gearRingPivot.rotation.x = 17.2032 * drumAngle;    // crown on ring (axis-X)
+  }
   window._setRotations = function(crankAngle) {
     crankSpinner.rotation.z = -crankAngle - GEAR_PHASE; // v21: rigid with lower (roller shaft)
     lowerPivot.rotation.z = -crankAngle - GEAR_PHASE;   // v70: scad roller_angle = +990t + 11.25deg
     upperPivot.rotation.z = crankAngle;
     drumPivot.rotation.z = crankAngle * DRUM_RATIO;
-    twisterPivot.rotation.x = -12.288 * DRUM_RATIO * crankAngle; // v75: 5-stage spur + bevel (12.29x drum)
+    applyGearRotations(crankAngle);
+    twisterPivot.rotation.x = 17.2032 * DRUM_RATIO * crankAngle; // v75: 5-stage spur + bevel (17.2032x drum)
     pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE); // v52: nip side A spin-compensated 4/3
     pullBPivot.rotation.y = -PULL_SPIN * (2 * crankAngle + GEAR_PHASE);// v52: nip side B counter-rotates 4/3
     takeupPivot.rotation.z = 2 * crankAngle;             // v48: tape-tension wind-up (no take-up gears; CAD -1440t base speed); winding sense unchanged vs v43-v47, same linear tape
@@ -666,7 +707,7 @@ window._gearTrain = {      chain: 'crank->drum 2.75:1 interior (44:16) -> 5-stag
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 55; // v75: gear-driven chain (5-stage spur + bevel), ring r18.5/OD53, crown 16T, bobbins 90° orbit 18, pull_x 196
+  var ASSET_V = 60; // v75: gear-driven chain (5-stage spur + bevel), ring r18.5/OD53, crown 16T, bobbins 90° orbit 18, pull_x 196
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -682,22 +723,30 @@ window._gearTrain = {      chain: 'crank->drum 2.75:1 interior (44:16) -> 5-stag
         parent: spoolGroup, pos: [-50, 0, -26], rot: [0, 0, 0] },
       { id: 'plow', label: '6-folder (spiral 45, twister-aimed)', file: 'stl/plow.glb', color: 0x8a8f98,
         parent: plowPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4 }, // v66 twister-aimed: bare scroll_sheet() (0.5-turn R12 mouth -> 1.25-turn R5.5 overlap tube, 1.6 wall), axis 13 = twister bore height (exit dead-on ring bore machine (172,30,17)), mouth world 114 exit 159; 2 floor pedestals + straps + 2 chassis ears; part_to_render "plow" compat alias; mouth sits after drop 100 (seed lands flat first)
-      { id: 'rollers_lower', label: 'Rollers lower (hidden)', file: 'stl/rollers_lower.glb', color: 0x9aa2ad,
+      { id: 'rollers_lower', label: 'Rollers lower', file: 'stl/rollers_lower.glb', color: 0x9aa2ad,
         parent: lowerPivot, pos: [0, 0, 34.95], rot: [Math.PI, 0, 0], // v21: gear-down export (body centre 34.95); Rx(180) lands gear on back plane Y~12.
-        metalness: 0.8, roughness: 0.35, visible: false },
-      { id: 'rollers_upper', label: 'Rollers upper (hidden)', file: 'stl/rollers_upper.glb', color: 0x9aa2ad,
+        metalness: 0.8, roughness: 0.35 },
+      { id: 'rollers_upper', label: 'Rollers upper', file: 'stl/rollers_upper.glb', color: 0x9aa2ad,
         parent: upperPivot, pos: [0, 0, 15], rot: [Math.PI, 0, 0], // v27: export zoffset 11->0 (min_z=0); body centre 15, recentered on pivot
-        metalness: 0.8, roughness: 0.35, visible: false },
+        metalness: 0.8, roughness: 0.35 },
       { id: 'crank', label: 'Crank (roller drive)', file: 'stl/crank.glb', color: 0xb03a2e,
         parent: crankSpinner, pos: [-5, -8.47, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5 },
-{ id: 'twister', label: 'Thread twister (v75 gear-driven, ring r18.5/OD53)', file: 'stl/twister.glb', color: 0xc9a227,
-            parent: twisterPivot, pos: [0, -10, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 }, // v75: ring_r=18.5 tube=8 twister_lift=10; crown 16T M1.5 + 2 bobbins 90° orbit 18
-        { id: 'twister_bracket', label: 'Twister split-collar bracket', file: 'stl/twister_bracket.glb', color: 0x8a8f98,
-            parent: root, pos: [159, 17, -30], rot: [-Math.PI / 2, Math.PI / 2, 0], metalness: 0.5, roughness: 0.4, visible: true }, // v74: standalone bracket, origin-centred min_z=0, split from twister.glb
-        { id: 'twister_pinion', label: 'Twister crown gear (16T M1.5)', file: 'stl/twister_pinion.glb', color: 0x8a8f98,
-            parent: twisterPinionPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4, visible: true }, // v75: crown gear on WEST face at (165,30,17), meshes pinion shaft bevel
-        { id: 'gear_train', label: 'Gear train (5-stage spur + bevel)', file: 'stl/gear_train.glb', color: 0x8a8f98,
-            parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5, roughness: 0.4, visible: false }, // v75: 5-stage spur M1.5 (12.29x) + bevel pair
+{ id: 'gear_drum', label: 'Gear drum (44T M2)', file: 'stl/gear_drum.glb', color: 0x8a8f98,
+            parent: gearDrumPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5, roughness: 0.4, visible: false }, // v75: 44T drum gear (cartridge already shows it; avoids double render)
+        { id: 'gear_shaft_a', label: 'Gear shaft A (11T+16T)', file: 'stl/gear_shaft_a.glb', color: 0x8a8f98,
+            parent: gearAPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5, roughness: 0.4 },
+        { id: 'gear_shaft_b', label: 'Gear shaft B (10T+16T)', file: 'stl/gear_shaft_b.glb', color: 0x8a8f98,
+            parent: gearBPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5, roughness: 0.4 },
+        { id: 'gear_shaft_c', label: 'Gear shaft C (10T+16T)', file: 'stl/gear_shaft_c.glb', color: 0x8a8f98,
+            parent: gearCPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5, roughness: 0.4 },
+        { id: 'gear_shaft_d', label: 'Gear shaft D (10T+14T)', file: 'stl/gear_shaft_d.glb', color: 0x8a8f98,
+            parent: gearDPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5, roughness: 0.4 },
+        { id: 'gear_shaft_e', label: 'Gear shaft E (10T+bevel)', file: 'stl/gear_shaft_e.glb', color: 0x8a8f98,
+            parent: gearEPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5, roughness: 0.4 },
+        { id: 'gear_pinion', label: 'Pinion shaft (2x12T bevel)', file: 'stl/gear_pinion.glb', color: 0x8a8f98,
+            parent: gearPinionPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5, roughness: 0.4 },
+        { id: 'gear_ring', label: 'Twister ring + crown (16T)', file: 'stl/gear_ring.glb', color: 0xc9a227,
+            parent: gearRingPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 }, // v75: ring r18.5/OD53 + crown 16T M1.5 + 2 bobbins 90° orbit 16.25
       { id: 'pull_a', label: 'Vertical pull A (cushioned)', file: 'stl/pull_a.glb', color: 0x3f434a,
         parent: pullAPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.05, roughness: 0.9 }, // v52: soft rubber/silicone cushion sleeve (firm grip, no crush); OD ~d15 => 4/3 spin keeps surface speed, spacing driver
       { id: 'pull_b', label: 'Vertical pull B (cushioned)', file: 'stl/pull_b.glb', color: 0x3f434a,
@@ -708,7 +757,8 @@ window._gearTrain = {      chain: 'crank->drum 2.75:1 interior (44:16) -> 5-stag
    // Display order for the parts panel (matches user checklist + tape/seeds extras).
 var PART_ORDER = ['chassis', 'hopper', 'shroud', 'cartridge', 'cones_a',
 'cones_b', 'plow', 'rollers_lower', 'rollers_upper', 'crank',
-        'twister', 'twister_pinion', 'gear_train', 'pull_a', 'pull_b', 'takeup', 'tape', 'seeds'];
+        'gear_drum', 'gear_shaft_a', 'gear_shaft_b', 'gear_shaft_c', 'gear_shaft_d', 'gear_shaft_e', 'gear_pinion', 'gear_ring',
+        'pull_a', 'pull_b', 'takeup', 'tape', 'seeds'];
 
   var toggleGroups = {};
   var togglesDiv = document.getElementById('toggles');
@@ -942,16 +992,10 @@ var PART_ORDER = ['chassis', 'hopper', 'shroud', 'cartridge', 'cones_a',
     lowerPivot.rotation.z = -crankAngle - GEAR_PHASE;
     upperPivot.rotation.z = crankAngle;
     drumPivot.rotation.z = crankAngle * DRUM_RATIO;
-    // v53 OVERHEAD twister drive (zero exterior gears, module 2):
-    // EXISTING drum44 -> overhead counter 10T (4.4x, back plane, high)
-    // -> Y-bevel 12T -> high X-pinion 10T (1.2x, overhead) ->
-    // thin 15T/12T drop (1.25x) = 6.6x at the low shaft -> friction
-    // wheel on the ring OD (slip after, hollow middle, sign kept, 1 bind/seed nominal); pull nip tape-coupled 4/3 with
-    // the roller shaft (v52 d15 cushioned sleeve = spacing driver, same surface speed,
-    // no crush); take-up tape-tension wind-up 2x crank (slip clutch).
-    var twAngle = -12.288 * DRUM_RATIO * crankAngle; // v75: 5-stage spur + bevel (12.29x drum)
+    applyGearRotations(crankAngle);
+    // v75 GEAR-DRIVEN twister (per-shaft pivots, 17.2032x drum):
+    var twAngle = 17.2032 * DRUM_RATIO * crankAngle; // v75: 5-stage spur + bevel (17.2032x drum)
     twisterPivot.rotation.x = twAngle;
-    twisterPinionPivot.rotation.y = -(28 / 12) * twAngle;
     pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE);
     pullBPivot.rotation.y = -PULL_SPIN * (2 * crankAngle + GEAR_PHASE);
     takeupPivot.rotation.z = 2 * crankAngle;

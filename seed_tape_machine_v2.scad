@@ -362,48 +362,56 @@ turner_curl_off = 1.2;            // v54 reference only (no bore offset)
 turner_curl_cz = 13;              // v56 bore-axis height (lane-centred; was 12)
 
 // ============================================================
-// v75 GEAR TRAIN params (chain from drum, all spur M1.5)
+// v75 GEAR TRAIN params (ALL-AXIS-Y spur train, drum -> ring)
 // ============================================================
-// Stage 1 (z=60): drum 44T -> 11T, shaft A: 11T@60 + 16T@45
+epsilon = 0.05;
+// All spur gears are VERTICAL DISCS (axis-Y, rotate([90,0,0])),
+// mounted on HORIZONTAL RODS along Y. The drum gear (44T M2) is
+// axis-Y at y = chassis_width/2 - gear_off = 32 - 17.95 = 14.05
+// (inside seed_cartridge HORIZONTAL branch), meshing the roller
+// gear. gear_off = roller_len/2 + gear_thick/2 - epsilon = 17.95.
+gear_thick = 6;  // drum/roller gear thickness (seed_cartridge local too)
+gear_off = roller_len/2 + gear_thick/2 - epsilon;  // 17.95
+gear_mesh_y = chassis_width/2 - gear_off;          // 14.05
+// Stage 1 (y=14.05): drum 44T M2 r44 at (100,14.05,60) <-> 11T M2 r11 at (155,14.05,60). CD=55.
 gear11_teeth = 11; gear11_mod = 2; gear11_t = 6;
-gear16a_teeth = 16; gear16a_mod = 1.5; gear16a_t = 6;
-// Stage 2 (z=45): 16T -> 10T, shaft B: 10T@45 + 16T@30
-gear10b_teeth = 10; gear10b_mod = 1.5; gear10b_t = 6;
-gear16b_teeth = 16; gear16b_mod = 1.5; gear16b_t = 6;
-// Stage 3 (z=30): 16T -> 10T, shaft C: 10T@30 + 16T@15
-gear10c_teeth = 10; gear10c_mod = 1.5; gear10c_t = 6;
-gear16c_teeth = 16; gear16c_mod = 1.5; gear16c_t = 6;
-// Stage 4 (z=15): 16T -> 10T, shaft D: 10T@15 + 16T@12
-gear10d_teeth = 10; gear10d_mod = 1.5; gear10d_t = 6;
-gear16d_teeth = 16; gear16d_mod = 1.5; gear16d_t = 6;
-// Stage 5 (z=12): 16T -> 10T, shaft E: 10T@12 + 12T bevel@9
-gear10e_teeth = 10; gear10e_mod = 1.5; gear10e_t = 6;
-gear12e_teeth = 12; gear12e_mod = 1.5; gear12e_t = 6;
-// Shaft positions (solved for cd=19.5 each stage, zigzag from (155,12) to (145,49.4))
-// Stage 1: drum(100,12,60) -> 11T@(155,12,60), shaft A: 11T@60 + 16T@45
-shaftA_x = 155; shaftA_y = 12; shaftA_z = 60;
-gear16a_x = 155; gear16a_y = 45; gear16a_z = 60;
-// Stage 2: 16T@(155,45) -> 10T, shaft B: 10T@45 + 16T@30
-gear10b_x = 155 + 19.5; gear10b_y = 45; gear10b_z = 45;
-gear16b_x = gear10b_x; gear16b_y = 30; gear16b_z = 45;
-// Stage 3: 16T@(174.5,30) -> 10T, shaft C: 10T@30 + 16T@15
-gear10c_x = gear16b_x; gear10c_y = 30; gear10c_z = 30;
-gear16c_x = gear10c_x; gear16c_y = 15; gear16c_z = 30;
-// Stage 4: 16T@(174.5,15) -> 10T, shaft D: 10T@15 + 16T@12
-gear10d_x = gear16c_x; gear10d_y = 15; gear10d_z = 15;
-gear16d_x = gear10d_x; gear16d_y = 12; gear16d_z = 15;
-// Stage 5: 16T@(174.5,12) -> 10T, shaft E: 10T@12 + 12T bevel@9 at (145,49.4)
-gear10e_x = gear16d_x; gear10e_y = 12; gear10e_z = 12;
-// Chain shaft E bevel (axis Z) at (145,49.4,9) meshes pinion shaft bevel (axis X) at same point
-chain_bevel_x = 145; chain_bevel_y = 49.4; chain_bevel_z = 9;
-// Pinion shaft: axis X at y=49.4, z=9, x=145-164
-pinion_shaft_x0 = 145; pinion_shaft_x1 = 164; pinion_shaft_y = 49.4; pinion_shaft_z = 9;
-// Pinion shaft bearing blocks
-pinion_block_x0 = 145; pinion_block_x1 = 164;
-// Ring crown gear: 16T M1.5 on WEST face (x=165), bore Ø17 (r8.5)
+// Shaft A: rod along Y at (155,60). Gears: 11T M2 r11 @y=14.05 + 16T M1.5 r12 @y=45.
+shaftA_x = 155; shaftA_z = 60;
+gear16a_teeth = 16; gear16a_mod = 1.5; gear16a_t = 6; gear16a_y = 45;
+// Shaft B: rod at (135.5,59.79). Gears: 10T M1.5 r7.5 @y=45 + 16T M1.5 r12 @y=30.
+shaftB_x = 135.5; shaftB_z = 59.79;
+gear10b_teeth = 10; gear10b_mod = 1.5; gear10b_t = 6; gear10b_y = 45;
+gear16b_teeth = 16; gear16b_mod = 1.5; gear16b_t = 6; gear16b_y = 30;
+// Shaft C: rod at (125.5,43.04). Gears: 10T M1.5 r7.5 @y=30 + 16T M1.5 r12 @y=45.
+shaftC_x = 125.5; shaftC_z = 43.04;
+gear10c_teeth = 10; gear10c_mod = 1.5; gear10c_t = 6; gear10c_y = 30;
+gear16c_teeth = 16; gear16c_mod = 1.5; gear16c_t = 6; gear16c_y = 45;
+// Shaft D: rod at (145,43.04). Gears: 10T M1.5 r7.5 @y=45 + 14T M1.5 r10.5 @y=30 (14T NEW).
+shaftD_x = 145; shaftD_z = 43.04;
+gear10d_teeth = 10; gear10d_mod = 1.5; gear10d_t = 6; gear10d_y = 45;
+gear14d_teeth = 14; gear14d_mod = 1.5; gear14d_t = 6; gear14d_y = 30;
+// Shaft E: rod at (145,25.04). Gears: 10T M1.5 r7.5 @y=30 + chain bevel @y=49.4.
+shaftE_x = 145; shaftE_z = 25.04;
+gear10e_teeth = 10; gear10e_mod = 1.5; gear10e_t = 6; gear10e_y = 30;
+// Chain bevel: 12T M1.5 r9, axis-Y, apex at (145,49.4,25.04). 1:1 miter with pinion bevel #1.
+chain_bevel_y = 49.4;
+gear12e_teeth = 12; gear12e_mod = 1.5; gear12e_t = 4;
+// Pinion shaft: axis-X at y=49.4, z=25.04, x=145..154 (Ø4), bearing blocks both ends.
+pinion_shaft_x0 = 145; pinion_shaft_x1 = 154; pinion_shaft_y = 49.4; pinion_shaft_z = 25.04;
+pinion_shaft_x2 = 163;  // v75: support end under the crown-mesh teeth (eliminates cantilever)
+pinion_shaft_d = 4;
+pinion_bevel_teeth = 12; pinion_bevel_mod = 1.5; pinion_bevel_t = 4;
+pinion_cone_r = 9;  // v75: pinion bevel #2 cone base radius. Teeth (r=7.63..10.37)
+                     // overlap it (union-safe) and stick out 1.37 beyond it.
+// Crown: 16T M1.5 r12, axis-X, apex (151,30,17), bore Ø17 (r8.5), teeth at x=163,
+// back disc x=163..165 r10.5 fused to torus (kept at r10.5 so the pinion cone +
+// teeth stay clear: r1+r2 = 21 tangent at the mesh plane).
 crown_teeth = 16; crown_mod = 1.5; crown_bore_d = 17;
-// v75 gear train ratio: 4 * (16/10)^3 * 1.0 * (12/16) = 4 * 4.096 * 0.75 = 12.288
-twister_orbits_per_drum = 4 * pow(16/10, 3) * 1.0 * (12/16); // 12.288
+crown_apex_x = 151; crown_face_x = 165; crown_disc_r = 10.5;
+crown_cone_r = 12;  // v75: crown cone base radius. Teeth (r=10.63..13.37) overlap
+                     // it (union-safe) and stick out 1.37 beyond it (visible mesh).
+// v75 gear train ratio: 4 * 1.6^3 * 1.4 * 1.0 * 0.75 = 17.2032
+twister_orbits_per_drum = 4 * pow(16/10, 3) * (14/10) * 1.0 * (12/16); // 17.2032
 
 // Pull support pins (static bars: base-fused, slip-fit in roller
 // bores + cup-B bore; the tape-coupled rotors spin on them).
@@ -421,20 +429,24 @@ twister_lift = 10;            // v75: ring bottom at z=-10, lift to min_z=0
 twister_ring_cx = 173;        // v75: ring center X (was bind_x=172)
 twister_ring_cy = 30;         // v75: ring center Y
 twister_ring_cz = 17;         // v75: ring center Z
-// Crown gear on WEST face (x=165)
-crown_face_x = 165;
-// Bobbins: 2× Class-15 (r10.35, length 11.1mm), at 90° apart, orbit 18, on EAST face (x=181)
-bobbin_r = 10.35; bobbin_len = 11.1; bobbin_orbit = 18; bobbin_axle_r = 3;
-bobbin_a_y = 48; bobbin_a_z = 17;   // Bobbin A (front +Y)
-bobbin_b_y = 30; bobbin_b_z = 35;   // Bobbin B (top +Z)
+// v75: crown/pinion teeth point at each other (mesh at x=163). Teeth sit at the
+// gear's local +X; after rotate([0,90,0]) that maps to world -Z, so the tooth
+// angle is atan2(dy, -dz) toward the mating axis.
+crown_tooth_angle = atan2(pinion_shaft_y - twister_ring_cy, -(pinion_shaft_z - twister_ring_cz));
+pinion_tooth_angle = atan2(twister_ring_cy - pinion_shaft_y, -(twister_ring_cz - pinion_shaft_z));
+// Bobbins: 2× Class-15 (r10.35, length 11.1mm), at 90° apart, orbit 16.25,
+// bodies EAST of torus (local x=13.55, world 186.55, spanning 181..192),
+// axles Ø3 through the torus tube at orbit radius.
+bobbin_r = 10.35; bobbin_len = 11.1; bobbin_orbit = 16.25; bobbin_axle_r = 1.5;
+bobbin_body_x = 13.55;   // local X of bobbin body center (world 186.55)
+bobbin_a_y = twister_ring_cy + bobbin_orbit;  // 46.25 (front +Y)
+bobbin_a_z = twister_ring_cz;                 // 17
+bobbin_b_y = twister_ring_cy;                 // 30
+bobbin_b_z = twister_ring_cz + bobbin_orbit;  // 33.25 (top +Z)
 bobbin_east_x = 181;
 // Eyelets: repositioned for 90° bobbin arrangement
 eyelet_r = 1;
-// Pinion shaft bevel params
-pinion_bevel_teeth = 12; pinion_bevel_mod = 1.5;
-// Ring crown gear params
 
-epsilon = 0.05;
 vpull_collar_z = 5.0;              // v45 mid-collar centre LOCAL (assembly lifts +base_thick: CAD top 4+5+1.5=10.5 clears ribbon base 13 by 2.5)
 cone_h = 25;
 cone_r_big = 22.5;  // 45mm OD
@@ -599,6 +611,53 @@ module bevel_gear(teeth, module_mm, thickness, bore_dia=0) {
     }
 }
 
+// ============================================================
+// Face-gear-style bevel: teeth at apex + pitch_r (NOT apex +
+// thickness/2 like bevel_gear). Built along +Z: cone apex at
+// origin, teeth plane at z=pitch_r, back disc z=pitch_r..+thickness.
+// Used for the ring crown (teeth at x=163 = apex 151 + pitch_r 12)
+// and pinion bevel #2 (teeth at x=163 = apex 154 + pitch_r 9) so
+// both mesh at the same X plane.
+// ============================================================
+module face_bevel_gear(teeth, module_mm, thickness, bore_dia=0, disc_r=0, tooth_angle=0, cone_r=0, disc=true, teeth_z=0, teeth_depth=0) {
+    assert(teeth >= 10 && teeth <= 60, "face_bevel_gear: teeth out of range [10,60]");
+    assert(module_mm > 0, "face_bevel_gear: module_mm must be >0");
+    assert(thickness > 0, "face_bevel_gear: thickness must be >0");
+    pitch_r = module_mm*teeth/2;
+    outer_r = pitch_r + module_mm;
+    root_r = max(pitch_r - 1.25*module_mm, 1);
+    back_r = disc_r > 0 ? disc_r : outer_r;
+    cone_base_r = cone_r > 0 ? cone_r : outer_r;
+    stack_h = pitch_r + thickness;
+    // Teeth boxes: default at the teeth plane (z=pitch_r, depth 2). For the
+    // pinion bevel #2 the boxes span the full cone height (z=pitch_r/2, depth
+    // pitch_r) so the union with the shallow cone stays CGAL-safe (short boxes
+    // overlapping the cone base silently deleted the cone body).
+    tz = teeth_z > 0 ? teeth_z : pitch_r;
+    td = teeth_depth > 0 ? teeth_depth : 2;
+    difference() {
+        union() {
+            // Pitch cone body (apex at origin, teeth plane at z=pitch_r).
+            translate([0, 0, pitch_r/2])
+                cylinder(h=pitch_r, r1=root_r, r2=cone_base_r, center=true);
+            // Back disc (web) fused to the teeth plane.
+            if (disc)
+                translate([0, 0, pitch_r])
+                    cylinder(h=thickness, r=back_r, center=false);
+            // Teeth suggestion: boxes around the pitch rim at the teeth plane.
+            for (i=[0:teeth-1])
+                rotate([0, 0, tooth_angle + i*360/teeth])
+                    translate([pitch_r, 0, tz])
+                        rotate([0, 25, 0])
+                            cube([module_mm*1.4, tooth_arc_frac*PI*module_mm, td], center=true);
+        }
+        // Slip bore along the axis (through cone + back disc).
+        if (bore_dia > 0)
+            translate([0, 0, -epsilon])
+                cylinder(h=stack_h + 2*epsilon, d=bore_dia + 2*tolerance, center=false);
+    }
+}
+
 // M3 hex-head bolt visual
 module hex_bolt(shank_len) {
     head_r = bolt_head_across / sqrt(3);
@@ -676,6 +735,15 @@ module chassis() {
             for (side=[0,1])
                 bearing_block(takeup_x, takeup_z, bb_height_spool, false,
                               side == 0 ? 0 : chassis_width);
+            // v75 gear train shaft bearing blocks (rods along Y at each shaft)
+            for (spec=[[shaftA_x, shaftA_z],
+                       [shaftB_x, shaftB_z],
+                       [shaftC_x, shaftC_z],
+                       [shaftD_x, shaftD_z],
+                       [shaftE_x, shaftE_z]])
+                for (side=[0,1])
+                    bearing_block(spec[0], spec[1], 10, false,
+                                  side == 0 ? 0 : chassis_width);
             // v40 MOUNTING LAYOUT (parametric on the station X positions):
             // BOTTOM mount: 6-turner (M3 holes below) + wind-up reel
             //   (take-up bearing blocks above ride the base).
@@ -1778,23 +1846,34 @@ module thread_twister() {
     // v75: gear-driven twister. Hollow ring + 16T crown gear on
     // WEST face + 2 bobbin holders at 90° apart on EAST face.
     // Ring rotates about X, driven by 12T pinion (axis X) meshing
-    // the crown gear. Bobbins orbit the tape axis at orbit=18.
+    // the crown gear. Bobbins orbit the tape axis at orbit=16.25.
     union() {
         // Outer guide ring in the YZ plane (axis X)
         rotate([0, 90, 0])
             rotate_extrude(convexity=10)
                 translate([twister_ring_r, 0, 0])
                     square([twister_ring_tube*2, twister_ring_tube*2], center=true);
-        // 16T M1.5 crown gear on WEST face (x=165)
-        translate([-(twister_ring_cx - crown_face_x), 0, 0])
+        // 16T M1.5 crown gear on WEST face: apex at local x=-22 (world 151),
+        // teeth at local x=-10 (world 163), back disc x=-10..-8 (world 163..165) r10.5.
+        translate([-(twister_ring_cx - crown_apex_x), 0, 0])
             rotate([0, 90, 0])
-                bevel_gear(teeth=crown_teeth, module_mm=crown_mod, thickness=4, bore_dia=crown_bore_d);
-        // 2 bobbin holders at 90° apart on EAST face (x=181)
+                face_bevel_gear(teeth=crown_teeth, module_mm=crown_mod, thickness=2,
+                                bore_dia=crown_bore_d, disc_r=crown_disc_r,
+                                tooth_angle=crown_tooth_angle, cone_r=crown_cone_r,
+                                teeth_z=crown_mod*crown_teeth/4, teeth_depth=crown_mod*crown_teeth/2);
+        // 2 bobbin holders at 90° apart on EAST face: bodies EAST of torus
+        // (axis-X cylinders at local x=13.55, spanning world 181..192),
+        // axles Ø3 through the torus tube at orbit radius.
         for (k=[0:1])
             rotate([k*90, 0, 0]) {
-                translate([0, bobbin_orbit, 0])
+                // Bobbin axle through the torus tube (Ø3, west face to body center)
+                translate([(bobbin_body_x - twister_ring_tube)/2, bobbin_orbit, 0])
                     rotate([0, 90, 0])
-                        cylinder(h=bobbin_len + 2*epsilon, d=bobbin_r*2, center=true);
+                        cylinder(h=bobbin_body_x + twister_ring_tube, d=bobbin_axle_r*2, center=true);
+                // Bobbin body EAST of torus
+                translate([bobbin_body_x, bobbin_orbit, 0])
+                    rotate([0, 90, 0])
+                        cylinder(h=bobbin_len, d=bobbin_r*2, center=true);
             }
         // Guide eyelets near bore (2 eyelets 90deg apart)
         for (k=[0:1])
@@ -1848,7 +1927,8 @@ module twister_pinion() {
     assert(pinion_bevel_teeth >= 10 && pinion_bevel_teeth <= 60, "twister_pinion: teeth out of range");
     assert(pinion_bevel_mod == crown_mod, "twister_pinion: must match crown module (M1.5)");
     rotate([90, 0, 0])
-        bevel_gear(teeth=pinion_bevel_teeth, module_mm=pinion_bevel_mod, thickness=4, bore_dia=axle_dia);
+        face_bevel_gear(teeth=pinion_bevel_teeth, module_mm=pinion_bevel_mod,
+                        thickness=pinion_bevel_t, bore_dia=pinion_shaft_d);
 }
 
 module vpull_roller() {
@@ -2002,6 +2082,142 @@ module crank_assembly() {
 }
 
 // ============================================================
+// v75 GEAR TRAIN geometry (ALL-AXIS-Y spur train, drum -> ring)
+// All spur gears are vertical discs (axis-Y, rotate([90,0,0]))
+// on horizontal rods along Y. Each shaft is its own module so
+// the viewer can export per-shaft GLBs with independent pivots.
+// IMPORTANT: every per-shaft module is ORIGIN-CENTRED (shaft axis
+// through the origin) so the viewer can parent the GLB to a pivot
+// at the shaft axis with pos [0,0,0] and spin it about its own
+// axis. The assembly wraps each in translate() to world position.
+// ============================================================
+// Rod along Y centred at origin (spans y=-rod_half..rod_half,
+// matching the chassis interior y=wall_thick..chassis_width-wall_thick)
+module gear_rod(d=axle_dia) {
+    rod_half = (chassis_width - 2*wall_thick)/2;  // 29
+    rotate([90, 0, 0])
+        cylinder(h=2*rod_half, d=d, center=true);
+}
+
+// Small base-mounted bearing block with a bore along X for the pinion
+// shaft. Origin-centred: shaft axis at (0,0,0), block rises from
+// z=-pinion_shaft_z (base) to the shaft + cap.
+module pinion_bearing_block(x_rel) {
+    block_w = 8;   // along Y
+    block_h = pinion_shaft_z + 4;  // from base to shaft + cap
+    difference() {
+        translate([x_rel - 4, -block_w/2, -pinion_shaft_z])
+            cube([8, block_w, block_h]);
+        translate([x_rel, 0, 0])
+            rotate([0, 90, 0])
+                cylinder(h=8 + 2*epsilon, d=pinion_shaft_d + 2*tolerance, center=true);
+    }
+}
+
+// 44T drum gear (axis-Y), origin-centred. World (100,14.05,60).
+module gear_drum() {
+    rotate([90, 0, 0])
+        spur_gear(teeth=44, module_mm=2, thickness=6, bore_dia=axle_dia);
+}
+
+// Shaft A: rod + 11T@y=14.05 + 16T@y=45 (relative to shaft centre y=32)
+module gear_shaft_a() {
+    gear_rod();
+    translate([0, gear_mesh_y - chassis_width/2, 0])
+        rotate([90, 0, 0])
+            spur_gear(teeth=gear11_teeth, module_mm=gear11_mod, thickness=gear11_t, bore_dia=axle_dia);
+    translate([0, gear16a_y - chassis_width/2, 0])
+        rotate([90, 0, 0])
+            spur_gear(teeth=gear16a_teeth, module_mm=gear16a_mod, thickness=gear16a_t, bore_dia=axle_dia);
+}
+
+// Shaft B: rod + 10T@y=45 + 16T@y=30
+module gear_shaft_b() {
+    gear_rod();
+    translate([0, gear10b_y - chassis_width/2, 0])
+        rotate([90, 0, 0])
+            spur_gear(teeth=gear10b_teeth, module_mm=gear10b_mod, thickness=gear10b_t, bore_dia=axle_dia);
+    translate([0, gear16b_y - chassis_width/2, 0])
+        rotate([90, 0, 0])
+            spur_gear(teeth=gear16b_teeth, module_mm=gear16b_mod, thickness=gear16b_t, bore_dia=axle_dia);
+}
+
+// Shaft C: rod + 10T@y=30 + 16T@y=45
+module gear_shaft_c() {
+    gear_rod();
+    translate([0, gear10c_y - chassis_width/2, 0])
+        rotate([90, 0, 0])
+            spur_gear(teeth=gear10c_teeth, module_mm=gear10c_mod, thickness=gear10c_t, bore_dia=axle_dia);
+    translate([0, gear16c_y - chassis_width/2, 0])
+        rotate([90, 0, 0])
+            spur_gear(teeth=gear16c_teeth, module_mm=gear16c_mod, thickness=gear16c_t, bore_dia=axle_dia);
+}
+
+// Shaft D: rod + 10T@y=45 + 14T@y=30
+module gear_shaft_d() {
+    gear_rod();
+    translate([0, gear10d_y - chassis_width/2, 0])
+        rotate([90, 0, 0])
+            spur_gear(teeth=gear10d_teeth, module_mm=gear10d_mod, thickness=gear10d_t, bore_dia=axle_dia);
+    translate([0, gear14d_y - chassis_width/2, 0])
+        rotate([90, 0, 0])
+            spur_gear(teeth=gear14d_teeth, module_mm=gear14d_mod, thickness=gear14d_t, bore_dia=axle_dia);
+}
+
+// Shaft E: rod + 10T@y=30 + chain bevel@y=49.4
+module gear_shaft_e() {
+    gear_rod();
+    translate([0, gear10e_y - chassis_width/2, 0])
+        rotate([90, 0, 0])
+            spur_gear(teeth=gear10e_teeth, module_mm=gear10e_mod, thickness=gear10e_t, bore_dia=axle_dia);
+    // Chain bevel (axis-Y) -> pinion bevel #1 (axis-X) 1:1 miter
+    translate([0, chain_bevel_y - chassis_width/2, 0])
+        rotate([90, 0, 0])
+            bevel_gear(teeth=gear12e_teeth, module_mm=gear12e_mod, thickness=gear12e_t, bore_dia=axle_dia);
+}
+
+// Pinion shaft: axis-X through origin (world centre (149.5,49.4,25.04)),
+// 2× 12T bevels at x=±4.5 + bearing blocks.
+module gear_pinion() {
+    pinion_cx = (pinion_shaft_x0 + pinion_shaft_x1)/2;  // 149.5
+    // Pinion shaft (axis-X), extended to x=163 so the crown-mesh teeth are
+    // supported (no cantilever past the x=154 bearing block).
+    translate([(pinion_shaft_x0 + pinion_shaft_x2)/2 - pinion_cx, 0, 0])
+        rotate([0, 90, 0])
+            cylinder(h=pinion_shaft_x2-pinion_shaft_x0, d=pinion_shaft_d, center=true);
+    // Pinion bevel #1 (axis-X) at x=145 meshes chain bevel 1:1
+    translate([pinion_shaft_x0 - pinion_cx, 0, 0])
+        rotate([0, 90, 0])
+            bevel_gear(teeth=pinion_bevel_teeth, module_mm=pinion_bevel_mod, thickness=pinion_bevel_t, bore_dia=pinion_shaft_d);
+    // Pinion bevel #2 (axis-X) at x=154, teeth at x=163 mesh the crown.
+    // Teeth point at the crown axis; no back disc (the crown disc owns that
+    // x=163..165 plane, so the pinion body stays clear of it).
+    translate([pinion_shaft_x1 - pinion_cx, 0, 0])
+        rotate([0, 90, 0])
+            face_bevel_gear(teeth=pinion_bevel_teeth, module_mm=pinion_bevel_mod, thickness=pinion_bevel_t, bore_dia=pinion_shaft_d,
+                            tooth_angle=pinion_tooth_angle, cone_r=pinion_cone_r, disc=false,
+                            teeth_z=pinion_bevel_mod*pinion_bevel_teeth/4, teeth_depth=pinion_bevel_mod*pinion_bevel_teeth/2);
+    // Pinion shaft bearing blocks (base-mounted, bore along X, both ends + support)
+    pinion_bearing_block(pinion_shaft_x0 - pinion_cx);
+    pinion_bearing_block(pinion_shaft_x1 - pinion_cx);
+    pinion_bearing_block(pinion_shaft_x2 - pinion_cx);
+}
+
+// Full gear train (drum through pinion) at WORLD positions. include_drum
+// adds the 44T drum gear (used by the gear_train part export; the assembly
+// gets the drum gear from seed_cartridge instead).
+module gear_train_gears(include_drum=false) {
+    if (include_drum)
+        translate([drum_axle_x, gear_mesh_y, shaftA_z]) gear_drum();
+    translate([shaftA_x, chassis_width/2, shaftA_z]) gear_shaft_a();
+    translate([shaftB_x, chassis_width/2, shaftB_z]) gear_shaft_b();
+    translate([shaftC_x, chassis_width/2, shaftC_z]) gear_shaft_c();
+    translate([shaftD_x, chassis_width/2, shaftD_z]) gear_shaft_d();
+    translate([shaftE_x, chassis_width/2, shaftE_z]) gear_shaft_e();
+    translate([(pinion_shaft_x0+pinion_shaft_x1)/2, pinion_shaft_y, pinion_shaft_z]) gear_pinion();
+}
+
+// ============================================================
 // Animated assembly
 // Sign convention:
 //   drum_angle = -360*$t ANTI-CLOCKWISE about +Y (top surface
@@ -2032,60 +2248,10 @@ module animated_assembly() {
     // Chassis
     chassis();
 
-    // v75 GEAR TRAIN (all spur, M1.5, exterior visible)
-    // Stage 1: drum 44T (at (100,12)) -> 11T (at (155,12)), shaft A
-    translate([drum_axle_x, chassis_width/2, shaftA_z])
-        rotate([0, 0, 0])
-            spur_gear(teeth=44, module_mm=2, thickness=6, bore_dia=axle_dia);
-    translate([shaftA_x, chassis_width/2, shaftA_z])
-        rotate([0, 0, 0])
-            spur_gear(teeth=11, module_mm=2, thickness=6, bore_dia=axle_dia);
-    // Shaft A idler 16T at (155,45) -> Stage 2 10T
-    translate([gear16a_x, chassis_width/2, gear16a_z])
-        rotate([0, 0, 0])
-            spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    // Stage 2: 16T@(174.5,45) -> 10T (at (174.5,30))
-    translate([gear10b_x, chassis_width/2, gear10b_z])
-        rotate([0, 0, 0])
-            spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([gear16b_x, chassis_width/2, gear16b_z])
-        rotate([0, 0, 0])
-            spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    // Stage 3: 16T@(174.5,30) -> 10T (at (174.5,15))
-    translate([gear10c_x, chassis_width/2, gear10c_z])
-        rotate([0, 0, 0])
-            spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([gear16c_x, chassis_width/2, gear16c_z])
-        rotate([0, 0, 0])
-            spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    // Stage 4: 16T@(174.5,15) -> 10T (at (174.5,12))
-    translate([gear10d_x, chassis_width/2, gear10d_z])
-        rotate([0, 0, 0])
-            spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([gear16d_x, chassis_width/2, gear16d_z])
-        rotate([0, 0, 0])
-            spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    // Stage 5: 16T@(174.5,12) -> 10T (at (174.5,12))
-    translate([gear10e_x, chassis_width/2, gear10e_z])
-        rotate([0, 0, 0])
-            spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    // Chain shaft bevel (axis Z) at (145,49.4,9) -> pinion bevel (axis X)
-    translate([chain_bevel_x, chassis_width/2, chain_bevel_z])
-        rotate([0, 90, 0])
-            bevel_gear(teeth=12, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    // Pinion shaft bevel (axis X) at (164,49.4,9) -> crown gear
-    translate([pinion_shaft_x1, chassis_width/2, pinion_shaft_z])
-        rotate([90, 0, 0])
-            bevel_gear(teeth=pinion_bevel_teeth, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    // Pinion shaft cylinder (axis X, y=49.4, z=9)
-    translate([(pinion_shaft_x0+pinion_shaft_x1)/2, chassis_width/2, pinion_shaft_z])
-        rotate([90, 0, 0])
-            cylinder(h=pinion_shaft_x1-pinion_shaft_x0, d=axle_dia, center=true);
-
-    // v75 Ring crown gear on WEST face (x=165)
-    translate([crown_face_x, chassis_width/2, twister_ring_cz])
-        rotate([0, 90, 0])
-            bevel_gear(teeth=crown_teeth, module_mm=crown_mod, thickness=4, bore_dia=crown_bore_d);
+    // v75 GEAR TRAIN (ALL-AXIS-Y spur train, drum -> ring, ratio 17.2032)
+    // Drum gear comes from seed_cartridge (axis-Y at y=14.05); the rest
+    // of the train is exterior-visible rods + vertical disc gears.
+    gear_train_gears(include_drum=false);
 
     // Spool cones
     translate([spool_axle_x, wall_thick+1, spool_axle_z])
@@ -2139,18 +2305,13 @@ module animated_assembly() {
             translate([-crank_pivot_x, 0, -crank_pivot_z])
                 crank_assembly();
 
-    // v75 Thread twister (gear-driven)
-    translate([twister_ring_cx, chassis_width/2, twister_ring_cz])
+    // v75 Thread twister (gear-driven), ring center at y=twister_ring_cy
+    translate([twister_ring_cx, twister_ring_cy, twister_ring_cz])
         rotate([twister_angle, 0, 0])
             thread_twister();
     // v75 Split-collar bracket coaxial with scroll exit
-    translate([twister_ring_cx - 13, chassis_width/2, twister_ring_cz])
+    translate([twister_ring_cx - 13, twister_ring_cy, twister_ring_cz])
         twister_bracket();
-    // v75 Pinion shaft bevel (axis X, y=49.4, z=9)
-    translate([pinion_shaft_x0, chassis_width/2, pinion_shaft_z])
-        rotate([twister_angle, 0, 0])
-            rotate([90, 0, 0])
-                bevel_gear(teeth=pinion_bevel_teeth, module_mm=1.5, thickness=4, bore_dia=axle_dia);
 
     // Pull rollers (zoffset=11 compensated)
     translate([pull_x, chassis_width/2 - vpull_off, base_thick])
@@ -2221,37 +2382,27 @@ if (part_to_render == "all") {
         rotate([90, 0, 0])
             twister_pinion();
 } else if (part_to_render == "gear_train") {
-    // v75: 5-stage spur gear train + bevel pair.
+    // v75: full ALL-AXIS-Y spur train + bevel pair, with chassis.
     chassis();
-    translate([drum_axle_x, chassis_width/2, shaftA_z])
-        spur_gear(teeth=44, module_mm=2, thickness=6, bore_dia=axle_dia);
-    translate([shaftA_x, chassis_width/2, shaftA_z])
-        spur_gear(teeth=11, module_mm=2, thickness=6, bore_dia=axle_dia);
-    translate([gear16a_x, chassis_width/2, gear16a_z])
-        spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([gear10b_x, chassis_width/2, gear10b_z])
-        spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([gear16b_x, chassis_width/2, gear16b_z])
-        spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([gear10c_x, chassis_width/2, gear10c_z])
-        spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([gear16c_x, chassis_width/2, gear16c_z])
-        spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([gear10d_x, chassis_width/2, gear10d_z])
-        spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([gear16d_x, chassis_width/2, gear16d_z])
-        spur_gear(teeth=16, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([gear10e_x, chassis_width/2, gear10e_z])
-        spur_gear(teeth=10, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([chain_bevel_x, chassis_width/2, chain_bevel_z])
-        rotate([0, 90, 0])
-            bevel_gear(teeth=12, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([pinion_shaft_x1, chassis_width/2, pinion_shaft_z])
-        rotate([90, 0, 0])
-            bevel_gear(teeth=pinion_bevel_teeth, module_mm=1.5, thickness=6, bore_dia=axle_dia);
-    translate([crown_face_x, chassis_width/2, twister_ring_cz])
-        rotate([0, 90, 0])
-            bevel_gear(teeth=crown_teeth, module_mm=crown_mod, thickness=4, bore_dia=crown_bore_d);
+    gear_train_gears(include_drum=true);
+} else if (part_to_render == "gear_drum") {
+    // 44T drum gear (axis-Y at y=14.05, world (100,14.05,60))
+    gear_drum();
+} else if (part_to_render == "gear_shaft_a") {
+    gear_shaft_a();
+} else if (part_to_render == "gear_shaft_b") {
+    gear_shaft_b();
+} else if (part_to_render == "gear_shaft_c") {
+    gear_shaft_c();
+} else if (part_to_render == "gear_shaft_d") {
+    gear_shaft_d();
+} else if (part_to_render == "gear_shaft_e") {
+    gear_shaft_e();
+} else if (part_to_render == "gear_pinion") {
+    gear_pinion();
+} else if (part_to_render == "gear_ring") {
+    // v75: twister ring at origin (NO lift) for the gear_ring pivot GLB.
+    thread_twister();
 } else if (part_to_render == "pull_a") {
     vpull_roller(); // base at z=0 already
 } else if (part_to_render == "pull_b") {
