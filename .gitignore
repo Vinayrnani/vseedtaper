@@ -6,3 +6,14 @@ playwright-screenshots/
 screenshots/
 test-results/
 playwright-report/
+
+# Root photos
+/*.jpg
+/*.jpeg
+/*.png
+
+# Previews
+previews/
+
+# Duplicate STLs (viewer loads .glb)
+web/stl/*.stl
