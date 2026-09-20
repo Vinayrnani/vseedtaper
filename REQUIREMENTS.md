@@ -1,6 +1,6 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v75**
+**Version: v76**
 
 ## v75 Step 4: full gear-driven chain (drum→5-stage spur→bevel→ring crown) - 2026-09-19 (final build: commits 56059a4 CAD, b1ed937 viewer/GLBs)
 
