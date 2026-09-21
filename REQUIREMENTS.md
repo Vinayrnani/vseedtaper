@@ -7,6 +7,11 @@
 3. **Verify**: NoError, mesh (dist 60, y-spans coincide ≈45..51, x-interleave ~4mm), gear-hub vs front-wall clearance check, pivots ±0.15, ratios ±3% with signs, 0 console errors, animating close-up screenshots of the front-side mesh.
 4. **Out of scope**: v53-train removal still HOLD (note: back-plane counter now meshes air — accepted temporary state, forward ref); plow/shroud/split untouched.
 5. **Viewer**: ASSET_V 43→44; header v79→v81.
+6. **Fix (27cc865)**: cartridge export gear offset corrected +13.9mm
+   (formula now drum_base+drum_len/2+gear_off, gear z 39.36, hub -Z);
+   drum mesh phase +4.5° half-pitch in SCAD + viewer DRUM_PHASE;
+   ASSET_V 44→45; mesh proven ΔX=60.0000/ΔY≈0/ΔZ≈-0.24,
+   interleave 0.58mm, 0 console errors.
 
 ## v80 Step A: six_turner/plow restored verbatim from v66/v67/v68 - 2026-09-21
 

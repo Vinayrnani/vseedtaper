@@ -2,6 +2,11 @@
 
 ## v81 — 2026-09-21
 - Step B (amended): BOTH gears on CRANK/front-wall side — drum 40T stays/moves to FRONT plane (+gear_off, world y≈47.95); crank real 20T sits NEAR THE HANDLE at front plane (world y≈45..51, local y≈-20, hub +Y toward arm) on SHORT hex shaft (hex_shaft_len back to 28, shaft stays centered at arm); NO long through-chassis shaft. Drum still counter-rotates (drum_angle=-360*$t vs crank +720*$t, external mesh, 0.5×). Twister/viewer signs from v81 stand (DRUM_RATIO -0.5, viewer twister -3×). Cartridge EXPORT branch aligned to same front plane (currently builds gear at bottom/back — move to match). Regen crank + cartridge ONLY (chassis holes at x=160 already exist). Verify NoError/mesh (dist 60, y-spans coincide ≈45..51, x-interleave ~4mm)/gear-hub vs front-wall clearance/pivots ±0.15/ratios ±3% signs/0 console errors/animating close-up screenshots of front-side mesh. OUT: v53-train removal HOLD (back-plane counter now meshes air — accepted temporary state, forward ref), plow/shroud/split untouched. ASSET_V 43→44; header v79→v81.
+- v81 fix (27cc865): cartridge export gear offset corrected +13.9mm
+  (formula now drum_base+drum_len/2+gear_off, gear z 39.36, hub -Z);
+  drum mesh phase +4.5° half-pitch in SCAD + viewer DRUM_PHASE;
+  ASSET_V 44→45; mesh proven ΔX=60.0000/ΔY≈0/ΔZ≈-0.24,
+  interleave 0.58mm, 0 console errors.
 
 ## v80 — 2026-09-21
 - Step A: six_turner/plow restored verbatim from v66/v67/v68 (commit d1f2a09). Deleted HEAD parametric identifiers (st_x/st_R/st_W/st_H/n_st/fpx/fR/fW/fH/n_fp/plate_t/wall/hook_off/floor_local/curl_cz/curl_strip_pts). Restored scroll_sheet() (45×1.6, steps 35/35) and six_turner() (axis_z=13, mouth_x0=-12 → world 114, ears (132,6)/(153,54)). web/v66/stl/plow.glb proven faithful (4311 verts, bbox/volume identical to fresh d1f2a09 render). ASSET_V stays 43. Twister v53 overhead drive accepted-state (still present, meshing). Parked WIP: crank-20T + counter-rotation in /tmp/opencode/v80_gear_wip.patch.
