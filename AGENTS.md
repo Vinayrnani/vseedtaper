@@ -54,3 +54,7 @@ Always maximise parallel execution. Independent work runs in parallel — multip
 
 ## Skills (mandatory load)
 Every subagent must load the appropriate skill MANDATORILY before starting work — e.g. SCAD/CAD work loads the openscad skill, code review loads the code-review skill, planning loads plan-protocol/plan-review. The orchestrator names the required skill(s) in each delegated task; the worker loads them first and states the loaded skill in its first progress note. No implementation, review, or plan counts as started until the skill is loaded.
+
+## Docs tasks go to general
+All documentation/writing tasks (requirements, changelog, AGENTS.md edits, commit messages) are delegated to the `general` subagent, NOT `scribe`.
+Rationale: general has full shell/git access and reliably completes pushes; scribe's restricted git caused stalled half-pushes.

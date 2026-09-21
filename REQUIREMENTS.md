@@ -1,11 +1,11 @@
 **Version: v81**
 
-## v81 Step B: Crank 20T gear + drum gear back-plane + counter-rotation — 2026-09-21
+## v81 Step B (amended): Both gears on CRANK (front-wall) side — 2026-09-21
 
-1. **Why** (user: crank carries ONLY a real 20T spur gear, drum gear to back plane, counter-rotation): crank carries ONLY a real 20T spur gear (teeth=roller_teeth=20, module 2, thick 6, hex bore) at BACK plane world y 9..15 (local y=-56, rotate([-90,0,0]) hub +Y toward arm) on extended hex shaft hex_shaft_len 28→81 centered local -21.5 (world span 6..87). Drum 40T translate +gear_off → -gear_off (back plane world ≈12.05, hub +Y toward drum — also fixes v79 hub-away defect). drum_angle +360→-360*$t (external mesh, opposite crank +720*$t, ratio 0.5). twister_angle → +360*$t*orbits; viewer twister -3×crank, DRUM_RATIO 0.5→-0.5. Pull/takeup UNCHANGED (tape-driven).
+1. **Why** (user redirected: BOTH gears on the CRANK/front-wall side): drum 40T stays/moves to FRONT plane (+gear_off, world y≈47.95); crank real 20T sits NEAR THE HANDLE at front plane (world y≈45..51, local y≈-20, hub +Y toward arm) on SHORT hex shaft (hex_shaft_len back to 28, shaft stays centered at arm); NO long through-chassis shaft. Drum still counter-rotates (drum_angle=-360*$t vs crank +720*$t, external mesh, 0.5×). Twister/viewer signs from v81 stand (DRUM_RATIO -0.5, viewer twister -3×). Cartridge EXPORT branch must be aligned to the same front plane (it currently builds gear at bottom/back — move to match).
 2. **Regen**: crank + cartridge ONLY (chassis holes at x=160 already exist).
-3. **Verify**: NoError, mesh (dist 60, y-spans coincide ±0.05, x-interleave ~4mm), pivots ±0.15, ratios ±3% with signs, 0 console errors, animating screenshots.
-4. **Out of scope**: v53-train removal still HOLD (back-plane drum gear restores counter-10T mesh at cnt53_y=12); plow/shroud/split untouched.
+3. **Verify**: NoError, mesh (dist 60, y-spans coincide ≈45..51, x-interleave ~4mm), gear-hub vs front-wall clearance check, pivots ±0.15, ratios ±3% with signs, 0 console errors, animating close-up screenshots of the front-side mesh.
+4. **Out of scope**: v53-train removal still HOLD (note: back-plane counter now meshes air — accepted temporary state, forward ref); plow/shroud/split untouched.
 5. **Viewer**: ASSET_V 43→44; header v79→v81.
 
 ## v80 Step A: six_turner/plow restored verbatim from v66/v67/v68 - 2026-09-21
