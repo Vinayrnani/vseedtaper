@@ -41,6 +41,7 @@
 4. Reviewer verifies the implementation against the requirements; on FAIL, redo (max 5 verify/fix loops), then escalate to user.
 5. Commit + push code only after reviewer PASS; per-version snapshot web/vNN/ (index.html + js/ + stl/*.glb only) on every version advance.
 6. Present to user in plain layman wording, short messages.
+7. Commit + version-finalize ONLY after explicit user approval. Implementation lands as uncommitted work + live preview + screenshots; user inspects and approves each change; commits, pushes, per-version snapshots (web/vNN/), and ASSET_V bumps ship only after the user's final APPROVE for that version. Reviewer PASS alone does not authorize committing.
 
 ## Delegation to coder (small context)
 The `coder` subagent runs on mimo 2.5 with a SMALL context window. Therefore the orchestrator must ALWAYS split implementation work into small sequential self-contained tasks (one file area / one change per task). Each delegated task must include: working directory, exact file path + line hints, the precise old→new change, done criteria, stop conditions (stop before commit unless told), and which files must NOT be touched. Never send coder a multi-phase epic in one task; chain small tasks instead. Reviewer tasks stay read-only and single-scope.
