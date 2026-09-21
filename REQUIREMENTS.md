@@ -1,4 +1,10 @@
-**Version: v81**
+**Version: v82**
+
+## v82 SCAD modular split (behavior-preserving) - 2026-09-21
+
+1. **Why**: `seed_tape_machine_v2.scad` (~2407 lines, 29 modules, zero include/use) split into 7 files with render output guaranteed identical (STL hash proof before/after). Overhead-drive identifiers renamed to plain words (old version-stamped labels removed from code). Twister redesign parked until split is proven unbroken.
+2. **Layout**: `scad/params.scad` (vars+asserts), `scad/gears.scad`, `scad/chassis.scad`, `scad/feed.scad`, `scad/plow.scad`, `scad/stations.scad`; `seed_tape_machine_v2.scad` kept as master (part_to_render + assembly + dispatch + includes).
+3. **Frozen**: no geometry change, no viewer change, no ASSET_V bump.
 
 ## v81 Step B (amended): Both gears on CRANK (front-wall) side — 2026-09-21
 
