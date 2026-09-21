@@ -1,6 +1,17 @@
 # Seed Tape Machine — Project Requirements & Context Record
 
-**Version: v79**
+**Version: v80**
+
+## v80 Step A: six_turner/plow restored verbatim from v66/v67/v68 — 2026-09-21
+
+1. **Why** (user: restore the exact v66/v67/v68 plow): The HEAD parametric six_turner (st_R/st_W/st_H arrays, 7-station loft) is replaced with the verbatim v66/v67/v68 scroll_sheet() code from commit d1f2a09. Proven faithful: web/v66/stl/plow.glb snapshot (156,388 bytes, 4311 vertices, bbox/volume identical to fresh render from d1f2a09 source).
+2. **CAD** (`seed_tape_machine_v2.scad` only):
+   - **Restored verbatim from d1f2a09**: `scroll_sheet()` module (L1576–1616, user's overlapping spiral folder 45×1.6, steps 35/35, $fn=6 spheres), `six_turner()` module (L1621–1700, axis_z=13, mouth_x0=-12 → world 114, pedA/pedB, ear 6/1/earA[3,-7]/earB[24,41], v68 placement transform).
+   - **Deleted HEAD parametric identifiers**: st_x, st_R, st_W, st_H, n_st, fpx, fR, fW, fH, n_fp, plate_t, wall, hook_off, floor_local, curl_cz (six_turner-local only), curl_strip_pts().
+   - **No global changes**: plow_start=126, plow_end=159, turner_end=159 — values already identical.
+   - **NOT changed**: gears, shroud, viewer, regen-script, ASSET_V (stays 43).
+3. **Twister undriven accepted-state**: The v53 overhead twister drive (fric53_r=3.5, fric53_x=175, overhead counter 10T + Y-bevel 12T + X-pinion 10T + friction wheel on ring OD) is still present and meshing in HEAD. This is the accepted state for now — no removal attempted.
+4. **Parked WIP** (not committed): crank-20T gear + counter-rotation code changes saved to `/tmp/opencode/v80_gear_wip.patch` + `/tmp/opencode/v80_scad_dir.tar.gz`. Step B (drum gear to other side) pending.
 
 ## v79 Crank gear mesh at 160 / Drum gear front plane / Rollers removed / Shroud east — 2026-09-20
 

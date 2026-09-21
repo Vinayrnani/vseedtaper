@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v80 — 2026-09-21
+- Step A: six_turner/plow restored verbatim from v66/v67/v68 (commit d1f2a09). Deleted HEAD parametric identifiers (st_x/st_R/st_W/st_H/n_st/fpx/fR/fW/fH/n_fp/plate_t/wall/hook_off/floor_local/curl_cz/curl_strip_pts). Restored scroll_sheet() (45×1.6, steps 35/35) and six_turner() (axis_z=13, mouth_x0=-12 → world 114, ears (132,6)/(153,54)). web/v66/stl/plow.glb proven faithful (4311 verts, bbox/volume identical to fresh d1f2a09 render). ASSET_V stays 43. Twister v53 overhead drive accepted-state (still present, meshing). Parked WIP: crank-20T + counter-rotation in /tmp/opencode/v80_gear_wip.patch.
+
 ## v79 — 2026-09-20
 - Crank 20T meshes drum 40T at x=160 (center_distance=60), drum gear moved to front plane (+gear_off), rollers removed (upper deleted, lower replaced by crank axle through-shaft), shroud mirrored east (x 116..124, between drum 100 and six_turner 126), hopper stays as one unit. SCAD: crank_axle_x/z params, shroud_x0/x1 computed from drum_axle_x, crank_mount_x=crank_axle_x, pull_rollers() simplified, animated_assembly() crank at x=160. Viewer: crankMount (160,60,-68), shroudPivot (116,0,-30), lower/upper pivots removed, _setRotations + animation loop updated, PART_DEFS/ORDER pruned, ASSET_V 42→43. verify_v79.js PASSED (3 pivots ±0.15mm, 3 ratios ±3% with signs, ASSET_V=43, 0 console errors). 5 GLBs regenerated (chassis, hopper, shroud, cartridge, crank); stale roller GLBs deleted.
 

@@ -21,7 +21,7 @@
 
 ## Gotchas — do not violate
 - Never edit v1 scad or `web/backup/` except to restore.
-- 10. **Playwright screenshots: `screenshots/` only, never in git, max 25.** Keep all Playwright screenshots in `screenshots/` folder, ensure it is gitignored, and auto-delete oldest files when count exceeds 25.
+- 10. **Playwright screenshots: `screenshots/` only, never in git, max 25.** Keep all Playwright screenshots in `screenshots/` folder, ensure it is gitignored, and prune oldest by file modification time (max 25) via `scripts/cleanup-screenshots.sh`.
 - Playwright browser reuse: verify scripts use `playwright_pool.js` (one shared browser, idle-kill after 10min). Never `browser.close()` per script — use `pool.releaseBrowser(browser)`. Full teardown only via `node playwright_pool.js stop` (does the pkill); check `node playwright_pool.js status` before starting new session.
 - Serve on port 9099 only (iptables rule); don't change port.
 - CAD conventions: `$fn=60` for curves, `tol=0.3` (`tolerance`, clearances derive from it) — keep both.
@@ -31,3 +31,11 @@
 - Requirements-first: tune REQUIREMENTS.md before code; every edit bumps version (vN→vN+1) + changelog entry; commit & push before editing requirements.
 - Live animating preview for every change + snapshot checks while animating; layman wording to user; short messages; fix loop max 3 iterations then ask; max parallelism, never let browsers pile up.
 - **Per-version snapshot:** on every successful version advance (vN→vN+1), copy working `web/index.html` + `web/js/` + `web/stl/*.glb` into `web/vNN/` (GLB only, never `.stl`) before proceeding — keeps a live preview per version at `http://localhost:9099/vNN/`.
+
+## Delivery flow (mandatory)
+1. Requirements first: capture/tune in REQUIREMENTS.md, bump version (vN→vN+1) + changelog entry, COMMIT + PUSH requirements before any code.
+2. Plan the change; a reviewer must APPROVE the plan (APPROVE/REJECT with reasons) before implementation.
+3. Implement ONE change at a time: live animating preview + screenshots per change; user visually inspects and confirms before the next change.
+4. Reviewer verifies the implementation against the requirements; on FAIL, redo (max 3 verify/fix loops), then escalate to user.
+5. Commit + push code only after reviewer PASS; per-version snapshot web/vNN/ (index.html + js/ + stl/*.glb only) on every version advance.
+6. Present to user in plain layman wording, short messages.
