@@ -2,7 +2,7 @@
 
 ## What this repo is
 - OpenSCAD CAD + static three.js viewer. No build, no tests, no CI, no README.
-- `seed_tape_machine_v2.scad` (1136 lines) is current. `seed_tape_machine.scad` is v1 — DO NOT MODIFY.
+- `seed_tape_machine_v2.scad` (current v2 scad at HEAD, verify with wc -l) is current. `seed_tape_machine.scad` is v1 — DO NOT MODIFY.
 - `web/` = v2 viewer, `web/backup/` = v1 viewer. Only dep: `playwright` (see `package.json`).
 
 ## Commands (exact)
@@ -29,14 +29,14 @@
 
 ## Workflow (mandatory, condensed from prior AGENTS.md)
 - Requirements-first: tune REQUIREMENTS.md before code; every edit bumps version (vN→vN+1) + changelog entry; commit & push before editing requirements.
-- Live animating preview for every change + snapshot checks while animating; layman wording to user; short messages; fix loop max 3 iterations then ask; max parallelism, never let browsers pile up.
+- Live animating preview for every change + snapshot checks while animating; layman wording to user; short messages; fix loop max 5 iterations then ask; max parallelism, never let browsers pile up.
 - **Per-version snapshot:** on every successful version advance (vN→vN+1), copy working `web/index.html` + `web/js/` + `web/stl/*.glb` into `web/vNN/` (GLB only, never `.stl`) before proceeding — keeps a live preview per version at `http://localhost:9099/vNN/`.
 
 ## Delivery flow (mandatory)
 1. Requirements first: capture/tune in REQUIREMENTS.md, bump version (vN→vN+1) + changelog entry, COMMIT + PUSH requirements before any code.
 2. Plan the change; a reviewer must APPROVE the plan (APPROVE/REJECT with reasons) before implementation.
 3. Implement ONE change at a time: live animating preview + screenshots per change; user visually inspects and confirms before the next change.
-4. Reviewer verifies the implementation against the requirements; on FAIL, redo (max 3 verify/fix loops), then escalate to user.
+4. Reviewer verifies the implementation against the requirements; on FAIL, redo (max 5 verify/fix loops), then escalate to user.
 5. Commit + push code only after reviewer PASS; per-version snapshot web/vNN/ (index.html + js/ + stl/*.glb only) on every version advance.
 6. Present to user in plain layman wording, short messages.
 
