@@ -1,4 +1,13 @@
-**Version: v82**
+**Version: v83**
+
+## v83 Twister redesign: static hollow axle + spinning twister, drive gears removed - 2026-09-21
+
+1. **Why** (user: clean chassis, no gears; finalize twister shape first, gear chain later): replace the overhead drive with a static hollow axle the twister spins on. Tape passes through the axle bore; twister slides on from the east and push-locks. All overhead drive gears REMOVED from chassis. Twister keeps its current visual spin ratio; no drive source in CAD for now (documented gap, gear chain is a later version).
+2. **Hollow axle (static)**: 10mm bore for tape, OD 15, tube x160..184 with funnel mouth (gap 0.5–2 from plow exit x159). Single west pedestal x162..166 from z0 (fuses with base). 3 snap-hook fingers at east end (4 wide / 1.6 thick / 6 long, 1.2 slots, 0.8 lip).
+3. **Twister (spinning, ratio unchanged)**: hub bore 15.6 slip-fit on axle OD; disc r14 x167..171; back-face bevel-tooth BLANK — shape only, 24T M1.5 envelope reserved, real gear mesh in a later version. 2 spindle pins Ø6 (hole 6.6) at orbit R10, parallel-X, 180° apart. 2 real Class-15 bobbins (Ø20.7×11.1) with split-collet snap lips. 2 thread-guide eyelet posts (simple, tension by wrap angle).
+4. **Base**: through-slot x166..183 y8..52 (contains disc dip + bobbin sweep with margin) + 4 corner feet 10×10 down to z=-8 (bobbin dip clears by ≥2). Chassis export lifts +8 for min_z=0; viewer chassis pivot compensates -8.
+5. **Verify**: 0 render errors; viewer ready + 0 console errors + animation + tape-static + bore-open + axle-static checks, screenshots; reviewer PASS required; web/v83 snapshot (index.html + js/ + stl/*.glb only).
+6. **Frozen**: fail-loud asserts for every stack-up; `$fn=60`, `tol=0.3` kept; never v1 / web-backup.
 
 ## v82 SCAD modular split (behavior-preserving) - 2026-09-21
 
