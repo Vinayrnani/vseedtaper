@@ -42,3 +42,6 @@
 
 ## Delegation to coder (small context)
 The `coder` subagent runs on mimo 2.5 with a SMALL context window. Therefore the orchestrator must ALWAYS split implementation work into small sequential self-contained tasks (one file area / one change per task). Each delegated task must include: working directory, exact file path + line hints, the precise old→new change, done criteria, stop conditions (stop before commit unless told), and which files must NOT be touched. Never send coder a multi-phase epic in one task; chain small tasks instead. Reviewer tasks stay read-only and single-scope.
+
+## Modularity (1k lines/file)
+Keep ALL code modular — every source file (SCAD, JS, HTML, scripts) max ~1000 lines where feasible. Split by responsibility: web viewer (index.html) splits into modules (e.g. scene setup, part defs, pivots/animation, legend/UI, verify hooks) loaded from web/js/; SCAD splits per-part with shared params; no new monolith growth. Each split must be behavior-preserving (same render output / same viewer behavior) with its own verify pass. One split = one versioned change: requirements entry, reviewer PASS, regen/verify if GLBs affected, web/vNN/ snapshot, commit+push.
