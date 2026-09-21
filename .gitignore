@@ -17,3 +17,6 @@ previews/
 
 # Duplicate STLs (viewer loads .glb)
 web/stl/*.stl
+
+# Regen cache (regenerable build artifact)
+.regen_cache/
