@@ -172,6 +172,7 @@
   var DRUM_RATIO = -0.5;                     // v81: external counter-rotation (crank 20T front y45..51 ↔ drum 40T front y≈47.95)
   var GEAR_PHASE = Math.PI / 20;            // v21: 9deg = gear_mesh_phase (20T half-pitch,
                                             // tooth-into-gap); applied to pull nip
+  var DRUM_PHASE = 4.5 * Math.PI / 180;    // v81: 4.5deg = 40T drum half-pitch, tooth-into-gap mesh
   var PULL_SPIN = 4 / 3;                    // v52: pull nip surface speed ratio (d15 cushioned sleeve, same surface speed)
   var CRANK_ANGLE_PER_REV = Math.PI * 2;
 
@@ -613,7 +614,7 @@
     };
   window._setRotations = function(crankAngle) {
     crankSpinner.rotation.z = crankAngle;                          // v79: crank at x=160
-    drumPivot.rotation.z = crankAngle * DRUM_RATIO;               // v81: drum -0.5x crank (external counter-rotation)
+    drumPivot.rotation.z = crankAngle * DRUM_RATIO + DRUM_PHASE;  // v81: drum -0.5x crank + phase (tooth-into-gap)
     twisterPivot.rotation.x = -3 * crankAngle;                    // v81: twister -3x crank (front-plane external counter-rotation)
     pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE);  // v52: nip side A
     pullBPivot.rotation.y = -PULL_SPIN * (2 * crankAngle + GEAR_PHASE); // v52: nip side B
@@ -636,7 +637,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 44; // v81: front-plane gears, external counter-rotation (drum -0.5x, twister -3x)
+  var ASSET_V = 45; // v81: drum phase offset +4.5° (tooth-into-gap mesh), ASSET_V 44->45
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -894,7 +895,7 @@
 // takeupPivot.rotation.z = -2*crankAngle (takeup 2x crank, opposite sign)
 
     crankSpinner.rotation.z = crankAngle;                          // v79: crank at x=160
-    drumPivot.rotation.z = crankAngle * DRUM_RATIO;               // v81: drum -0.5x crank (external counter-rotation)
+    drumPivot.rotation.z = crankAngle * DRUM_RATIO + DRUM_PHASE;  // v81: drum -0.5x crank + phase (tooth-into-gap)
     // v53 OVERHEAD twister drive (zero exterior gears, module 2):
     // EXISTING drum40 -> overhead counter 10T (4x, back plane, high)
     // -> Y-bevel 12T -> high X-pinion 10T (1.2x, overhead) ->

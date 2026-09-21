@@ -2248,7 +2248,7 @@ module crank_assembly() {
 //   v79: rollers REMOVED; crank carries the 20T pinion at x=160.
 // ============================================================
 module animated_assembly() {
-    drum_angle = -360*$t;    // v79: CCW about +Y, external mesh 0.5× crank
+    drum_angle = -360*$t + 4.5;  // v81: +4.5° half-pitch phase (40T drum) for tooth-into-gap mesh with crank 20T
     crank_angle = 720*$t;   // v79: crank 20T spins 2x drum (CW, meshes drum 40T)
     roller_angle = crank_angle + gear_mesh_phase; // mesh-phased crank gear
     twister_angle = 360*$t*twister_orbits_per_drum; // v37: 6 orbits/drum rev about X
