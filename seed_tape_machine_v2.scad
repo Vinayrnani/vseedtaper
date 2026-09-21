@@ -1461,11 +1461,12 @@ module seed_cartridge(sdia = seed_dia, sdepth = seed_depth) {
                         translate([0, 0, -epsilon])
                             cylinder(h=1.5 + 2*epsilon, d=drum_dia - 6, center=false);
                     }
-            // Drum gear (lightened, 40T) — FRONT side (matches assembly gear mesh with crank 20T)
-            translate([0,0, drum_base + drum_len - gear_z])
-                spur_gear(teeth=drum_teeth, module_mm=gear_module, thickness=gear_thick,
-                          bore_flat=hex_axle_flat, is_hex=true,
-                          hub_dia=20, hub_len=8, lightened=true);
+            // Drum gear (lightened, 40T) — gear center z=39.5 (drum center 21.55 + gear_off 17.95)
+            translate([0,0, drum_base + drum_len/2 + gear_off])
+                rotate([180,0,0])
+                    spur_gear(teeth=drum_teeth, module_mm=gear_module, thickness=gear_thick,
+                              bore_flat=hex_axle_flat, is_hex=true,
+                              hub_dia=20, hub_len=8, lightened=true);
         }
     } else {
         // HORIZONTAL for assembly preview
