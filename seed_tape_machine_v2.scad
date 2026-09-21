@@ -1,7 +1,8 @@
 /*
     Modular Hand-Cranked Seed Tape Machine - v2 Authoritative Spec
     ===========================================================
-    v79: crank at x=160 (20T meshing drum 40T, 2:1), drum gear front plane,
+    v81: crank at x=160 (20T FRONT-plane gear meshes drum 40T, 2:1),
+         28mm hex shaft at front, spur_gear in crank,
          rollers removed (upper deleted, lower replaced by crank axle),
          shroud east (116..124) moves with hopper as one unit.
     Parametric OpenSCAD 2021.01 - zero-error, manifold, flat-base parts.
@@ -84,7 +85,7 @@ target_spacing     = 152.4;                   // v14 MVP: fixed 6 inch spacing
 //   spool (-6, far west).
 // Gear mesh: crank(160) 20T -> drum(100) 40T, dist=60=center_distance,
 //   crank rotates 2:1 vs drum (crank_angle = 2*drum_angle).
-//   Drum gear on FRONT plane (y=47.95) for crank mesh.
+//   Drum gear on FRONT plane (y≈47.95) for crank mesh.
 // Plow stays EAST of drum (126->159, v1 precedent); tape scroll unchanged.
 // v79: rollers REMOVED; crank carries the 20T pinion at x=160, front wall.
 // ============================================================
@@ -196,7 +197,8 @@ shroud_h   = 23;                  // v33 enclosed tunnel height (tape slot 0..21
 // ============================================================
 // Crank (v79: at x=160, 20T gear meshes drum 40T at dist=60)
 // Crank carries a 20T spur gear at the FRONT plane that meshes
-// the drum's 40T gear. Handle at front y=68, near twist gears.
+// the drum's 40T gear. 28mm hex shaft at front near handle.
+// Handle at front y=68, near twist gears.
 // grip orbit r=crank_throw=45, $fn=60, tol=0.3 all kept.
 // ============================================================
 crank_throw     = 45;
@@ -482,6 +484,10 @@ assert((drum_teeth/cnt53_Zc)*(bev53_Zy/bev53_Zx)*(drop53_Zh/drop53_Zl) == 6, "v5
 // Stage-1 mesh: centre distance = r_drum40 + r_counter (same Y plane).
 assert(abs(sqrt(pow(cnt53_cx - drum_axle_x, 2) + pow(cnt53_cz - drum_axle_z, 2)) - (cnt53_rd + cnt53_rc)) <= tolerance + 0.01, "v53: drum40->counter mesh must satisfy dist=r1+r2 (50)");
 assert(cnt53_y == 12, "v53: counter must share the drum40 gear plane (back, y 9..15)");
+// v79: crank gear world y = crank_mount_y + gear_local_y = 68 + (-20) = 48 (front plane).
+assert(crank_mount_y - 20 >= 44 && crank_mount_y - 20 <= 52, "crank gear world y must be ~48 (front plane, gear spans y 45..51)");
+// v81: drum gear world y = chassis_width/2 + gear_off = 30 + 17.95 ≈ 47.95 (front plane, matches crank gear within 0.05).
+assert(chassis_width/2 + roller_len/2 + 3 - epsilon >= 44 && chassis_width/2 + roller_len/2 + 3 - epsilon <= 52, "drum gear world y must be ~48 (front plane, gear spans y 45..51)");
 // Bevel axes intersect at the overhead apex + perpendicular (Y vs X).
 assert(apex53_x == cnt53_cx && apex53_z == cnt53_cz, "v53: apex must sit on the Y countershaft (cx,44)");
 assert(apex53_y == hi53_y && apex53_z == hi53_z, "v53: apex must sit on the high layshaft (45.5,44)");
@@ -1414,10 +1420,10 @@ module seed_cartridge(sdia = seed_dia, sdepth = seed_depth) {
     assert(sdepth > 0 && sdepth < drum_radius, "seed_cartridge: seed_depth invalid");
     drum_len = drum_width;
     gear_thick = 6;
-    // v20: drum gear sits on BACK side of drum (-gear_off, world Y~12).
+    // v20: drum gear sits on FRONT side of drum (+gear_off, world Y~47.95).
     // gear_off shared by both branches so export matches assembly.
     gear_off = roller_len/2 + gear_thick/2 - epsilon;  // 17.95
-    gear_z = gear_thick/2 + 0.6;  // 3.6: web center (tip chamfer dips 0.6 below web, base keeps min_z=0)
+    gear_z = gear_thick/2 + 0.6;  // 3.6: gear at bottom of export = FRONT side after viewer Rx(PI) flip
     drum_base = gear_z + gear_off - drum_len/2;  // 14.05: export drum lift
 
     if (part_to_render == "cartridge" || part_to_render == "drum") {
@@ -1455,8 +1461,8 @@ module seed_cartridge(sdia = seed_dia, sdepth = seed_depth) {
                         translate([0, 0, -epsilon])
                             cylinder(h=1.5 + 2*epsilon, d=drum_dia - 6, center=false);
                     }
-            // Drum gear (lightened, 40T) — v20 BACK/BOTTOM side, chamfer-aware base
-            translate([0,0, gear_z])
+            // Drum gear (lightened, 40T) — FRONT side (matches assembly gear mesh with crank 20T)
+            translate([0,0, drum_base + drum_len - gear_z])
                 spur_gear(teeth=drum_teeth, module_mm=gear_module, thickness=gear_thick,
                           bore_flat=hex_axle_flat, is_hex=true,
                           hub_dia=20, hub_len=8, lightened=true);
@@ -1495,7 +1501,7 @@ module seed_cartridge(sdia = seed_dia, sdepth = seed_depth) {
                                 cylinder(h=1.5, d=drum_dia + 3, center=true);
                                 cylinder(h=1.5 + 2*epsilon, d=drum_dia - 6, center=true);
                             }
-                // v79: gear on FRONT side (+gear_off); hub points toward the drum.
+                // v79: gear on FRONT side (+gear_off, world y≈47.95); hub points toward the drum.
                 translate([0, +gear_off, 0])
                     rotate([-90,0,0])
                         spur_gear(teeth=drum_teeth, module_mm=gear_module, thickness=gear_thick,
@@ -2172,6 +2178,8 @@ module crank_assembly() {
     grip_y0 = s * arm_w;
     grip_y1 = grip_y0 + s * grip_len;
     grip_yc = (grip_y0 + grip_y1)/2;
+    gear_local_y = -20;      // world y=48: 68-20 (front, gear spans y 45..51)
+    gear_thick = 6;           // matching drum/roller gear thickness
 
     difference() {
         union() {
@@ -2191,10 +2199,15 @@ module crank_assembly() {
             translate([pivot_x, arm_yc, pivot_z])
                 rotate([90,0,0])
                     cylinder(h=16, r=7, center=true);
-            // Pivot hex shaft
+            // Pivot hex shaft (28mm, centred at arm_yc)
             translate([pivot_x, arm_yc, pivot_z])
                 rotate([90,0,0])
                     cylinder(h=hex_shaft_len, r=hex_axle_r, $fn=6, center=true);
+            // 20T crank gear, front plane world y 45..51, meshes drum 40T (dist 60)
+            translate([pivot_x, gear_local_y, pivot_z])
+                rotate([-90,0,0])
+                    spur_gear(teeth=roller_teeth, module_mm=gear_module, thickness=gear_thick,
+                              bore_flat=hex_axle_flat, is_hex=true, hub_dia=20, hub_len=8, lightened=true);
             // Handle riser
             translate([handle_x, arm_yc, 0])
                 cylinder(h=pivot_z + 5.5, r=5.5, center=false);
@@ -2226,18 +2239,18 @@ module crank_assembly() {
 // Animated assembly
 // Sign convention (v79: crank at x=160, 20T meshes drum 40T at x=100):
 //   crank_angle = 720*$t (2:1 vs drum, CW about +Y).
-//   drum_angle = 360*$t (driven by crank via 40:20 mesh).
-//   twister_angle = -360*$t*twister_orbits_per_drum (6x/drum, about X).
+//   drum_angle = -360*$t (external mesh counter-rotation, 0.5× crank).
+//   twister_angle = 360*$t*twister_orbits_per_drum (flips with drum, v53 parity kept).
 //   pull nip pair spins about Z at ±roller_angle*vpull_spin (tape-coupled
 //   4/3 vs the main roller, v52 d15 dia => same surface speed).
 //   takeup_angle = -1440*$t about the reel axle.
 //   v79: rollers REMOVED; crank carries the 20T pinion at x=160.
 // ============================================================
 module animated_assembly() {
-    drum_angle = 360*$t;    // v79: CW about +Y, driven by crank 2:1
+    drum_angle = -360*$t;    // v79: CCW about +Y, external mesh 0.5× crank
     crank_angle = 720*$t;   // v79: crank 20T spins 2x drum (CW, meshes drum 40T)
     roller_angle = crank_angle + gear_mesh_phase; // mesh-phased crank gear
-    twister_angle = -360*$t*twister_orbits_per_drum; // v37: 6 orbits/drum rev about X
+    twister_angle = 360*$t*twister_orbits_per_drum; // v37: 6 orbits/drum rev about X
     pull_a_angle = roller_angle*vpull_spin;   // v52: nip side A spin-compensated 4/3
     pull_b_angle = -roller_angle*vpull_spin;  // v52: nip side B counter-rotates 4/3
     takeup_angle = -1440*$t;       // v48: tape-tension wind-up
