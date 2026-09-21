@@ -7,6 +7,9 @@ STL_DIR="$SCRIPT_DIR/web/stl"
 CACHE_DIR="$SCRIPT_DIR/.regen_cache"
 TMPDIR=$(mktemp -d /tmp/openscad_XXXXXX)
 
+# Copy scad/ into TMPDIR so include <scad/...> resolves from temp .scad files
+cp -r "$SCRIPT_DIR/scad" "$TMPDIR/scad"
+
 # --- Renderer selection (parsed once at the boundary) ---
 # Prefer openscad-nightly (manifold backend, headless, no X needed).
 # Fall back to 2021.01 openscad on persistent Xvfb :99. Fail loud if neither.

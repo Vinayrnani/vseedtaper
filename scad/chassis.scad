@@ -1,0 +1,260 @@
+module chassis() {
+    difference() {
+        union() {
+            translate([chassis_x0, 0, 0])
+                cube([chassis_len, chassis_width, base_thick]);
+            translate([chassis_x0, 0, 0])
+                cube([chassis_len, wall_thick, chassis_height]);
+            translate([chassis_x0, chassis_width - wall_thick, 0])
+                cube([chassis_len, wall_thick, chassis_height]);
+            // Track rails
+            rail_thick = 2;
+            rail_len = 200;
+            rail_x0 = 10;
+            translate([rail_x0, (chassis_width - paper_width)/2 - rail_thick, base_thick - 0.15])
+                cube([rail_len, rail_thick, track_depth + 0.15]);
+            translate([rail_x0, (chassis_width + paper_width)/2, base_thick - 0.15])
+                cube([rail_len, rail_thick, track_depth + 0.15]);
+            // Hopper slide rails
+            translate([drum_axle_x - 22, 7, base_thick - 0.15])
+                cube([44, 8, 6 + 0.15]);
+            translate([drum_axle_x - 22, chassis_width - 15, base_thick - 0.15])
+                cube([44, 8, 6 + 0.15]);
+            // Bearing blocks (pillow-block style)
+            for (spec=[[drum_axle_x,   drum_axle_z,   bb_height_drum,   1],
+                       [crank_axle_x,  crank_axle_z,  bb_height_roller, 1],
+                       [spool_axle_x,  spool_axle_z,  bb_height_spool,  0]])
+                for (side=[0,1]) {
+                    // v27 printable: fuse blocks to BOTH walls (front y_off=0
+                    // -> Y -2..2 overlaps wall 0..3; back y_off=60 -> 58..62
+                    // overlaps wall 57..60). Old code ignored side (all at
+                    // front, back blocks floated unfused).
+                    bearing_block(spec[0], spec[1], spec[2], spec[3]==1,
+                                  side == 0 ? 0 : chassis_width);
+                }
+            // v37 wind-up reel bearing blocks (axle along Y at takeup_x/takeup_z)
+            for (side=[0,1])
+                bearing_block(takeup_x, takeup_z, bb_height_spool, false,
+                              side == 0 ? 0 : chassis_width);
+            // v40 MOUNTING LAYOUT (parametric on the station X positions):
+            // BOTTOM mount: 6-turner (M3 holes below) + wind-up reel
+            //   (take-up bearing blocks above ride the base).
+            // SIDE mount: twister ring + pull rollers + drum (axles pass
+            //   through the chassis walls: axle holes + blocks below).
+            // TOP mount: hopper+shroud (slide rails + sole-flange M3) +
+            //   tape input spools (spool blocks feed from above).
+            // v40 pull top bridge (side-mount story for the vertical nip):
+            // cross bar fused wall-to-wall over the nip at pull_x.
+            // v47: SOLID bridge (no tube hole — tape-coupled nip, zero
+            // exterior gears); cup B kept (bored) for the static pin B.
+            // v52 SHORTER stack (roller top 27): bridge 28, cup 25..28.
+            translate([pull_x - 2, 0, 28])
+                cube([4, chassis_width, 3]);
+            translate([pull_x, chassis_width/2 + vpull_off, 25])
+                difference() {
+                    cylinder(h=3 + epsilon, r=6, center=false);
+                    translate([0, 0, -epsilon])
+                        cylinder(h=3 + 3*epsilon, d=axle_clearance_dia, center=false);
+                }
+            // OVERHEAD twister drive (v51 hollow kept: ZERO coaxial
+            // parts, ZERO exterior gears, NO belts, NO floor gears, NO
+            // duplicate takeoff): back wall is clean solid. EXISTING
+            // drum40 (axis Y, back plane y 9..15) -> overhead counter
+            // 10T (axis Y, same plane y=12, dist 50 = 40+10) at
+            // (~147.37,12,44) = 4x, high above the tape (bottom 32);
+            // Y-bevel 12T (same high countershaft, axis Y) -> X-pinion
+            // 10T (high layshaft, axis X) = 1.2x at apex (cx,45.5,44),
+            // Y vs X 90deg, both bottoms >= 30 (overhead); thin 15T/12T
+            // spur drop (parallel X-X, dz=27, 1.25x at x=181, bottoms
+            // 27/3, low one pocketed) -> low layshaft + side friction
+            // wheel (r3.5) touching the ring OD (slip after) = 6x at
+            // the low shaft. One high Y countershaft (cx,44, y 1..59,
+            // through-wall) + high/low X layshafts (y=45.5, z=44/17)
+            // + 2 hanger posts replace the v51 low apex works.
+            // Pull/takeup are tape-coupled (no gears): static pins
+            // support both roller ends; bridge kept SOLID (no tube
+            // hole); cup B kept (bored).
+            // Counter spur (axis Y, back plane y=12: meshes the
+            // existing drum40 gear; bored, slips on the high
+            // countershaft; overhead, never near the tape).
+            translate([overhead_counter_x, overhead_counter_y, overhead_counter_z])
+                rotate([90, 0, 0])
+                    spur_gear(teeth=overhead_counter_teeth, module_mm=overhead_mod, thickness=overhead_spur_t, bore_dia=axle_dia);
+            // Y-bevel (apex at apex, axis Y, body toward -Y; bored, same
+            // high countershaft as the counter spur, overhead).
+            translate([overhead_apex_x, overhead_apex_y, overhead_apex_z])
+                rotate([90, 0, 0])
+                    bevel_gear(teeth=overhead_bevel_y_teeth, module_mm=overhead_mod, thickness=overhead_bevel_t, bore_dia=axle_dia);
+            // X-pinion (apex at apex, axis X, body toward +X along the
+            // high layshaft; bored, slips on it).
+            translate([overhead_apex_x, overhead_apex_y, overhead_apex_z])
+                rotate([0, 90, 0])
+                    bevel_gear(teeth=overhead_bevel_x_teeth, module_mm=overhead_mod, thickness=overhead_bevel_t, bore_dia=axle_dia);
+            // Apex-contact note: mating pitch cones meet only at the
+            // shared apex point (single-point visual mesh, as real
+            // bevels); parallel spur pairs mesh tooth-into-gap
+            // (dist=r1+r2 asserted above).
+            // High countershaft (spinner along Y at (cx,44), carries
+            // the counter spur + Y-bevel; ends hidden in wall bores).
+            translate([overhead_counter_x, (overhead_counter_y0 + overhead_counter_y1)/2, overhead_counter_z])
+                rotate([90, 0, 0])
+                    cylinder(h=overhead_counter_y1 - overhead_counter_y0, r=axle_dia/2, center=true);
+            // High side layshaft (spinner along X at y=45.5,z=44,
+            // apex -> drop; overhead, bore stays empty).
+            translate([(overhead_high_x0 + overhead_high_x1)/2, overhead_high_y, overhead_high_z])
+                rotate([0, 90, 0])
+                    cylinder(h=overhead_high_x1 - overhead_high_x0, r=overhead_high_r, center=true);
+            // Spur drop pair (thin t=4, parallel X-X at x=181:
+            // high 15T -> low 12T, dz=27=15+12).
+            translate([drop_pair_x, overhead_high_y, overhead_high_z])
+                rotate([0, 90, 0])
+                    spur_gear(teeth=drop_pair_high_teeth, module_mm=overhead_mod, thickness=drop_pair_t, bore_dia=axle_dia);
+            translate([drop_pair_x, overhead_low_y, overhead_low_z])
+                rotate([0, 90, 0])
+                    spur_gear(teeth=drop_pair_low_teeth, module_mm=overhead_mod, thickness=drop_pair_t, bore_dia=axle_dia);
+            // Low side layshaft (spinner along X at y=45.5,z=17,
+            // 165..183, carries drop-low + friction wheel).
+            translate([(overhead_low_x0 + overhead_low_x1)/2, overhead_low_y, overhead_low_z])
+                rotate([0, 90, 0])
+                    cylinder(h=overhead_low_x1 - overhead_low_x0, r=overhead_low_r, center=true);
+            // Friction wheel (spinner fused on the low shaft at x=175,
+            // face beside the ring east face, rim tangent to the ring
+            // OD: hollow rolling cradle drive, nothing in the middle).
+            translate([friction_wheel_x, overhead_low_y, overhead_low_z])
+                rotate([0, 90, 0])
+                    cylinder(h=friction_wheel_t, r=friction_wheel_r, center=true);
+            // Hanger posts under both layshafts (static brackets fused
+            // to the base, beside the tape; tops meet the shaft
+            // bottoms, bearing holes slip).
+            difference() {
+                translate([overhead_high_post_x - 2, overhead_high_y - 2, 0])
+                    cube([4, 4, overhead_high_post_top]);
+                translate([overhead_high_post_x, overhead_high_y, overhead_high_post_top])
+                    rotate([0, 90, 0])
+                        cylinder(h=4 + 2*epsilon, d=axle_clearance_dia, center=true);
+            }
+            difference() {
+                translate([overhead_low_post_x - 2, overhead_low_y - 2, 0])
+                    cube([4, 4, overhead_low_post_top]);
+                translate([overhead_low_post_x, overhead_low_y, overhead_low_post_top])
+                    rotate([0, 90, 0])
+                        cylinder(h=4 + 2*epsilon, d=axle_clearance_dia, center=true);
+            }
+            // v48 pull support pins (static bars: base-fused, slip-fit
+            // in roller bores + cup-B bore; the tape-coupled rotors
+            // spin on them — supported both ends, never coplanar).
+            translate([pull_x, chassis_width/2 - vpull_off, (pull_pinA_z0 + pull_pinA_z1)/2])
+                cylinder(h=pull_pinA_z1 - pull_pinA_z0, r=pull_pin_r, center=true);
+            translate([pull_x, chassis_width/2 + vpull_off, (pull_pinB_z0 + pull_pinB_z1)/2])
+                cylinder(h=pull_pinB_z1 - pull_pinB_z0, r=pull_pin_r, center=true);
+            // v45 DEAD AXLES (static bars, slip-fit through bores/holes):
+            // drum hex through-shaft (fuses into the solid v48 drum spur,
+            // slip in the drum/interior-gear hex bores + wall/block hex
+            // holes — the drum stays free to spin); take-up round shaft
+            // (slip in the reel/wall/block round bores); spool round
+            // shaft (slip in cone hex holes + wall/block bores, ends hidden
+            // in the block bores). Ends buried/hidden, never coplanar.
+            translate([drum_axle_x, (drum_shaft_y0 + drum_shaft_y1)/2, drum_axle_z])
+                rotate([90, 0, 0])
+                    cylinder(h=drum_shaft_y1 - drum_shaft_y0, r=hex_axle_r, $fn=6, center=true);
+            translate([takeup_x, (takeup_shaft_y0 + takeup_shaft_y1)/2, takeup_z])
+                rotate([90, 0, 0])
+                    cylinder(h=takeup_shaft_y1 - takeup_shaft_y0, r=axle_dia/2, center=true);
+            translate([spool_axle_x, (spool_shaft_y0 + spool_shaft_y1)/2, spool_axle_z])
+                rotate([90, 0, 0])
+                    cylinder(h=spool_shaft_y1 - spool_shaft_y0, r=axle_dia/2, center=true);
+            // v37 twister guide posts (static frame cradling the orbiting
+            // ring: two stubs flanking the tape at bind_x reach z=13,
+            // holding a 2 rolling gap under the ring-OD tube (ring bottom
+            // outer 18, tube r2 -> nearest steel 15; v45: was full-height
+            // 17 and grazed the swept tube by ~1). The product passes
+            // through the ring bore, so no through-axle is possible; the
+            // rotor spins on the viewer pivot (axis-correct), cradled here.
+            for (s=[-1,1])
+                translate([bind_x - 2, chassis_width/2 + s*12 - 1.5, 0])
+                    cube([4, 3, twister_post_h]);
+            // Corner gussets via hull() of cubes
+            for (gy=[0, chassis_width - 6]) {
+                translate([chassis_x0 + 4, gy, base_thick - 0.15])
+                    hull() {
+                        cube([12, 6, 1.15]);
+                        translate([0, 0, 12]) cube([1.5, 6, 1]);
+                    }
+                translate([chassis_x0 + chassis_len - 16, gy, base_thick - 0.15])
+                    hull() {
+                        cube([12, 6, 1.15]);
+                        translate([10.5, 0, 12]) cube([1.5, 6, 1]);
+                    }
+            }
+        }
+        // Axle holes (nominal + 2*tolerance)
+        for (side=[0,1]) {
+            translate([spool_axle_x, side*(chassis_width-wall_thick)+wall_thick/2, spool_axle_z])
+                rotate([90,0,0])
+                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        }
+        for (side=[0,1]) {
+            translate([takeup_x, side*(chassis_width-wall_thick)+wall_thick/2, takeup_z])
+                rotate([90,0,0])
+                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        }
+        // v79: crank shaft hex hole at x=160 through both walls
+        for (side=[0,1]) {
+            translate([crank_axle_x, side*(chassis_width-wall_thick)+wall_thick/2, crank_axle_z])
+                rotate([90,0,0])
+                    cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
+        }
+        for (side=[0,1]) {
+            translate([drum_axle_x, side*(chassis_width-wall_thick)+wall_thick/2, drum_axle_z])
+                rotate([90,0,0])
+                    cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
+        }
+        // high-countershaft wall holes (through-wall support at (cx,44)).
+        for (side=[0,1]) {
+            translate([overhead_counter_x, side*(chassis_width-wall_thick)+wall_thick/2, overhead_counter_z])
+                rotate([90,0,0])
+                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        }
+        // v48: NO idler stubs fuse into the back wall (zero exterior
+        // gears) — the wall keeps full section everywhere. The solid
+        // pull bridge needs no hole (tape-coupled nip, no drive tube).
+        // 45° chamfers on base edges
+        translate([chassis_x0, chassis_width/2, base_thick])
+            rotate([0,45,0])
+                cube([2.5, chassis_width + 2*epsilon, 2.5], center=true);
+        translate([chassis_x0 + chassis_len, chassis_width/2, base_thick])
+            rotate([0,45,0])
+                cube([2.5, chassis_width + 2*epsilon, 2.5], center=true);
+        // Plow mounting holes
+        for (px=[plow_start + 6, plow_start + plow_len - 6])
+            for (py=[6, 54]) {
+                translate([px, py, base_thick/2])
+                    cylinder(h=base_thick + 2*epsilon, d=bolt_dia + 2*tolerance, center=true);
+                translate([px, py, -epsilon])
+                    cylinder(h=nut_trap_depth + epsilon,
+                             r=(bolt_head_across + 2*tolerance)/sqrt(3), $fn=6, center=false);
+            }
+        // Hopper rail slots
+        translate([drum_axle_x - 20.2, 7 + (8-6.4)/2, base_thick - epsilon])
+            cube([40.4, 6.4, 6 + 2*epsilon]);
+        translate([drum_axle_x - 20.2, chassis_width - 15 + (8-6.4)/2, base_thick - epsilon])
+            cube([40.4, 6.4, 6 + 2*epsilon]);
+        // drop pocket under the low 12T drop gear (spinning steel
+        // bottom 3 vs base top 4: pocket 2..5 gives 1.0 rolling gap,
+        // base keeps a 2mm print floor, min_z=0 kept elsewhere).
+        translate([drop_pair_x - 4, overhead_low_y - 4, drop_pair_pocket_z0 - epsilon])
+            cube([8, 8, (base_thick + 1) - drop_pair_pocket_z0 + 2*epsilon]);
+        // Lightening cutouts in walls (v48: zero exterior gears, so
+        // the back wall is clean solid everywhere; cutout kept high
+        // at z64, clear of the interior spur pair at y=45 and the
+        // high Y countershaft / side layshaft at z17 (all interior).
+        translate([56, -epsilon, 64])
+            cube([24, wall_thick+2*epsilon, 22]);
+        translate([90, chassis_width - wall_thick - epsilon, 18])
+            cube([30, wall_thick+2*epsilon, 22]);
+    }
+}
+
+// ============================================================
+// 2. Spool cones (tapered, 15-45mm OD) - flat base at Z=0
+// ============================================================
