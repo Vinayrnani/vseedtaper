@@ -48,3 +48,6 @@ Keep ALL code modular — every source file (SCAD, JS, HTML, scripts) max ~1000 
 
 ## Prior-code references (approval gate)
 Agents must consult previous code/snapshots/history (git show, web/vNN/, old commits) ONLY when the user's request relates to that prior work. Any other backward-looking digging (exploring old versions out of curiosity, pulling references for unrelated changes) needs the user's explicit approval first. Forward work always uses live HEAD facts, re-verified by grep — never pasted line numbers from earlier sessions.
+
+## Parallelism (split + parallelise to save time)
+Always maximise parallel execution. Independent work runs in parallel — multiple tool calls per block, parallel subagents for independent scopes. Split large work into small self-contained tasks that can run concurrently; go sequential ONLY where a task depends on another's output. One owner per task — never two agents on the same in-flight task; others wait or take different scopes. For coder (small context) each parallel split must still be fully self-contained (own goal, file:line, done criteria). Batch independent greps/reads/verifies; never serialize what can run together.
