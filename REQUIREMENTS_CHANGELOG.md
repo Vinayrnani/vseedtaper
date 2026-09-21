@@ -1,5 +1,8 @@
 # Requirements Change Log
 
+## v81 — 2026-09-21
+- Step B: crank carries ONLY a real 20T spur gear (teeth=roller_teeth=20, module 2, thick 6, hex bore) at BACK plane world y 9..15 (local y=-56, rotate([-90,0,0]) hub +Y toward arm) on extended hex shaft hex_shaft_len 28→81 centered local -21.5 (world span 6..87); drum 40T translate +gear_off → -gear_off (back plane world ≈12.05, hub +Y toward drum — also fixes v79 hub-away defect); drum_angle +360→-360*$t (external mesh, opposite crank +720*$t, ratio 0.5); twister_angle → +360*$t*orbits, viewer twister -3×crank, DRUM_RATIO 0.5→-0.5; pull/takeup UNCHANGED (tape-driven); regen crank + cartridge ONLY (chassis holes at x=160 already exist); verify NoError/mesh (dist 60, y-spans ±0.05, x-interleave ~4mm)/pivots ±0.15/ratios ±3% signs/0 console errors/animating screenshots; OUT: v53-train removal HOLD (back-plane drum gear restores counter-10T mesh at cnt53_y=12), plow/shroud/split untouched; ASSET_V 43→44; header v79→v81.
+
 ## v80 — 2026-09-21
 - Step A: six_turner/plow restored verbatim from v66/v67/v68 (commit d1f2a09). Deleted HEAD parametric identifiers (st_x/st_R/st_W/st_H/n_st/fpx/fR/fW/fH/n_fp/plate_t/wall/hook_off/floor_local/curl_cz/curl_strip_pts). Restored scroll_sheet() (45×1.6, steps 35/35) and six_turner() (axis_z=13, mouth_x0=-12 → world 114, ears (132,6)/(153,54)). web/v66/stl/plow.glb proven faithful (4311 verts, bbox/volume identical to fresh d1f2a09 render). ASSET_V stays 43. Twister v53 overhead drive accepted-state (still present, meshing). Parked WIP: crank-20T + counter-rotation in /tmp/opencode/v80_gear_wip.patch.
 
@@ -136,7 +139,7 @@
 - Sealed drop tube (no spill): bore 9->10 (-5..5, 8mm clearance), outer 18->14 (-7..7, 2.0 walls), tube bottom 26.5->25.9 local (world 29.9, 0.5 overlap into ribbon top 30.4); E/W bottom-open tape notches (25.7..26.7) thread the flat ribbon at x=100 (fold lives 126..159), N/S walls seal full-height; drop window to bore 10, hopper export -25.9 (min_z=0, watertight), fail-loud asserts; viewer hopper child +25.9, dropSeed 31.5->30.4, _dropSeal hooks, ASSET_V 16, 13 GLBs rebuilt
 
 ## v28 — 2026-09-17
-- Tape bend true mimic (tapeubend.png end-on): CAD R 3.0->1.75, fold 12.7->6.0 (HW 3.0), wall 2.0->5.5, N_ARC 12->20, new shoulder R1.5/60° S-kink + N_X 12 taper (0.15->1.0 W->E), double slab removed (single-layer floor), former collar shoe visual; stale v25 NOT-found comment fixed; viewer mirrors params, TAPE_LEN 320->180 unified, collar visual, ASSET_V 15
+- Tape bend true mimic (tapeubend.png end-on): CAD R 3.0->1.75, fold 12.7->6.0 (HW 3.0), wall 2.0->5.5, N_ARC 12->20, new shoulder R1.5/60° S-kink + N_X 12 taper (0.15->1.0 W->E), double slab removed (single-layer floor), former collar shoe visual; viewer mirrors params, TAPE_LEN 320->180 unified, collar visual, ASSET_V 15
 
 ## v27 — 2026-09-16
 - Final printable pass: chassis back bearing blocks fused (y_off, was floating), shroud flanges gain 4xM3 holes, upper roller zoffset 11->0 (min_z=0), hopper export -26.5 to base (viewer +26.5 Y recomp), cover groove 0.8->0.7 (wall >=1.2); tape 0.4 film exempt, cones/rollers sets vs watertight singles noted; viewer collapsible kept, ASSET_V 14, 13 GLBs rebuilt

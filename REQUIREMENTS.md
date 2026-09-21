@@ -1,35 +1,18 @@
-# Seed Tape Machine — Project Requirements & Context Record
+**Version: v81**
 
-**Version: v80**
+## v81 Step B: Crank 20T gear + drum gear back-plane + counter-rotation — 2026-09-21
 
-## v80 Step A: six_turner/plow restored verbatim from v66/v67/v68 — 2026-09-21
+1. **Why** (user: crank carries ONLY a real 20T spur gear, drum gear to back plane, counter-rotation): crank carries ONLY a real 20T spur gear (teeth=roller_teeth=20, module 2, thick 6, hex bore) at BACK plane world y 9..15 (local y=-56, rotate([-90,0,0]) hub +Y toward arm) on extended hex shaft hex_shaft_len 28→81 centered local -21.5 (world span 6..87). Drum 40T translate +gear_off → -gear_off (back plane world ≈12.05, hub +Y toward drum — also fixes v79 hub-away defect). drum_angle +360→-360*$t (external mesh, opposite crank +720*$t, ratio 0.5). twister_angle → +360*$t*orbits; viewer twister -3×crank, DRUM_RATIO 0.5→-0.5. Pull/takeup UNCHANGED (tape-driven).
+2. **Regen**: crank + cartridge ONLY (chassis holes at x=160 already exist).
+3. **Verify**: NoError, mesh (dist 60, y-spans coincide ±0.05, x-interleave ~4mm), pivots ±0.15, ratios ±3% with signs, 0 console errors, animating screenshots.
+4. **Out of scope**: v53-train removal still HOLD (back-plane drum gear restores counter-10T mesh at cnt53_y=12); plow/shroud/split untouched.
+5. **Viewer**: ASSET_V 43→44; header v79→v81.
 
-1. **Why** (user: restore the exact v66/v67/v68 plow): The HEAD parametric six_turner (st_R/st_W/st_H arrays, 7-station loft) is replaced with the verbatim v66/v67/v68 scroll_sheet() code from commit d1f2a09. Proven faithful: web/v66/stl/plow.glb snapshot (156,388 bytes, 4311 vertices, bbox/volume identical to fresh render from d1f2a09 source).
-2. **CAD** (`seed_tape_machine_v2.scad` only):
-   - **Restored verbatim from d1f2a09**: `scroll_sheet()` module (L1576–1616, user's overlapping spiral folder 45×1.6, steps 35/35, $fn=6 spheres), `six_turner()` module (L1621–1700, axis_z=13, mouth_x0=-12 → world 114, pedA/pedB, ear 6/1/earA[3,-7]/earB[24,41], v68 placement transform).
-   - **Deleted HEAD parametric identifiers**: st_x, st_R, st_W, st_H, n_st, fpx, fR, fW, fH, n_fp, plate_t, wall, hook_off, floor_local, curl_cz (six_turner-local only), curl_strip_pts().
-   - **No global changes**: plow_start=126, plow_end=159, turner_end=159 — values already identical.
-   - **NOT changed**: gears, shroud, viewer, regen-script, ASSET_V (stays 43).
-3. **Twister undriven accepted-state**: The v53 overhead twister drive (fric53_r=3.5, fric53_x=175, overhead counter 10T + Y-bevel 12T + X-pinion 10T + friction wheel on ring OD) is still present and meshing in HEAD. This is the accepted state for now — no removal attempted.
-4. **Parked WIP** (not committed): crank-20T gear + counter-rotation code changes saved to `/tmp/opencode/v80_gear_wip.patch` + `/tmp/opencode/v80_scad_dir.tar.gz`. Step B (drum gear to other side) pending.
+## v80 Step A: six_turner/plow restored verbatim from v66/v67/v68 - 2026-09-21
 
-## v79 Crank gear mesh at 160 / Drum gear front plane / Rollers removed / Shroud east — 2026-09-20
+1. **Why** (user: restore the plow exactly as it was in v66/v67/v68): six_turner/plow restored verbatim from v66/v67/v68 (commit d1f2a09). Deleted HEAD parametric identifiers (st_x/st_R/st_W/st_H/n_st/fpx/fR/fW/fH/n_fp/plate_t/wall/hook_off/floor_local/curl_cz/curl_strip_pts). Restored scroll_sheet() (45×1.6, steps 35/35) and six_turner() (axis_z=13, mouth_x0=-12 → world 114, ears (132,6)/(153,54)). web/v66/stl/plow.glb proven faithful (4311 verts, bbox/volume identical to fresh d1f2a09 render). ASSET_V stays 43. Twister v53 overhead drive accepted-state (still present, meshing). Parked WIP: crank-20T + counter-rotation in /tmp/opencode/v80_gear_wip.patch.
 
-1. **Why** (user: 20T crank meshes drum 40T, drum gear front, rollers gone, shroud east): Move crank to x=160 so 20T gear meshes drum 40T at distance 60 (= center_distance). Move drum gear from back plane to front plane (+gear_off). Remove rollers (upper deleted, lower replaced by crank axle as through-shaft). Mirror shroud to east (x 116..124) between drum (100) and six_turner (126). Hopper stays as one unit with shroud.
-2. **CAD** (`seed_tape_machine_v2.scad` only):
-   - **Crank params**: `crank_axle_x=160`, `crank_axle_z=60`; `crank_mount_x=crank_axle_x`; `roller_axle_x/z` become aliases for backward compat.
-   - **Shroud params**: `shroud_x0=drum_axle_x+16=116`, `shroud_x1=drum_axle_x+24=124`, `shroud_len=8`.
-   - **Drum gear front plane**: `translate([0, +gear_off, 0])` (was `-gear_off`).
-   - **Rollers removed**: `pull_rollers()` simplified to only `knurled_roller(is_lower=true)`; upper roller deleted.
-   - **Crank at x=160 in animated_assembly()**: `translate([crank_axle_x, ...])`, `rotate([0, crank_angle, 0])`.
-   - **Chassis**: crank bearing block + hex hole at x=160; roller through-hole removed.
-   - **Asserts**: `crank_mount_x == crank_axle_x` (was `== drum_axle_x`); gear center distance assert uses `crank_axle_x/z`.
-3. **Viewer** (`web/index.html` only): `crankMount.position.set(160,60,-68)`; `shroudPivot.position.set(116,0,-30)`; lower/upper pivots removed; `_setRotations` + animation loop updated (crank positive, drum 0.5x, twister 3x, takeup -2x); `ASSET_V` 42→43; legend updated with v79 R→L layout.
-4. **Collisions**: drum gear at y=44.95..50.95 (front plane), hopper front cheek at y~45 — near-clearance, no hard collision. Shroud east (116..124) clears six_turner start at 126.
-5. **Visual check**: live animating preview + snapshots while animating, 0 console errors, verify_v79.js PASSED (pivots ±0.15mm, ratios ±3% with signs, 0 console errors, ASSET_V=43, no rollers loaded).
-6. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`; port 9099 only.
-
-## v78 Crank RIGHT / Hopper MIRRORED — seed box mouth faces LEFT - 2026-09-20
+## v79 Crank RIGHT / Hopper MIRRORED — seed box mouth faces LEFT - 2026-09-20
 
 1. **Why** (user: move crank to right, flip hopper): user wanted the crank handle on the RIGHT (front) side and the seed box mouth facing LEFT (west). Move crank assembly from left wall (x=0) to front wall (x=100, drum-coaxial), mirror hopper 180° about Y so wedge swings west.
 2. **CAD** (`seed_tape_machine_v2.scad` only):
@@ -42,6 +25,8 @@
 4. **Collisions**: mirrored hopper wedge (world x 17..86) overlaps shroud/tape/pull in X but all obstacles are below Z=49 → no 3D collision. Two SCAD asserts enforce this.
 5. **Visual check**: live animating preview + snapshots while animating, 0 console errors, tape-static, verify_v78.js PASSED (pivots ±0.15mm, ratios ±3% with signs, 0 console errors).
 6. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`; drum/roller axles unchanged; port 9099 only.
+
+## v77 Twister "Lift all up" + pinion TOP - 2026-09-20
 
 1. **Why** (user: "Lift all up" + pinion "Top"): lift the downstream tape line so two REAL Class-15 sewing bobbins on a rotor clear the floor. Replace v76's v53 friction drive + 2 dummy spindles with a printable assembly: fixed hollow axle (Ø10 bore carries the tape pocket through the rotor centre along X), rotor disc spinning on it via slip-fit bore, crown teeth on the rotor's WEST face, pinion at the TOP (axis Y), driven by a compound spur chain from the seed drum gear. Ratio **15** (target inside user range 12-18; 6 seeds/rev × 2.5 turns/seed).
 2. **CAD** (`seed_tape_machine_v2.scad` only):
@@ -1602,16 +1587,14 @@ If context is ever lost, read this file first.
    at x=-6 (r_big 22.5 -> east face 16.5) vs roller back gear at x=40
    r22 (west face 18, Y 9-15): box-level X gap 1.5, real tapered gap
    ~4.5. Minimal-move rule: keep -6.
-4. **Viewer**: shroud PART_DEF + `shroudPivot` (58,0,-30) unchanged and
-   correct; `ASSET_V` 11->12; all 12 GLBs rebuilt. Order proof asserts
-   hopper_x > drum_x > shroud_x > roller_x in `verify_v24.js`.
+4. **Viewer** (`web/index.html` only): `shroudPivot` (58,0,-30) +
+   shroud PART_DEF (child [0,0,0]/Rx-90) in PART_ORDER after hopper;
+   spoolGroup x 10->-6; `ASSET_V` 9->10; legend notes the R->L layout.
+   All 12 GLBs rebuilt.
 5. **Frozen**: v1 scad + web/backup/ untouched; `$fn=60`, `tol=0.3`;
    `center_distance` 60, `gear_mesh_phase` 9°, back gears; crank back wall
    `[40,-8,60]`; port 9099 only. Step 4 (tape bend) / Step 5 (mobile
    panel) NOT started.
-
-Authoritative record of requirements, standing rules, and current state.
-If context is ever lost, read this file first.
 
 ## v23 Crank to Back Wall (Step 2 miss fix) - 2026-09-16
 
@@ -2113,7 +2096,7 @@ If context is ever lost, read this file first.
 ## v2 Authoritative Spec (user-provided)
 - Globals: tolerance=0.3, paper_width=25.4, seed_dia=3.0, seed_depth=2.0, seed_spacing=152, $fn=60, part_to_render="all", animate_assembly=true
 - Drum: drum_radius=25 (dia 50), drum_width=15. CLOCKWISE rotation (viewed +X right, +Z up).
-- Hopper LEFT (9 o'clock, 135°→225° from +X). Clockwise ⇒ cavities scoop seeds upward bottom-to-top. Inner wall = drum_radius + hopper_clearance(0.3). Side cheek plates hug drum faces (axial gap = tolerance).
+- Hopper LEFT (9 o'clock, 135°→225° from +X). CLOCKWISE ⇒ cavities scoop seeds upward bottom-to-top. Inner wall = drum_radius + hopper_clearance(0.3). Side cheek plates hug drum faces (axial gap = tolerance).
 - U-Channel Shroud RIGHT (1 o'clock to 6 o'clock, 60°→270°) via rotate_extrude() of U-profile (shroud_id=8 channel inner radial dim) at drum_radius + gap; drop port at 270° (6 o'clock) over tape centerline.
 - Spool: rear axle, height 65mm above base (120mm max roll OD), two tapered cones 15–45mm core IDs.
 - Seed cradle: 25.4mm track (paper_width + 2*tolerance) + U depression under drop port.
@@ -2125,13 +2108,13 @@ If context is ever lost, read this file first.
 - Separate printable bodies (each a part_to_render branch, flat base min_z=0): chassis, hopper_body, u_channel_shroud, seed_cartridge, spool_cones, folding_plow, pull_rollers, crank_assembly. Mate via mounting tabs/slots (tolerance-clearanced), never fused.
 - Allowed geometry modules ONLY: difference()/union()/hull()/cube()/cylinder()/sphere()/rotate_extrude() (+ transforms/for/if/echo/assert). NO minkowski, NO intersection(), NO polygon().
 - part_to_render if/else chain at bottom (all/chassis/hopper/shroud/cartridge/cones/plow/rollers/crank) + fail-loud else.
-- animate_assembly=true + part_to_render=="all": drum_angle=+360*$t (CLOCKWISE about +Y), lower roller + crank = −720*$t, upper idler = +720*$t. At $t=0 geometry = static layout. Comment sign convention.
+- animate_assembly=true + part_to_render=="all": drum_angle=+360*$t (CLOCKWISE about +Y), lower roller + crank = −720*$t, upper idler = +720*$t. At $t=0 geometry = static layout. Sign convention comment.
 - Kinematics: gear ratio 2:1 (roller_teeth=20, drum_teeth=40, gear_module=2 → pitch dias 40/80, mesh center distance exactly 60mm). roller_dia=20, drum_dia=50. tape_per_crank_rev=PI*roller_dia=62.83; drum_rot_per_crank=0.5; tape_per_drum_rev=125.66→(v2: 157.08 with drum_dia 50); num_divots=max(1,round(tape_per_drum_rev/seed_spacing)); echo diagnostics + NOTE when num_divots==1.
 - v2 axle layout (verified): spool=[10,65], drum=[100,60], roller=[160,60], chassis_height=110, plow x 126→155 at base_thick, crank shaft axis at (160,30,60) outside wall (y=chassis_width+8). Gear mesh |160−100|=60mm exact.
 - All holes nominal + 2*tolerance (except explicit 0.3 hopper clearance and shroud gap). Epsilon-overlap face unions (epsilon=0.05). All 9 export branches min_z=0.000.
 
 ## v2 Verification Results (already passed)
-- All 9 part_to_render branches exit 0, min_z=0.000 (chassis 411KB, hopper 377KB, shroud 51KB, cartridge 3.4MB, cones 201KB, plow 204KB, rollers 2.5MB, crank 401KB, all 7.4MB).
+- All 9 part_to_render branches exit 0, min_z=0.000 (chassis 411KB, hopper 377KB, shroud 51KB, cartridge 3.4MB, roller 2.5MB, crank 401KB, all 7.4MB).
 - seed_dia=5.0 and seed_spacing=25 overrides compile exit 0.
 - Crank orbit proven at $t=0/0.25/0.5/0.75: grip traces circle radius crank_throw=45 about shaft axis (160,30,60): t=0 (205,30,60) → t=0.25 (160,30,105) → t=0.5 (115,30,60) → t=0.75 (160,30,15).
 - No minkowski/intersection/polygon. $fn=60 present.

@@ -45,3 +45,6 @@ The `coder` subagent runs on mimo 2.5 with a SMALL context window. Therefore the
 
 ## Modularity (1k lines/file)
 Keep ALL code modular — every source file (SCAD, JS, HTML, scripts) max ~1000 lines where feasible. Split by responsibility: web viewer (index.html) splits into modules (e.g. scene setup, part defs, pivots/animation, legend/UI, verify hooks) loaded from web/js/; SCAD splits per-part with shared params; no new monolith growth. Each split must be behavior-preserving (same render output / same viewer behavior) with its own verify pass. One split = one versioned change: requirements entry, reviewer PASS, regen/verify if GLBs affected, web/vNN/ snapshot, commit+push.
+
+## Prior-code references (approval gate)
+Agents must consult previous code/snapshots/history (git show, web/vNN/, old commits) ONLY when the user's request relates to that prior work. Any other backward-looking digging (exploring old versions out of curiosity, pulling references for unrelated changes) needs the user's explicit approval first. Forward work always uses live HEAD facts, re-verified by grep — never pasted line numbers from earlier sessions.
