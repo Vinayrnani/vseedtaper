@@ -23,6 +23,8 @@
 - Never edit v1 scad or `web/backup/` except to restore.
 - 10. **Playwright screenshots: `screenshots/` only, never in git, max 25.** Keep all Playwright screenshots in `screenshots/` folder, ensure it is gitignored, and prune oldest by file modification time (max 25) via `scripts/cleanup-screenshots.sh`.
 - Playwright browser reuse: verify scripts use `playwright_pool.js` (one shared browser, idle-kill after 10min). Never `browser.close()` per script — use `pool.releaseBrowser(browser)`. Full teardown only via `node playwright_pool.js stop` (does the pkill); check `node playwright_pool.js status` before starting new session.
+  Repo workaround (globals untouched): reviewer judges screenshots+code (read-only); coder/general executes node verify_*.js via pool to produce screenshots for reviewer.
+  Coder never interprets images, reviewer never runs shell beyond reading.
 - Serve on port 9099 only (iptables rule); don't change port.
 - CAD conventions: `$fn=60` for curves, `tol=0.3` (`tolerance`, clearances derive from it) — keep both.
 - Preview folders (`web/v*/`) must contain only `index.html`, `js/`, `stl/*.glb` — never commit or keep `.stl` intermediates there; the viewer loads GLB only.
