@@ -51,3 +51,6 @@ Agents must consult previous code/snapshots/history (git show, web/vNN/, old com
 
 ## Parallelism (split + parallelise to save time)
 Always maximise parallel execution. Independent work runs in parallel — multiple tool calls per block, parallel subagents for independent scopes. Split large work into small self-contained tasks that can run concurrently; go sequential ONLY where a task depends on another's output. One owner per task — never two agents on the same in-flight task; others wait or take different scopes. For coder (small context) each parallel split must still be fully self-contained (own goal, file:line, done criteria). Batch independent greps/reads/verifies; never serialize what can run together.
+
+## Skills (mandatory load)
+Every subagent must load the appropriate skill MANDATORILY before starting work — e.g. SCAD/CAD work loads the openscad skill, code review loads the code-review skill, planning loads plan-protocol/plan-review. The orchestrator names the required skill(s) in each delegated task; the worker loads them first and states the loaded skill in its first progress note. No implementation, review, or plan counts as started until the skill is loaded.
