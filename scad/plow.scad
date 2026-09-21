@@ -55,20 +55,20 @@ module six_turner() {
     // is exactly printable_folder(), screwed down via its own tabs.
     // ---- v66 twister-aimed mounts (bare sheet kept) ----
     // Axis 13: exit bore lands DEAD on the twister bore (assembly
-    // lifts +4 -> world 17 = twister_axle_z, y 20+10=30 = ring
+    // lifts +4 -> world 17 = twister_axle_z, y 20+10=34 = ring
     // centre), so the exit faces the twister straight; entry mouth
     // rims sit at lane height, floor 0.2 above the base. Supports:
     // 2 ground pedestals fused under the sheet floor + straps to 2
-    // chassis ears on the M3 holes (world 132/6, 153/54).
-    cy = 20;                        // sheet centre (local y, world tape centre 30)
+    // chassis ears on the M3 holes (world 132/6, 153/62).
+    cy = 20;                        // sheet centre (local y, world tape centre 34 = lane_y)
     axis_z = 13;                    // sheet axis height (exit = twister bore height)
     mouth_x0 = -12;                 // sheet mouth (world 114, exit lands 159)
     pedA = [6, 8, 12, 28, 4.3];     // mid pedestal x0,x1,y0,y1,top (floor ~3.9)
     pedB = [24.5, 26.5, 14, 26, 7.7]; // exit pedestal x0,x1,y0,y1,top (floor ~7.3)
     ear = 6;                        // ear edge length (6x6x1)
     ear_t = 1;                      // ear thickness
-    earA = [3, -7];                 // ear A corner, centre (6,-4) -> world (132,6)
-    earB = [24, 41];                // ear B corner, centre (27,44) -> world (153,54)
+    earA = [3, -11];                // ear A corner, centre (6,-8) -> world (132,6)
+    earB = [24, 45];                // ear B corner, centre (27,48) -> world (153,62)
     hole_d = bolt_dia + 2*tolerance; // M3 clearance 3.6
     // ---- v63 fail-loud: exact-scroll placement ----
     assert(turner_len == 33 && plow_start == 126 && turner_end == 159,
@@ -83,7 +83,7 @@ module six_turner() {
     // exactly on the slot end (twister gap untouched).
     assert(mouth_x0 + plow_start == 114, "six_turner: mouth must sit at world 114");
     assert(mouth_x0 + length + plow_start == turner_end, "six_turner: exit must land on 159");
-    assert(cy == 20, "six_turner: sheet must stay centred on the tape (local 20, world 30 = ring centre)");
+    assert(cy == 20, "six_turner: sheet must stay centred on the tape (local 20, world 34 = ring centre)");
     assert(axis_z == 13, "six_turner: axis must stay 13 (exit bore meets twister bore)");
     assert(axis_z + base_thick == twister_axle_z, "six_turner: exit axis must meet the twister bore height (world 17)");
     assert(axis_z - 12 - thickness/2 >= 0.1, "six_turner: mouth floor must stay above the base");
@@ -99,8 +99,8 @@ module six_turner() {
     assert(earA[0] + ear/2 == 6 && earB[0] + ear/2 == turner_len - 6
         && earA[0] + ear/2 + plow_start == 132 && earB[0] + ear/2 + plow_start == 153,
         "six_turner: ear holes must hit chassis X (world 132/153)");
-    assert(earA[1] + ear/2 + 10 == 6 && earB[1] + ear/2 + 10 == 54,
-        "six_turner: ear holes must hit chassis rows (world 6/54)");
+    assert(earA[1] + ear/2 + (chassis_width/2 - 20) == 6 && earB[1] + ear/2 + (chassis_width/2 - 20) == 62,
+        "six_turner: ear holes must hit chassis rows (world 6/62)");
     assert(hole_d == bolt_dia + 2*tolerance, "six_turner: ear holes must be M3 clearance");
     // No added solids: the part is exactly printable_folder().
     // Seeded pocket core must thread the 24-wide entry mouth.
@@ -124,8 +124,8 @@ module six_turner() {
                 translate([earA[0], earA[1], 0]) cube([ear, ear, ear_t]);
                 translate([earB[0], earB[1], 0]) cube([ear, ear, ear_t]);
                 // Ground straps (z0..1, tie ears to pedestal feet).
-                translate([3, -7, 0]) cube([6, 21, 1]);
-                translate([24, 20, 0]) cube([6, 27, 1]);
+                translate([3, -11, 0]) cube([6, 25, 1]);
+                translate([24, 20, 0]) cube([6, 25, 1]);
                 // Support pedestals (tops fused into the sheet floor wall).
                 translate([pedA[0], pedA[2], 0]) cube([pedA[1] - pedA[0], pedA[3] - pedA[2], pedA[4]]);
                 translate([pedB[0], pedB[2], 0]) cube([pedB[1] - pedB[0], pedB[3] - pedB[2], pedB[4]]);

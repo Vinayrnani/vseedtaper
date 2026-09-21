@@ -282,28 +282,28 @@
   // All positions in root-local M-frame coords: M(x,y,z) = (x,z,-y).
   // Drum pivot at OpenSCAD (100, 30, 60) -> root-local (100, 60, -30)
   var drumPivot = new THREE.Group();
-  drumPivot.position.set(100, 60, -30);
+  drumPivot.position.set(100, 60, -34);
   root.add(drumPivot);
 
     // Hopper at OpenSCAD (100, 30, 4) -> root-local (100, 4, -30)
     // v10: hopper is ONE wrap-around part (left retention cover + right
     // wedge + corner tube); no separate shroud part/pivot exists.
     var hopperPivot = new THREE.Group();
-    hopperPivot.position.set(100, 4, -30);
+    hopperPivot.position.set(100, 4, -34);
     root.add(hopperPivot);
 
   // Shroud tunnel at OpenSCAD (116, 30, 0) -> root-local (116, 0, -30)
   // v79: enclosed tape cover EAST of drum (drum exit -> six_turner,
   // world x 116-124, centroid 120). Moves with hopper as one unit.
   var shroudPivot = new THREE.Group();
-  shroudPivot.position.set(116, 0, -30);
+  shroudPivot.position.set(116, 0, -34);
   root.add(shroudPivot);
 
   // Spool cones at OpenSCAD (-6, 4, 65) and (-6, 56, 65)
   // spoolGroup midpoint at OpenSCAD (-6, 30, 65) -> Three.js (-6, 65, -30)
   // v22: spool moved west (10->-6), clear of back wall.
   var spoolGroup = new THREE.Group();
-  spoolGroup.position.set(-6, 65, -30);
+  spoolGroup.position.set(-6, 65, -34);
   root.add(spoolGroup);
 
   // Seed cradle at OpenSCAD (126, 17.3, 4) -> Three.js (126, 4, -17.3)
@@ -317,11 +317,11 @@
   root.add(plowPivot);
 
 
-   // Crank mount at OpenSCAD (160, 68, 60) = crank axle with 20T gear,
-   // outside FRONT wall (x = crank_mount_x = 160, y = crank_mount_y = 68) ->
-   // root-local (160, 60, -68). v81: crank meshes drum 40T, external counter-rotation.
+   // Crank mount at OpenSCAD (160, 76, 60) = crank axle with 20T gear,
+   // outside FRONT wall (x = crank_mount_x = 160, y = crank_mount_y = 76) ->
+   // root-local (160, 60, -76). v83: crank meshes drum 40T, external counter-rotation.
    var crankMount = new THREE.Group();
-   crankMount.position.set(160, 60, -68);
+   crankMount.position.set(160, 60, -76);
    root.add(crankMount);
    var crankSpinner = new THREE.Group();
    crankSpinner.position.set(0, 0, 0);
@@ -332,21 +332,21 @@
     // Thread twister at OpenSCAD (172, 30, 17) -> (172, 17, -30): ring
     // axis along root X, spins rotation.x (same sign as scad Rx angle).
     var twisterPivot = new THREE.Group();
-    twisterPivot.position.set(172, 17, -30);
+    twisterPivot.position.set(172, 17, -34);
     root.add(twisterPivot);
     // Vertical-nip pull pair at OpenSCAD (194, 30-/+14.2, 4) ->
     // (194, 4, -15.8) / (194, 4, -44.2): vertical axes stay vertical
     // under child Rx(-90), spin about root Y (same sign as scad Rz).
     var pullAPivot = new THREE.Group();
-    pullAPivot.position.set(194, 4, -17.6);
+    pullAPivot.position.set(194, 4, -21.6);
     root.add(pullAPivot);
     var pullBPivot = new THREE.Group();
-    pullBPivot.position.set(194, 4, -42.4);
+    pullBPivot.position.set(194, 4, -46.4);
     root.add(pullBPivot);
     // Wind-up reel at OpenSCAD (226, 30, 34) -> (226, 34, -30): axle
     // along root Z like the drum, spins rotation.z (negated scad angle).
     var takeupPivot = new THREE.Group();
-    takeupPivot.position.set(226, 34, -30);
+    takeupPivot.position.set(226, 34, -34);
     root.add(takeupPivot);
 
   // ---------- tape ribbon with center U-fold bend (procedural, v28 true mimic, v31 west + transit, v33 lane 13) ----------
@@ -399,7 +399,7 @@
   // outward (reverse S) with feet landing back on the wings. Arc centers
   // (z=+-2.0, y=0.4+1.5=1.9) at full depth.
   var tapeFoldGroup = new THREE.Group();
-  tapeFoldGroup.position.set(TAPE_FOLD_START + TAPE_FOLD_LEN / 2, TAPE_Z, -30);
+  tapeFoldGroup.position.set(TAPE_FOLD_START + TAPE_FOLD_LEN / 2, TAPE_Z, -34);
   var tapeArcMeshes = [];
   var TAPE_DX = TAPE_FOLD_LEN / TAPE_N_X;
   function tapeFoldSeg(p0, p1, xc, dx) { // p = [z, y] cross-section path points
@@ -460,7 +460,7 @@
   var leadAng = Math.atan2(leadDz, leadDx);
   var leader = new THREE.Mesh(new THREE.BoxGeometry(leadLen + 1, 0.4, LEAD_W), tapeMat);
   leader.position.set((LEAD_X0 + LEAD_X1) / 2 + 0.25 * Math.cos(leadAng),
-    TAPE_Z + 0.4 + leadDz / 2 + 0.25 * Math.sin(leadAng), -30);
+    TAPE_Z + 0.4 + leadDz / 2 + 0.25 * Math.sin(leadAng), -34);
   leader.rotation.z = leadAng;
   leader.castShadow = true;
   root.add(leader);
@@ -500,7 +500,7 @@
   // (root-local x 165..179, centre BIND_X=172 = plow_end+13, axis at
   // y=17/z=-30, helix radius 4.5 around the 7.8 pocket). Phase offset
   // PI = the 2 twister arms; helix advance + scroll follows the tape.
-  var BIND_X = 172, BIND_Y = 17, BIND_Z = -30, BIND_R = 4.5, BIND_HALF = 7;
+  var BIND_X = 172, BIND_Y = 17, BIND_Z = -34, BIND_R = 4.5, BIND_HALF = 7;
   var THREAD_N = 42;
   var threadMat = new THREE.LineBasicMaterial({ color: 0xf5ead0 });
   function makeThreadLine() {
@@ -637,10 +637,10 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 45; // v81: drum phase offset +4.5° (tooth-into-gap mesh), ASSET_V 44->45
+  var ASSET_V = 46; // v82: twister_axle static part + lane shift -30→-34 + chassis lift, ASSET_V 45->46
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
-        parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
+        parent: root, pos: [0, -15, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
       { id: 'hopper', label: 'Hopper (wrap-around, bottom-drop)', file: 'stl/hopper.glb', color: 0xd9b23a,
         parent: hopperPivot, pos: [0, 19.4, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.15 }, // v33: export drops 19.4 to min_z=0 (hover pipe bottom; was 19.9); +19.4 Y re-seats drum centre on pivot, pipe hovers 10 above ribbon top
       { id: 'shroud', label: 'Shroud (tape cover)', file: 'stl/shroud.glb', color: 0x7c8a9c,
@@ -656,7 +656,9 @@
       { id: 'crank', label: 'Crank (drum drive)', file: 'stl/crank.glb', color: 0xb03a2e,
         parent: crankSpinner, pos: [-5, -8.47, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.5 },
       { id: 'twister', label: 'Thread twister (hollow 2-rod binder)', file: 'stl/twister.glb', color: 0xc9a227,
-        parent: twisterPivot, pos: [0, -12, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 },
+        parent: twisterPivot, pos: [0, -29.5, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 },
+      { id: 'twister_axle', label: 'Twister axle (static pedestal+tube)', file: 'stl/twister_axle.glb', color: 0x5b7fa6,
+        parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
       { id: 'pull_a', label: 'Vertical pull A (cushioned)', file: 'stl/pull_a.glb', color: 0x3f434a,
         parent: pullAPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.05, roughness: 0.9 }, // v52: soft rubber/silicone cushion sleeve (firm grip, no crush); OD ~d15 => 4/3 spin keeps surface speed, spacing driver
       { id: 'pull_b', label: 'Vertical pull B (cushioned)', file: 'stl/pull_b.glb', color: 0x3f434a,
@@ -667,7 +669,7 @@
    // Display order for the parts panel (matches user checklist + tape/seeds extras).
    var PART_ORDER = ['chassis', 'hopper', 'shroud', 'cartridge', 'cones_a',
       'cones_b', 'plow', 'crank',
-      'twister', 'pull_a', 'pull_b', 'takeup', 'tape', 'seeds'];
+      'twister', 'twister_axle', 'pull_a', 'pull_b', 'takeup', 'tape', 'seeds'];
 
   var toggleGroups = {};
   var togglesDiv = document.getElementById('toggles');
@@ -931,7 +933,7 @@
     // to the pack; the old 100+mod(advance,62.83) scroll slid the ribbon
     // +63mm per rev, uncovering spool/nip/forming and dangling it past
     // the chassis east end). Advance readout below still counts tape mm.
-    tapeGroup.position.set(TAPE_CX, TAPE_Z, -30);
+    tapeGroup.position.set(TAPE_CX, TAPE_Z, -34);
 
     // Seed drop at hopper BOTTOM-CENTER hover pipe exit (v33 option B:
     // bore centre world x=100, round pipe ID6/OD10 L10, bottom y=23.4
@@ -942,7 +944,7 @@
     // Hover proof constants (mirror hopper_body() in .scad).
     window._dropSeal = { bore: 7.6, outer: 10, tubeBottomWorld: 23.4, ribbonTop: 13.4, dropX: 100, pipeLen: 10, hoverGap: 10, wall: 1.2, throatCx: 0 };
     var phase = mod(revs * DRUM_RATIO * 6, 1); // v13: 6 drops per drum rev (6 cavities)
-    dropSeed.position.set(100, 30 - phase * 16, -30);
+    dropSeed.position.set(100, 30 - phase * 16, -34);
 
     var crankRevs = revs; // v79: crank turns at 1:1 (drum 0.5x via 20/40T mesh)
     stCrank.textContent = crankRevs.toFixed(2);

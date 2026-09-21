@@ -33,6 +33,9 @@ module animated_assembly() {
     // Chassis
     chassis();
 
+    // Static twister axle (absolute coords, no transform — pedestal + tube + snap fingers)
+    twister_axle();
+
     // Spool cones
     translate([spool_axle_x, wall_thick+1, spool_axle_z])
         rotate([-90,0,0]) single_cone();
@@ -146,7 +149,7 @@ if (num_divots == 6) {
 if (part_to_render == "all") {
     assemble_all();
 } else if (part_to_render == "chassis") {
-    chassis();
+    translate([0, 0, 15]) chassis(); // feet z=-15 → min_z=0
 } else if (part_to_render == "hopper") {
     // v33 printable: standalone export drops to print base min_z=0
     // (local hover-pipe bottom 19.4 -> 0; was 19.9/25.9/26.5);
@@ -165,8 +168,11 @@ if (part_to_render == "all") {
 } else if (part_to_render == "rollers") {
     pull_rollers();
 } else if (part_to_render == "twister") {
-    // Rotor centred at origin; lift to print base (min_z=0).
-    translate([0, 0, twister_lift]) thread_twister();
+    // Bobbin-down export pose: one bobbin straight down → min_z = tw_lift - (tw_orbit + bob_d/2) = 0.15
+    translate([0, 0, tw_lift]) rotate([90, 0, 0]) thread_twister();
+} else if (part_to_render == "twister_axle") {
+    // Static axle (absolute coords, no transform needed for export).
+    twister_axle();
 } else if (part_to_render == "pull_a") {
     vpull_roller(); // base at z=0 already
 } else if (part_to_render == "pull_b") {
