@@ -1,6 +1,9 @@
 # Requirements Change Log
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
 
+## v86 — 2026-09-22
+- Axle mouth solid: bore Ø10 open; tube OD15 x160..184.5 frozen; NEW rim ring x184..187 OD20 (r10) 3mm axial, wall r5..r10, bore-entry chamfer 45°x1.5mm; slots 1.5mm shortened x176..183; lock lip re-cut on rim ID (depth 1mm/width 1.5mm); assert hub ends ≤184. True bevel teeth: module 2, Z=24, PA 20°, pitch r24, cone 45° (1:1 90° future mate), face 7mm, backlash 0.2mm/flank, tip ≥0.8mm, no undercuts, x160..167 root r18 tip r27, clear disc r23 / sweep R32.4 (axial gap asserted). Frozen: R19/disc r23/OD15/bore10/lane_y/hub r7.8+lip, drum/crank/tape untouched. Verify: manifold+asserts, regen twister+axle, ASSET_V bump, pool screenshots, 0 errors, no code commit pre-APPROVE.
+
 ## v85 — 2026-09-22
 - Twister clean-sheet rebuild: bobbin pins OD6 shaft, visible slot >=2.5mm full length, 45°-chamfered arrow tip OD9-10 (NO true undercuts — FDM printable), twin-prong push-lock like reference photo. Teeth: true bevel profile, trapezoid + angled flanks + back-to-front taper, 18-24T, features >=0.8mm, printable. Axle mouth: full-wall ring, 3 uniform 1.5mm slots, bold barb r9, full annulus face. AXIS FIX: rotor spin axis coaxial with axle tube axis (remove off-axis mount; measured fault rotor world [74.5,19.4,17.8] vs axle [71.5,14.5,21.0]). UNCHANGED: R19 orbit, disc r23, OD15/bore10, lane_y=34, hub bore r7.8+lip, -3x crank drive, tape path.
 

@@ -1,5 +1,12 @@
-**Version: v85**
+**Version: v86**
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
+
+## v86 Axle mouth solid + true bevel teeth - 2026-09-22
+
+1. **Axle mouth solid**: bore Ø10 open; tube OD15 x160..184.5 frozen; NEW rim ring x184..187 OD20 (r10) 3mm axial, wall r5..r10, bore-entry chamfer 45°x1.5mm; slots 1.5mm shortened x176..183; lock lip re-cut on rim ID (depth 1mm / width 1.5mm); assert hub ends ≤184.
+2. **True bevel teeth**: module 2, Z=24, PA 20°, pitch r24, cone 45° (1:1 90° future mate), face 7mm, backlash 0.2mm/flank, tip ≥0.8mm, no undercuts, x160..167 root r18 tip r27, clear disc r23 / sweep R32.4 (axial gap asserted).
+3. **Frozen**: R19/disc r23/OD15/bore10/lane_y/hub r7.8+lip, drum/crank/tape untouched.
+4. **Verify**: manifold+asserts, regen twister+axle, ASSET_V bump, pool screenshots, 0 errors, no code commit pre-APPROVE.
 
 ## v85 Twister clean-sheet rebuild - 2026-09-22
 
