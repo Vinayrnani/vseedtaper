@@ -7,8 +7,9 @@
       scad/gears.scad     — hex_hole, round_axle_hole, spur_gear, bevel_gear, hex_bolt, bearing_block
       scad/chassis.scad   — chassis()
       scad/feed.scad      — single_cone, spool_cones, hopper_body, seed_cartridge, seed_cradle
-      scad/plow.scad      — scroll_sheet, six_turner, folding_plow
-      scad/stations.scad  — seed_tape_bend, former_collar, knurled_roller, pull_rollers, thread_twister, vpull_roller, takeup_reel, crank_assembly
+     scad/plow.scad      — scroll_sheet, six_turner, folding_plow
+     scad/stations.scad  — seed_tape_bend, former_collar, knurled_roller, pull_rollers, thread_twister, vpull_roller, takeup_reel, crank_assembly
+     scad/drive_train.scad — v95 from-crank clusters (A/B/C/D/I), O-tire, bar1 rail
 */
 
 part_to_render = "all";
@@ -20,6 +21,7 @@ include <scad/chassis.scad>;
 include <scad/feed.scad>;
 include <scad/plow.scad>;
 include <scad/stations.scad>;
+include <scad/drive_train.scad>;
 
 module animated_assembly() {
     drum_angle = -360*$t + 4.5;  // v81: +4.5° half-pitch phase (40T drum) for tooth-into-gap mesh with crank 20T
@@ -83,17 +85,43 @@ module animated_assembly() {
 
     // v79: rollers REMOVED; upper/lower roller lines deleted.
 
-    // Crank drives from x=160 (v79): 20T gear meshes drum 40T at dist=60.
-    // Front wall (Y=68), grip +Y outward. Crank rotates 2x drum (720*$t).
-    translate([crank_mount_x, crank_mount_y, drum_axle_z])
+    // Crank drives from (152,105) (v95: swung up on the r60 mesh circle):
+    // 20T gear meshes drum 40T at dist=60. Front wall (Y=68), grip +Y
+    // outward. Crank rotates 2x drum (720*$t).
+    translate([crank_mount_x, crank_mount_y, crank_axle_z])
         rotate([0, crank_angle, 0])
             translate([-crank_pivot_x, 0, -crank_pivot_z])
                 crank_assembly();
 
+    // v95 from-crank train (user: crank up + attached compounds + zigzag):
+    // crank20 -> A[10+30] (-2) -> B[10+bevel] (+6) -> corner ->
+    // C[bevel+15] (-6) -> idler[12+12] (+7.5) -> D[12+wheel] (-7.5) ->
+    // twister (+7.5 friction flip) = 2.5 wraps/seed. Angles = rev*crank_angle.
+    translate([v95_Ax, v95_A_y0, v95_Az])
+        rotate([0, A_rev * crank_angle, 0])
+            dt_cluster_A();
+    translate([v95_Bx, v95_B_y0, v95_Bz])
+        rotate([0, B_rev * crank_angle, 0])
+            dt_cluster_B();
+    translate([v95_C_x0, v95_C_y, v95_C_z])
+        rotate([C_rev * crank_angle, 0, 0])
+            dt_cluster_C();
+    translate([v95_I_x0, v95_I_y, v95_I_z])
+        rotate([I_rev * crank_angle, 0, 0])
+            dt_cluster_I();
+    translate([v95_D_x0, v95_D_y, v95_D_z])
+        rotate([D_rev * crank_angle, 0, 0])
+            dt_cluster_D();
+    translate([(v95_tire_x0 + v95_tire_x1)/2, v95_D_y, v95_D_z])
+        rotate([D_rev * crank_angle, 0, 0])
+            dt_tire();
+    // bar1 back-wall rail (static, absolute coords)
+    dt_bar1();
+
     // v37 Thread twister (v51 HOLLOW: ring + 2 rod bobbin holders
     // orbit the tape axis just east of the plow, binding each seed
-    // into the folded pocket; side friction drive, 6x at the
-    // layshaft, viewer kinematic -3x about X).
+    // into the folded pocket; v95 from-crank drive (2*3*1.25 = 7.5x,
+    // idler 1:1 through, friction flip +7.5 about X, 2.5 wraps/seed).
     translate([bind_x, chassis_width/2, twister_axle_z])
         rotate([twister_angle, 0, 0])
             thread_twister();
@@ -175,6 +203,21 @@ if (part_to_render == "all") {
     takeup_reel(); // built along Z, base at z=0 already
 } else if (part_to_render == "crank") {
     crank_assembly();
+} else if (part_to_render == "gear_A") {
+    dt_cluster_A(); // local Y frame (viewer pivot compensates, print rotated flat)
+} else if (part_to_render == "gear_B") {
+    dt_cluster_B();
+} else if (part_to_render == "gear_C") {
+    dt_cluster_C(); // local X frame
+} else if (part_to_render == "gear_D") {
+    dt_cluster_D();
+} else if (part_to_render == "gear_I") {
+    dt_cluster_I();
+} else if (part_to_render == "tire") {
+    dt_tire(); // centred at origin (assembly places at tire centre)
+} else if (part_to_render == "bar1") {
+    // Static rail (absolute coords, no transform needed for export).
+    dt_bar1();
 } else {
     echo(str("ERROR: unknown part_to_render='", part_to_render, "'."));
     cube([1,1,1]);

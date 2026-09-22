@@ -12,7 +12,7 @@ OpenSCAD CAD + static three.js viewer for a **seed-tape making machine** (v2). N
 
 ### Machine (CAD — `seed_tape_machine_v2.scad`)
 - Builds the full assembly: chassis, hopper, drum/cartridge, cones, plow (six-turner), tape path + former collar, cradle, twister + twister axle + pedestal, pull rollers a/b + bridge, takeup, crank.
-- Drive: crank → drum gear mesh (module 2, fail-loud mesh distance). Twister driven at ratio from crank (viewer signs documented in code).
+- Drive: crank → drum gear mesh (module 2, fail-loud mesh distance). Twister powered from the crank at 2.5 wraps per seed (7.5x crank: crank20 → A[10+30] → B[10+bevel] → corner → C[bevel+15] → idler[12+12] → D[12+wheel] → friction tire on disc OD; seed rate unchanged at 3 seeds/crank rev).
 - Feed path: hopper drop → plow forms/folders tape → twister orients seed pocket → pull/takeup advance tape. Clearances asserted fail-loud on every stack-up.
 - CAD conventions: `$fn=60` curves, `tol=0.3` (all clearances derive from `tol`).
 - Single-object isolation: changing one part must not silently alter others.
@@ -24,10 +24,15 @@ OpenSCAD CAD + static three.js viewer for a **seed-tape making machine** (v2). N
 
 ### Viewer (`web/`)
 - `PART_DEFS` + per-part pivots + `SCHEME` colors; loads `stl/*.glb` only (never `.stl` in previews).
+- Every part has its own preview toggle (one checkbox per part id, auto-created).
 - Vendored `three.min.js`, `GLTFLoader.js`, `OrbitControls.js` — never CDN-swap.
 - Cache bust `?v=N` on GLB/script URLs; bump `ASSET_V` when regenerating assets.
 - Animated assembly preview for user review on port **9099** only.
 - `web/vNN/` snapshots: only `index.html`, `js/`, `stl/*.glb`.
+
+### Printable parts (`print/`)
+- Every object has its own separate `.stl` file (one per part, oriented flat, `min_z=0`); parts assemble into the full machine (fused shaft clusters, wall-bore cantilevers, rail + pedestal supports; demo-load overhangs documented in code).
+- `print/*.stl` are generated artifacts — rebuild via `./regenerate_glbs.sh`, never hand-edit.
 
 ### Regeneration pipeline
 - `./regenerate_glbs.sh`: **`openscad-nightly` only** (manifold, headless, no Xvfb, no 2021.01) + `python3 trimesh` STL→GLB. Missing nightly → fail loud with install hint.

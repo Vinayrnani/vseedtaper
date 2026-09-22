@@ -44,7 +44,7 @@ for arg in "$@"; do
     fi
 done
 
-ALL_GLB="chassis hopper cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister twister_axle pull_a pull_b takeup"
+ALL_GLB="chassis hopper cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister twister_axle pull_a pull_b takeup gear_A gear_B gear_C gear_D gear_I tire bar1"
 if [ "${#FILTER[@]}" -gt 0 ]; then
     for p in "${FILTER[@]}"; do
         case " $ALL_GLB " in
@@ -185,19 +185,30 @@ echo "=== Step 2: Converting STL to GLB (single persistent python, $JOBS workers
 # NOTE: converts run after the export barrier (all STLs ready). Overlapping
 # converts with exports was considered but skipped: marginal gain for 12
 # parts, extra failure modes; the barrier keeps failures loud and simple.
-python3 - "$JOBS" "$TMPDIR" "$STL_DIR" "${DIRTY[@]}" <<'PYEOF'
+python3 - "$JOBS" "$TMPDIR" "$STL_DIR" "$SCRIPT_DIR/print" "${DIRTY[@]}" <<'PYEOF'
 import os
 import sys
+import numpy as np
 import trimesh
 from concurrent.futures import ThreadPoolExecutor
 
 jobs = max(1, int(sys.argv[1]))
-tmpdir, stldir = sys.argv[2], sys.argv[3]
-wanted = sys.argv[4:]
+tmpdir, stldir, printdir = sys.argv[2], sys.argv[3], sys.argv[4]
+wanted = sys.argv[5:]
 if not wanted:
     sys.exit(0)
+os.makedirs(printdir, exist_ok=True)
 
 base_for = {"rollers_lower": "rlow_s", "rollers_upper": "rup_s"}
+# print orientation: rotate assembly frame flat, then drop to min_z=0.
+# Y-clusters stand tower-style (discs horizontal); X parts stand on end;
+# bar1 lies flat (6 tall); everything else prints as-oriented.
+RX90 = trimesh.transformations.rotation_matrix(np.pi / 2, [1, 0, 0])
+RYN90 = trimesh.transformations.rotation_matrix(-np.pi / 2, [0, 1, 0])
+RYP90 = trimesh.transformations.rotation_matrix(np.pi / 2, [0, 1, 0])
+print_rot = {"gear_A": RX90, "gear_B": RX90,
+             "gear_C": RYN90, "gear_D": RYN90, "gear_I": RYN90,
+             "tire": RYN90, "bar1": RYP90}
 
 def convert_one(glb_name):
     base = base_for.get(glb_name, glb_name)
@@ -206,8 +217,16 @@ def convert_one(glb_name):
     if not os.path.isfile(src):
         return "  SKIP " + glb_name + ": missing " + src
     mesh = trimesh.load(src)
+    if not mesh.is_watertight:
+        print("  WARNING " + glb_name + ": not watertight", flush=True)
     mesh.export(dst)
-    return "  Done: " + dst
+    prot = print_rot.get(glb_name)
+    pm = trimesh.load(src)
+    if prot is not None:
+        pm.apply_transform(prot)
+    pm.vertices -= [0, 0, pm.bounds[0][2]]
+    pm.export(os.path.join(printdir, glb_name + ".stl"))
+    return "  Done: " + dst + " + print/" + glb_name + ".stl"
 
 with ThreadPoolExecutor(max_workers=jobs) as pool:
     for line in pool.map(convert_one, wanted):

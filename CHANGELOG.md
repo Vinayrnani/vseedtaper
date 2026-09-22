@@ -4,6 +4,9 @@ Version-level changes only. Product requirements live in `REQUIREMENTS.md`.
 
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
 
+## v95 — 2026-09-22
+- Twister powered from the hand crank at 2.5 wraps/seed (7.5x/crank, 3 seeds/crank rev unchanged): crank swung up to (152,104.93) on the r60 mesh circle (mesh exact, drum/seed rate untouched); NEW from-crank train crank20 → A[10+30] (-2x) → B[10+bevel10] (+6x) → TRUE-apex mitre corner → C[bevel+15] (-6x) → idler[12+12] (+7.5x, user-approved fill-in) → D[12+r10 wheel] (-7.5x) → friction O-tire tangent to twister disc OD → twister +7.5x. Compounds FUSED per user (one STL per shaft, no press-fit); pinions T≤12 thinned 0.8 (anti-bind); wall-to-wall back rail (B/D/idler bores + B10 slot) + chassis-fused C-idler pedestal (tape-notched, pocket-clear). All positions solved in code, ~50 fail-loud asserts (mesh CDs, contact, product, revs, bands, boxes, radial sweeps). Parts: 7 new STLs (A/B/C/D/I clusters + tire + bar1), each own file + preview toggle; print/ set (25 STLs, oriented flat, min_z=0); viewer 5 pivots + exact spins (probe: -2/+6/-6/+7.5/-7.5/+7.5, 0 errors), ASSET_V 56→57. $fn=60, tol=0.3 kept.
+
 ## v93 — 2026-09-22
 - Viewer plow/twister bore alignment: plowPivot (126,19,-14)→(126,4,-14), base-fused zero ground clearance (v87 +15 was double-counted — pivot and axis_z both carried it, exit rendered at 47 not 32); twisterPivot (184,29.5,-34)→(184,32,-34), rotor bore coaxial with axle bore. CAD unchanged (axis_z=28 + base 4 = 32 = twister_axle_z, asserts already enforce). No GLB regen, ASSET_V stays 56. Verify: verify_v88 PASSED, plow exit bore 32 = twister bore 32, 0 console errors. Snapshot web/v93/ (GLB only). $fn=60, tol=0.3 kept.
 

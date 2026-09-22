@@ -588,7 +588,7 @@ module crank_assembly() {
 // Sign convention (v79: crank at x=160, 20T meshes drum 40T at x=100):
 //   crank_angle = 720*$t (2:1 vs drum, CW about +Y).
 //   drum_angle = -360*$t (external mesh counter-rotation, 0.5× crank).
-//   twister_angle = 360*$t*twister_orbits_per_drum (visual spin only; real gears in a later version).
+//   twister_angle = 360*$t*twister_orbits_per_drum (v95: 15 orbits/drum rev = 2.5 wraps/seed, driven +7.5x by the D friction wheel below).
 //   pull nip pair spins about Z at ±roller_angle*vpull_spin (tape-coupled
 //   4/3 vs the main roller, v52 d15 dia => same surface speed).
 //   takeup_angle = -1440*$t about the reel axle.

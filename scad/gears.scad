@@ -12,10 +12,12 @@ module round_axle_hole(length, dia, clearance=0) {
 // Each tooth = hull(tip_cylinder, root_cylinder) for tapered flanks.
 // ============================================================
 module spur_gear(teeth, module_mm, thickness, bore_flat=0, bore_dia=0, is_hex=false,
-                 hub_dia=0, hub_len=0, lightened=false, collar_dia=0, collar_len=0) {
+                 hub_dia=0, hub_len=0, lightened=false, collar_dia=0, collar_len=0,
+                 tooth_scale=1.0) {
     assert(teeth >= 10 && teeth <= 60, "spur_gear: teeth out of range [10,60]");
     assert(module_mm > 0, "spur_gear: module_mm must be >0");
     assert(thickness > 0, "spur_gear: thickness must be >0");
+    assert(tooth_scale > 0 && tooth_scale <= 1.0, "spur_gear: tooth_scale must be in (0,1]");
     pitch_dia = module_mm * teeth;
     outer_dia = pitch_dia + 2*addendum;
     root_dia  = pitch_dia - 2*dedendum;
@@ -24,8 +26,8 @@ module spur_gear(teeth, module_mm, thickness, bore_flat=0, bore_dia=0, is_hex=fa
     root_r  = root_dia/2;
     circ_pitch = PI * module_mm;
     tip_arc = tooth_arc_frac * circ_pitch;
-    tip_d  = tip_arc;
-    rootd  = 0.72 * circ_pitch;
+    tip_d  = tip_arc * tooth_scale;   // v95: pinion thinning (T<=12 use 0.8, anti-bind)
+    rootd  = 0.72 * circ_pitch * tooth_scale;
     tip_ctr_r  = outer_r - tip_d/2;
     root_ctr_r = root_r - 0.3;
     pitch_ang = 360/teeth;
