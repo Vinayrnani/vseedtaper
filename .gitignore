@@ -20,3 +20,6 @@ web/stl/*.stl
 
 # Regen cache (regenerable build artifact)
 .regen_cache/
+
+# Preview snapshots (local reference only, never tracked)
+web/v*/
