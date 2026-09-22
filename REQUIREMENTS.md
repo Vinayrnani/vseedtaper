@@ -1,5 +1,13 @@
-**Version: v86**
+**Version: v87**
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
+
+## v87 Rotor teeth revert to v85 wedge profile - 2026-09-22
+
+1. **Revert**: rotor teeth from v86 module-2 gear profile (Z=24, PA 20°, pitch r24, cone 45°) back to v85 wedge profile — 24 trapezoidal teeth, base 2.6 / tip 1.6 / depth 7 / flank 45° / taper 15°, built in local fused frame (x -12..-5).
+2. **Reason**: v86 teeth built in absolute frame floated detached from rotor.
+3. **KEEP (v86)**: axle rim OD20, axis fix (pivot/BIND_Y 14.5), arrow pins.
+4. **Frozen**: R19/disc r23/OD15/bore10/lane_y/hub r7.8+lip, drum/crank/tape untouched.
+5. **Verify**: manifold+asserts, regen twister, ASSET_V bump, pool screenshots, 0 errors, no code commit pre-APPROVE.
 
 ## v86 Axle mouth solid + true bevel teeth - 2026-09-22
 

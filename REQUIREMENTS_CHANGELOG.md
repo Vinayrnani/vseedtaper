@@ -1,6 +1,9 @@
 # Requirements Change Log
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
 
+## v87 — 2026-09-22
+- Rotor teeth revert: v86 module-2 gear profile back to v85 wedge profile (24 trapezoidal, base 2.6/tip 1.6/depth 7/flank 45/taper 15) in local fused frame (x -12..-5); reason: v86 teeth built in absolute frame floated detached. KEEP: v86 axle rim OD20, axis fix (pivot/BIND_Y 14.5), arrow pins. Frozen: R19/disc r23/OD15/bore10/lane_y/hub r7.8+lip, drum/crank/tape untouched. Verify: manifold+asserts, regen twister, ASSET_V bump, pool screenshots, 0 errors, no code commit pre-APPROVE.
+
 ## v86 — 2026-09-22
 - Axle mouth solid: bore Ø10 open; tube OD15 x160..184.5 frozen; NEW rim ring x184..187 OD20 (r10) 3mm axial, wall r5..r10, bore-entry chamfer 45°x1.5mm; slots 1.5mm shortened x176..183; lock lip re-cut on rim ID (depth 1mm/width 1.5mm); assert hub ends ≤184. True bevel teeth: module 2, Z=24, PA 20°, pitch r24, cone 45° (1:1 90° future mate), face 7mm, backlash 0.2mm/flank, tip ≥0.8mm, no undercuts, x160..167 root r18 tip r27, clear disc r23 / sweep R32.4 (axial gap asserted). Frozen: R19/disc r23/OD15/bore10/lane_y/hub r7.8+lip, drum/crank/tape untouched. Verify: manifold+asserts, regen twister+axle, ASSET_V bump, pool screenshots, 0 errors, no code commit pre-APPROVE.
 
