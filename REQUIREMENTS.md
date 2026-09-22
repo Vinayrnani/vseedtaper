@@ -1,4 +1,24 @@
-**Version: v83**
+**Version: v85**
+Status: AWAITING USER FINAL APPROVAL — uncommitted.
+
+## v85 Twister clean-sheet rebuild - 2026-09-22
+
+1. **Bobbin pins**: OD6 shaft, visible slot ≥2.5mm full length, 45°-chamfered arrow tip OD9-10 (NO true undercuts — FDM printable), twin-prong push-lock like reference photo.
+2. **Teeth**: true bevel profile, trapezoid + angled flanks + back-to-front taper, 18-24T, features ≥0.8mm, printable.
+3. **Axle mouth**: full-wall ring, 3 uniform 1.5mm slots, bold barb r9, full annulus face.
+4. **AXIS FIX**: rotor spin axis coaxial with axle tube axis (remove off-axis mount; measured fault: rotor world [74.5,19.4,17.8] vs axle [71.5,14.5,21.0]).
+5. **Frozen/UNCHANGED**: R19 orbit, disc r23, OD15/bore10, lane_y=34, hub bore r7.8+lip, -3x crank drive, tape path; fail-loud asserts for every stack-up; `$fn=60`, `tol=0.3` kept; never v1 / web-backup.
+
+## v84 Twister corrections (final numbers) - 2026-09-21
+
+1. **Teeth + pedestal**: teeth → disc back/west face x166..167 (1 thick, via `bevel_gear()` 24T M1.5, NON-MESHING placeholder); pedestal shifts x158..162 (mouth 160 inside pedestal zone, fused-base-by-design; 4mm clear of teeth and slot).
+2. **Bobbin**: SOLID visuals DELETED (pins + collet lips only). `tw_lift` 29.5→23.5 (rendered sweep = disc r23; assert `tw_lift>=tw_disc_r+0.5`). Viewer twister pos [0,-23.5,0]. Physical Class-15 sweep asserts (R19/orbit/slot/feet) KEPT, marked physical-not-rendered; `bob_d`/`bob_h` params kept for asserts.
+3. **Shroud REMOVED entirely**: module + params + assembly + dispatch + regen + viewer + GLB file; snapshots frozen.
+4. **Snap**: 3 fingers @120°, 4 wide, 1.2 thick, x182..185, 1×45° lead-in chamfer + 0.8 barb/30° undercut. Gaps: pin-tip→snap 2 (≥2); bobbin→snap 0.9 (≥0.5 explicit); snap→pull 1.35 (≥1 explicit); barb-outer 9.5 vs eyelet-inner 11 (≥1).
+5. **Eyelets**: R13, r2 posts x170..185, Ø2 cross-hole near tip (~183); tip-vs-pull 1.35 (≥1 explicit).
+6. **Plow**: NO CAD shift (viewer pivot fix verified good by user); mouth gap stays 1 (assert [0.5,2]).
+7. **Viewer**: ASSET_V 46→47.
+8. **Frozen**: fail-loud asserts for every stack-up; `$fn=60`, `tol=0.3` kept; never v1 / web-backup.
 
 ## v83 Twister redesign: static hollow axle + spinning twister, drive gears removed - 2026-09-21
 
