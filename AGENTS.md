@@ -28,7 +28,7 @@ Requirements
   → reviewer screenshots (pool Playwright) + live preview (notify user to look if possible)
   → [if FAIL: implement again → reviewer again]  max 2 fix loops, then ASK USER
   → user APPROVE
-  → ONE commit + push (`CHANGELOG.md` entry + code + snapshot)
+  → ONE commit + push (`CHANGELOG.md` entry + code; snapshot stays local, never committed)
 ```
 
 1. **Requirements + changelog split:** `REQUIREMENTS.md` = **readable product functionality only** (not a version log). Version bumps + per-version change notes go **only** to **`CHANGELOG.md`** (renamed from `REQUIREMENTS_CHANGELOG.md`). Both stay uncommitted until final user APPROVE — never commit/push requirements or changelog alone.
@@ -37,7 +37,7 @@ Requirements
 4. **Reviewer pass:** screenshots via **pool Playwright** (`playwright_pool.js` + `node verify_*.js`; coder/general runs the scripts, reviewer judges images/code read-only). Screenshots are **only for the reviewer's automated review — never shown to the user**. While screenshots run, if the user can review the live preview, notify them to look.
 5. **Fix loop:** on reviewer FAIL → implement again → reviewer again. **Max 2 implement→review cycles**, then **stop and ask the user**. Never a 3rd auto-loop. Never repeat the same tool call/action more than 2 times (same call → same result → stop after 2).
 6. **User APPROVE:** present short layman wording + live preview. Reviewer PASS alone never authorizes commit.
-7. **ONE commit + push** covering `REQUIREMENTS.md` (only if product functionality changed) + `CHANGELOG.md` (vN entry) + code + `web/vNN/` snapshot + ASSET_V bump — only after explicit user APPROVE. Never two commits. Snapshot first: copy `web/index.html` + `web/js/` + `web/stl/*.glb` into `web/vNN/` (GLB only, never `.stl`), uncommitted until APPROVE.
+7. **ONE commit + push** covering `REQUIREMENTS.md` (only if product functionality changed) + `CHANGELOG.md` (vN entry) + code + ASSET_V bump — only after explicit user APPROVE. Never two commits. Snapshot first (local-only, never committed): copy `web/index.html` + `web/js/` + `web/stl/*.glb` into `web/vNN/` (GLB only, never `.stl`). `web/v*/` is gitignored — snapshots stay on disk for local reference, never in git.
 
 ## Gotchas — do not violate
 - **No repeated tool calls / no repeated work (STRICT):** never the same tool call, command, grep/read, or action more than **2 times** with the same result. Attempt once; change approach on the second attempt; after **2 identical attempts** STOP — no third try — report blocker + partial results. Applies to every agent (orchestrator, plan, coder, reviewer, general).
@@ -49,7 +49,7 @@ Requirements
 - Playwright pool: `playwright_pool.js` (one browser, idle-kill 10min). Never `browser.close()` per script — `pool.releaseBrowser(browser)`. Teardown only `node playwright_pool.js stop`; check `node playwright_pool.js status` first. Repo split (globals untouched): coder/general runs verify scripts → reviewer judges screenshots+code read-only. Coder never interprets images; reviewer never runs shell beyond reading.
 - Serve on port 9099 only (iptables); don't change port.
 - CAD: `$fn=60` curves, `tol=0.3` (clearances derive from it) — keep both.
-- Preview folders (`web/v*/`): only `index.html`, `js/`, `stl/*.glb` — never `.stl` intermediates.
+- Preview folders (`web/v*/`): only `index.html`, `js/`, `stl/*.glb` — never `.stl` intermediates. Local-only, gitignored — never commit/push.
 - NO commit/push without explicit user APPROVE — reviewer PASS alone never authorizes committing.
 
 ## Role matrix
@@ -65,7 +65,7 @@ Requirements
 `coder` = small context. Orchestrator splits into small sequential self-contained tasks (one file area / one change). Each task: working dir, exact file path + line hints, old→new change, done criteria, stop conditions (stop before commit unless told), files NOT to touch. Never a multi-phase epic. Reviewer tasks = read-only, single-scope.
 
 ## Modularity (1k lines/file)
-All source (SCAD, JS, HTML, scripts) max ~1000 lines where feasible. Split by responsibility. Behavior-preserving splits with own verify pass. One split = one versioned change (requirements + reviewer PASS + regen if GLBs + snapshot + commit after APPROVE).
+All source (SCAD, JS, HTML, scripts) max ~1000 lines where feasible. Split by responsibility. Behavior-preserving splits with own verify pass. One split = one versioned change (requirements + reviewer PASS + regen if GLBs + local snapshot + commit after APPROVE).
 
 ## Prior-code references (approval gate)
 Consult git history / `web/vNN/` / old commits ONLY when the request relates to that prior work. Other backward-looking digging needs user approval first. Forward work = live HEAD facts, re-verified by grep — never stale pasted line numbers.
