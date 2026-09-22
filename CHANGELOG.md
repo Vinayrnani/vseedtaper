@@ -1,5 +1,11 @@
-# Requirements Change Log
+# CHANGELOG
+
+Version-level changes only. Product requirements live in `REQUIREMENTS.md`.
+
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
+
+## v93 — 2026-09-22
+- Viewer plow/twister bore alignment: plowPivot (126,19,-14)→(126,4,-14), base-fused zero ground clearance (v87 +15 was double-counted — pivot and axis_z both carried it, exit rendered at 47 not 32); twisterPivot (184,29.5,-34)→(184,32,-34), rotor bore coaxial with axle bore. CAD unchanged (axis_z=28 + base 4 = 32 = twister_axle_z, asserts already enforce). No GLB regen, ASSET_V stays 56. Verify: verify_v88 PASSED, plow exit bore 32 = twister bore 32, 0 console errors. Snapshot web/v93/ (GLB only). $fn=60, tol=0.3 kept.
 
 ## v92 — 2026-09-22
 - Strict no-repeat rule: never the same tool call/action more than 2 times (attempt once, change approach once, then stop + report). Added to AGENTS.md Gotchas+Workflow and subagent-discipline.md. All prior v91 rules kept; no commit pre-APPROVE.

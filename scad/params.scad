@@ -86,13 +86,15 @@ target_spacing     = 152.4;                   // v14 MVP: fixed 6 inch spacing
 // v79: rollers REMOVED; crank carries the 20T pinion at x=160, front wall.
 // ============================================================
 drum_axle_x  = 100;
-drum_axle_z  = 60;   // ≥ drum_radius + base_thick + clearance = 29.3 ✓
+drum_axle_z  = 75;   // v87 +15 lift: ≥ drum_radius + base_thick + clearance = 29.3 ✓ (was 60)
+assert(drum_axle_z == 75, "drum_axle_z must be 75 (+15 lift) — feeds hopper assembly +15");
 crank_axle_x = 160;  // v79: crank (20T) meshes drum (40T), dist=60=center_distance
-crank_axle_z = 60;  // same Z as drum for gear mesh
+crank_axle_z = 75;  // same Z as drum for gear mesh (+15 with drum)
 roller_axle_x = crank_axle_x;  // v79: alias (old roller position, now crank axle)
 roller_axle_z = crank_axle_z;  // v79: alias
 spool_axle_x  = -6;  // v22: 10->-6, clears roller back gear (box-level X gap 1.5)
-spool_axle_z  = 65;  // 120mm max roll OD, height 65mm above base
+spool_axle_z  = 80;  // v87 +15 lift: 120mm max roll OD, height 80mm above base (was 65)
+assert(spool_axle_z == 80, "cone rod (spool_axle_z) must be 80 (+15 lift)");
 
 // ============================================================
 // Chassis
@@ -101,7 +103,7 @@ chassis_x0    = -14; // v22: west edge (was 0); east edge chassis_x0+chassis_len
 chassis_len   = 274; // v86: 262->274, east extension seats the wind-up reel clear of the pull nip (X gap 6)
 chassis_width = 68;
 lane_y = chassis_width / 2;  // lane center, was hardcoded 30
-chassis_height = 110;  // > max(spool top=90, drum top=102) + 5 = 107 ✓
+chassis_height = 125;  // v87 +15: > max(spool top=105, drum top=117) + 5 = 122 ✓ (was 110)
 base_thick    = 4;
 wall_thick    = 3;
 
@@ -171,7 +173,7 @@ hopper_flange_thick = 3;
 hopper_clearance = 0.3;
 hopper_inner_r  = drum_radius + hopper_clearance; // 25.3
 hopper_outer_r  = hopper_inner_r + seed_dia + 3;  // 30.8
-hopper_axis_z   = drum_axle_z - base_thick;       // 56
+hopper_axis_z   = 56;  // v87 +15 lift: frozen local axis (assembly Z = drum_axle_z - 56 = base_thick + 15; was drum_axle_z - base_thick which tracked and broke body frame)
 wiper_slot      = 1.2;
 groove_w        = 7;     // inner-face groove width, matches drum cavity track (fits 6mm cavities d6.6)
 groove_d        = 0.7;   // v27 printable: 0.8 left only 1.175 wall (<1.2); 0.7 leaves ~1.275, still clears cavity protrusion 0.6
@@ -251,9 +253,9 @@ tape_flat_end    = 220;
 tape_len         = tape_flat_end - tape_x0;   // 234 (was 222: shifted +12 with stations)
 leader_x0        = 218;   // leader start (2 overlap onto the flat ribbon)
 leader_x1        = 236.5; // leader end (inside the pack silhouette)
-leader_z1        = 26.5;  // leader end height (pack bottom 26 + 0.5 bite)
+leader_z1        = 41.5; // v87 +15 lift: leader end height (pack bottom 41 + 0.5 bite)
 leader_w         = 8;     // leader width (finished folded tube, not full 25.4)
-tape_z           = 13;           // v33 lane (was 24): transit top 21.4 clears disc 35 by 13.6, ribbon top 13.4
+tape_z           = 28;           // v87 +15 lift: transit top 36.4, ribbon top 28.4
 tape_n_arc       = 20;           // arc facets per side (smooth like $fn=60 curves)
 tape_n_x         = 12;           // taper steps along X (progressive entry->exit)
 
@@ -279,8 +281,9 @@ tape_n_x         = 12;           // taper steps along X (progressive entry->exit
 bind_x   = plow_end + 25;   // 184: thread orbit station east of the plow (rotor X half 4 -> 180..188, gap 9)
 pull_x   = plow_end + 47;   // 206: vertical-nip pull station (sleeve r7.65 -> 198.35..213.65, gap 8.35 to twister east)
 takeup_x = 238;             // wind-up reel east (flange r16 -> 222..254, gap 8.35 to pull east; chassis east 260)
-takeup_z = 34;              // reel axle height (flange 18..50: bottom >= 0, top < 110)
-twister_axle_z = tape_z + 4;      // 17: ring centre over the folded pocket (pocket top ~21)
+takeup_z = 49;              // v87 +15 lift: reel axle height (flange 33..65: bottom >= 0, top < 125)
+assert(takeup_z == 49, "takeup_z must be 49 (+15 lift from 34)");
+twister_axle_z = tape_z + 4;      // 32: v87 +15 lift: ring centre over the folded pocket (pocket top ~36)
 twister_arms = 2;                 // 2 bobbin spindles
 twister_orbits_per_drum = 6;      // one bind per cavity per drum rev (== num_divots)
 tw_bore_d = 10;                   // twister bore diameter (tape pocket 7.8 passes through)
@@ -416,7 +419,7 @@ turner_end = plow_end;            // 159
 turner_curl_r = 6.5;              // v54 reference only (no shell)
 turner_curl_bore = 4.2;           // v54 reference only (no bore)
 turner_curl_off = 1.2;            // v54 reference only (no bore offset)
-turner_curl_cz = 13;              // v56 bore-axis height (lane-centred; was 12)
+turner_curl_cz = 28;              // v87 +15 lift: bore-axis height (lane-centred)
 
 // ============================================================
 // OVERHEAD twister drive (user: duplicate drum gear + bottom
@@ -453,8 +456,8 @@ turner_curl_cz = 13;              // v56 bore-axis height (lane-centred; was 12)
 // Pull support pins (static bars: base-fused, slip-fit in roller
 // bores + cup-B bore; the tape-coupled rotors spin on them).
 pull_pin_r = axle_dia/2;             // 4: static pin radius (slip in bores)
-pull_pinA_z0 = 2; pull_pinA_z1 = 27; // base-fused .. hidden in roller top cap (v52 shorter stack top 27)
-pull_pinB_z0 = 2; pull_pinB_z1 = 27; // base-fused .. hidden in cup-B bore (v52 cup 25..28)
+pull_pinA_z0 = 2; pull_pinA_z1 = 42; // base-fused .. hidden in roller top cap (v87 stack top 42)
+pull_pinB_z0 = 2; pull_pinB_z1 = 42; // base-fused .. hidden in cup-B bore (v87 cup 40..43)
 // cup B kept (bored) for the static pin B (no tube hole v48).
 vpull_collar_z = 5.0;              // v45 mid-collar centre LOCAL (assembly lifts +base_thick: CAD top 4+5+1.5=10.5 clears ribbon base 13 by 2.5; was 12 grazing the tape)
 
@@ -512,12 +515,13 @@ assert(abs((twister_axle_z + tw_teeth_top_r) - (drum_axle_z - (roller_pitch_dia/
            drum_axle_z - (roller_pitch_dia/2 + addendum)));
 assert(axle_clearance_dia/2 > axle_dia/2, "v48: bores must slip on shafts (free spin, no fuse)");
 assert(pull_pinA_z0 >= 0 && pull_pinA_z0 <= base_thick, "v48: pull pin A must start fused in the base");
-assert(pull_pinA_z1 >= base_thick + vpull_h && pull_pinA_z1 <= base_thick + vpull_h + 3, str("v52: pull pin A top (27) must hide inside the roller top cap (24..27): ", pull_pinA_z1));
-assert(pull_pinB_z1 > 25 && pull_pinB_z1 <= 28, str("v52: pull pin B top (27) must hide inside cup-B bore (25..28): ", pull_pinB_z1));
-assert(spool_axle_z == 65, "spool_axle_z must be 65");
+assert(pull_pinA_z1 >= base_thick + 15 + vpull_h && pull_pinA_z1 <= base_thick + 15 + vpull_h + 3, str("v87: pull pin A top (42) must hide inside the roller top cap (39..42): ", pull_pinA_z1));
+assert(pull_pinB_z1 > 40 && pull_pinB_z1 <= 43, str("v87: pull pin B top (42) must hide inside cup-B bore (40..43): ", pull_pinB_z1));
+assert(spool_axle_z == 80, "spool_axle_z must be 80");
 assert(chassis_height > max(spool_axle_z + cone_h + bb_height_spool, drum_axle_z + drum_outer_r) + 5,
        str("chassis_height must hold tallest axle + clearance: need > ", max(spool_axle_z+cone_h+bb_height_spool, drum_axle_z+drum_outer_r)+5, " got ", chassis_height));
 assert(hopper_inner_r > drum_radius, "hopper_inner_r must exceed drum_radius (clearance >0)");
+assert(drum_axle_z - hopper_axis_z == base_thick + 15, str("v87: hopper assembly must sit +15 (translate = base_thick+15): ", drum_axle_z - hopper_axis_z));
 assert(plow_len > 15, str("plow_len must exceed 15, got ", plow_len));
 assert(tape_thick >= 0.3, str("tape_thick must stay printable (>=0.3, no zero-thickness), got ", tape_thick));
 assert(tape_bend_radius >= 1 && tape_bend_radius <= 6,
@@ -545,7 +549,7 @@ assert(tape_x0 + tape_len >= plow_end, str("tape ribbon must reach the plow end:
 assert(bind_x > plow_end, str("bind station must sit east of the plow end: ", bind_x));
 assert(twister_arms == 2, "thread twister must carry exactly 2 thread arms");
 assert(twister_orbits_per_drum == num_divots, "twister must orbit once per cavity (6 per drum rev, one bind per seed)");
-assert(twister_axle_z + tw_disc_r <= 41, "twister disc top needs margin (40 vs 41)");
+assert(twister_axle_z + tw_disc_r <= 56, "twister disc top needs margin (55 vs 56)");
 // Stack-up asserts (new twister geometry)
 assert(tw_mouth_x - plow_end >= 10 && tw_mouth_x - plow_end <= 16, "mouth gap tw_mouth_x-plow_end in [10,16]");
 assert(tw_ped_x1 + 0.5 <= tw_slot_x0, "slot edge tw_ped_x1+0.5<=tw_slot_x0");
@@ -653,8 +657,9 @@ assert(axle_clearance_dia/2 > axle_dia/2, "v45: reel/wall/block bores must slip 
 assert(spool_shaft_y0 >= 0 && spool_shaft_y0 <= 2, str("v45: spool shaft must start hidden in the back block bore: ", spool_shaft_y0));
 assert(spool_shaft_y1 >= 66 && spool_shaft_y1 <= 68, str("v45: spool shaft must end hidden in the front block bore: ", spool_shaft_y1));
 assert(tape_z - (base_thick + vpull_collar_z + 1.5) >= 2, str("v45: pull mid-collar top must clear the ribbon base by >=2 (assembly lifts +base_thick): ", tape_z - (base_thick + vpull_collar_z + 1.5)));
-assert(base_thick + vpull_h + 3 > 25 && base_thick + vpull_h + 3 <= 28, str("v52: pull roller B top (27) must engage cup B (cup 25..28, bridge 28): ", base_thick + vpull_h + 3));
-assert(base_thick + vpull_h + 3 >= pull_pinA_z0 && base_thick + vpull_h + 3 <= pull_pinA_z1 + 3, str("v52: pull roller A top cap (27) must ride on the static pin (pin 2..27): ", base_thick + vpull_h + 3));
+assert(base_thick + 15 + vpull_h + 3 > 40 && base_thick + 15 + vpull_h + 3 <= 43, str("v87: pull roller B top (42) must engage cup B (cup 40..43, bridge 43): ", base_thick + 15 + vpull_h + 3));
+assert(base_thick + 15 + vpull_h + 3 >= pull_pinA_z0 && base_thick + 15 + vpull_h + 3 <= pull_pinA_z1 + 3, str("v87: pull roller A top cap (42) must ride on the static pin (pin 2..42): ", base_thick + 15 + vpull_h + 3));
+assert(base_thick == 4 && tw_foot_z == -15, "v87: base slab 0..4 and feet -15..0 must stay unchanged");
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
 assert(crank_mount_x == crank_axle_x, str("crank_mount_x must equal crank_axle_x (160): ", crank_mount_x));
 assert(crank_mount_y == chassis_width + 8, str("crank_mount_y must sit outside the front wall (68): ", crank_mount_y));

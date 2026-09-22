@@ -48,9 +48,10 @@ module chassis() {
             // v47: SOLID bridge (no tube hole — tape-coupled nip, zero
             // exterior gears); cup B kept (bored) for the static pin B.
             // v52 SHORTER stack (roller top 27): bridge 28, cup 25..28.
-            translate([pull_x - 2, 0, 28])
+            // v87 +15 lift: bridge 43, cup 40..43 (roller top 42).
+            translate([pull_x - 2, 0, 43])
                 cube([4, chassis_width, 3]);
-            translate([pull_x, chassis_width/2 + vpull_off, 25])
+            translate([pull_x, chassis_width/2 + vpull_off, 40])
                 difference() {
                     cylinder(h=3 + epsilon, r=6, center=false);
                     translate([0, 0, -epsilon])
@@ -70,6 +71,7 @@ module chassis() {
             // (slip in the reel/wall/block round bores); spool round
             // shaft (slip in cone hex holes + wall/block bores, ends hidden
             // in the block bores). Ends buried/hidden, never coplanar.
+            // v87 +15: drum 75, takeup rod 49, cone rod (spool) 80.
             translate([drum_axle_x, (drum_shaft_y0 + drum_shaft_y1)/2, drum_axle_z])
                 rotate([90, 0, 0])
                     cylinder(h=drum_shaft_y1 - drum_shaft_y0, r=hex_axle_r, $fn=6, center=true);

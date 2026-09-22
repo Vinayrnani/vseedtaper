@@ -296,14 +296,17 @@ module thread_twister() {
 }
 
 module twister_axle() {
-    // Absolute coordinates: pedestal (x170..174, y lane_y±5, z0..9.5)
+    // Absolute coordinates: pedestal (x170..174, y lane_y±5, z0..24.5)
     // fused with tube (x172..197, OD15, Ø10 through-bore) + collar (r9 x176.5..178)
     // + groove in hub bore (r9 x193.5..196) + full annulus wall (r5..7.5 x186..197) with 3 tapered slots.
+    // v87 +15 lift: tube centre twister_axle_z=32, tube bottom 24.5 meets pedestal top 24.5.
+    assert(twister_axle_z == 32, "twister_axle: bore centre must be 32 (tape_z 28 + 4)");
+    assert(24.5 == twister_axle_z - 7.5, "twister_axle: pedestal top must meet lifted tube bottom (32-7.5)");
     difference() {
         union() {
-            // Pedestal: x170..174, y lane_y-5..lane_y+5, z0..9.5 (fused)
+            // Pedestal: x170..174, y lane_y-5..lane_y+5, z0..24.5 (fused)
             translate([tw_ped_x0, lane_y - 5, 0])
-                cube([4, 10, 9.5], center=false);
+                cube([4, 10, 24.5], center=false);
             translate([0, lane_y, twister_axle_z]) {
                 // Tube: x172..197, OD15, Ø10 through-bore
                 translate([tw_mouth_x, 0, 0])

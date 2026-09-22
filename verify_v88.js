@@ -36,7 +36,7 @@ function check(cond, msg) {
       return m ? m[1] : null;
     });
     console.log('ASSET_V:', assetV);
-    check(assetV === '53', 'ASSET_V=53 got ' + assetV);
+    check(assetV === '56', 'ASSET_V=56 got ' + assetV);
 
     const pivots = await page.evaluate(() => {
       window._root.updateMatrixWorld(true);

@@ -86,11 +86,12 @@ module hopper_body() {
     throat_cx = 0;                       // v35: funnel throat centre (local X)
     entry_flare_leg = 0.6;               // v35: bore exit 45deg break leg (>=0.6)
     mouth_flare_leg = 0.8;               // v35: throat entry 45deg break leg (>=0.6)
-    pipe_bot_local = tape_z + tape_thick + drop_gap - (drum_axle_z - hopper_axis_z); // 19.4
+    pipe_bot_local = tape_z + tape_thick + drop_gap - (drum_axle_z - hopper_axis_z); // 19.4 (v87: frozen hopper_axis_z=56 → drum offset 19)
     pipe_top_local = pipe_bot_local + drop_pipe_len; // 29.4
     tube_x0 = -5; tube_x1 = 5;
     bore_x0 = -3.8; bore_x1 = 3.8;
     tube_z0 = pipe_bot_local; tube_z1 = 52;
+    assert(abs(pipe_bot_local - 19.4) < 0.001, "hopper_body: pipe_bot_local must stay 19.4 (export min_z offset)");
     assert(abs(drop_pipe_id - 7.6) < 0.001, "hopper_body: hover pipe ID must be 7.6 (thinnest wall)");
     assert(drop_pipe_od == 10, "hopper_body: hover pipe OD must be 10");
     assert(drop_pipe_len == 10, "hopper_body: hover pipe length must be 10");

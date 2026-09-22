@@ -54,19 +54,20 @@ module six_turner() {
     // straps, ears, tab post, tray, nose) deleted per user: the part
     // is exactly printable_folder(), screwed down via its own tabs.
     // ---- v66 twister-aimed mounts (bare sheet kept) ----
-    // Axis 13: exit bore lands DEAD on the twister bore (assembly
-    // lifts +4 -> world 17 = twister_axle_z, y 20+10=34 = ring
-    // centre), so the exit faces the twister straight; entry mouth
-    // rims sit at lane height, floor 0.2 above the base. Supports:
-    // 2 ground pedestals fused under the sheet floor + straps to 2
+    // Axis 28 (v87 +15 from 13): exit bore lands DEAD on the twister
+    // bore (assembly lifts +base_thick=4 -> world 32 = twister_axle_z,
+    // y 20+10=34 = ring centre), so the exit faces the twister straight;
+    // entry mouth rims sit at lane height. Supports: 2 ground pedestals
+    // fused under the sheet floor (tops +15: 19.3/22.7) + straps to 2
     // chassis ears on the M3 holes (world 132/6, 153/62).
     cy = 20;                        // sheet centre (local y, world tape centre 34 = lane_y)
-    axis_z = 13;                    // sheet axis height (exit = twister bore height)
+    axis_z = 28;                    // v87 +15: sheet axis height (exit = twister bore height)
     mouth_x0 = -12;                 // sheet mouth (world 114, exit lands 159)
-    pedA = [6, 8, 12, 28, 4.3];     // mid pedestal x0,x1,y0,y1,top (floor ~3.9)
-    pedB = [24.5, 26.5, 14, 26, 7.7]; // exit pedestal x0,x1,y0,y1,top (floor ~7.3)
-    ear = 6;                        // ear edge length (6x6x1)
-    ear_t = 1;                      // ear thickness
+    pedA = [6, 8, 12, 28, 19.3];    // v87 +15: mid pedestal x0,x1,y0,y1,top (floor ~18.9)
+    pedB = [24.5, 26.5, 14, 26, 22.7]; // v87 +15: exit pedestal x0,x1,y0,y1,top (floor ~22.3)
+    ear = 6;                        // ear edge length (6x6 footprint)
+    ear_t = 1;                      // ear flange thickness (stack-up keeps 1)
+    mount_h = ear_t + 15;           // v87 +15: ear/strap column height z0..16 (base-fused)
     earA = [3, -11];                // ear A corner, centre (6,-8) -> world (132,6)
     earB = [24, 45];                // ear B corner, centre (27,48) -> world (153,62)
     hole_d = bolt_dia + 2*tolerance; // M3 clearance 3.6
@@ -84,13 +85,17 @@ module six_turner() {
     assert(mouth_x0 + plow_start == 114, "six_turner: mouth must sit at world 114");
     assert(mouth_x0 + length + plow_start == turner_end, "six_turner: exit must land on 159");
     assert(cy == 20, "six_turner: sheet must stay centred on the tape (local 20, world 34 = ring centre)");
-    assert(axis_z == 13, "six_turner: axis must stay 13 (exit bore meets twister bore)");
-    assert(axis_z + base_thick == twister_axle_z, "six_turner: exit axis must meet the twister bore height (world 17)");
+    assert(axis_z == 28, "six_turner: axis must stay 28 (exit bore meets twister bore)");
+    assert(axis_z + base_thick == twister_axle_z, "six_turner: exit axis must meet the twister bore height (world 32, assembly at base_thick)");
+    assert(axis_z == 28 && axis_z + base_thick == 32, "six_turner: +15 lift stack (axis 28 local + base 4 = world 32)");
     assert(axis_z - 12 - thickness/2 >= 0.1, "six_turner: mouth floor must stay above the base");
     // Pedestal fuse: tops embed ~0.4 into the sheet floor wall
-    // (floor outer ~3.9 mid / ~7.3 exit, wall 1.6, void stays clear).
-    assert(pedA[4] >= 3.5 && pedA[4] <= 5.0, "six_turner: mid pedestal top must land in the floor wall");
-    assert(pedB[4] >= 6.8 && pedB[4] <= 8.9, "six_turner: exit pedestal top must land in the floor wall");
+    // (floor outer ~18.9 mid / ~22.3 exit, wall 1.6, void stays clear).
+    // v87 +15 lift: ped tops +15 (4.3→19.3, 7.7→22.7) to meet lifted axis_z=28.
+    assert(pedA[4] >= 18.5 && pedA[4] <= 20.0, "six_turner: mid pedestal top must land in the floor wall");
+    assert(pedB[4] >= 21.8 && pedB[4] <= 23.9, "six_turner: exit pedestal top must land in the floor wall");
+    assert(abs(pedA[4] - 19.3) < 0.001 && abs(pedB[4] - 22.7) < 0.001,
+        "six_turner: pedestal tops must be +15 lift values (19.3 / 22.7)");
     assert(pedA[0] >= mouth_x0 && pedA[1] <= mouth_x0 + length, "six_turner: mid pedestal must sit under the sheet");
     assert(pedB[0] >= mouth_x0 && pedB[1] <= mouth_x0 + length, "six_turner: exit pedestal must sit under the sheet");
     // Screw ears: 6x6x1 diagonal pair on the chassis M3 holes, straps
@@ -120,21 +125,21 @@ module six_turner() {
                     rotate([0, 90, 0])
                         rotate([0, 0, -90])
                             scroll_sheet();
-                // Screw ears (z0..1, M3 holes to the chassis).
-                translate([earA[0], earA[1], 0]) cube([ear, ear, ear_t]);
-                translate([earB[0], earB[1], 0]) cube([ear, ear, ear_t]);
-                // Ground straps (z0..1, tie ears to pedestal feet).
-                translate([3, -11, 0]) cube([6, 25, 1]);
-                translate([24, 20, 0]) cube([6, 25, 1]);
+                // Screw ears (z0..mount_h, M3 holes to the chassis).
+                translate([earA[0], earA[1], 0]) cube([ear, ear, mount_h]);
+                translate([earB[0], earB[1], 0]) cube([ear, ear, mount_h]);
+                // Ground straps (z0..mount_h, tie ears to pedestal feet).
+                translate([3, -11, 0]) cube([6, 25, mount_h]);
+                translate([24, 20, 0]) cube([6, 25, mount_h]);
                 // Support pedestals (tops fused into the sheet floor wall).
                 translate([pedA[0], pedA[2], 0]) cube([pedA[1] - pedA[0], pedA[3] - pedA[2], pedA[4]]);
                 translate([pedB[0], pedB[2], 0]) cube([pedB[1] - pedB[0], pedB[3] - pedB[2], pedB[4]]);
             }
-            // Ear M3 clearance holes (only voids).
+            // Ear M3 clearance holes (only voids; full mount_h depth).
             translate([earA[0]+ear/2, earA[1]+ear/2, -epsilon])
-                cylinder(h=ear_t+2*epsilon, d=hole_d, center=false);
+                cylinder(h=mount_h+2*epsilon, d=hole_d, center=false);
             translate([earB[0]+ear/2, earB[1]+ear/2, -epsilon])
-                cylinder(h=ear_t+2*epsilon, d=hole_d, center=false);
+                cylinder(h=mount_h+2*epsilon, d=hole_d, center=false);
         }
     }
 }

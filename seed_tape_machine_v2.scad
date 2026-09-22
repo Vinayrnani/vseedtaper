@@ -36,7 +36,7 @@ module animated_assembly() {
     // Static twister axle (absolute coords, no transform — pedestal + tube + snap fingers)
     twister_axle();
 
-    // Spool cones
+    // Spool cones (v87 +15: spool_axle_z=80)
     translate([spool_axle_x, wall_thick+1, spool_axle_z])
         rotate([-90,0,0]) single_cone();
     translate([spool_axle_x, chassis_width-wall_thick-1, spool_axle_z])
@@ -52,11 +52,12 @@ module animated_assembly() {
     // top z=73, open-top half-pipe 16mm/8mm cover 11->6 with grooves,
     // 2 side joints, closed box, bottom-center hover pipe ID6/OD10 L10
     // at drum x hovering 10 above the lowered lane)
+    // v87 +15 lift: hopper_axis_z frozen at 56 → translate Z = drum_axle_z - 56 = 19 = base_thick+15
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
 
     // Seed cradle
-    translate([plow_start, chassis_width/2 - 12.7, base_thick])
+    translate([plow_start, chassis_width/2 - 12.7, base_thick + 15])
         seed_cradle();
 
     // Seed tape with center U-fold (v34 OD10: narrow 4 trough,
@@ -103,10 +104,10 @@ module animated_assembly() {
     // walls caps the axles), pinching the closed pocket and pulling it
     // at the same surface speed as the main roller (v52 d15 at 4/3 spin, spacing
     // preserved). Soft rubber/silicone sleeve grips without crushing.
-    translate([pull_x, chassis_width/2 - vpull_off, base_thick])
+    translate([pull_x, chassis_width/2 - vpull_off, base_thick + 15])
         rotate([0, 0, pull_a_angle])
             vpull_roller();
-    translate([pull_x, chassis_width/2 + vpull_off, base_thick])
+    translate([pull_x, chassis_width/2 + vpull_off, base_thick + 15])
         rotate([0, 0, pull_b_angle])
             vpull_roller();
 
@@ -114,6 +115,7 @@ module animated_assembly() {
     // CLUTCH: reel built along Z is recentred, tilted to axle-Y, spun
     // about its axle by takeup_angle (core d10 step-up winds the same
     // linear tape the pull nip delivers; clutch discs slip when full).
+    // v87 +15 lift: takeup_z=49 (axis rod follows)
     translate([takeup_x, chassis_width/2, takeup_z])
         rotate([90, 0, 0])
             rotate([0, 0, takeup_angle])
