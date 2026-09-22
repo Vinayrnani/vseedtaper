@@ -10,58 +10,28 @@ TMPDIR=$(mktemp -d /tmp/openscad_XXXXXX)
 # Copy scad/ into TMPDIR so include <scad/...> resolves from temp .scad files
 cp -r "$SCRIPT_DIR/scad" "$TMPDIR/scad"
 
-# --- Renderer selection (parsed once at the boundary) ---
-# Prefer openscad-nightly (manifold backend, headless, no X needed).
-# Fall back to 2021.01 openscad on persistent Xvfb :99. Fail loud if neither.
-OPENSCAD_BIN=""
-USE_NIGHTLY=0
-NEED_XVFB=0
-if command -v openscad-nightly >/dev/null 2>&1; then
-    OPENSCAD_BIN="openscad-nightly"
-    USE_NIGHTLY=1
-elif command -v openscad >/dev/null 2>&1; then
-    OPENSCAD_BIN="openscad"
-    NEED_XVFB=1
-else
-    echo "ERROR: neither openscad-nightly nor openscad found on PATH." >&2
-    echo "  Upgrade command: sudo apt-get install -y openscad-nightly" >&2
+# --- Renderer selection: openscad-nightly ONLY (fail loud if missing) ---
+# Never fall back to 2021.01 openscad or Xvfb. Nightly manifold backend
+# renders headless (QT_QPA_PLATFORM=offscreen); no display server needed.
+OPENSCAD_BIN="openscad-nightly"
+if ! command -v "$OPENSCAD_BIN" >/dev/null 2>&1; then
+    echo "ERROR: openscad-nightly not found on PATH." >&2
+    echo "  Install: sudo apt-get install -y openscad-nightly" >&2
     echo "  (OBS home:t-paul xUbuntu_24.04, arm64 build available)" >&2
+    echo "  Legacy openscad 2021.01 / Xvfb fallback is intentionally removed." >&2
     exit 1
 fi
 
-XVFB_PID=""
 cleanup() {
-    if [ -n "$XVFB_PID" ] && kill -0 "$XVFB_PID" 2>/dev/null; then
-        kill "$XVFB_PID" 2>/dev/null || true
-    fi
     rm -rf "$TMPDIR"
 }
 trap cleanup EXIT
-
-# Single persistent Xvfb for the legacy path only (nightly needs no X).
-# NOTE: per-part `xvfb-run -a` removed (it forked an X server per part).
-# If xvfb-run is ever needed again, use tuned flags:
-#   xvfb-run -a -w 0 -s "-screen 0 800x600x24 -nolisten tcp"
-if [ "$NEED_XVFB" -eq 1 ]; then
-    command -v Xvfb >/dev/null 2>&1 || {
-        echo "ERROR: Xvfb not found but legacy openscad needs it." >&2
-        exit 1
-    }
-    Xvfb :99 -screen 0 800x600x24 -nolisten tcp &
-    XVFB_PID=$!
-    sleep 1
-    kill -0 "$XVFB_PID" 2>/dev/null || {
-        echo "ERROR: Xvfb :99 failed to start (stale lock? try: rm -f /tmp/.X99-lock)." >&2
-        exit 1
-    }
-    export DISPLAY=:99
-fi
 
 # Usage: ./regenerate_glbs.sh [--force] [part ...]
 #   --force   ignore skip-unchanged cache, regenerate everything selected
 #   part ...  optional subset of the 12 GLB names to (re)generate;
 #             default is all parts. Valid names:
-#             chassis hopper shroud cartridge plow crank cones rollers
+#             chassis hopper cartridge plow crank cones rollers
 #             cone_a cone_b rollers_lower rollers_upper tape
 #             twister pull_a pull_b takeup
 FORCE=0
@@ -74,7 +44,7 @@ for arg in "$@"; do
     fi
 done
 
-ALL_GLB="chassis hopper shroud cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister twister_axle pull_a pull_b takeup"
+ALL_GLB="chassis hopper cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister twister_axle pull_a pull_b takeup"
 if [ "${#FILTER[@]}" -gt 0 ]; then
     for p in "${FILTER[@]}"; do
         case " $ALL_GLB " in
@@ -97,7 +67,7 @@ scad_base_for() {
 }
 
 echo "=== Regenerating all GLB files for seed tape machine v2 ==="
-echo "  Renderer: $OPENSCAD_BIN (nightly=$USE_NIGHTLY)"
+echo "  Renderer: $OPENSCAD_BIN (manifold headless, no Xvfb)"
 
 make_scad() {
     local part="$1"
@@ -190,24 +160,18 @@ echo "=== Step 1: Exporting STL files with $OPENSCAD_BIN (-P$JOBS) ==="
 export_part() {
     local base="$1"
     echo "  Exporting $base..."
-    if [ "$USE_NIGHTLY" -eq 1 ]; then
-        if env -u DISPLAY QT_QPA_PLATFORM=offscreen "$OPENSCAD_BIN" \
-            --backend=manifold --export-format binstl -q \
-            -o "$TMPDIR/${base}.stl" "$TMPDIR/${base}.scad" 2>&1; then
-            return 0
-        fi
-        echo "  WARNING: manifold failed for $base, retrying with cgal" >&2
-        env -u DISPLAY QT_QPA_PLATFORM=offscreen "$OPENSCAD_BIN" \
-            --backend=cgal --export-format binstl -q \
-            -o "$TMPDIR/${base}.stl" "$TMPDIR/${base}.scad" 2>&1 \
-            || echo "  WARNING: $base export failed (both backends)"
-    else
-        "$OPENSCAD_BIN" --export-format binstl -q \
-            -o "$TMPDIR/${base}.stl" "$TMPDIR/${base}.scad" 2>&1 \
-            || echo "  WARNING: $base may have failed"
+    if env -u DISPLAY QT_QPA_PLATFORM=offscreen "$OPENSCAD_BIN" \
+        --backend=manifold --export-format binstl -q \
+        -o "$TMPDIR/${base}.stl" "$TMPDIR/${base}.scad" 2>&1; then
+        return 0
     fi
+    echo "  WARNING: manifold failed for $base, retrying with cgal" >&2
+    env -u DISPLAY QT_QPA_PLATFORM=offscreen "$OPENSCAD_BIN" \
+        --backend=cgal --export-format binstl -q \
+        -o "$TMPDIR/${base}.stl" "$TMPDIR/${base}.scad" 2>&1 \
+        || echo "  WARNING: $base export failed (both backends)"
 }
-export TMPDIR OPENSCAD_BIN USE_NIGHTLY
+export TMPDIR OPENSCAD_BIN
 export -f export_part
 
 DIRTY_BASES=()

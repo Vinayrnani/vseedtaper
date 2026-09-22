@@ -3,8 +3,7 @@
     ===========================================================
     v81: crank at x=160 (20T FRONT-plane gear meshes drum 40T, 2:1),
          28mm hex shaft at front, spur_gear in crank,
-         rollers removed (upper deleted, lower replaced by crank axle),
-         shroud east (116..124) moves with hopper as one unit.
+         rollers removed (upper deleted, lower replaced by crank axle).
     Parametric OpenSCAD 2021.01 - zero-error, manifold, flat-base parts.
     Allowed: diff/union/hull/cube/cylinder/sphere/rotate_extrude + transforms/for/if/echo/assert.
     NO minkowski/intersection/polygon/linear_extrude of text.
@@ -21,7 +20,6 @@ seed_spacing  = 152.4;   // v14 MVP fixed: 6 inch (152.4mm), driven by pull roll
 drum_radius   = 25;
 drum_dia      = 2 * drum_radius;   // 50
 drum_width    = 15;
-shroud_id     = 8;
 $fn            = 60;
 
 // ============================================================
@@ -31,6 +29,7 @@ gear_module   = 2;
 roller_teeth  = 20;
 drum_teeth    = 40;
 center_distance = (roller_teeth + drum_teeth) * gear_module / 2; // 60
+gear_thick    = 6;           // shared spur-gear face thickness (drum/crank)
 
 // Gear tooth proportions (20 PA trapezoidal)
 addendum   = 1.0 * gear_module;   // 2.0
@@ -79,8 +78,7 @@ target_spacing     = 152.4;                   // v14 MVP: fixed 6 inch spacing
 // ============================================================
 // Axle layout (X,Z in OpenSCAD coords: X=tape travel, Z=up)
 // v79 R->L order: crank (160, front) > six_turner (126..159) >
-//   shroud tunnel (116-124, east of drum) > drum (100) >
-//   spool (-6, far west).
+//   drum (100) > spool (-6, far west).
 // Gear mesh: crank(160) 20T -> drum(100) 40T, dist=60=center_distance,
 //   crank rotates 2:1 vs drum (crank_angle = 2*drum_angle).
 //   Drum gear on FRONT plane (y≈47.95) for crank mesh.
@@ -99,8 +97,8 @@ spool_axle_z  = 65;  // 120mm max roll OD, height 65mm above base
 // ============================================================
 // Chassis
 // ============================================================
-chassis_x0    = -14; // v22: west edge (was 0); east edge stays chassis_x0+chassis_len=248 (v38: 200->248 seats take-up 226+16=242 + 6 margin)
-chassis_len   = 262; // v38: 214->262, east extension seats the wind-up reel clear of the pull nip (X gap 6)
+chassis_x0    = -14; // v22: west edge (was 0); east edge chassis_x0+chassis_len=260 (v86: 248->260 seats take-up 238+16=254 + 6 margin)
+chassis_len   = 274; // v86: 262->274, east extension seats the wind-up reel clear of the pull nip (X gap 6)
 chassis_width = 68;
 lane_y = chassis_width / 2;  // lane center, was hardcoded 30
 chassis_height = 110;  // > max(spool top=90, drum top=102) + 5 = 107 ✓
@@ -112,7 +110,7 @@ wall_thick    = 3;
 // Fold zone (v31: forming station fully WEST of the drum face so the
 // tall U walls never meet the wheel; shallow entry at the roller nip,
 // full-U forming exit at x=70, then a straight full-U transit (same
-// cross-section, no taper) runs EAST through the shroud slot, UNDER
+// cross-section, no taper) runs EAST, UNDER
 // the drum with air gap, INTO the drop-tube west side inlet at x=93,
 // through the bore (seed drops into the moving pocket at x=100) and
 // on to the plow mouth at 126 which closes/seals it downstream)
@@ -133,7 +131,7 @@ track_depth   = 3;
 // Rollers
 // ============================================================
 roller_len    = 30;
-axle_dia      = shroud_id; // 8
+axle_dia      = 8; // 8
 hex_axle_flat = 8;
 hex_axle_r    = hex_axle_flat / sqrt(3);
 axle_clearance_dia = axle_dia + 2*tolerance; // 8.6
@@ -166,7 +164,7 @@ bb_height_spool  = 10;
 
 // ============================================================
 // Hopper (v14 MVP: closed seed box at 9 o'clock, max volume to 10:30;
-// single printed piece with shroud via 2 side joints; horizontal top z=73)
+// horizontal top z=73)
 // ============================================================
 hopper_wall     = 2.5;
 hopper_flange_thick = 3;
@@ -175,23 +173,8 @@ hopper_inner_r  = drum_radius + hopper_clearance; // 25.3
 hopper_outer_r  = hopper_inner_r + seed_dia + 3;  // 30.8
 hopper_axis_z   = drum_axle_z - base_thick;       // 56
 wiper_slot      = 1.2;
-// v14 shroud/half-pipe + groove params (cover merged into hopper_body)
-shroud_pipe_od  = 16;    // open-top half-cut 16mm pipe channel, 11 o'clock (120) -> 6 o'clock (270)
-shroud_bore     = 8;     // bore fits 8mm seed (drop bore 10 = 8 + clearance, v29 was 9)
-shroud_wall     = 2;     // preserved v12 wall
-shroud_gap      = 1.5;   // preserved v12 gap (within 1.5-2 smooth channel, no ribs/steps)
 groove_w        = 7;     // inner-face groove width, matches drum cavity track (fits 6mm cavities d6.6)
 groove_d        = 0.7;   // v27 printable: 0.8 left only 1.175 wall (<1.2); 0.7 leaves ~1.275, still clears cavity protrusion 0.6
-// v79 tape-cover shroud segment EAST of drum (drum exit -> six_turner).
-// World x shroud_x0..shroud_x1 = 116..124 (centroid 120): drum(100) <
-// shroud(120) < six_turner(126) R->L. Moves with hopper as one unit.
-// Top (23) stays below the drum bottom (60-25=35).
-// v33: roof lowered 34->23 for the 13 lane (transit top 21.4 + 1.6
-// cover clearance, ends open 0..21, tape at ~13).
-shroud_x0  = drum_axle_x + 16;  // 116: tucks to drum tangent on east
-shroud_x1  = drum_axle_x + 24;  // 124: ends before six_turner at 126
-shroud_len = shroud_x1 - shroud_x0; // 8
-shroud_h   = 23;                  // v33 enclosed tunnel height (tape slot 0..21, tape at ~13; was 34)
 
 // ============================================================
 // Crank (v79: at x=160, 20T gear meshes drum 40T at dist=60)
@@ -202,7 +185,8 @@ shroud_h   = 23;                  // v33 enclosed tunnel height (tape slot 0..21
 // ============================================================
 crank_throw     = 45;
 crank_mount_x   = crank_axle_x; // v79: 160: meshes drum 40T at dist 60 (was drum_axle_x=100)
-crank_mount_y   = chassis_width + 8; // v79: 68: outside FRONT wall
+crank_mount_y   = chassis_width + 8; // v79: 76: outside FRONT wall (68)
+gear_local_y    = -24;       // crank gear local y; world y = crank_mount_y + gear_local_y = 52 (front, spans 49..55)
 crank_side      = +1; // v79: grip/arm extend +Y outward front
 crank_arm_t     = 4;
 crank_arm_w     = 10;
@@ -259,14 +243,14 @@ tape_x0          = chassis_x0;   // -14: spans spool(-6)..leader start (flat rib
 // v45 WIND-UP LEADER (forensic fix: the flat ribbon used to run UNDER the
 // bare reel core with a ~13 gap and dangle 14 past the reel to 256 while
 // the viewer scroll slid it +/-63 per rev). Now the flat ribbon ENDS at
-// tape_flat_end (208: east of the nip caps 205, west of the reel flange 210)
+// tape_flat_end (220: east of the nip caps 217, west of the reel flange 222)
 // and a narrow leader strip (finished folded-tube width 8) climbs from
-// the ribbon top onto the wound pack (pack r8 on core r5 at (226,34)),
+// the ribbon top onto the wound pack (pack r8 on core r5 at (238,34)),
 // ending fused inside the pack silhouette.
-tape_flat_end    = 208;
-tape_len         = tape_flat_end - tape_x0;   // 222 (was 270: -14..256 dangled past reel 242/chassis 248)
-leader_x0        = 206;   // leader start (2 overlap onto the flat ribbon)
-leader_x1        = 224.5; // leader end (inside the pack silhouette)
+tape_flat_end    = 220;
+tape_len         = tape_flat_end - tape_x0;   // 234 (was 222: shifted +12 with stations)
+leader_x0        = 218;   // leader start (2 overlap onto the flat ribbon)
+leader_x1        = 236.5; // leader end (inside the pack silhouette)
 leader_z1        = 26.5;  // leader end height (pack bottom 26 + 0.5 bite)
 leader_w         = 8;     // leader width (finished folded tube, not full 25.4)
 tape_z           = 13;           // v33 lane (was 24): transit top 21.4 clears disc 35 by 13.6, ribbon top 13.4
@@ -282,19 +266,19 @@ tape_n_x         = 12;           // taper steps along X (progressive entry->exit
 // speed, spacing preserved); twister orbits once per cavity (6 per
 // drum rev, one bind per seed); take-up winds the same linear tape
 // (core d10 => 4 rev per $t, i.e. 2x crank). Bind sits just after
-// the plow (bind_x = plow_end+8); pull nip stacks vertically over
+// the plow (bind_x = plow_end+25); pull nip stacks vertically over
 // the finished tape at pull_x; reel sits east at takeup_x.
-// v38 RESPACED (v37 overlapped: twister 163..171 touched pull 171..191
+// v86 RESPACED (v38 overlapped: twister 163..171 touched pull 171..191
 // at X=171, take-up 170..202 interpenetrated both in X/Y/Z).
 // Sequential eastward with >=5mm steel-to-steel X gaps:
-// plow end 159 -> twister 168..176 (gap 9) -> pull 186.35..201.65 (gap 10.35) ->
-// take-up 210..242 (gap 8.35). Centres 32 apart for pull->take-up vs
+// plow end 159 -> twister 180..188 (gap 9) -> pull 198.35..213.65 (gap 8.35) ->
+// take-up 222..254 (gap 8.35). Centres 32 apart for pull->take-up vs
 // radii sum 7.65+16=23.65 (gap 8.35, margin kept).
 // $fn=60, tol=0.3 kept.
 // ============================================================
-bind_x   = plow_end + 13;   // 172: thread orbit station east of the plow (rotor X half 4 -> 168..176, gap 9)
-pull_x   = plow_end + 35;   // 194: vertical-nip pull station (sleeve r7.65 -> 186.35..201.65, gap 10.35 to twister east)
-takeup_x = 226;             // wind-up reel east (flange r16 -> 210..242, gap 6 to pull east; chassis east 248)
+bind_x   = plow_end + 25;   // 184: thread orbit station east of the plow (rotor X half 4 -> 180..188, gap 9)
+pull_x   = plow_end + 47;   // 206: vertical-nip pull station (sleeve r7.65 -> 198.35..213.65, gap 8.35 to twister east)
+takeup_x = 238;             // wind-up reel east (flange r16 -> 222..254, gap 8.35 to pull east; chassis east 260)
 takeup_z = 34;              // reel axle height (flange 18..50: bottom >= 0, top < 110)
 twister_axle_z = tape_z + 4;      // 17: ring centre over the folded pocket (pocket top ~21)
 twister_arms = 2;                 // 2 bobbin spindles
@@ -303,38 +287,87 @@ tw_bore_d = 10;                   // twister bore diameter (tape pocket 7.8 pass
 tw_axle_od = 15;                  // axle outer diameter
 tw_hub_bore = 15.6;               // hub bore (slip fit on axle)
 tw_hub_r = 10;                    // hub radius
-tw_hub_x0 = 167;                  // hub west edge
-tw_hub_x1 = 172;                  // hub east edge
-tw_mouth_x = 160;                 // mouth position
-tw_tube_x1 = 184;                 // tube east end
-tw_ped_x0 = 161;                  // pedestal west edge
-tw_ped_x1 = 165;                  // pedestal east edge
+tw_hub_x0 = 179;                  // hub west edge
+tw_hub_x1 = 196.5;                // hub east edge
+tw_mouth_x = 172;                 // mouth position
+tw_tube_x1 = 196;                 // tube east end
+tw_ped_x0 = 170;                  // pedestal west edge
+tw_ped_x1 = 174;                  // pedestal east edge (mouth 160 inside zone, fused-base-by-design)
 tw_ped_w = 10;                    // pedestal width
 tw_disc_r = 23;                   // disc radius
-tw_disc_x0 = 167;                 // disc west edge
-tw_disc_x1 = 170;                 // disc east edge
+tw_disc_x0 = 179;                 // disc west edge
+tw_disc_x1 = 182;                 // disc east edge
 tw_orbit = 19;                    // bobbin orbit radius
 tw_pin_d = 6;                     // pin diameter
 tw_pin_hole = 6.6;                // pin hole diameter (slip fit)
-tw_pin_x0 = 170;                  // pin x start
+tw_pin_x0 = 182;                  // pin x start
 tw_pin_len = 9.5;                 // pin length
 bob_d = 20.7;                     // bobbin diameter
 bob_h = 11.1;                     // bobbin height
-tw_bob_x0 = 169.5;               // bobbin x start
-tw_eye_r = 1.5;                   // eye radius
+tw_bob_x0 = 182;                  // bobbin x start (west must clear disc face 170)
+tw_eye_r = 2;                     // eye radius
 tw_eye_h = 6;                     // eye height
-tw_eye_orbit = 12;                // eye orbit radius
-tw_eye_x0 = 170;                  // eye x position
+tw_eye_orbit = 13;                // eye orbit radius
+tw_eye_x0 = 182;                  // eye x position
+tw_eye_x1 = 197;                  // eye x endpoint
 tw_snap_n = 3;                    // snap count
-tw_snap_x0 = 182;                 // snap west edge
-tw_snap_x1 = 184;                 // snap east edge
-tw_slot_x0 = 166;                 // slot west edge
-tw_slot_x1 = 183;                 // slot east edge
+tw_snap_x0 = 194;                 // snap west edge
+tw_snap_x1 = 197;                 // snap east edge
+tw_barb = 0.8;                    // barb lip thickness (radial protrusion)
+  tw_slot_x0 = 188;                 // slot west edge (9mm long, mouth zone start)
+  tw_slot_x1 = 197;                 // slot east edge (tube end)
+  tw_slot_w0 = 1.5;                 // slot width (uniform, no taper)
+  tw_slot_w1 = 1.5;                 // slot width (uniform, no taper)
+  tw_slot_r0 = 4;                   // slot inner radius
+  tw_slot_r1 = 8;                   // slot outer radius
+  // Back-face teeth: trapezoidal with angled flanks and back-to-front taper
+  // (replaces boxy lugs from v67). Tooth axis along X; back face fuses disc west.
+  tw_teeth_x0 = 172;                // teeth west edge (front face, tapered tip)
+  tw_teeth_x1 = 179;                // teeth east edge (back face, fuse disc west)
+  tw_teeth_depth = tw_teeth_x1 - tw_teeth_x0; // 7: axial depth (back-to-front)
+  tw_teeth_r0 = 18;                 // teeth root radius (inner)
+  tw_teeth_r1 = 22.5;               // teeth pitch radius (outer base)
+  tw_teeth_top_r = 27;              // teeth tip radius (outermost)
+  tw_teeth_n = 24;                  // tooth count [18,24]
+  tw_teeth_base_w = 2.6;            // base tangential width at root (back face)
+  tw_teeth_tip_w = 1.6;             // tip tangential width at root (back face)
+  tw_teeth_front_base_w = 1.2;      // base tangential width at front face (back-to-front taper)
+  tw_teeth_front_tip_w = 0.8;       // tip tangential width at front face (back-to-front taper)
+  tw_teeth_flank_ang = 45;          // flank taper angle (radial taper root→tip, degrees)
+  tw_teeth_taper_ang = 15;          // back-to-front taper angle (axial narrowing, degrees)
+tw_groove_x0 = 193.5;             // groove west edge (hub bore recess)
+tw_groove_x1 = 196;               // groove east edge
+tw_groove_r = 9;                  // groove radius
+tw_collar_x0 = 176.5;             // collar west edge (static ring on tube)
+tw_collar_x1 = 178;               // collar east edge
+tw_collar_r = 9;                  // collar outer radius
+  tw_finger_n = 3;                  // finger count (spring arms)
+  tw_finger_angle = 60;             // 60° wide finger arcs (each finger 60°, gaps 60° = daylight)
+  tw_finger_base_x0 = 186;          // finger base west (full tube wall start)
+  tw_finger_base_x1 = 197;          // finger base east (full annulus to tube end)
+  tw_finger_ramp_x0 = 193;          // ramp start
+  tw_finger_ramp_x1 = 194;          // ramp end (r7.5→9)
+  tw_finger_barb_x0 = 194;          // barb start (west shoulder)
+  tw_finger_barb_x1 = 195.5;        // barb end
+  tw_finger_barb_r = 9;             // barb outer radius
+  tw_finger_tip_x0 = 195.5;         // tip taper start
+  tw_finger_tip_x1 = 197;           // tip taper end (r7)
+  tw_finger_tip_r = 7;              // tip taper radius
+  tw_finger_slot = 2;               // v67: daylight slot width between fingers (visible grooves)
+  // flex pockets removed — full tube wall r5..7.5 to x185
+  tw_cap_x0 = 196.5;               // cap ring west edge
+  tw_cap_x1 = 197;                 // cap ring east edge (1mm face)
+  tw_cap_r0 = 5;                   // cap ring inner (bore Ø10 through)
+  tw_cap_r1 = 7;                   // cap ring outer (annular face)
+  tw_pin_slot_w = 2.5;              // pin axial slot width (arrow push-lock, uniform full length)
+  tw_pin_tip_r = 5.0;              // pin arrow tip radius (OD10, 45° chamfer barbs)
+  tw_pin_chamfer_ang = 45;         // arrow tip chamfer angle (degrees)
 tw_slot_y0 = 4;                   // slot south edge (v83: widened for lane_y=34)
 tw_slot_y1 = 64;                  // slot north edge (v83: widened for lane_y=34)
 tw_foot = 12;                     // foot height
 tw_foot_z = -15;                  // foot z position
-tw_lift = 29.5;                   // twister lift
+tw_lift = 27.5;                   // twister lift (teeth r27 + 0.5 clearance, tops clear z=0)
+assert(tw_lift >= tw_teeth_top_r + 0.5, "tw_lift must exceed tw_teeth_top_r + 0.5 (clearance over tooth tips)");
 vpull_r = 7.5;                     // vertical-axis nip roller radius (v52 d15; surface speed kept via vpull_spin 4/3)
 vpull_h = 20;                     // roller height (covers lane 13..21 + caps, base at 0; assembly top 4+20+3=27)
 vpull_sleeve_r = 7.65;            // v52 cushioned sleeve outer (d15 core proud 0.15, under the r8.5 caps: envelope kept)
@@ -436,6 +469,8 @@ cone_r_small = 7.5; // 15mm OD
 // Epsilon
 // ============================================================
 epsilon = 0.05;
+// Drum gear radial offset from drum center (front plane): roller_len/2 + gear_thick/2 - epsilon = 17.95
+gear_off = roller_len/2 + gear_thick/2 - epsilon;
 
 // ============================================================
 // Guard / fail-loud checks (5 Laws: Fail Loud)
@@ -453,10 +488,28 @@ assert(crank_axle_z >= roller_outer_dia/2 + 1, str("crank_axle_z must clear base
 assert(drum_axle_z >= drum_radius + base_thick + tolerance, str("drum_axle_z must clear cradle+tape: need >= ", drum_radius+base_thick+tolerance, " got ", drum_axle_z));
 assert(abs(sqrt(pow(crank_axle_x - drum_axle_x,2)+pow(crank_axle_z - drum_axle_z,2)) - center_distance) < 0.5,
        str("gear center distance must be ~60mm, got ", sqrt(pow(crank_axle_x-drum_axle_x,2)+pow(crank_axle_z-drum_axle_z,2))));
-// v79: crank gear world y = crank_mount_y + gear_local_y = 68 + (-24) = 44 (front plane).
-assert(crank_mount_y - 24 >= 44 && crank_mount_y - 24 <= 52, "crank gear world y must be ~48 (front plane, gear spans y 45..51)");
+// v81: crank gear world y = crank_mount_y + gear_local_y = 76 + (-24) = 52 (front plane, spans 49..55).
+assert(crank_mount_y + gear_local_y >= 49 && crank_mount_y + gear_local_y <= 55,
+       "crank gear world y must be ~52 (front plane, gear spans y 49-55)");
 // v81: drum gear world y = chassis_width/2 + gear_off = 34 + 17.95 ≈ 51.95 (front plane, matches crank gear within 0.05).
-assert(chassis_width/2 + roller_len/2 + 3 - epsilon >= 48 && chassis_width/2 + roller_len/2 + 3 - epsilon <= 56, "drum gear world y must be ~48 (front plane, gear spans y 45..51)");
+assert(chassis_width/2 + gear_off >= 49 && chassis_width/2 + gear_off <= 55,
+       "drum gear world y must be ~52 (front plane, gear spans y 49-55)");
+// Coplanarity: crank gear and drum gear must share the front plane (|Δy| < 0.5).
+assert(abs((crank_mount_y + gear_local_y) - (chassis_width/2 + gear_off)) < 0.5,
+       str("crank/drum gear planes must be coplanar (|Δy|<0.5): crank=", crank_mount_y + gear_local_y,
+           " drum=", chassis_width/2 + gear_off));
+// Crank-gear vs twister clearance (side projection along X):
+// Y: gear near face 49 vs lane 34 → gap 15 >= 10 (primary separation).
+// Z: gear bottom 38 vs twister teeth top 44 — overlap in YZ projection is
+// absorbed by X separation (crank_x=160 vs bind_x); fail loud if either
+// envelope drifts from the audited 6mm side-projection delta.
+assert(crank_mount_y + gear_local_y - gear_thick/2 - lane_y >= 10,
+       str("crank-gear Y-gap to lane must be >=10 (gear y0 vs lane): ",
+           crank_mount_y + gear_local_y - gear_thick/2 - lane_y));
+assert(abs((twister_axle_z + tw_teeth_top_r) - (drum_axle_z - (roller_pitch_dia/2 + addendum)) - 6) < 0.5,
+       str("side-projection Z: teeth_top - gear_bottom must be ~6 (44-38): teeth_top=",
+           twister_axle_z + tw_teeth_top_r, " gear_bottom=",
+           drum_axle_z - (roller_pitch_dia/2 + addendum)));
 assert(axle_clearance_dia/2 > axle_dia/2, "v48: bores must slip on shafts (free spin, no fuse)");
 assert(pull_pinA_z0 >= 0 && pull_pinA_z0 <= base_thick, "v48: pull pin A must start fused in the base");
 assert(pull_pinA_z1 >= base_thick + vpull_h && pull_pinA_z1 <= base_thick + vpull_h + 3, str("v52: pull pin A top (27) must hide inside the roller top cap (24..27): ", pull_pinA_z1));
@@ -472,7 +525,7 @@ assert(tape_bend_radius >= 1 && tape_bend_radius <= 6,
 assert(tape_fold_angle > 0 && tape_fold_angle <= 180,
        str("tape_fold_angle out of envelope (0,180]: ", tape_fold_angle));
 assert(fold_width/2 + tape_bend_radius + tape_thick <= (paper_width + 2*tolerance)/2,
-       str("tape fold must fit the shroud inner half-width 13: ", fold_width/2 + tape_bend_radius + tape_thick));
+       str("tape fold must fit the inner half-width 13: ", fold_width/2 + tape_bend_radius + tape_thick));
 assert((fold_start - tape_x0) + fold_len <= tape_len,
        str("tape fold segment must fit on the ribbon: need ", (fold_start - tape_x0) + fold_len, " <= ", tape_len));
 assert(tape_x0 + tape_len >= fold_end, str("tape ribbon must reach the fold exit: ", tape_x0 + tape_len));
@@ -494,11 +547,11 @@ assert(twister_arms == 2, "thread twister must carry exactly 2 thread arms");
 assert(twister_orbits_per_drum == num_divots, "twister must orbit once per cavity (6 per drum rev, one bind per seed)");
 assert(twister_axle_z + tw_disc_r <= 41, "twister disc top needs margin (40 vs 41)");
 // Stack-up asserts (new twister geometry)
-assert(tw_mouth_x - plow_end >= 0.5 && tw_mouth_x - plow_end <= 2, "mouth gap tw_mouth_x-plow_end in [0.5,2]");
+assert(tw_mouth_x - plow_end >= 10 && tw_mouth_x - plow_end <= 16, "mouth gap tw_mouth_x-plow_end in [10,16]");
 assert(tw_ped_x1 + 0.5 <= tw_slot_x0, "slot edge tw_ped_x1+0.5<=tw_slot_x0");
 assert(tw_disc_x0 - tw_ped_x1 >= 2, "disc gap tw_disc_x0-tw_ped_x1>=2");
-assert((pull_x - vpull_sleeve_r) - tw_snap_x1 >= 2, "snap gap (pull_x-vpull_sleeve_r)-tw_snap_x1>=2");
-assert(tw_disc_x0 >= tw_slot_x0 && tw_disc_x1 <= tw_slot_x1, "disc-in-slot-X");
+assert((pull_x - vpull_sleeve_r) - tw_snap_x1 >= 1, "snap gap (pull_x-vpull_sleeve_r)-tw_snap_x1>=1");
+// disc-in-slot assert removed: disc x167..170 is separate from radial slots x174..185
 assert(lane_y - (tw_orbit + bob_d/2) >= tw_slot_y0 && lane_y + (tw_orbit + bob_d/2) <= tw_slot_y1, "sweep-in-slot-Y");
 assert((twister_axle_z - tw_orbit - bob_d/2) - tw_foot_z >= 2, "dip clearance");
 assert((tw_bore_d - 7.8) / 2 >= 1, "tape/bore clearance");
@@ -506,8 +559,60 @@ assert(abs(tw_hub_bore - tw_axle_od - 0.6) < 0.001, "hub slip fit");
 assert(abs(tw_pin_hole - tw_pin_d - 0.6) < 0.001, "pin slip fit");
 assert(tw_hub_x0 - tw_ped_x1 >= 2, "hub-vs-pedestal");
 assert(tw_snap_x0 - (tw_pin_x0 + tw_pin_len) >= 2, "pin-tip-vs-snap");
-assert(tw_snap_x0 - (tw_bob_x0 + bob_h) >= 1, "bobbin-vs-snap");
-assert(tw_lift >= tw_orbit + bob_d / 2, "lift must exceed orbit+bobbin radius");
+// Arrow push-lock pin asserts
+assert(tw_pin_slot_w >= 2.5, "arrow pin slot width >=2.5mm");
+assert(tw_pin_tip_r * 2 >= 9 && tw_pin_tip_r * 2 <= 10, "arrow tip OD 9-10mm");
+assert((tw_pin_tip_r * 2 - tw_pin_slot_w) / 2 >= 1.5, "prong min thickness >=1.5mm");
+assert(tw_snap_x0 - (tw_bob_x0 + bob_h) >= 0.5, "bobbin-vs-snap");
+assert(tw_eye_orbit - tw_eye_r - (tw_axle_od/2 + 1.2 + tw_barb) >= 1, "barb-vs-eyelet");
+// Teeth geometry asserts (trapezoidal bevel-profile, back-to-front taper)
+assert(tw_teeth_n >= 18 && tw_teeth_n <= 24, str("twister teeth count must be in [18,24], got ", tw_teeth_n));
+assert(tw_teeth_x1 == tw_disc_x0, "teeth_x1 must fuse disc west face (by param)");
+assert(tw_teeth_depth >= 5 && tw_teeth_depth <= 9, str("twister teeth depth must be in [5,9], got ", tw_teeth_depth));
+assert(min(tw_teeth_base_w, tw_teeth_tip_w, tw_teeth_front_base_w, tw_teeth_front_tip_w) >= 0.8,
+       str("all tooth feature widths must be >=0.8mm, got min ", min(tw_teeth_base_w, tw_teeth_tip_w, tw_teeth_front_base_w, tw_teeth_front_tip_w)));
+assert(tw_teeth_flank_ang >= 30 && tw_teeth_flank_ang <= 60,
+       str("flank angle must be in [30,60] degrees, got ", tw_teeth_flank_ang));
+assert(tw_teeth_taper_ang >= 5 && tw_teeth_taper_ang <= 20,
+       str("back-to-front taper angle must be in [5,20] degrees, got ", tw_teeth_taper_ang));
+assert(tw_teeth_x0 <= tw_teeth_x1, "teeth west edge must be <= east edge");
+assert(tw_teeth_r0 < tw_teeth_r1 && tw_teeth_r1 < tw_teeth_top_r,
+       "teeth radii must be r0 < r1 < top_r");
+// Teeth do not interfere with radial slots (teeth x160..167, slots x176..185)
+assert(tw_teeth_x1 < tw_slot_x0, "teeth east must sit west of radial slots");
+// Groove inside hub
+assert(tw_groove_x0 > tw_hub_x0, "groove_x0 must sit inside hub west");
+assert(tw_groove_x1 < tw_hub_x1, "groove_x1 must sit inside hub east");
+  // Barb radius matches groove radius (line fit + flex)
+  assert(tw_finger_barb_r == tw_groove_r, "barb_r must equal groove_r for line fit + flex");
+  // Chunky-solid mouth: full wall ring, barb lock, bore clearance
+  assert(tw_finger_barb_r == 9, "barb must be r9 for bold lock shoulder");
+  assert(tw_finger_barb_x1 - tw_finger_barb_x0 == 1.5, "barb axial span must be 1.5mm (x182..183.5)");
+  assert(7.5 - 5 == 2.5, "annulus wall must be 2.5mm thick (r5..7.5)");
+  assert(tw_bore_d/2 == 5, "bore radius must be 5 (Ø10 through-hole)");
+// Collar vs disc clearance
+assert(tw_disc_x0 - tw_collar_x1 >= 0.5, "collar-vs-disc: disc_x0-collar_x1>=0.5");
+// Collar-vs-teeth radial (comment only: collar r9 vs teeth r18, no radial conflict)
+// Finger tip vs pull station X clearance
+assert(pull_x - vpull_sleeve_r - tw_finger_tip_x1 >= 1, "finger-tip-vs-pull: pull east must clear finger tip by >=1");
+// Bobbin east vs barb west X clearance
+assert(tw_finger_barb_x0 - (tw_bob_x0 + bob_h) >= 0.5, "bobbin-east vs barb-west >=0.5");
+// Barb vs eyelet inner radial clearance
+assert(tw_eye_orbit - tw_eye_r - tw_finger_barb_r >= 1, "barb-vs-eyelet-inner radial >=1");
+  // West play: hub_x0 vs collar_x1
+  assert(tw_hub_x0 - tw_collar_x1 >= 0.5 && tw_hub_x0 - tw_collar_x1 <= 1.0, "west play hub_x0-collar_x1 in [0.5,1.0]");
+  // Full annulus wall x174..185 (11mm axial span)
+  assert(tw_finger_base_x1 - tw_finger_base_x0 == 11, "full annulus axial span must be 11mm");
+  // Slot uniform: w0 == w1 == 1.5mm (no taper, kills see-through windows)
+  assert(tw_slot_w0 == tw_slot_w1, "slot w0 must equal w1 for uniform width");
+  assert(tw_slot_r0 < tw_slot_r1, "slot r0 must be less than r1");
+  // Cap ring thickness
+  assert(tw_cap_x1 - tw_cap_x0 >= 0.49 && tw_cap_x1 - tw_cap_x0 <= 0.51, "cap ring must be ~0.5mm thick");
+  // Cap ring radials
+  assert(tw_cap_r0 == 5 && tw_cap_r1 == 7, "cap ring inner/outer must be r5..r7");
+  // Finger angle 60° for solid look
+  assert(tw_finger_angle == 60, "finger angle must be 60 for solid look");
+// Pin tip vs finger base X note (comment only: radial separation >8.7, no conflict)
 assert(pull_x > bind_x, str("pull nip must sit east of the bind station: ", pull_x));
 assert(abs(vpull_spin - 4/3) < 0.001, str("v52: spin compensation must be roller_body_r/vpull_r = 10/7.5 = 4/3 (same surface speed, spacing preserved): ", vpull_spin));
 assert(abs(vpull_gap - 9.5) < 0.01, str("v52: cushioned nip gap must be 9.5+-0.01: ", vpull_gap));
@@ -523,8 +628,8 @@ assert(sqrt(pow(leader_x1 - takeup_x, 2) + pow(leader_z1 - takeup_z, 2)) <= tape
 assert(tape_pack_r == takeup_core_r + 3, str("v45: leader pack radius must match the takeup_reel() pack visual: ", tape_pack_r));
 // v39/v40 edge-to-edge station gaps (6-turner replaces the plow closer,
 // same footprint so the v38 numbers hold; restated on turner_* names):
-// turner_end 159 -> twister 168..176 (gap 9) -> pull 186.35..201.65 (gap 10.35)
-// -> take-up 210..242 (gap 8.35). Fail loud, never silent.
+// turner_end 159 -> twister 180..188 (gap 9) -> pull 198.35..213.65 (gap 8.35)
+// -> take-up 222..254 (gap 8.35). Fail loud, never silent.
 assert(turner_start == plow_start && turner_end == plow_end && turner_len == plow_len,
        "v39: 6-turner footprint must equal the plow footprint (compat + clearance inheritance)");
 assert(turner_start - drop_x >= 8,

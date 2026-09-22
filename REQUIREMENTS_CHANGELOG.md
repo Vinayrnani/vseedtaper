@@ -1,9 +1,6 @@
 # Requirements Change Log
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
 
-## v93 — 2026-09-22
-- 15mm lift off base: base slab 0..4 / feet -15..0 / ground -15 stay; all other assembly +15Z; chassis walls 110->125 carry drum/hopper 60->75, crank 60->75, spool 65->80, takeup 34->49 (bores/blocks/gear mesh together, dist 60 kept); tape_z 13->28 chain (twister 17->32 = tape+4, plow axis+base==twister, hopper gap 10, collar+cradle with tape); supports +15 (plow ears/straps/peds, twister pedestal 0..9.5->0..24.5 fused, pull pins 2..27->2..42, pull bridge/cup, track/hopper rails fused, feet unchanged); scope = hopper/drum/cones/plow/tape+collar/cradle/twister+axle/pull_a/b+bridge/takeup/crank (no shroud module = naming gap, rollers legacy export-only). $fn=60, tol=0.3 kept; no commit pre-APPROVE.
-
 ## v92 — 2026-09-22
 - Strict no-repeat rule: never the same tool call/action more than 2 times (attempt once, change approach once, then stop + report). Added to AGENTS.md Gotchas+Workflow and subagent-discipline.md. All prior v91 rules kept; no commit pre-APPROVE.
 

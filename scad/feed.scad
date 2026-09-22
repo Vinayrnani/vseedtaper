@@ -111,7 +111,7 @@ module hopper_body() {
 
     // v78: mirror about Y axis — wedge swings to west (mouth LEFT), bore stays at x=0.
     // Mirrored wedge world x: drum_axle_x + [-83..-14] = [17..86].
-    // Collision checks: shroud Z 0..23, forming Z~13, pull roller Z~4..28 —
+    // Collision checks: forming Z~13, pull roller Z~4..28 —
     // all below wedge Z≥49 → no 3D collision despite X overlap.
     mirror([1, 0, 0])
     difference() {
@@ -242,7 +242,7 @@ module hopper_body() {
             rotate([90, 0, 0])
                 rotate([0, 0, 120])
                     rotate_extrude(angle=150, convexity=10)
-                        translate([drum_radius + shroud_gap + groove_d/2, 0, 0])
+                        translate([drum_radius + 1.5 + groove_d/2, 0, 0])
                             square([groove_d + epsilon, groove_w], center=true);
         // Floor inner-face groove (v14 YELLOW: central longitudinal guide
         // w7 x d0.8 along tilted floor, matches drum cavity track for
@@ -253,74 +253,11 @@ module hopper_body() {
                     cube([(x_tip + 1) - 16, groove_w, groove_d + epsilon]);
     }
     // v78 collision asserts: mirrored wedge (local x -83..-14, world 17..86)
-    // must not reach below Z=49 where obstacles live (shroud Z≤23, tape Z~13, pull Z≤28).
+    // must not reach below Z=49 where obstacles live (tape Z~13, pull Z≤28).
     assert(cheek_bot_root >= 49, "v78: mirrored hopper wedge bottom must stay above obstacles (Z≥49)");
     // Wedge must not extend west beyond the chassis
     assert(x_tip >= -chassis_len + chassis_x0 + 10,
            str("v78: mirrored hopper nose must stay inside chassis (x_tip=", x_tip, ")"));
-}
-
-// ============================================================
-// 4. Shroud — v22 REAL PART (was v14 legacy annular stub): enclosed tape
-//    cover tunnel WEST of the drum, roller nip -> drum exit (local x
-//    0..shroud_len = world 58..84, centroid ~71, Y centred on the track).
-//    Side walls stand on the base (flat print base min_z=0) + sole
-//    flanges; top plate clears the tape (v33 ends open 0..21, tape at ~13);
-//    top (23) stays below the roller gear bottom (38) and the hopper
-//    cover bottom lip (~36.4 at x=84). Round side view-ports (d10) show
-//    the tape. Inner width = paper_width + 2*tol; curves use $fn=60.
-//    Local frame: x 0..len, y centred 0, z 0..shroud_h. Assembly places
-//    it at [shroud_x0, chassis_width/2, 0]; export is standalone min_z=0.
-// ============================================================
-module u_channel_shroud() {
-    assert(shroud_len > 5, str("u_channel_shroud: shroud_len must exceed 5, got ", shroud_len));
-    assert(shroud_x0 >= drum_axle_x + 16,
-           str("u_channel_shroud: west end must tuck to drum tangent east, got ", shroud_x0));
-    assert(shroud_x1 <= plow_start - 2,
-           str("u_channel_shroud: east end must stay west of six_turner, got ", shroud_x1));
-    assert(shroud_h < drum_axle_z - drum_radius,
-           str("u_channel_shroud: top must stay below drum bottom (35), got ", shroud_h));
-    wall = shroud_wall;                          // 2
-    inner_hw = (paper_width + 2*tolerance)/2;    // 13
-    outer_hw = inner_hw + wall;                  // 15
-    top_t = 2;                                   // v33 top plate 21..23 (was 32..34)
-    slot_hw = 6.45;                              // v33: central top slot passes
-                                                 // the transit walls (5.35)
-                                                 // + shoulder kinks (6.3)
-    assert(outer_hw - slot_hw >= 6,
-           str("u_channel_shroud: top strips must stay printable (>=6): ", outer_hw - slot_hw));
-    port_d = 10;
-    port_z = 18; // v33: spans 13..23 = lane base 13 to roof 23, tape stays visible
-    difference() {
-        union() {
-            // Side walls (stand on base, full length/height)
-            for (s=[-1,1])
-                translate([0, s > 0 ? inner_hw : -outer_hw, 0])
-                    cube([shroud_len, wall, shroud_h]);
-            // Top plate (ends stay open 0..21 for the tape; v33 central
-            // slot full length passes the transit walls, strips cover
-            // the wings on both sides)
-            for (s=[-1,1])
-                translate([0, s > 0 ? slot_hw : -outer_hw, shroud_h - top_t])
-                    cube([shroud_len, outer_hw - slot_hw, top_t]);
-            // Sole flanges (mounting feet, solid, min_z=0)
-            for (s=[-1,1])
-                translate([0, s > 0 ? outer_hw : -outer_hw - 4, 0])
-                    cube([shroud_len, 4, 3]);
-        }
-        // Round side view-ports (d10) down each wall — tape stays visible
-        for (s=[-1,1])
-            for (px=[shroud_len/4, 3*shroud_len/4])
-                translate([px, s*(inner_hw + wall/2), port_z])
-                    rotate([90,0,0])
-                        cylinder(h=wall + 2*epsilon, d=port_d, center=true);
-        // v27 printable: M3 mounting holes in sole flanges (were solid with
-        // no fasteners). Flange centre Y = s*(outer_hw+2), 2 holes per side.
-        for (s=[-1,1])
-            for (px=[6, shroud_len - 6])
-                translate([px, s*(outer_hw + 2), -epsilon])
-                    cylinder(h=3 + 2*epsilon, d=bolt_dia + 2*tolerance, center=false);
-    }
 }
 
 // ============================================================
@@ -335,9 +272,8 @@ module seed_cartridge(sdia = seed_dia, sdepth = seed_depth) {
     assert(sdepth > 0 && sdepth < drum_radius, "seed_cartridge: seed_depth invalid");
     drum_len = drum_width;
     gear_thick = 6;
-    // v20: drum gear sits on FRONT side of drum (+gear_off, world Y~47.95).
+    // v20: drum gear sits on FRONT side of drum (+gear_off from params, world Y~51.95).
     // gear_off shared by both branches so export matches assembly.
-    gear_off = roller_len/2 + gear_thick/2 - epsilon;  // 17.95
     gear_z = gear_thick/2 + 0.6;  // 3.6: gear at bottom of export = FRONT side after viewer Rx(PI) flip
     drum_base = gear_z + gear_off - drum_len/2;  // 14.05: export drum lift
 
@@ -417,7 +353,7 @@ module seed_cartridge(sdia = seed_dia, sdepth = seed_depth) {
                                 cylinder(h=1.5, d=drum_dia + 3, center=true);
                                 cylinder(h=1.5 + 2*epsilon, d=drum_dia - 6, center=true);
                             }
-                // v79: gear on FRONT side (+gear_off, world y≈47.95); hub points toward the drum.
+                // v79: gear on FRONT side (+gear_off, world y≈51.95); hub points toward the drum.
                 translate([0, +gear_off, 0])
                     rotate([-90,0,0])
                         spur_gear(teeth=drum_teeth, module_mm=gear_module, thickness=gear_thick,

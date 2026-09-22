@@ -1,14 +1,5 @@
-**Version: v93**
+**Version: v92**
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
-
-## v93 15mm lift off base - 2026-09-22
-
-1. **Intent**: parts lift off base — base slab stays z 0..4, feet -15..0, ground -15 unchanged. All other assembly parts go +15mm in Z.
-2. **Walls + axles**: chassis walls grow +15mm taller (chassis_height 110->125) to carry wall-mounted axles: drum_axle_z 60->75, crank_axle_z 60->75, spool_axle_z 65->80, takeup_z 34->49; bores/bearing blocks/gear mesh move together (center_distance 60 kept by moving both gears).
-3. **Alignment kept**: tape lane tape_z 13->28; twister axle = tape_z+4 (twister_axle_z 17->32); plow axis keeps axis_z+base_thick==twister_axle_z; hopper drop gap 10 kept; former collar + cradle lift with tape.
-4. **Scope = all assembly**: hopper, drum/cartridge, cones, plow, tape+former collar, cradle, twister+axle+pedestal, pull_a/b + pins/bridge, takeup, crank. No shroud module exists — noted as naming gap (no-op). Rollers legacy export-only — noted, no assembly change.
-5. **Supports grow +15 (stay fused)**: plow ears/straps/peds +15; twister pedestal 0..9.5 -> 0..24.5 fused; pull pins 2..27 -> 2..42; pull bridge/cup +15; track/hopper rails stay fused to base; feet unchanged.
-6. **Frozen**: fail-loud asserts for every stack-up updated to +15 values; `$fn=60`, `tol=0.3` kept; never v1 / web-backup; no commit pre-APPROVE.
 
 ## v92 Strict no-repeat rule - 2026-09-22
 

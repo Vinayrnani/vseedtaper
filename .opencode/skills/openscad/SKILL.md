@@ -9,10 +9,14 @@ Create, validate, and export OpenSCAD 3D models. Supports parameter customizatio
 
 ## Prerequisites
 
-OpenSCAD must be installed. Install via Homebrew:
+**OpenSCAD nightly only** (`openscad-nightly`, manifold backend, headless-capable). Never use `openscad` 2021.01 or Xvfb.
+
+Install on Linux (OBS home:t-paul, xUbuntu_24.04, arm64 available):
 ```bash
-brew install openscad
+sudo apt-get install -y openscad-nightly
 ```
+
+Other platforms: download a **nightly** build from https://openscad.org/downloads.html — tools fail loud if `openscad-nightly` is not on PATH.
 
 ## Tools
 

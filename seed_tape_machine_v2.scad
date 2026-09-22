@@ -6,7 +6,7 @@
       scad/params.scad    — global variables, kinematics, assertions, helpers
       scad/gears.scad     — hex_hole, round_axle_hole, spur_gear, bevel_gear, hex_bolt, bearing_block
       scad/chassis.scad   — chassis()
-      scad/feed.scad      — single_cone, spool_cones, hopper_body, u_channel_shroud, seed_cartridge, seed_cradle
+      scad/feed.scad      — single_cone, spool_cones, hopper_body, seed_cartridge, seed_cradle
       scad/plow.scad      — scroll_sheet, six_turner, folding_plow
       scad/stations.scad  — seed_tape_bend, former_collar, knurled_roller, pull_rollers, thread_twister, vpull_roller, takeup_reel, crank_assembly
 */
@@ -54,12 +54,6 @@ module animated_assembly() {
     // at drum x hovering 10 above the lowered lane)
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
-
-    // Tape cover shroud (v79: EAST of drum, moves with hopper as one unit,
-    // world x 116..124, centroid 120). Local frame x 0..len, y centred 0.
-    // v79: shroud sits between drum(100) and six_turner(126), east side.
-    translate([shroud_x0, chassis_width/2, 0])
-        u_channel_shroud();
 
     // Seed cradle
     translate([plow_start, chassis_width/2 - 12.7, base_thick])
@@ -155,8 +149,6 @@ if (part_to_render == "all") {
     // (local hover-pipe bottom 19.4 -> 0; was 19.9/25.9/26.5);
     // assembly branch above unaffected.
     translate([0, 0, -19.4]) hopper_body();
-} else if (part_to_render == "shroud") {
-    u_channel_shroud();
 } else if (part_to_render == "cartridge") {
     seed_cartridge(seed_dia, seed_depth);
 } else if (part_to_render == "cones") {
@@ -168,8 +160,8 @@ if (part_to_render == "all") {
 } else if (part_to_render == "rollers") {
     pull_rollers();
 } else if (part_to_render == "twister") {
-    // Bobbin-down export pose: one bobbin straight down → min_z = tw_lift - (tw_orbit + bob_d/2) = 0.15
-    translate([0, 0, tw_lift]) rotate([90, 0, 0]) thread_twister();
+    // Export pose: translate only (no bobbin-down rotate; bobbins not rendered)
+    translate([0, 0, tw_lift]) thread_twister();
 } else if (part_to_render == "twister_axle") {
     // Static axle (absolute coords, no transform needed for export).
     twister_axle();

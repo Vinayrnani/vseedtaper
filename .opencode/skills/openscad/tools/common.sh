@@ -1,43 +1,24 @@
 #!/bin/bash
 # Common utilities for OpenSCAD tools
 
-# Find OpenSCAD executable
+# Find OpenSCAD executable — nightly only, fail loud if missing.
 find_openscad() {
-    # Check common locations
-    if command -v openscad &> /dev/null; then
-        echo "openscad"
+    if command -v openscad-nightly &> /dev/null; then
+        echo "openscad-nightly"
         return 0
     fi
-    
-    # macOS Application bundle
-    if [ -d "/Applications/OpenSCAD.app" ]; then
-        echo "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD"
-        return 0
-    fi
-    
-    # Homebrew on Apple Silicon
-    if [ -x "/opt/homebrew/bin/openscad" ]; then
-        echo "/opt/homebrew/bin/openscad"
-        return 0
-    fi
-    
-    # Homebrew on Intel
-    if [ -x "/usr/local/bin/openscad" ]; then
-        echo "/usr/local/bin/openscad"
-        return 0
-    fi
-    
     return 1
 }
 
-# Check if OpenSCAD is available
+# Check if OpenSCAD nightly is available
 check_openscad() {
     OPENSCAD=$(find_openscad) || {
-        echo "Error: OpenSCAD not found!"
+        echo "Error: openscad-nightly not found!"
         echo ""
-        echo "Install OpenSCAD using one of:"
-        echo "  brew install openscad"
-        echo "  Download from https://openscad.org/downloads.html"
+        echo "Install OpenSCAD nightly only (no 2021.01 fallback):"
+        echo "  sudo apt-get install -y openscad-nightly"
+        echo "  (OBS home:t-paul xUbuntu_24.04, arm64 build available)"
+        echo "  https://openscad.org/downloads.html (nightly builds)"
         exit 1
     }
     export OPENSCAD

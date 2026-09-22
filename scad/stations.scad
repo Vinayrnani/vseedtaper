@@ -172,7 +172,7 @@ module thread_twister() {
     assert(twister_arms == 2, "thread_twister: must carry exactly 2 spindles");
     difference() {
         union() {
-            // Hub sleeve: outer r10, bore 15.6 (local x -5..0 = abs 167..172)
+            // Hub sleeve: outer r10, bore 15.6 (local x -5..0 = abs 179..184)
             translate([-5, 0, 0])
                 rotate([0, 90, 0])
                     difference() {
@@ -180,7 +180,7 @@ module thread_twister() {
                         translate([0, 0, -epsilon])
                             cylinder(h=5 + 2*epsilon, r=15.6/2, center=false, $fn=60);
                     }
-            // Disc: r23, local -5..-2 = abs 167..170
+            // Disc: r23, local -5..-2 = abs 179..182
             translate([-5, 0, 0])
                 rotate([0, 90, 0])
                     difference() {
@@ -188,98 +188,238 @@ module thread_twister() {
                         translate([0, 0, -epsilon])
                             cylinder(h=3 + 2*epsilon, r=15.6/2, center=false, $fn=60);
                     }
-            // Non-meshing visual bevel-blank teeth: 24 boxes in annulus
-            // r16..22, local x -1.5..+1.5 east of disc face; -8 is z-offset of ring centre (placeholder only,
-            // never gear math — viewer paints them as visual texture)
-            for (i=[0:23]) {
-                rotate([i*15, 0, 0])
-                    translate([0, 19, -8])
-                        cube([3, 4, 3], center=true);
+            // 24 trapezoidal teeth with angled flanks and back-to-front taper.
+            // Each tooth is a 3-section hull: back face (wide), mid-depth (visible taper),
+            // front face (narrow). Radial taper via flank_ang, axial taper via taper_ang.
+            // NO bevel_gear module; NO boxy lugs.
+            // Local x: hub east=0 (abs 184), disc= -5..-2 (abs 179..182),
+            // teeth back=-5 (abs 179), teeth front=-12 (abs 172).
+            for (i=[0:tw_teeth_n-1]) {
+                rotate([i*(360/tw_teeth_n), 0, 0]) {
+                    // Local x offsets (hub_east=184, teeth at abs x172..179)
+                    _bk = -5;   // back face (abs 179, fuse disc west)
+                    _fr = -12;  // front face (abs 172)
+                    _md = (_bk + _fr) / 2;  // mid-depth (abs 175.5)
+                    // Back face cross-section (wide)
+                    back_base = [_bk, (tw_teeth_r0+tw_teeth_r1)/2, 0];
+                    back_tip  = [_bk, (tw_teeth_r1+tw_teeth_top_r)/2, 0];
+                    // Mid-depth cross-section (visible taper)
+                    mid_base = [_md, (tw_teeth_r0+tw_teeth_r1)/2, 0];
+                    mid_tip  = [_md, (tw_teeth_r1+tw_teeth_top_r)/2, 0];
+                    // Front face cross-section (narrow, tapered)
+                    front_base = [_fr, (tw_teeth_r0+tw_teeth_r1)/2, 0];
+                    front_tip  = [_fr, (tw_teeth_r1+tw_teeth_top_r)/2, 0];
+                    // Root section (r0..r1): 3-section hull back→mid→front
+                    hull() {
+                        translate(back_base)
+                            cube([epsilon, tw_teeth_r1-tw_teeth_r0, tw_teeth_base_w], center=true);
+                        translate(mid_base)
+                            cube([epsilon, tw_teeth_r1-tw_teeth_r0, (tw_teeth_base_w+tw_teeth_front_base_w)/2], center=true);
+                        translate(front_base)
+                            cube([epsilon, tw_teeth_r1-tw_teeth_r0, tw_teeth_front_base_w], center=true);
+                    }
+                    // Tip section (r1..top_r): 3-section hull back→mid→front
+                    hull() {
+                        translate(back_tip)
+                            cube([epsilon, tw_teeth_top_r-tw_teeth_r1, tw_teeth_tip_w], center=true);
+                        translate(mid_tip)
+                            cube([epsilon, tw_teeth_top_r-tw_teeth_r1, (tw_teeth_tip_w+tw_teeth_front_tip_w)/2], center=true);
+                        translate(front_tip)
+                            cube([epsilon, tw_teeth_top_r-tw_teeth_r1, tw_teeth_front_tip_w], center=true);
+                    }
+                    // Flank connector: back-to-front at root level (radial flank taper)
+                    hull() {
+                        translate(back_base)
+                            cube([epsilon, 0.8, tw_teeth_base_w], center=true);
+                        translate(back_tip)
+                            cube([epsilon, 0.8, tw_teeth_tip_w], center=true);
+                    }
+                    hull() {
+                        translate(front_base)
+                            cube([epsilon, 0.8, tw_teeth_front_base_w], center=true);
+                        translate(front_tip)
+                            cube([epsilon, 0.8, tw_teeth_front_tip_w], center=true);
+                    }
+                }
             }
-            // 2 spindle pins: r3, orbit R19, 180 apart, local -2..+7.5 = abs 170..179.5
+            // 2 spindle pins: r3, orbit R19, 180 apart, arrow push-lock tips
             for (k=[0:twister_arms-1])
                 rotate([k*180, 0, 0]) {
+                    // Pin body (cylinder along x)
                     translate([-2, 19, 0])
                         rotate([0, 90, 0])
                             cylinder(h=9.5, r=3, center=false, $fn=60);
-                    // Bobbin visual: r10.35 h11.1 centred on pin, local -2.5..+8.6 = abs 169.5..180.6
-                    translate([-2.5, 19, 0])
-                        rotate([0, 90, 0])
-                            cylinder(h=11.1, r=10.35, center=false, $fn=60);
-                    // Collet lip ring at pin tip
-                    translate([7.5, 19, 0])
-                        rotate([0, 90, 0])
-                            difference() {
-                                cylinder(h=1.2, r=4.5, center=false, $fn=60);
-                                translate([0, 0, -epsilon])
-                                    cylinder(h=1.2 + 2*epsilon, r=3.1, center=false, $fn=60);
+                    // Arrow push-lock tip: 45° chamfer barb r3→r5 over 2mm
+                    // + flat shoulder 1mm + centered slot 2.5mm full length
+                    translate([5.5, 19, 0]) {
+                        difference() {
+                            union() {
+                                // 45° chamfer cone: r3→r5 over 2mm (45° angle)
+                                rotate([0, 90, 0])
+                                    cylinder(h=2, r1=3, r2=tw_pin_tip_r, center=false, $fn=60);
+                                // Flat shoulder: ring r5→r3, 1mm step face
+                                translate([2, 0, 0])
+                                    rotate([0, 90, 0])
+                                        difference() {
+                                            cylinder(h=1, r=tw_pin_tip_r, center=false, $fn=60);
+                                            translate([0, 0, -epsilon])
+                                                cylinder(h=1+2*epsilon, r=3, center=false, $fn=60);
+                                        }
                             }
+                            // Centered slot: 2.5mm wide, full pin length, through diameter
+                            translate([0, -tw_pin_slot_w/2, -10])
+                                cube([10, tw_pin_slot_w, 20], center=false);
+                        }
+                    }
                 }
-            // 2 eyelet posts: r1.5 h6 at orbit R12, 90/270 offset
-            // from spindles, local -2..+4 = abs 170..176
+            // 2 eyelet posts: r2 h15 at orbit R13, 90/270 offset
+            // from spindles, local -2..+13 = abs 182..197
             for (offset=[90, 270])
                 rotate([offset, 0, 0]) {
-                    translate([-2, 12, 0])
+                    translate([-2, 13, 0])
                         rotate([0, 90, 0])
-                            cylinder(h=6, r=1.5, center=false, $fn=60);
+                            cylinder(h=15, r=2, center=false, $fn=60);
                 }
         }
         // Central bore through hub sleeve + disc (tape path)
         translate([-8, 0, 0])
             rotate([0, 90, 0])
                 cylinder(h=16, r=15.6/2, center=false, $fn=60);
-        // Ø2 cross-hole near top of each eyelet post
+        // Ø2 cross-hole near top of each eyelet post (~x=183)
         for (offset=[90, 270])
             rotate([offset, 0, 0]) {
-                translate([4, 12, 0])
+                translate([11, 13, 0])
                     rotate([0, 90, 0])
-                        cylinder(h=2, r=1, center=false, $fn=60);
+                        cylinder(h=4, r=1, center=true, $fn=60);
             }
     }
 }
 
 module twister_axle() {
-    // Absolute coordinates: pedestal (x161..165, y lane_y±5, z0..9.5)
-    // fused with tube (x160..184, OD15, Ø10 through-bore) + snap fingers (x182..184).
+    // Absolute coordinates: pedestal (x170..174, y lane_y±5, z0..9.5)
+    // fused with tube (x172..197, OD15, Ø10 through-bore) + collar (r9 x176.5..178)
+    // + groove in hub bore (r9 x193.5..196) + full annulus wall (r5..7.5 x186..197) with 3 tapered slots.
     difference() {
         union() {
-            // Pedestal: x161..165, y lane_y-5..lane_y+5, z0..9.5 (fused)
-            translate([161, lane_y - 5, 0])
+            // Pedestal: x170..174, y lane_y-5..lane_y+5, z0..9.5 (fused)
+            translate([tw_ped_x0, lane_y - 5, 0])
                 cube([4, 10, 9.5], center=false);
             translate([0, lane_y, twister_axle_z]) {
-                // Tube: x160..184, OD15, Ø10 through-bore
-                translate([160, 0, 0])
+                // Tube: x172..197, OD15, Ø10 through-bore
+                translate([tw_mouth_x, 0, 0])
                     rotate([0, 90, 0])
-                        cylinder(h=24, r=15/2, center=false, $fn=60);
-                // Funnel flare at mouth x160 (flared entry for tape threading)
-                translate([160, 0, 0])
+                        cylinder(h=25, r=15/2, center=false, $fn=60);
+                // Funnel flare at mouth x172 (flared entry for tape threading)
+                translate([tw_mouth_x, 0, 0])
                     rotate([0, 90, 0])
                         cylinder(h=3, r1=12, r2=15/2, center=false, $fn=60);
-                // 3 snap fingers at x182..184: cantilever hooks with 1.2 slots
-                // and 0.8 barb lips, 120° apart around the tube end
-                for (i=[0:2])
+                // Static collar ring r9 x176.5..178 (fused on tube exterior)
+                translate([tw_collar_x0, 0, 0])
+                    rotate([0, 90, 0])
+                        difference() {
+                            cylinder(h=tw_collar_x1-tw_collar_x0, r=tw_collar_r, center=false, $fn=60);
+                            translate([0, 0, -epsilon])
+                                cylinder(h=tw_collar_x1-tw_collar_x0+2*epsilon, r=15/2, center=false, $fn=60);
+                        }
+                // Full annulus wall x186..197: r5..7.5 (2.5mm solid wall over r5 bore)
+                // Single 360° ring — NOT per-finger — keeps it chunky-solid
+                translate([tw_finger_base_x0, 0, 0])
+                    rotate([0, 90, 0])
+                        linear_extrude(height=tw_finger_base_x1-tw_finger_base_x0)
+                            difference() {
+                                circle(r=7.5, $fn=60);
+                                circle(r=5, $fn=60);
+                            }
+                // 3 barb fingers @120°: ramp r7.5→r9 + barb r9 + tip r9→r7
+                for (i=[0:tw_finger_n-1])
                     rotate([i*120, 0, 0]) {
-                        // Finger body (4 wide, 6 long, 1.6 thick radial)
-                        translate([182, 7.5, 0])
-                            cube([6, 4, 1.6], center=true);
-                        // Barb lip (0.8 thick, protruding inward)
-                        translate([184, 6.8, 0])
-                            cube([1.5, 2, 0.8], center=true);
+                        // Ramp section x181..182: r7.5 → r9 (protruding ramp)
+                        translate([tw_finger_ramp_x0, 0, 0])
+                            rotate([0, 90, 0])
+                                hull() {
+                                    linear_extrude(height=epsilon)
+                                        intersection() {
+                                            circle(r=15/2, $fn=60);
+                                            rotate([-tw_finger_angle/2, 0, 0])
+                                                square([15, 15]);
+                                        }
+                                    translate([0, 0, tw_finger_ramp_x1-tw_finger_ramp_x0-epsilon])
+                                        linear_extrude(height=epsilon)
+                                            intersection() {
+                                                circle(r=tw_finger_barb_r, $fn=60);
+                                                rotate([-tw_finger_angle/2, 0, 0])
+                                                    square([15, 15]);
+                                            }
+                                }
+                        // Barb section x182..183.5: r9 (flat locking shoulder)
+                        translate([tw_finger_barb_x0, 0, 0])
+                            rotate([0, 90, 0])
+                                linear_extrude(height=tw_finger_barb_x1-tw_finger_barb_x0)
+                                    intersection() {
+                                        circle(r=tw_finger_barb_r, $fn=60);
+                                        rotate([-tw_finger_angle/2, 0, 0])
+                                            square([15, 15]);
+                                    }
+                        // Tip taper x183.5..185: r9 → r7
+                        translate([tw_finger_tip_x0, 0, 0])
+                            rotate([0, 90, 0])
+                                hull() {
+                                    linear_extrude(height=epsilon)
+                                        intersection() {
+                                            circle(r=tw_finger_barb_r, $fn=60);
+                                            rotate([-tw_finger_angle/2, 0, 0])
+                                                square([15, 15]);
+                                        }
+                                    translate([0, 0, tw_finger_tip_x1-tw_finger_tip_x0-epsilon])
+                                        linear_extrude(height=epsilon)
+                                            intersection() {
+                                                circle(r=tw_finger_tip_r, $fn=60);
+                                                rotate([-tw_finger_angle/2, 0, 0])
+                                                    square([15, 15]);
+                                            }
+                                }
                     }
             }
         }
         // Through-bore Ø10 (full tube length)
         translate([0, lane_y, twister_axle_z])
-            translate([160, 0, 0])
+            translate([tw_mouth_x, 0, 0])
                 rotate([0, 90, 0])
-                    cylinder(h=24 + 2*epsilon, r=5, center=false, $fn=60);
-        // Snap finger slots (1.2 wide gaps between hooks)
+                    cylinder(h=25 + 2*epsilon, r=5, center=false, $fn=60);
+        // Hub bore groove r9 x193.5..196 (recess in bore wall)
         translate([0, lane_y, twister_axle_z])
-            for (i=[0:2])
-                rotate([i*120, 0, 0]) {
-                    translate([182, 5, -0.6])
-                        cube([6, 1.2, 1.2], center=false);
-                }
+            translate([tw_groove_x0, 0, 0])
+                rotate([0, 90, 0])
+                    difference() {
+                        cylinder(h=tw_groove_x1-tw_groove_x0, r=tw_groove_r, center=false, $fn=60);
+                        translate([0, 0, -epsilon])
+                            cylinder(h=tw_groove_x1-tw_groove_x0+2*epsilon, r=5, center=false, $fn=60);
+                    }
+        // Annular cap face at tip: r5..r7 ring x184.5..185 (1mm face, bore Ø10 through)
+        translate([0, lane_y, twister_axle_z])
+            translate([tw_cap_x0, 0, 0])
+                rotate([0, 90, 0])
+                    difference() {
+                        cylinder(h=tw_cap_x1-tw_cap_x0, r=tw_cap_r1, center=false, $fn=60);
+                        translate([0, 0, -epsilon])
+                            cylinder(h=tw_cap_x1-tw_cap_x0+2*epsilon, r=tw_cap_r0, center=false, $fn=60);
+                    }
+        // 3 uniform through-slots at 60°, 180°, 300° (radial cuts through annulus)
+        // Width 1.5mm uniform x176..185, radial r4..r8
+        translate([0, lane_y, twister_axle_z])
+            for (g=[0:tw_finger_n-1])
+                rotate([g*120 + 60, 0, 0])
+                    hull() {
+                        translate([tw_slot_x0, -tw_slot_w0/2, -tw_slot_r1])
+                            cube([epsilon, tw_slot_w0, 2*tw_slot_r1]);
+                        translate([tw_slot_x1-epsilon, -tw_slot_w1/2, -tw_slot_r1])
+                            cube([epsilon, tw_slot_w1, 2*tw_slot_r1]);
+                    }
+        // Mouth chamfer: 0.5mm lead-in at x174 (bore r5 → annulus r7.5)
+        translate([0, lane_y, twister_axle_z])
+            translate([tw_finger_base_x0, 0, 0])
+                rotate([0, 90, 0])
+                    cylinder(h=0.5, r1=5, r2=7.5, center=false, $fn=60);
     }
 }
 
@@ -383,7 +523,7 @@ module crank_assembly() {
     grip_y0 = s * arm_w;
     grip_y1 = grip_y0 + s * grip_len;
     grip_yc = (grip_y0 + grip_y1)/2;
-    gear_local_y = -24;      // world y=44: 68-24 (front, gear spans y 41..47)
+    // gear_local_y from params: world y=52: crank_mount_y(76)-24 (front, gear spans y 49..55)
     gear_thick = 6;           // matching drum/roller gear thickness
 
     difference() {
@@ -408,7 +548,7 @@ module crank_assembly() {
             translate([pivot_x, arm_yc, pivot_z])
                 rotate([90,0,0])
                     cylinder(h=hex_shaft_len, r=hex_axle_r, $fn=6, center=true);
-            // 20T crank gear, front plane world y 45..51, meshes drum 40T (dist 60)
+            // Crank gear (20T) at front plane, meshes drum 40T
             translate([pivot_x, gear_local_y, pivot_z])
                 rotate([-90,0,0])
                     spur_gear(teeth=roller_teeth, module_mm=gear_module, thickness=gear_thick,
