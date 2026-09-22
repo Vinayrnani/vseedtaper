@@ -1,6 +1,24 @@
 # Requirements Change Log
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
 
+## v93 — 2026-09-22
+- 15mm lift off base: base slab 0..4 / feet -15..0 / ground -15 stay; all other assembly +15Z; chassis walls 110->125 carry drum/hopper 60->75, crank 60->75, spool 65->80, takeup 34->49 (bores/blocks/gear mesh together, dist 60 kept); tape_z 13->28 chain (twister 17->32 = tape+4, plow axis+base==twister, hopper gap 10, collar+cradle with tape); supports +15 (plow ears/straps/peds, twister pedestal 0..9.5->0..24.5 fused, pull pins 2..27->2..42, pull bridge/cup, track/hopper rails fused, feet unchanged); scope = hopper/drum/cones/plow/tape+collar/cradle/twister+axle/pull_a/b+bridge/takeup/crank (no shroud module = naming gap, rollers legacy export-only). $fn=60, tol=0.3 kept; no commit pre-APPROVE.
+
+## v92 — 2026-09-22
+- Strict no-repeat rule: never the same tool call/action more than 2 times (attempt once, change approach once, then stop + report). Added to AGENTS.md Gotchas+Workflow and subagent-discipline.md. All prior v91 rules kept; no commit pre-APPROVE.
+
+## v91 — 2026-09-22
+- Agent instruction updates: plan via `plan` agent (not general); delivery flow max 2 verify/fix loops; fix loop max 2; remove vision-only screenshot rule from subagent-discipline.md; single-object isolation gotcha (no touching other objects without user permission + why). $fn=60, tol=0.3 kept; no commit pre-APPROVE.
+
+## v90 — 2026-09-22
+- Drum+crank gear restore: uncomment feed 316-322+360-364, stations 552-555; gear_local_y -24→-16, coplanarity <0.5, Y/Z clearance asserts; regen cartridge+crank; ASSET_V 53→55; viewer text revert; verify_v90 side+front; snapshot web/v90/ (GLB only). $fn=60, tol=0.3 kept; no commit pre-APPROVE.
+
+## v89 — 2026-09-22
+- OpenSCAD nightly-only hardening: regenerate_glbs.sh drops 2021.01/Xvfb fallback (requires openscad-nightly, manifold headless, fail loud); skill common.sh find_openscad/check_openscad nightly-only (macOS brew paths removed); SKILL.md prerequisites → nightly install; AGENTS.md Commands+Gotchas updated; REQUIREMENTS Project Location → nightly fact. $fn=60, tol=0.3 kept; no commit pre-APPROVE.
+
+## v88 — 2026-09-22
+- Twister + twister axle at least 10mm edge-to-edge east of plow, move adjacents, extend chassis if needed: plow exit (x=159) to twister teeth/mouth (currently 160, 1mm gap) and pedestal/hub must be >=10mm gap; twister station (bind_x), pull, takeup shift east to preserve gaps; chassis_len extend east + twister slot / pull bridge / mount holes follow; asserts updated (tw_mouth_x-plow_end 0.5-2 -> >=10). $fn=60, tol=0.3 kept.
+
 ## v87 — 2026-09-22
 - Rotor teeth revert: v86 module-2 gear profile back to v85 wedge profile (24 trapezoidal, base 2.6/tip 1.6/depth 7/flank 45/taper 15) in local fused frame (x -12..-5); reason: v86 teeth built in absolute frame floated detached. KEEP: v86 axle rim OD20, axis fix (pivot/BIND_Y 14.5), arrow pins. Frozen: R19/disc r23/OD15/bore10/lane_y/hub r7.8+lip, drum/crank/tape untouched. Verify: manifold+asserts, regen twister, ASSET_V bump, pool screenshots, 0 errors, no code commit pre-APPROVE.
 

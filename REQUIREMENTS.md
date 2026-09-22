@@ -1,5 +1,56 @@
-**Version: v87**
+**Version: v93**
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
+
+## v93 15mm lift off base - 2026-09-22
+
+1. **Intent**: parts lift off base — base slab stays z 0..4, feet -15..0, ground -15 unchanged. All other assembly parts go +15mm in Z.
+2. **Walls + axles**: chassis walls grow +15mm taller (chassis_height 110->125) to carry wall-mounted axles: drum_axle_z 60->75, crank_axle_z 60->75, spool_axle_z 65->80, takeup_z 34->49; bores/bearing blocks/gear mesh move together (center_distance 60 kept by moving both gears).
+3. **Alignment kept**: tape lane tape_z 13->28; twister axle = tape_z+4 (twister_axle_z 17->32); plow axis keeps axis_z+base_thick==twister_axle_z; hopper drop gap 10 kept; former collar + cradle lift with tape.
+4. **Scope = all assembly**: hopper, drum/cartridge, cones, plow, tape+former collar, cradle, twister+axle+pedestal, pull_a/b + pins/bridge, takeup, crank. No shroud module exists — noted as naming gap (no-op). Rollers legacy export-only — noted, no assembly change.
+5. **Supports grow +15 (stay fused)**: plow ears/straps/peds +15; twister pedestal 0..9.5 -> 0..24.5 fused; pull pins 2..27 -> 2..42; pull bridge/cup +15; track/hopper rails stay fused to base; feet unchanged.
+6. **Frozen**: fail-loud asserts for every stack-up updated to +15 values; `$fn=60`, `tol=0.3` kept; never v1 / web-backup; no commit pre-APPROVE.
+
+## v92 Strict no-repeat rule - 2026-09-22
+
+1. **No repeated tool calls (STRICT)**: never issue the same tool call / command / grep / read / action more than **2 times** with the same result. Attempt once; change approach on the second attempt; after **2 identical attempts** stop immediately and report the blocker + partial results — no third retry.
+2. **Where**: AGENTS.md Gotchas + Workflow; `subagent-discipline.md` stagnation rules (replaces softer "fails twice in a row" wording with absolute max-2 rule). Applies to every agent (orchestrator, plan, coder, reviewer, general, vision).
+3. **Frozen**: prior v91 rules kept (plan agent, max 2 fix loops, single-object isolation); openscad-nightly-only; v1 scad + web/backup untouched; `$fn=60`, `tol=0.3`; port 9099 only; no commit pre-APPROVE.
+
+## v91 Agent instruction updates - 2026-09-22
+
+1. **Planning agent**: implementation plans are delegated to the **`plan` agent** (with `plan-protocol`), not `general`/`scribe`. Docs (requirements/changelog/AGENTS) remain `general`.
+2. **Delivery flow**: Requirements → plan (`plan` agent, reviewer APPROVE) → implement one change at a time → reviewer verify (**max 2** loops) → ONE commit+push only after user APPROVE.
+3. **Fix loop**: max **2** iterations then ask (was 5).
+4. **Vision rule removed**: deleted "only vision subagent interprets screenshots" from `subagent-discipline.md`.
+5. **Single-object isolation**: when altering one object/part/file, do not touch other objects without user permission — explain *why* the other object must be touched and get permission first.
+6. **Frozen**: openscad-nightly-only still in force; v1 scad + web/backup untouched; `$fn=60`, `tol=0.3`; port 9099 only; no commit pre-APPROVE.
+
+## v90 Drum+crank gear restore - 2026-09-22
+
+1. **Restore**: uncomment feed lines 316-322 + 360-364 and stations lines 552-555 (drum 40T + crank 20T gear geometry back in build).
+2. **Coplanarity**: `gear_local_y` -24→-16; drum/crank gear planes coplanar <0.5mm; Y/Z clearance asserts kept fail-loud.
+3. **Regen**: cartridge + crank GLBs only.
+4. **Viewer**: ASSET_V 53→55; header/legend text reverted to gear-mesh wording.
+5. **Verify**: verify_v90 side + front mesh close-ups, pivots/ratios, 0 console errors.
+6. **Snapshot**: web/v90/ (index.html + js/ + stl/*.glb only, GLB never .stl).
+7. **Frozen**: v1 scad + web/backup untouched; `$fn=60`, `tol=0.3`; port 9099 only; no commit pre-APPROVE.
+
+## v89 OpenSCAD nightly-only hardening - 2026-09-22
+
+1. **Renderer**: `openscad-nightly` only (manifold backend, `QT_QPA_PLATFORM=offscreen` headless). Legacy `openscad` 2021.01 / `xvfb-run` / Xvfb fallback path **removed** everywhere.
+2. **regenerate_glbs.sh**: requires `openscad-nightly` on PATH else fail loud with OBS install hint; always uses `--backend=manifold` (+cgal retry); no Xvfb startup.
+3. **Skill tools** (`.opencode/skills/openscad/tools/common.sh`): `find_openscad()` resolves `openscad-nightly` only; macOS brew / plain-`openscad` paths removed; error message points at `sudo apt-get install -y openscad-nightly`.
+4. **SKILL.md Prerequisites**: document nightly-only install; never `brew install openscad`.
+5. **AGENTS.md**: Commands line + Gotchas state nightly-only, no Xvfb fallback.
+6. **Project Location**: current fact updated to `/usr/bin/openscad-nightly` (no `xvfb-run` needed).
+7. **Frozen**: v1 scad + web/backup untouched; `$fn=60`, `tol=0.3`; port 9099 only; no commit pre-APPROVE.
+
+## v88 Twister + twister axle 10mm east of plow - 2026-09-22
+
+1. **Gap**: plow exit (x=159) to twister teeth/mouth (currently 160, 1mm gap) and pedestal/hub must be >=10mm edge-to-edge east of plow.
+2. **Shift east**: twister station (bind_x), pull, takeup shift east to preserve gaps; chassis_len extends east + twister slot / pull bridge / mount holes follow.
+3. **Asserts**: mouth gap assert (tw_mouth_x-plow_end 0.5-2) becomes >=10; all downstream stack-up asserts updated.
+4. **Frozen**: fail-loud asserts for every stack-up; `$fn=60`, `tol=0.3` kept; never v1 / web-backup.
 
 ## v87 Rotor teeth revert to v85 wedge profile - 2026-09-22
 
@@ -2144,7 +2195,7 @@ If context is ever lost, read this file first.
 - v2 source: seed_tape_machine_v2.scad (1041 lines, current model)
 - Web viewer: web/ (root = v2), web/backup/ (v1 backup, served at /backup)
 - Previews: previews/ (v1 PNG renders)
-- OpenSCAD 2021.01 at /usr/bin/openscad; headless renders need `xvfb-run -a`
+- OpenSCAD nightly only: `openscad-nightly` (manifold, headless `QT_QPA_PLATFORM=offscreen`); no `xvfb-run` / no 2021.01 fallback
 - Public IP: 68.233.98.190 ; viewer port: 9099
 
 ## Versioned Approach (user directive)
