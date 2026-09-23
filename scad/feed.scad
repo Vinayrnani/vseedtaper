@@ -64,7 +64,36 @@ module hopper_body() {
     LOW_TILT = 8;                          // lower floor rises a little to the right
     tilt_pivot = [25, 0, 56];              // 3-o'clock mouth point on drum
     floor_half = cheek_in + 1.0;           // v19 SEAL (was +0.5): floor sides bury into cheeks
-    floor_lx1 = (84.5 - tilt_pivot[0])/cos(LOW_TILT);  // v19 SEAL: floor local-x end = world x84.5
+    // Asymmetric flare rev6 (SMOOTH TAPER, gravity ramp kept):
+    // +Y/FRONT stock-narrow full length (clears drum 40T gear disc).
+    // -Y/BACK tapers smoothly 7.8->24.5 (no step, no seed-trap corners);
+    // floor keeps the stock 8deg ramp so seeds slide to the mouth.
+    // Taper rules that rev3-5 learned the hard way: hull pairs share
+    // IDENTICAL z-spans (planar faces, no twist) and tilted boxes use
+    // tilt-mapped stations Xt(x) = (x-25)/cos8 (tilt frame sits on pivot).
+    X_R0 = 14; X_R1 = 24;                  // +Y hull stations (kept, proven)
+    X_T0 = 77; X_T1 = 82;
+    y_tip_neg_in = 24.5;                   // -Y inner face at tip
+    y_tip_neg_out = y_tip_neg_in + wall;   // 27.0: uniform 2.5 cheek wall
+    Xt_M = (27-25)/cos(LOW_TILT);        // taper starts past carve (r26)
+    Xt_M1 = (32-25)/cos(LOW_TILT);       // taper hull-A box end
+    Xt_T = (X_T0 - 25)/cos(LOW_TILT);      // tilted station mapping to X_T0
+    S_C = (y_tip_neg_in - cheek_in)/(X_T0 - 27);
+    S_T = S_C*cos(LOW_TILT);               // tilt-corrected taper slope
+    floorTipHalf = (cheek_in + 1.0) + S_T*(Xt_T - Xt_M);
+    voidTipHalf = (cheek_in + 0.5) + S_T*(Xt_T - Xt_M);
+    block_neg = y_tip_neg_out + 0.6;       // 27.6: nose block -Y half
+    nose_x0 = 75; nose_len = 8;            // nose x75..83 (west tip world 17)
+    lug_pos_y0 = 9.6; lug_pos_y1 = 12.5;    // +Y lug: fused, clears gear band
+    lug_neg_y0 = -29.5; lug_neg_y1 = -26.6; // -Y lug: 1.5 off wall bore
+    assert(27 > drum_radius + mouth_gap, "hopper flare: taper must start past carve");
+    assert(floorTipHalf < y_tip_neg_out, "hopper flare: floor must not pierce cheek outer");
+    assert(voidTipHalf < y_tip_neg_out - 1.5, "hopper flare: bowl wall >=1.5");
+    assert(block_neg < 31, "hopper flare: nose block must clear chassis walls");
+    assert(lug_pos_y1 + chassis_width/2 < chassis_width/2 + gear_off - gear_thick/2 - 2,
+           "hopper flare: +Y lug must stay 2 clear of drum gear face");
+    assert(100 - (nose_x0 + nose_len) >= 16.5,
+           "hopper flare: nose west must stay clear of spool cone rim");
     // BOTTOM-CENTER hover pipe (v35 thinnest printable wall: 6-o'clock,
     // x=0 = drum centre; round pipe OD10/ID7.6 (wall 1.2) L10 hangs from
     // the hopper floor, bottom hovers drop_gap=10 above the ribbon top --
@@ -117,27 +146,41 @@ module hopper_body() {
     mirror([1, 0, 0])
     difference() {
         union() {
-            // Triangular cheek plates (v19 SEAL: bottom edge deepened to
-            // overlap the floor top along the whole wedge — root 49, tip
-            // 59: bottom slope ~0.17 tracks the 8deg floor so the plates
-            // swallow the floor sides x16..83 with 4-6mm vertical overlap;
-            // drum carve trims the mouth reach. Tip nub 3.5-long ending
-            // x84.5, buried in the nose).
-            for (s = [-1, 1])
-                hull() {
-                    translate([x0, s > 0 ? cheek_in : -y_out, cheek_bot_root])
-                        cube([10, wall, cheek_top0 - cheek_bot_root]);
-                    translate([x_tip - 6, s > 0 ? cheek_in : -y_out, cheek_bot_tip])
-                        cube([5, wall, apex_top - cheek_bot_tip]);
-                    translate([x_tip - 2, s > 0 ? cheek_in : -y_out, (apex_top + cheek_bot_tip)/2 - 1])
-                        cube([3.5, wall, 2]);
-                }
-            // Lower floor slab (v19 SEAL: runs to x84.5 deep into the nose,
-            // half-width floor_half buries 1.0 into the cheek band).
+            // Cheek plates — ASYMMETRIC: +Y stock-straight (drum-gear side),
+            // -Y tapered wide (free side). Mouth/drum interface unchanged.
+            hull() {
+                translate([X_R0, cheek_in, cheek_bot_root])
+                    cube([X_R1 - X_R0, wall, cheek_top0 - cheek_bot_root]);
+                translate([X_T0, cheek_in, cheek_bot_tip])
+                    cube([X_T1 - X_T0, wall, apex_top - cheek_bot_tip]);
+            }
+            // -Y cheek — mouth box (stock section, carve trims flush: zero
+            // sliver) + SMOOTH TAPER starting past carve (x27, no seed-trap
+            // corners). Hull boxes share IDENTICAL z-spans (planar, no twist).
+            translate([X_R0, -(cheek_in + wall), cheek_bot_root])
+                cube([33 - X_R0, wall, cheek_top0 - cheek_bot_root]);
+            hull() {
+                translate([27, -(cheek_in + wall), cheek_bot_root])
+                    cube([32 - 27, wall, cheek_top0 - cheek_bot_root]);
+                translate([X_T0, -y_tip_neg_out, cheek_bot_root])
+                    cube([X_T1 - X_T0, wall, cheek_top0 - cheek_bot_root]);
+            }
+            // Lower floor slab — stock 8deg RAMP kept (gravity feed): straight
+            // mouth box (mouth zone bit-identical to stock) + taper hull
+            // starting past carve (shared envelope => parallel to cheek
+            // inner, 1.0 bury, never gaps, never pierces).
             translate(tilt_pivot)
                 rotate([0, -LOW_TILT, 0])
-                    translate([-9, -floor_half, -floor_thick])
-                        cube([floor_lx1 + 9, 2*floor_half, floor_thick]);
+                    union() {
+                        translate([-20, -floor_half, -floor_thick])
+                            cube([Xt_M1 + 1 + 20, 2*floor_half, floor_thick]);
+                        hull() {
+                            translate([Xt_M, -floor_half, -floor_thick])
+                                cube([Xt_M1 - Xt_M, 2*floor_half, floor_thick]);
+                            translate([Xt_T, -floorTipHalf, -floor_thick])
+                                cube([4, floorTipHalf + floor_half, floor_thick]);
+                        }
+                    }
             // v17 BLUE side-closure fins (the ONLY cover<->trough joint):
             // arc band r[26.5,28.5] sweeping 30..122deg at each cheek strip,
             // saddle-fusing wedge root (x14..24) to the 11-o'clock cover lip
@@ -153,13 +196,18 @@ module hopper_body() {
                             rotate_extrude(angle=92, convexity=10)
                                 translate([27.5, -s*(cheek_in + wall/2), 0])
                                     square([2, wall], center=true);
-            // Closed nose (v19 SEAL: 7 thick x78..85, half-width y_out+0.6
-            // swallowing cheek ends + floor sides (kills coplanar outer
-            // faces), foot 58 below floor bottom, cap 73.5 above cheek tops
-            // — overlaps floor (to x84.5), cheeks (tip nub to x84.5) and fin
-            // band into one sealed bowl. Fill via open top, mouth via drum).
-            translate([78, -(y_out + 0.6), 58])
-                cube([7, 2*(y_out + 0.6), 15.5]);
+            // Closed nose — ASYMMETRIC bowl: -Y wide (seed volume), +Y stock.
+            // x75..83 (west tip world x>=17 clears spool cone rim 16.5).
+            // Foot 53.5 swallows wide-floor west end + cheek tips.
+            translate([nose_x0, -block_neg, 53.5])
+                cube([nose_len, block_neg + y_out + 0.6, 73.5 - 53.5]);
+            // Screwable side lugs (pair) at mid-nose height, M3 clearance
+            // along Y (holes cut below). +Y lug clears drum gear band;
+            // -Y lug clears wall bore and spool cone rim.
+            translate([77, lug_pos_y0, 63])
+                cube([5, lug_pos_y1 - lug_pos_y0, 5]);
+            translate([77, lug_neg_y0, 63])
+                cube([5, lug_neg_y1 - lug_neg_y0, 5]);
             // Root-top gussets (v19 SEAL: fill the carve-edge/fin-underside
             // triangle x13..25 z70..79 each side; drum carve trims r<26 so
             // the mouth stays open with 1.0 gap, remainder fuses cheek root
@@ -201,12 +249,29 @@ module hopper_body() {
         translate(drum_c)
             rotate([90,0,0])
                 cylinder(h=2*y_out + 2*epsilon, r=drum_radius + mouth_gap, center=true);
-        // Open-top trough void (v17 PINK: ends x70, stops 8 short of the
-        // nose inner face so the tip stays a solid watertight bowl).
+        // Open-top trough void — stock narrow channel behavior at the mouth
+        // + smooth taper on tilt-mapped stations (bowl wall uniform 2.0,
+        // no step, no seed-trap corners). Ramp-matched: void bottom tracks
+        // just under the ramped floor. Reaches into the nose for volume.
         translate(tilt_pivot)
             rotate([0, -LOW_TILT, 0])
-                translate([-3, -(cheek_in + 0.5), -0.5])
-                    cube([48, 2*(cheek_in + 0.5), 30.5]);
+                union() {
+                    translate([-20, -(cheek_in + 0.5), -0.5])
+                        cube([Xt_M1 + 1 + 20, 2*(cheek_in + 0.5), 30.5]);
+                    hull() {
+                        translate([Xt_M, -(cheek_in + 0.5), -0.5])
+                            cube([Xt_M1 - Xt_M, 2*(cheek_in + 0.5), 30.5]);
+                        translate([Xt_T, -voidTipHalf, -0.5])
+                            cube([4, voidTipHalf + cheek_in + 0.5, 30.5]);
+                    }
+                };
+        // Side-lug M3 clearance holes (axis Y through each lug).
+        translate([79.5, lug_pos_y1 + epsilon, 65.5])
+            rotate([90, 0, 0])
+                cylinder(h=(lug_pos_y1 - lug_pos_y0) + 2*epsilon, d=bolt_dia + 2*tolerance, center=false);
+        translate([79.5, lug_neg_y0 - epsilon, 65.5])
+            rotate([-90, 0, 0])
+                cylinder(h=(lug_neg_y1 - lug_neg_y0) + 2*epsilon, d=bolt_dia + 2*tolerance, center=false);
         // v35 drop bore + tapered groove + 45deg lead-ins (no window box, no tape slots):
         // cylindrical ID7.6 bore through the hover pipe + tapered inner
         // cone (r4.6 -> r8, wide 16 -> 7.6 throat, ~8.6deg from vertical)

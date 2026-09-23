@@ -64,29 +64,7 @@ module chassis() {
                 cylinder(h=pull_pinA_z1 - pull_pinA_z0, r=pull_pin_r, center=true);
             translate([pull_x, chassis_width/2 + vpull_off, (pull_pinB_z0 + pull_pinB_z1)/2])
                 cylinder(h=pull_pinB_z1 - pull_pinB_z0, r=pull_pin_r, center=true);
-            // v95 merged C-idler pedestal (chassis-fused): base x166-171.5
-            // (west of teeth 172) + solid tower x166-169 (no slots: C15/I1
-            // start at x170). Feet notch the tape flat (y21.3-46.7 z13-22):
-            // feet y9-21 + y47-54, span y21-47 z0-13, columns z22.5+,
-            // bridge-high z37-62 (over pocket top 36), tower z58-90 with
-            // C bore (47,Bz) + idler bore (Iy,Iz). C overhangs 12 east,
-            // idler rides pedestal + bar1 (demo loads, documented).
-            translate([v95_ped_x0, 9, 0]) cube([5.5, 12, 22.5]);
-            translate([v95_ped_x0, 47, 0]) cube([5.5, 7, 22.5]);
-            translate([v95_ped_x0, 21, 0]) cube([5.5, 26, 13]);
-            translate([v95_ped_x0, 24, 22.5]) cube([5.5, 18, 35.5]);
-            translate([v95_ped_x0, 20, 37]) cube([5.5, 28, 25]);
-            difference() {
-                translate([v95_ped_x0, 24, 58]) cube([3, 26, 32]);
-                // C bore d6.6 along X at (47, Bz)
-                translate([v95_ped_x0 - epsilon, 47, v95_Bz])
-                    rotate([0, 90, 0])
-                        cylinder(h=3 + 2*epsilon, d=6.6, center=false, $fn=60);
-                // Idler bore d6.6 along X at (Iy, Iz)
-                translate([v95_ped_x0 - epsilon, v95_I_y, v95_I_z])
-                    rotate([0, 90, 0])
-                        cylinder(h=3 + 2*epsilon, d=6.6, center=false, $fn=60);
-            }
+            // v97: no wall-to-wall drive bars (composite take-off only).
             // v45 DEAD AXLES (static bars, slip-fit through bores/holes):
             // drum hex through-shaft (fuses into the solid v48 drum spur,
             // slip in the drum/interior-gear hex bores + wall/block hex
@@ -134,7 +112,7 @@ module chassis() {
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
         }
-        // v79: crank shaft hex hole at x=160 through both walls
+        // v79: crank shaft hex hole (follows crank_axle, now up at v95 spot)
         for (side=[0,1]) {
             translate([crank_axle_x, side*(chassis_width-wall_thick)+wall_thick/2, crank_axle_z])
                 rotate([90,0,0])
@@ -145,15 +123,16 @@ module chassis() {
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
         }
-        // v95: A/B round shaft bores (r4 shafts -> d8.6) through both walls.
-        // A/B cantilever from the front-wall bores (demo loads).
+        // v97: A composite round shaft bore (r4 shaft -> d8.6) through both walls.
+        // A cantilevers from the front-wall bore (demo loads).
+        // v98: B composite bore alongside (same mount, r4 shaft -> d8.6).
         for (side=[0,1]) {
-            translate([v95_Ax, side*(chassis_width-wall_thick)+wall_thick/2, v95_Az])
+            translate([v97_Ax, side*(chassis_width-wall_thick)+wall_thick/2, v97_Az])
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
         }
         for (side=[0,1]) {
-            translate([v95_Bx, side*(chassis_width-wall_thick)+wall_thick/2, v95_Bz])
+            translate([v98_Bx, side*(chassis_width-wall_thick)+wall_thick/2, v98_Bz])
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
         }

@@ -44,7 +44,7 @@ for arg in "$@"; do
     fi
 done
 
-ALL_GLB="chassis hopper cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister twister_axle pull_a pull_b takeup gear_A gear_B gear_C gear_D gear_I tire bar1"
+ALL_GLB="chassis hopper cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister twister_axle pull_a pull_b takeup gear_A gear_B"
 if [ "${#FILTER[@]}" -gt 0 ]; then
     for p in "${FILTER[@]}"; do
         case " $ALL_GLB " in
@@ -201,14 +201,12 @@ os.makedirs(printdir, exist_ok=True)
 
 base_for = {"rollers_lower": "rlow_s", "rollers_upper": "rup_s"}
 # print orientation: rotate assembly frame flat, then drop to min_z=0.
-# Y-clusters stand tower-style (discs horizontal); X parts stand on end;
-# bar1 lies flat (6 tall); everything else prints as-oriented.
+# The A composite (Y-cluster) stands tower-style (discs horizontal);
+# everything else prints as-oriented.
 RX90 = trimesh.transformations.rotation_matrix(np.pi / 2, [1, 0, 0])
 RYN90 = trimesh.transformations.rotation_matrix(-np.pi / 2, [0, 1, 0])
 RYP90 = trimesh.transformations.rotation_matrix(np.pi / 2, [0, 1, 0])
-print_rot = {"gear_A": RX90, "gear_B": RX90,
-             "gear_C": RYN90, "gear_D": RYN90, "gear_I": RYN90,
-             "tire": RYN90, "bar1": RYP90}
+print_rot = {"gear_A": RX90, "gear_B": RX90}
 
 def convert_one(glb_name):
     base = base_for.get(glb_name, glb_name)

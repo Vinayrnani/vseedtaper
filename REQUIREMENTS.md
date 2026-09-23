@@ -12,7 +12,7 @@ OpenSCAD CAD + static three.js viewer for a **seed-tape making machine** (v2). N
 
 ### Machine (CAD — `seed_tape_machine_v2.scad`)
 - Builds the full assembly: chassis, hopper, drum/cartridge, cones, plow (six-turner), tape path + former collar, cradle, twister + twister axle + pedestal, pull rollers a/b + bridge, takeup, crank.
-- Drive: crank → drum gear mesh (module 2, fail-loud mesh distance). Twister powered from the crank at 2.5 wraps per seed (7.5x crank: crank20 → A[10+30] → B[10+bevel] → corner → C[bevel+15] → idler[12+12] → D[12+wheel] → friction tire on disc OD; seed rate unchanged at 3 seeds/crank rev).
+- Drive: crank → drum gear mesh (module 2, fail-loud mesh distance). Two composites on the crank-gear wall: crank20 → A[10+30] (-2x) → B[10+bev20] (+6x, 10T meshes A30, 20T bevel takeoff below); twister currently unpowered, next drive stage TBD. Seed rate unchanged at 3 seeds/crank rev.
 - Feed path: hopper drop → plow forms/folders tape → twister orients seed pocket → pull/takeup advance tape. Clearances asserted fail-loud on every stack-up.
 - CAD conventions: `$fn=60` curves, `tol=0.3` (all clearances derive from `tol`).
 - Single-object isolation: changing one part must not silently alter others.

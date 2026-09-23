@@ -9,7 +9,7 @@
       scad/feed.scad      — single_cone, spool_cones, hopper_body, seed_cartridge, seed_cradle
      scad/plow.scad      — scroll_sheet, six_turner, folding_plow
      scad/stations.scad  — seed_tape_bend, former_collar, knurled_roller, pull_rollers, thread_twister, vpull_roller, takeup_reel, crank_assembly
-     scad/drive_train.scad — v95 from-crank clusters (A/B/C/D/I), O-tire, bar1 rail
+     scad/drive_train.scad — v97 composite take-off (A[10+30] only)
 */
 
 part_to_render = "all";
@@ -27,7 +27,7 @@ module animated_assembly() {
     drum_angle = -360*$t + 4.5;  // v81: +4.5° half-pitch phase (40T drum) for tooth-into-gap mesh with crank 20T
     crank_angle = 720*$t;   // v79: crank 20T spins 2x drum (CW, meshes drum 40T)
     roller_angle = crank_angle + gear_mesh_phase; // mesh-phased crank gear
-    twister_angle = 360*$t*twister_orbits_per_drum; // v37: 6 orbits/drum rev about X
+    twister_angle = 0; // v97: twister unpowered (composite take-off only, next stage TBD)
     pull_a_angle = roller_angle*vpull_spin;   // v52: nip side A spin-compensated 4/3
     pull_b_angle = -roller_angle*vpull_spin;  // v52: nip side B counter-rotates 4/3
     takeup_angle = -1440*$t;       // v48: tape-tension wind-up
@@ -93,35 +93,20 @@ module animated_assembly() {
             translate([-crank_pivot_x, 0, -crank_pivot_z])
                 crank_assembly();
 
-    // v95 from-crank train (user: crank up + attached compounds + zigzag):
-    // crank20 -> A[10+30] (-2) -> B[10+bevel] (+6) -> corner ->
-    // C[bevel+15] (-6) -> idler[12+12] (+7.5) -> D[12+wheel] (-7.5) ->
-    // twister (+7.5 friction flip) = 2.5 wraps/seed. Angles = rev*crank_angle.
-    translate([v95_Ax, v95_A_y0, v95_Az])
+    // v97 composite take-off (user: revert gears, ONE composite 10->30):
+    // crank20 -> A[10+30] (-2, Y). v98 second composite (user: 10T + 20T
+    // bevel under A): A30 -> B[10+bev20] (+6, Y). Twister unpowered (next stage TBD).
+    translate([v97_Ax, v97_A_y0, v97_Az])
         rotate([0, A_rev * crank_angle, 0])
             dt_cluster_A();
-    translate([v95_Bx, v95_B_y0, v95_Bz])
+    translate([v98_Bx, v98_B_y0, v98_Bz])
         rotate([0, B_rev * crank_angle, 0])
             dt_cluster_B();
-    translate([v95_C_x0, v95_C_y, v95_C_z])
-        rotate([C_rev * crank_angle, 0, 0])
-            dt_cluster_C();
-    translate([v95_I_x0, v95_I_y, v95_I_z])
-        rotate([I_rev * crank_angle, 0, 0])
-            dt_cluster_I();
-    translate([v95_D_x0, v95_D_y, v95_D_z])
-        rotate([D_rev * crank_angle, 0, 0])
-            dt_cluster_D();
-    translate([(v95_tire_x0 + v95_tire_x1)/2, v95_D_y, v95_D_z])
-        rotate([D_rev * crank_angle, 0, 0])
-            dt_tire();
-    // bar1 back-wall rail (static, absolute coords)
-    dt_bar1();
 
     // v37 Thread twister (v51 HOLLOW: ring + 2 rod bobbin holders
     // orbit the tape axis just east of the plow, binding each seed
-    // into the folded pocket; v95 from-crank drive (2*3*1.25 = 7.5x,
-    // idler 1:1 through, friction flip +7.5 about X, 2.5 wraps/seed).
+    // into the folded pocket; v97: unpowered, static in preview
+    // (composite take-off only, next stage TBD).
     translate([bind_x, chassis_width/2, twister_axle_z])
         rotate([twister_angle, 0, 0])
             thread_twister();
@@ -206,18 +191,7 @@ if (part_to_render == "all") {
 } else if (part_to_render == "gear_A") {
     dt_cluster_A(); // local Y frame (viewer pivot compensates, print rotated flat)
 } else if (part_to_render == "gear_B") {
-    dt_cluster_B();
-} else if (part_to_render == "gear_C") {
-    dt_cluster_C(); // local X frame
-} else if (part_to_render == "gear_D") {
-    dt_cluster_D();
-} else if (part_to_render == "gear_I") {
-    dt_cluster_I();
-} else if (part_to_render == "tire") {
-    dt_tire(); // centred at origin (assembly places at tire centre)
-} else if (part_to_render == "bar1") {
-    // Static rail (absolute coords, no transform needed for export).
-    dt_bar1();
+    dt_cluster_B(); // local Y frame (viewer pivot compensates, print rotated flat)
 } else {
     echo(str("ERROR: unknown part_to_render='", part_to_render, "'."));
     cube([1,1,1]);
