@@ -36,51 +36,30 @@ function check(cond, msg) {
       return m ? m[1] : null;
     });
     console.log('ASSET_V:', assetV);
-    check(assetV !== null && +assetV >= 64, 'ASSET_V>=64 got ' + assetV);
+    check(assetV !== null && +assetV >= 68, 'ASSET_V>=68 got ' + assetV);
 
     const parts = await page.evaluate(() => {
-      const out = {};
-      ['gear_A', 'gear_B', 'gearwall'].forEach(id => {
-        let n = 0;
-        (window._partMeshes[id] || []).forEach(s => s.traverse(o => { if (o.isMesh) n++; }));
-        out[id] = n;
-      });
-      return out;
+      let n = 0;
+      (window._partMeshes['crank'] || []).forEach(s => s.traverse(o => { if (o.isMesh) n++; }));
+      return { crank: n };
     });
     console.log('PARTS ' + JSON.stringify(parts));
-    check(parts.gear_A > 0, 'gear_A has meshes got ' + parts.gear_A);
-    check(parts.gear_B > 0, 'gear_B has meshes got ' + parts.gear_B);
-    check(parts.gearwall > 0, 'gearwall has meshes got ' + parts.gearwall);
-
-    const retired = await page.evaluate(() => ({
-      defs: (document.documentElement.innerHTML.match(/gear_Bw|gear_Be|gear_C|bar1|barM|barE|pivotBw|pivotBe|pivotC/) || []).length,
-      drive: Object.keys(window._drive.pivots)
-    }));
-    console.log('RETIRED ' + JSON.stringify(retired));
-    check(retired.defs === 0, 'no old-train refs in page');
-    check(JSON.stringify(retired.drive.sort()) === JSON.stringify(['A', 'B']), 'drive pivots [A,B] got ' + retired.drive);
+    check(parts.crank > 0, 'crank has meshes got ' + parts.crank);
 
     const piv = await page.evaluate(() => {
       window._root.updateMatrixWorld(true);
       const rp = new THREE.Vector3(); window._root.getWorldPosition(rp);
-      const out = {};
-      ['A', 'B'].forEach(k => {
-        const p = new THREE.Vector3();
-        window._drive.pivots[k].getWorldPosition(p).sub(rp);
-        out[k] = [+p.x.toFixed(2), +p.y.toFixed(2), +p.z.toFixed(2)];
-      });
-      return out;
+      const cm = new THREE.Vector3();
+      window._pivots.crankMount.getWorldPosition(cm).sub(rp);
+      return [+cm.x.toFixed(2), +cm.y.toFixed(2)];
     });
-    console.log('PIVOTS ' + JSON.stringify(piv));
-    check(Math.abs(piv.A[0] - 162.52) < 1.5 && Math.abs(piv.A[1] - 76.04) < 1.5, 'pivotA ~(162.5,76.0) got ' + piv.A);
-    check(Math.abs(piv.B[0] - 162.52) < 1.5 && Math.abs(piv.B[1] - 50.29) < 1.5, 'pivotB ~(162.5,50.3) got ' + piv.B);
+    console.log('PIV crankMount ' + JSON.stringify(piv));
+    check(Math.abs(piv[0] - 152) < 1.5 && Math.abs(piv[1] - 104.93) < 1.5, 'crankMount ~(152,104.9) got ' + piv);
 
+    // crank still drives drum 2:1 (nothing else touched)
     async function rots() {
       return await page.evaluate(() => ({
         crank: window._crankSpinner.rotation.z,
-        A: window._drive.pivots.A.rotation.z,
-        B: window._drive.pivots.B.rotation.z,
-        tw: window._pivots.twister.rotation.x,
         drum: window._drumPivot.rotation.z
       }));
     }
@@ -90,16 +69,9 @@ function check(cond, msg) {
     await page.evaluate(() => { window._overrideAngle = 0.7 + Math.PI / 3; });
     await page.waitForTimeout(300);
     const r1 = await rots();
-    const d = k => r1[k] - r0[k];
-    const dc = d('crank');
-    console.log('dcrank=' + dc.toFixed(4));
-    const ratio = (k, want) => {
-      const got = d(k) / dc;
-      const ok = Math.abs(got - want) < 0.03 * Math.abs(want) + 0.02;
-      check(ok, k + ' ratio want ' + want + ' got ' + got.toFixed(3));
-    };
-    ratio('A', -2); ratio('B', 6); ratio('tw', 0); ratio('drum', -0.5);
-
+    const dc = r1.crank - r0.crank;
+    const got = (r1.drum - r0.drum) / dc;
+    check(Math.abs(got - (-0.5)) < 0.035, 'drum ratio want -0.5 got ' + got.toFixed(3));
     await page.evaluate(() => { window._overrideAngle = null; });
     await page.waitForTimeout(200);
     await page.evaluate(() => window._setPanelCollapsed(true));
@@ -114,15 +86,12 @@ function check(cond, msg) {
       console.log('Shot: ' + f);
     }
 
-    const ch = await page.evaluate(() => {
-      window._root.updateMatrixWorld(true);
-      const bb = new THREE.Box3();
-      (window._partMeshes['chassis'] || []).forEach(s => s.traverse(o => { if (o.isMesh) bb.expandByObject(o); }));
-      const c = bb.getCenter(new THREE.Vector3()); return [c.x, c.y, c.z];
-    });
-
-    await shot('v98_overview.png', [ch[0] - 300, ch[1] + 170, ch[2] + 300], ch, null, null);
-    await shot('v98_ABmesh.png', [5, 182, 69], [75, 72, -1], ['gear_A', 'gear_B', 'crank'], Math.PI / 5);
+    // viewer maps CAD (x,y,z) -> root (x, z, -y)
+    // shaft-into-gear closeup (crank part only: arm+boss+shaft+gear are one
+    // fused part): CAD cam (190,90,140) -> viewer (190,140,-90); CAD tgt (152,70,105) -> viewer (152,105,-70)
+    await shot('v102_crank_shaft.png', [190, 140, -90], [152, 105, -70], ['crank'], Math.PI / 5);
+    // handle-gap side view: CAD cam (260,80,105) -> viewer (260,105,-80); CAD tgt (155,75,100) -> viewer (155,100,-75)
+    await shot('v102_crank_handle.png', [260, 105, -80], [155, 100, -75], ['crank', 'chassis'], null);
 
     console.log('errors: ' + errors.length);
     errors.forEach(e => console.log('   ' + e));

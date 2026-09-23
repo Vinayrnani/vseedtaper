@@ -521,9 +521,9 @@ module crank_assembly() {
     pivot_x = crank_pivot_x;
     pivot_z = crank_pivot_z;
     handle_x = pivot_x + crank_throw;
-    s = crank_side; // v23: -1 = arm/grip extend -Y outward from the back wall (was +1 front)
-    arm_yc = s * arm_w/2;
-    grip_y0 = s * arm_w;
+    s = crank_side; // +1 = arm/grip outboard of the FRONT wall (world +Y)
+    arm_yc = s * (arm_w/2 + crank_arm_gap); // v102: handle stands 20 off the wall
+    grip_y0 = arm_yc + s * arm_w/2; // v102: grip starts at the arm outer face
     grip_y1 = grip_y0 + s * grip_len;
     grip_yc = (grip_y0 + grip_y1)/2;
     // gear_local_y from params: world y=52: crank_mount_y(76)-24 (front, gear spans y 49..55)
@@ -540,15 +540,16 @@ module crank_assembly() {
                 translate([handle_x, arm_yc, 0])
                     cylinder(h=arm_t, r=6, center=false);
             }
-            // Counterweight stub opposite handle
-            translate([pivot_x - 5, -arm_yc, 0])
-                cylinder(h=arm_t, r=5, center=false);
+            // (v102b: counterweight stub REMOVED — floating puck, fused to
+            // nothing, read as a loose piece hanging on the shaft.)
             // Hub boss around shaft
             translate([pivot_x, arm_yc, pivot_z])
                 rotate([90,0,0])
                     cylinder(h=16, r=7, center=true);
-            // Pivot hex shaft (28mm, centred at arm_yc)
-            translate([pivot_x, arm_yc, pivot_z])
+            // Pivot hex shaft (v102: 58mm — arm boss, through the front-wall
+            // hex hole, full through the crank-gear hex bore; shifted 16
+            // inboard so the tip stands 1 proud inside the gear: -28..+30)
+            translate([pivot_x, arm_yc - s*16, pivot_z])
                 rotate([90,0,0])
                     cylinder(h=hex_shaft_len, r=hex_axle_r, $fn=6, center=true);
             // Crank gear (20T) at front plane, meshes drum 40T

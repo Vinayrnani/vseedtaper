@@ -4,6 +4,36 @@ Version-level changes only. Product requirements live in `REQUIREMENTS.md`.
 
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
 
+## v111 — 2026-09-23
+- Step 8 done (user: A10 width must match the crank gear): A10 face 4 → 6mm, band 49-55 = exactly the crank plane (was 50.5-54.5); assert tightened to 6mm face. Closeup shows full-width teeth interleaved with the crank teeth. Regen gear_A (forced) + print, ASSET_V 77→78. Verify: verify_v98 PASSED, 0 errors. $fn=60, tol=0.3 kept; no commit.
+
+## v110 — 2026-09-23
+- Step-5 correction done (user: shafts must CROSS the outboard wall; cut inboard stubs): A shaft 44-80 → 47-83, B shaft 44-80 → 54-83 (tips ~2 proud outside the 78-81 wall); inboard stubs cut (A below A10, B below bevel, teeth still fused). Bevel lift re-derived absolute (web pinned 61.5-63.5 whatever the origin) after the origin move tripped the old relative assert — caught fail-loud, fixed same run. Viewer part offsets re-derived (pos z = 56 - y0: A 9, B 2) so local-frame parts land on true stations. Regen gear_A/gear_B (forced) + prints, ASSET_V 76→77. Verify: verify_v98 PASSED, closeup shows meshing stack + bare shafts, 0 errors. Step 7 also confirmed done (v109: full-profile A10 teeth interleave tooth-into-gap, no drift). $fn=60, tol=0.3 kept; no commit (steps continue).
+
+## v109 — 2026-09-23
+- Step 7 done (user: crank gear not meshing properly with A10): A10 teeth were thinned 20% (tooth_scale 0.8, anti-bind leftover) rattling in the mesh — now full standard profile like the crank gear. Tight closeup shows teeth interleaving tooth-into-gap with even flanks; ratios exact so the mesh can't drift through rotation. Regen gear_A (forced) + print, ASSET_V 75→76. Verify: verify_v98 PASSED, 0 errors. $fn=60, tol=0.3 kept; no commit (steps continue).
+
+## v108 — 2026-09-23
+- Step 5 done (user: extra outboard wall for the 30T/10T shafts): new standalone part gearwall — plate y78-81 (x132-192, z40-93) over both axes + 4 pillars (6x6, y67-80) fused into the front wall + d8.6 slip bores; A/B shafts extended to y80 (tips 2 deep in bores). Asserts: tips in bores, gears below plate, plate below arm, plate clears crank shaft, pillars clear A30 sweep, plate coverage, bore slip. New part_to_render branch + ALL_GLB/print_rot + viewer def/order + verify check. Regen gear_A/gear_B/gearwall (forced) + prints, ASSET_V 74→75. Verify: verify_v98 PASSED (gearwall meshes present, ratios exact, 0 errors); front closeup shows plate + pillars with gear teeth peeking over. $fn=60, tol=0.3 kept; no commit (steps continue).
+
+## v107 — 2026-09-23
+- Step 4b done (user: hub bump removed, bevel near wall, teeth kept nice): hub cylinder deleted — teeth + flat 2mm web only (shaft pierces the web, backs fuse into it); whole bevel rides up (lift 25.5): teeth 56-62, web top 63.5 (1.5 below wall inner 65). Teeth standard Tredgold form untouched, full thickness (mate gets backlash). Asserts updated (gap ≥5, reach, web-below-wall; hub param/assert retired). Gear file 112→107KB. Regen gear_B (forced) + print, ASSET_V 73→74. Verify: verify_v98 PASSED, closeup shows teeth + bare shaft below, no hub. Step 6 answered by action (thick hub gone; 2mm web is the minimum mount). $fn=60, tol=0.3 kept; no commit (steps continue).
+
+## v106 — 2026-09-23
+- Step 4a done (user: B straight under A for the twister spur): B_ang -15 → -90, B now (162.52, 50.29), CD 25.75 kept so A30↔B10 still mesh (direction now straight down). New asserts (B straight below A; bevel clears plow exit flare by y-separation ~2). Chassis bore follows params (regen forced) + print; pivotB + mounts + verify expectation updated. ASSET_V 72→73. Verify: verify_v98 PASSED (pivots, A -2, B +6 exact, 0 errors). $fn=60, tol=0.3 kept; no commit (steps continue).
+
+## v105 — 2026-09-23
+- Step 3 done (user: B10 outside the wall to mesh A30): B10 band 59-64 → 70-75 (shares the A30 band, mesh closed outside the wall); bevel↔B10 gap 1 → 12 bare shaft; B shaft 44-68 → 44-76 (tip waits for Step-5 wall). Asserts restored (band coplanarity) + new (B10 outside wall, shaft tip below arm sweep, gap ≥10, B10 clears crank shaft). Regen gear_B (forced) + print, ASSET_V 71→72. Verify: verify_v98 PASSED (A -2, B +6 exact, 0 errors). $fn=60, tol=0.3 kept; no commit (steps continue).
+
+## v104 — 2026-09-23
+- Step 2 done (user: A30 outside the chassis wall): A30 band 59-64 → 70-75 (2 clear of wall outer 68); A shaft 44-68 → 44-76 (carries A30, tip waits for Step-5 wall); A10 untouched on the crank plane. Stale inboard asserts updated (shaft-tip/arm-sweep envelope, Step-5 room reserve); B10 coplanarity assert relaxed to width-match until Step 3 re-meshes (mesh between steps is OPEN by plan). Regen gear_A (forced) + print, ASSET_V 70→71. Verify: verify_v98 PASSED, closeup shows A30 outboard. $fn=60, tol=0.3 kept; no commit (steps continue).
+
+## v103 — 2026-09-23
+- Step 1 done (user: bevel cone bulky, remove it): solid hub-taper + root cone deleted from dt_bevel_blank; the 20 standard teeth stay exactly as drawn, now hanging from a 2mm back flange (r10, catches every tooth back) tied to the r4 shaft by a short r6 hub — crown style, gullets stand open. New asserts (flange coverage, hub wall). Gear file shrank 117→112KB. Regen gear_B (forced) + print, ASSET_V 69→70. Verify: verify_v98 PASSED (A -2, B +6 exact, 0 errors), closeup shows open teeth + slim hub. $fn=60, tol=0.3 kept; no commit (steps continue).
+
+## v102 — 2026-09-23
+- Crank drive fix (user: shaft didn't touch the gear; handle too close to wall): hex shaft 28→58mm, runs arm boss → through front-wall hex hole → full through crank-gear hex bore (tip 1 proud inside, positive drive); arm/grip out 12 so the handle stands 20 off the wall (was 8); counterweight stub removed (floating puck, fused to nothing). Asserts: handle gap ≥20, shaft tip through gear bore. v102b: stub cut confirmed on solo screenshot. Regen crank + print, ASSET_V 68→69. Verify: verify_crank PASSED (mount, drum -0.5x, 0 errors). $fn=60, tol=0.3 kept; no commit (awaiting user orders).
+
 ## hopper rev6/rev7 — 2026-09-23
 - Hopper rebuild (concurrent track, committed together per user order): rev6 asymmetric smooth taper — +Y/front stock-narrow full length (clears drum 40T gear disc), -Y/back tapers smoothly 7.8→24.5 with no step or seed-trap corners, floor keeps the stock 8° gravity ramp; rev7 carve-clear taper (no mouth slivers). Hull pairs share identical z-spans (planar faces, no twist); fail-loud asserts (taper past carve, floor/cheek containment, bowl wall ≥1.5, nose/wall/gear/cone clears). Mouth/drum interface unchanged. Regen hopper.glb, ASSET_V →63.
 

@@ -1,25 +1,25 @@
 /*
     v97 composite take-off + v98 second composite — separate printable parts
-    (fused clusters). A/B along Y (y44..68); assembly placement in
+    (fused clusters). A y47..83, B y54..83 (tips through the Step-5 outboard wall); assembly placement in
     seed_tape_machine_v2.scad; viewer pivots in web/index.html.
     Print orientation: applied in regenerate_glbs.sh (trimesh rotate+drop),
     NOT here. $fn=60 inherited; tol via tolerance/epsilon.
-    A10 (T<=12) uses tooth_scale=0.8 (anti-bind); A30 full profile.
+    A10 full profile 6 wide (matches the crank face); A30 full profile.
 */
 
 // ---- A composite (axis Y): A10 m2 (mesh crank) + A30 m1.25 fused + shaft r4
 module dt_cluster_A() {
-    assert(v97_A_y1 - v97_A_y0 == 24, "A cluster: shaft span must be 24");
+    assert(v97_A_y1 - v97_A_y0 == 36, "A cluster: shaft span must be 36");
     union() {
-        // shaft r4 along Y, local y0..24 (= assembly y44..68)
+        // shaft r4 along Y, local y0..36 (= assembly y47..83, tip through Step-5 wall)
         rotate([-90, 0, 0])
-            cylinder(h=24, r=4, center=false, $fn=60);
-        // A10: band 50.5..54.5 (local center 8.5), m2 10T thinned
+            cylinder(h=36, r=4, center=false, $fn=60);
+        // A10: band 49..55 (local center 5), m2 10T FULL profile, 6 wide (Step 8: matches crank face)
         translate([0, (v97_A10_y0 + v97_A10_y1)/2 - v97_A_y0, 0])
             rotate([90, 0, 0])
-                spur_gear(teeth=10, module_mm=gear_module, thickness=4,
-                          tooth_scale=0.8);
-        // A30: band 59..64 (local center 17.5), m1.25 30T takeoff
+                spur_gear(teeth=10, module_mm=gear_module, thickness=6,
+                          tooth_scale=1.0);
+        // A30: band 70..75 (local center 28.5), m1.25 30T takeoff OUTSIDE wall
         translate([0, (v97_A30_y0 + v97_A30_y1)/2 - v97_A_y0, 0])
             rotate([90, 0, 0])
                 spur_gear(teeth=30, module_mm=1.25, thickness=5);
@@ -40,19 +40,15 @@ module dt_bevel_blank(pitch_r, back_r, h, phase_deg, teeth_n) {
     rootd1 = 0.72 * PI * 1.0;
     root_c = -(ded1 - 0.3); tip_c = add1 - tip_d1/2; // profile height datum
     k = 0.4485; // front scale (apex convergence over 7.8 face)
-    ap_z = h + pitch_r; // apex height (tan45 = 1)
+    ap_z = h + pitch_r; // apex height (tan45 = 1) — teeth converge here
     P = [pitch_r, 0, h]; // back-cone pitch point
     Q = P - [0.7071068, 0, -0.7071068]*7.8; // front pitch point (on generator)
-    C = (P + Q)/2;
-    eb = 1.45; // blank offset below pitch (perp): uniform gullet depth
-    Rb_r = pitch_r - eb*0.7071068; Rb_z = h - eb*0.7071068;
-    bslope = Rb_r / (ap_z - Rb_z); // root cone through the SAME apex
+    C = (P + Q)/2; // tooth-center: hulls span back copy <-> apex-scaled front
     union() {
-        // hub taper + apex-converging root cone (teeth sink 0.6 everywhere)
-        cylinder(h=8, r1=5.5, r2=9.9, center=false, $fn=60);
-        translate([0, 0, 6])
-            cylinder(h=8.5, r1=bslope*(ap_z-6), r2=bslope*(ap_z-14.5),
-                     center=false, $fn=60);
+        // v106 flat web (Step 4b: hub bump REMOVED) — 2mm disc pierced by
+        // the shaft; tooth backs fuse into its top, teeth hang below it.
+        translate([0, 0, 8 - v103_bev_flange_t])
+            cylinder(h=v103_bev_flange_t, r=v103_bev_flange_r, center=false, $fn=60);
         for (i=[0:teeth_n-1])
             rotate([0, 0, i*360/teeth_n + phase_deg])
                 translate(C)
@@ -74,20 +70,48 @@ module dt_bevel_blank(pitch_r, back_r, h, phase_deg, teeth_n) {
     }
 }
 
+// ---- Step-5 outboard support wall (static part): plate y78-81 over both
+// axes + 4 pillars fused into the front wall; d8.6 slip bores catch the
+// A/B shaft tips (y80). Own printable part (gearwall), absolute CAD coords.
+module dt_gearwall() {
+    difference() {
+        union() {
+            // plate
+            translate([v105_wall_x0, v105_wall_y0, v105_wall_z0])
+                cube([v105_wall_x1 - v105_wall_x0,
+                      v105_wall_y1 - v105_wall_y0,
+                      v105_wall_z1 - v105_wall_z0]);
+            // pillars (y67-80: 1 into the front wall, 2 into the plate)
+            for (px = v105_pillar_x) for (pz = v105_pillar_z)
+                translate([px - v105_pillar_s/2, 67, pz - v105_pillar_s/2])
+                    cube([v105_pillar_s, 13, v105_pillar_s]);
+        }
+        // A + B shaft slip bores (through + epsilon both faces)
+        translate([v97_Ax, v105_wall_y0 - epsilon, v97_Az])
+            rotate([90, 0, 0])
+                cylinder(h=(v105_wall_y1 - v105_wall_y0) + 2*epsilon,
+                         d=axle_clearance_dia, center=false);
+        translate([v98_Bx, v105_wall_y0 - epsilon, v98_Bz])
+            rotate([90, 0, 0])
+                cylinder(h=(v105_wall_y1 - v105_wall_y0) + 2*epsilon,
+                         d=axle_clearance_dia, center=false);
+    }
+}
+
 // ---- B composite (axis Y): B10 m1.25 (mesh A30) + Bbev20 m1.0 fused + shaft r4
 module dt_cluster_B() {
-    assert(v98_B_y1 - v98_B_y0 == 24, "B cluster: shaft span must be 24");
+    assert(v98_B_y1 - v98_B_y0 == 29, "B cluster: shaft span must be 29");
     union() {
-        // shaft r4 along Y, local y0..24 (= assembly y44..68)
+        // shaft r4 along Y, local y0..29 (= assembly y54..83, tip through Step-5 wall)
         rotate([-90, 0, 0])
-            cylinder(h=24, r=4, center=false, $fn=60);
-        // B10: band 59..64 (local center 17.5), m1.25 10T thinned
+            cylinder(h=29, r=4, center=false, $fn=60);
+        // B10: band 70..75 (local center 28.5), m1.25 10T thinned (Step 3: outside wall, meshes A30)
         translate([0, (v98_B10_y0 + v98_B10_y1)/2 - v98_B_y0, 0])
             rotate([90, 0, 0])
                 spur_gear(teeth=10, module_mm=1.25, thickness=5,
                           tooth_scale=0.8);
-        // Bbev20: band 50..58 (local top 8), m1.0, 20 standard teeth
-        translate([0, v98_Bbev_y1 - v98_B_y0, 0])
+        // Bbev20: teeth 56..62 near the wall (lift 25.5), m1.0, 20 standard teeth
+        translate([0, v106_bev_lift, 0])
             rotate([90, 0, 0])
                 dt_bevel_blank(pitch_r=10, back_r=11.5, h=8, phase_deg=0,
                                teeth_n=20);

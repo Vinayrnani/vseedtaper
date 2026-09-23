@@ -101,21 +101,42 @@ A_ang = -70;   // A down-east of crank (hopper-clear for the 30T)
 v97_A_cd = (roller_teeth + 10) * gear_module / 2 + 0.75; // 30.75: crank20 -> A10 m2
 v97_Ax = crank_axle_x + v97_A_cd * cos(A_ang); // ~162.52
 v97_Az = crank_axle_z + v97_A_cd * sin(A_ang); // ~76.03
-v97_A_y0 = 44; v97_A_y1 = 68;      // shaft r4 (front-wall bore cantilever)
-v97_A10_y0 = 50.5; v97_A10_y1 = 54.5; // A10 m2 (mesh crank-gear plane 49-55)
-v97_A30_y0 = 59; v97_A30_y1 = 64;     // A30 m1.25 30T (takeoff, 1 under wall)
+v97_A_y0 = 47; v97_A_y1 = 83;      // shaft r4 (stub cut; crosses outboard wall, tip ~2 proud)
+v97_A10_y0 = 49; v97_A10_y1 = 55; // A10 m2 6 wide (Step 8: matches crank gear face 49-55)
+v97_A30_y0 = 70; v97_A30_y1 = 75;     // A30 m1.25 30T OUTSIDE the wall (Step 2; B10 follows in Step 3)
 A_rev = -2; // composite spins -2x crank (external mesh flips)
 // v98 second composite (user: 10T + 20T bevel UNDER the A composite):
 // B10(m1.25) meshes A30 in the same band (59-64) [3x step-up] + fused
 // Bbev20(m1.0) foot below (takeoff for the next stage). B on r25.75
 // about A at -15° (up-east, v95-proven clearances).
-B_ang = -15;   // B up-east of A
+B_ang = -90;   // Step 4: B STRAIGHT BELOW A (twister spur setup)
 v98_B_cd = (30 + 10) * 1.25 / 2 + 0.75; // 25.75: A30 -> B10 m1.25
-v98_Bx = v97_Ax + v98_B_cd * cos(B_ang); // ~187.39
-v98_Bz = v97_Az + v98_B_cd * sin(B_ang); // ~69.37
-v98_B_y0 = 44; v98_B_y1 = 68;      // shaft r4 (front-wall bore cantilever)
-v98_B10_y0 = 59; v98_B10_y1 = 64;  // B10 m1.25 (mesh A30 band, same plane)
-v98_Bbev_y0 = 50; v98_Bbev_y1 = 58; // Bbev20 m1.0 foot (takeoff, 1 under B10)
+v98_Bx = v97_Ax + v98_B_cd * cos(B_ang); // =162.52 (under A)
+v98_Bz = v97_Az + v98_B_cd * sin(B_ang); // =50.29 (under A)
+v98_B_y0 = 54; v98_B_y1 = 83;      // shaft r4 (cut below bevel; crosses outboard wall, tip ~2 proud)
+v98_B10_y0 = 70; v98_B10_y1 = 75;  // B10 m1.25 OUTSIDE wall (Step 3: meshes A30 band 70-75)
+// Step 5 outboard support wall (user: extra wall outside carrying the A/B
+// shaft tips): plate y78-81 over both axes + 4 pillars fused into the front
+// wall (y67-80); A/B shafts run to y80 (tips 2 deep in the d8.6 bores).
+// Gears (tops 75) stay 3 below the plate; plate top (81) stays under the arm.
+v105_wall_x0 = 132; v105_wall_x1 = 192; // plate X span (covers pillars + bores)
+v105_wall_z0 = 40;  v105_wall_z1 = 93;  // plate Z span (6 clear of crank shaft)
+v105_wall_y0 = 78;  v105_wall_y1 = 81;  // plate Y span (3 = wall_thick)
+v105_pillar_x = [137, 187];             // pillar X centres (clear of A30 sweep)
+v105_pillar_z = [45, 88];               // pillar Z centres
+v105_pillar_s = 6;                      // pillar section (6x6, y67-80)
+// v106 bevel rework (user Step 4b: hub bump REMOVED, bevel near the wall).
+// Teeth (standard form, untouched) hang DOWN from a flat 2mm web that the
+// shaft pierces — no hub. Print frame rides up: backs embed in the web,
+// web top 1.5 below the wall inner face.
+v98_Bbev_y0 = 55; v98_Bbev_y1 = 63; // Bbev20 teeth envelope (fronts ~56, backs fuse into web)
+v106_bev_web_top = 63.5; // web top: 1.5 below the wall inner face (65)
+v106_bev_lift = v106_bev_web_top + 6 - v98_B_y0; // print-frame z=0 plane: pins the web absolute whatever the origin
+// v103 slim bevel mount (superseded v106: hub removed, flat web only).
+// Flange/web (print-frame z6-8) catches every tooth back (outer r~9.3);
+// the r4 shaft pierces it — no hub. v106 rides it near the wall (y61.5-63.5).
+v103_bev_flange_r = 10;  // >= tooth-back outer 9.3 + margin
+v103_bev_flange_t = 2;   // web thickness (print-frame z6..8)
 B_rev = 6; // B spins +6x crank (A -2x, flip, 30/10 step-up)
 spool_axle_x  = -6;  // v22: 10->-6, clears roller back gear (box-level X gap 1.5)
 spool_axle_z  = 80;  // v87 +15 lift: 120mm max roll OD, height 80mm above base (was 65)
@@ -206,8 +227,10 @@ groove_d        = 0.7;   // v27 printable: 0.8 left only 1.175 wall (<1.2); 0.7 
 // ============================================================
 // Crank (v79: at x=160, 20T gear meshes drum 40T at dist=60)
 // Crank carries a 20T spur gear at the FRONT plane that meshes
-// the drum's 40T gear. 28mm hex shaft at front near handle.
-// Handle at front y=68, near twist gears.
+// the drum's 40T gear. v102: 58mm hex shaft runs from the arm boss
+// through the front-wall hex hole and full through the crank-gear
+// hex bore (positive drive, 3-point support). Handle stands 20 off
+// the front wall (arm inner face world y88 vs wall outer 68).
 // grip orbit r=crank_throw=45, $fn=60, tol=0.3 all kept.
 // ============================================================
 crank_throw     = 45;
@@ -221,7 +244,8 @@ grip_len        = 30;
 grip_dia        = 16;
 crank_pivot_x   = crank_arm_w / 2; // 5
 crank_pivot_z   = crank_arm_t + hex_axle_r - 0.15; // ~8.47
-hex_shaft_len   = 28;
+hex_shaft_len   = 58;          // v102: 28+30 — arm boss, wall hole, full through gear bore
+crank_arm_gap   = 12;          // v102: arm inner face 20 clear of front-wall outer (was 8)
 
 // ============================================================
 // Seed cradle
@@ -512,6 +536,16 @@ assert(crank_axle_z >= roller_outer_dia/2 + 1, str("crank_axle_z must clear base
 assert(drum_axle_z >= drum_radius + base_thick + tolerance, str("drum_axle_z must clear cradle+tape: need >= ", drum_radius+base_thick+tolerance, " got ", drum_axle_z));
 assert(abs(sqrt(pow(crank_axle_x - drum_axle_x,2)+pow(crank_axle_z - drum_axle_z,2)) - center_distance) < 0.5,
        str("gear center distance must be ~60mm, got ", sqrt(pow(crank_axle_x-drum_axle_x,2)+pow(crank_axle_z-drum_axle_z,2))));
+// v102: crank handle stands >=20 off the front-wall outer face
+// (arm inner face world = crank_mount_y + crank_arm_gap = 88 vs wall 68).
+assert(crank_mount_y + crank_arm_gap - chassis_width >= 20,
+       str("crank handle must stand >=20 off the front wall, got ",
+           crank_mount_y + crank_arm_gap - chassis_width));
+// v102: hex shaft tip must pass full through the crank-gear bore
+// (shaft spans arm_yc-16 +/- len/2; tip = 48 vs gear inner face 49).
+assert(crank_mount_y + crank_arm_w/2 + crank_arm_gap - 16 - hex_shaft_len/2
+       <= crank_mount_y + gear_local_y - gear_thick/2,
+       "crank shaft tip must reach through the crank-gear bore");
 // v81: crank gear world y = crank_mount_y + gear_local_y = 76 + (-24) = 52 (front plane, spans 49..55).
 assert(crank_mount_y + gear_local_y >= 49 && crank_mount_y + gear_local_y <= 55,
        "crank gear world y must be ~52 (front plane, gear spans y 49-55)");
@@ -579,8 +613,48 @@ assert(A_rev == -2, "composite rev must be -2 per crank rev");
 // A->B mesh CD exact (pitch + 0.75 backlash prints + assembles):
 assert(abs(sqrt(pow(v98_Bx-v97_Ax,2)+pow(v98_Bz-v97_Az,2)) - v98_B_cd) < 0.05, "A->B distance must equal mesh CD 25.75");
 assert(B_rev == 6, "B rev must be +6 per crank rev");
-// B10 rides the A30 band (mesh coplanarity):
+// Step 4: B sits straight below A (same X, CD straight down):
+assert(abs(v98_Bx - v97_Ax) < 0.01 && abs((v97_Az - v98_Bz) - v98_B_cd) < 0.01,
+       "B must sit straight below A (Step 4)");
+// Step 4: B bevel (bottom z = Bz-11.5) vs plow exit flare (axis (159,34,32),
+// flare r10.5 worst case): plow material reaching the bevel's z-band stays at
+// y <= 34+sqrt(10.5^2-(dz)^2) = 42 < bevel y-start 44 (x overlaps, y saves it):
+assert(34 + sqrt(pow(10.5,2) - pow((v98_Bz - 11.5) - 32, 2)) <= v98_B_y0,
+       "B bevel must clear the plow exit flare (y-separation)");
+// Step 5 outboard wall asserts: shaft tips 2 deep in the plate bores (78-81):
+assert(v97_A_y1 == 83 && v98_B_y1 == 83, "A/B shafts must cross the outboard wall (tips ~2 proud outside)");
+// gear tops (75) stay 3 below the plate (78):
+assert(v97_A30_y1 <= v105_wall_y0 - 2 && v98_B10_y1 <= v105_wall_y0 - 2,
+       "A30/B10 must stay below the outboard plate");
+// plate top (81) stays under the crank-arm sweep (88):
+assert(v105_wall_y1 <= crank_mount_y + crank_arm_gap - 5, "outboard plate must stay below the arm");
+// plate east edge clears the crank hex shaft by >=4:
+assert(crank_axle_z - hex_axle_r - v105_wall_z1 >= 4, "outboard plate must clear the crank shaft");
+// pillars (6x6 at x137/187, z45/88, y67-80) clear the A30 sweep (r20.75) by >=1:
+assert(sqrt(pow((v105_pillar_x[0]+3)-v97_Ax,2)+pow((v105_pillar_z[1]-3)-v97_Az,2)) >= 21.75
+    && sqrt(pow((v105_pillar_x[0]+3)-v97_Ax,2)+pow((v105_pillar_z[0]+3)-v97_Az,2)) >= 21.75
+    && sqrt(pow((v105_pillar_x[1]-3)-v97_Ax,2)+pow((v105_pillar_z[1]-3)-v97_Az,2)) >= 21.75
+    && sqrt(pow((v105_pillar_x[1]-3)-v97_Ax,2)+pow((v105_pillar_z[0]+3)-v97_Az,2)) >= 21.75,
+       "outboard pillars must clear the A30 sweep");
+// plate covers pillars + bores with >=2 edge:
+assert(v105_wall_x0 <= v105_pillar_x[0]-3 && v105_wall_x1 >= v105_pillar_x[1]+3
+    && v105_wall_z0 <= v105_pillar_z[0]-3 && v105_wall_z1 >= v105_pillar_z[1]+3,
+       "outboard plate must cover pillars and bores");
+// wall bores slip on the r4 shafts:
+assert(axle_clearance_dia > 8, "outboard wall bores must slip on the r4 shafts");
 assert(v98_B10_y0 == v97_A30_y0 && v98_B10_y1 == v97_A30_y1, "B10 must share the A30 band (mesh)");
+assert(v98_B10_y0 >= chassis_width + 2, "B10 must sit outside the front wall");
+assert(v98_B_y1 <= crank_mount_y + crank_arm_gap - 5, "B shaft tip must stay below the crank-arm sweep");
+// Step-3 gap: bevel top (58) -> B10 bottom (70) = 12 bare shaft (was 1):
+assert(v98_B10_y0 - v98_Bbev_y1 >= 5, "Step-4b gap bevel->B10 must be >=5");
+// B10 (tip r7.5) vs crank hex shaft: true-distance over XZ:
+assert(sqrt(pow(v98_Bx-crank_axle_x,2)+pow(v98_Bz-crank_axle_z,2)) - 7.5 - hex_axle_r >= 1,
+       "B10 must clear the crank shaft (true-distance)");
+// Step 2: A30 sits OUTSIDE the front wall (2 clear), clears the crank hex
+// shaft by true distance, and stays below the crank-arm sweep:
+assert(v97_A30_y0 >= chassis_width + 2, "A30 must sit outside the front wall");
+assert(v97_A_cd - 20 - hex_axle_r >= 1, "A30 must clear the crank shaft (true-distance)");
+assert(v97_A30_y1 + 5 <= crank_mount_y + crank_arm_gap, "A30 must clear the crank-arm sweep");
 // B shaft spans both fused bands:
 assert(v98_B_y0 <= v98_Bbev_y0 && v98_B_y1 >= v98_B10_y1, "B shaft must span both fused bands");
 // B shaft (r4) vs A30 blank (r20.75): true-distance (mesh CD by construction):
@@ -595,21 +669,26 @@ assert(sqrt(pow(v98_Bx-34,2)+pow(v98_Bz-32,2)) - 11 > 24, "B bevel blank must cl
 assert(v98_Bz + 8.25 < crank_axle_z - 22, "B10 must stay below the crank-gear sweep");
 // B10 east (Bx+8.25) vs pull nip: x-clear:
 assert(v98_Bx + 8.25 < pull_x - vpull_sleeve_r, "B10 must stay west of the pull nip");
-// Bbev20 band top (58) vs B10 band (59): close-coupled with 1 gap:
-assert(v98_B10_y0 - v98_Bbev_y1 >= 0.5, "B bevel must sit just under B10");
-// Bbev20 teeth front (reach ~13.9 below band top) vs shaft start (44): stay on shaft:
-assert(v98_Bbev_y1 - 13.9 >= v98_B_y0, "B bevel teeth must not pass the shaft start");
+// Bbev20 band top (58) vs B10 band (70): Step-3 extended gap (12 bare shaft):
+    assert(v98_B10_y0 - v98_Bbev_y1 >= 0.5, "B bevel must sit just under B10");
+// v103 slim mount: flange must catch the tooth backs (outer r~9.3) and the
+// hub must keep >=1.5 wall around the r4 shaft:
+assert(v103_bev_flange_r >= 9.5, "bevel web must cover the tooth backs");
+// v106 flat web top (B_y0 + lift - 6 = 63.5) stays 1+ below the wall inner face (65):
+assert(v106_bev_web_top <= 64, "bevel web must stay below the wall");
+// Bbev20 teeth front (reach ~6.5 below band top, v106 lift) vs shaft start (44): stay on shaft:
+assert(v98_Bbev_y1 - 6.5 >= v98_B_y0, "B bevel teeth must not pass the shaft start");
 // B wall bore inside the front wall:
 assert(v98_Bx > chassis_x0 && v98_Bx < chassis_x0 + chassis_len && v98_Bz > 0 && v98_Bz < chassis_height, "B wall bore must sit inside the front wall");
 // (twister unpowered in v97: takeoff reserved for the next stage.)
-// y-rule: composite inboard (handle owns y>=76):
-assert(v97_A_y1 <= 68, "A shaft must stay inboard (y1<=68)");
+// y-rule (Step 2: shaft runs outboard carrying A30; tip stays 5 below the arm sweep):
+assert(v97_A_y1 <= crank_mount_y + crank_arm_gap - 5, "A shaft tip must stay below the crank-arm sweep");
 // Fused bands ride the shaft that carries them:
 assert(v97_A_y0 <= v97_A10_y0 && v97_A_y1 >= v97_A30_y1, "A shaft must span both fused bands");
 // A10 (4mm face) overlaps the crank-gear front plane 49-55:
-assert(v97_A10_y0 >= 49 && v97_A10_y1 <= 55 && (v97_A10_y1 - v97_A10_y0) >= 4, "A10 must mesh the crank-gear plane with >=4mm face");
-// A30 (top 64) vs wall inner (65): 1 under wall:
-assert(v97_A30_y1 < 65, "A30 must stay under the wall inner face");
+assert(v97_A10_y0 >= 49 && v97_A10_y1 <= 55 && (v97_A10_y1 - v97_A10_y0) >= 6, "A10 must mesh the crank-gear plane with 6mm face");
+// A30 outside (top 75) leaves room for the Step-5 outboard wall below the arm (88):
+assert(v97_A30_y1 <= crank_mount_y + crank_arm_gap - 10, "A30 must leave room for the Step-5 wall");
 // A30 (outer r20.75, m1.25) vs hopper (drum (100,75) max r33.8): radial:
 assert(sqrt(pow(v97_Ax-100,2)+pow(v97_Az-75,2)) - 20.75 > 33.8, "A30 must clear the hopper radially");
 // A30 east (Ax+20.75) vs pull nip (pull_x): x-clear:

@@ -352,7 +352,7 @@
     pivotA.position.set(162.517, 76.038, -56); // A (162.52, 76.04)
     root.add(pivotA);
     var pivotB = new THREE.Group();
-    pivotB.position.set(187.39, 69.37, -56); // B span y44-68 mid 56
+    pivotB.position.set(162.52, 50.29, -56); // Step 4: B straight below A (was 187.39, 69.37)
     root.add(pivotB);
 
   // ---------- tape ribbon with center U-fold bend (procedural, v28 true mimic, v31 west + transit, v33 lane 13) ----------
@@ -547,7 +547,7 @@
   window._gearTrain = { chain: 'crank 20T (152,104.93, up on r60 mesh circle) -> A[10+30] (-2x) -> B[10+bevel] (+6x) -> corner -> C[bevel+15] (-6x) -> idler[12+12] (+7.5x) -> D[12+wheel] (-7.5x) -> twister (+7.5x friction flip) = 2.5 wraps/seed; pull nip tape-coupled 4/3 (no gears); takeup wind-up 2x crank', belts: false, exteriorGears: 9,
     bevel: 'custom 10/10 m1.25 mitre corner (B->C, TRUE apex geometry, visual teeth interleave)',
     mesh: 'all spur meshes pitch-CD exact with backlash (fail-loud asserts); friction wheel tangent to disc OD',
-    mounts: { crank: [152, 104.93], A: [162.52, 76.04], B: [187.39, 69.37], C: [47, 69.37], idler: [32.93, 80.4], D: [29.74, 64.72] } };
+     mounts: { crank: [152, 104.93], A: [162.52, 76.04], B: [162.52, 50.29], C: [47, 69.37], idler: [32.93, 80.4], D: [29.74, 64.72] } };
   window._slipClutch = {
     pivot: takeupPivot, discs: 2, baseRatio: '+2x crank (viewer sense; CAD -1440t)',
     // Slip logic: the geared base speed (+2x crank viewer sense) is constant; the
@@ -648,7 +648,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 67; // hopper rev7 carve-clear taper (no mouth slivers); v98 second composite (gear_B+chassis bore); v99 pro bevel teeth (gear_B); v100 smooth round teeth (gear_B); v101 standard Tredgold teeth + close-coupled bevel (gear_B), ASSET_V 66->67
+  var ASSET_V = 78; // v111 A10 6mm face (gear_A), ASSET_V 77->78
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, -15, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -675,13 +675,15 @@
       { id: 'takeup', label: 'Take-up spool (slip clutch)', file: 'stl/takeup.glb', color: 0xc96a2b,
         parent: takeupPivot, pos: [0, 0, 20.5], rot: [Math.PI, 0, 0], metalness: 0.3 }, // v40: export height 31->41 (clutch discs+spring+nut on top); half 20.5 recentres the reel on the axle
       { id: 'gear_A', label: 'Gear A [10+30] (composite, -2x)', file: 'stl/gear_A.glb', color: 0xd97c2b,
-        parent: pivotA, pos: [0, 0, 12], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 }, // v97: local y0-24, pivot mid-shaft
+        parent: pivotA, pos: [0, 0, 9], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 }, // local y0-based: pos z = 56 - y0 (y0=47)
       { id: 'gear_B', label: 'Gear B [10+bev20] (composite, +6x)', file: 'stl/gear_B.glb', color: 0xd97c2b,
-        parent: pivotB, pos: [0, 0, 12], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 }, // v98: local y0-24, pivot mid-shaft
+        parent: pivotB, pos: [0, 0, 2], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 }, // local y0-based: pos z = 56 - y0 (y0=54)
+      { id: 'gearwall', label: 'Outboard wall (A/B shaft support)', file: 'stl/gearwall.glb', color: 0x8a8f98,
+        parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 }, // v108: absolute CAD coords, static
     ];
     // Display order for the parts panel (matches user checklist + tape/seeds extras).
     var PART_ORDER = ['chassis', 'hopper', 'cartridge', 'cones_a',
-      'cones_b', 'plow', 'crank', 'gear_A', 'gear_B',
+      'cones_b', 'plow', 'crank', 'gear_A', 'gear_B', 'gearwall',
       'twister', 'twister_axle', 'pull_a', 'pull_b', 'takeup', 'tape', 'seeds'];
 
   var toggleGroups = {};

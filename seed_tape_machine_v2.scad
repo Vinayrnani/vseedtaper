@@ -192,6 +192,8 @@ if (part_to_render == "all") {
     dt_cluster_A(); // local Y frame (viewer pivot compensates, print rotated flat)
 } else if (part_to_render == "gear_B") {
     dt_cluster_B(); // local Y frame (viewer pivot compensates, print rotated flat)
+} else if (part_to_render == "gearwall") {
+    dt_gearwall(); // absolute CAD coords (viewer: parent root, no offset)
 } else {
     echo(str("ERROR: unknown part_to_render='", part_to_render, "'."));
     cube([1,1,1]);
