@@ -16,11 +16,11 @@ module dt_cluster_A() {
         // shaft r4 along Y, local y0..33.5 (= assembly y49.5..83, tip through Step-5 wall)
         rotate([-90, 0, 0])
             cylinder(h=33.5, r=4, center=false, $fn=60);
-        // A10: band 49..55 (local center 2.5), m2 10T FULL profile, 6 wide (Step 8: matches crank face)
+        // A10: band 49..55 (local center 2.5), m2 10T FULL profile, 6 wide (Step 8: matches crank face; v124: pinion thinned 0.8 so crank-A10 has tangential clearance like every other mesh — crank stays full for the approved crank-drum mesh)
         translate([0, (v97_A10_y0 + v97_A10_y1)/2 - v97_A_y0, 0])
             rotate([90, 0, 0])
                 spur_gear(teeth=10, module_mm=gear_module, thickness=6,
-                          tooth_scale=1.0);
+                          tooth_scale=0.8);
         // A30: band 70..75 (local center 23), m1.25 30T takeoff OUTSIDE wall
         translate([0, (v97_A30_y0 + v97_A30_y1)/2 - v97_A_y0, 0])
             rotate([90, 0, 0])
@@ -196,21 +196,10 @@ module dt_cluster_B() {
             rotate([90, 0, 0])
                 bev_teeth(tw_bev_n, 22.5, tw_bev_face, v113_B_thin, v113_B_phase, tw_bev_mod);
         // Root cone frustum under the teeth (canonical z22..25.3 mapped,
-        // embedded into the web):
+        // solid, shaft-pierced, ring-carries the tooth heels):
         translate([0, 25, 0])
             rotate([90, 0, 0])
                 translate([0, 0, 22])
                     cylinder(h=3.3, r1=21, r2=18.2, center=false, $fn=60);
-        // Back web solid r24 (canonical z19.2..22.5 mapped, local y2.5..5.8,
-        // embedded into the tooth heels):
-        translate([0, 25, 0])
-            rotate([90, 0, 0])
-                translate([0, 0, 19.2])
-                    cylinder(h=3.3, r=24, center=false, $fn=60);
-        // Hub r8 (local y5.5..8.5 = assembly 59.5..62.5, embedded in the
-        // web top, pierced by the shaft; v117 fix: was 14.5, floated into
-        // the idler gear — reseated on the web, clears idler by ~7):
-        translate([0, 5.5, 0])
-            cylinder(h=3, r=8, center=false, $fn=60);
     }
 }

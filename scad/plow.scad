@@ -63,11 +63,13 @@ module six_turner() {
     cy = 20;                        // sheet centre (local y, world tape centre 34 = lane_y)
     axis_z = 28;                    // v87 +15: sheet axis height (exit = twister bore height)
     mouth_x0 = -12;                 // sheet mouth (world 114, exit lands 159)
-    pedA = [6, 8, 12, 28, 19.3];    // v87 +15: mid pedestal x0,x1,y0,y1,top (floor ~18.9)
-    pedB = [24.5, 26.5, 14, 26, 22.7]; // v87 +15: exit pedestal x0,x1,y0,y1,top (floor ~22.3)
+    pedA = [4, 10, 12, 28, 19.3];    // Step 9: widened X to 6 (world 130..136), top/embed unchanged
+    pedB = [22, 28, 14, 26, 22.7]; // Step 9: widened X to 6 (world 148..154), top/embed unchanged
+    strapB_y1 = 38.3;              // Step 9: strapB north end (world 52.3 — below teeth envelope 52.5)
+    notch_y1 = 45.8;               // Step 9: earB notch top (world 59.8 — above teeth top 57.5)
     ear = 6;                        // ear edge length (6x6 footprint)
     ear_t = 1;                      // ear flange thickness (stack-up keeps 1)
-    mount_h = ear_t + 15;           // v87 +15: ear/strap column height z0..16 (base-fused)
+    mount_h = ear_t + 9;            // Step 9: ear/strap column height z0..10 (slim; base-fused, M3 through base kept)
     earA = [3, -11];                // ear A corner, centre (6,-8) -> world (132,6)
     earB = [24, 45];                // ear B corner, centre (27,48) -> world (153,62)
     hole_d = bolt_dia + 2*tolerance; // M3 clearance 3.6
@@ -107,6 +109,15 @@ module six_turner() {
     assert(earA[1] + ear/2 + (chassis_width/2 - 20) == 6 && earB[1] + ear/2 + (chassis_width/2 - 20) == 62,
         "six_turner: ear holes must hit chassis rows (world 6/62)");
     assert(hole_d == bolt_dia + 2*tolerance, "six_turner: ear holes must be M3 clearance");
+    // Step-9 B-teeth clearance (sweep XZ c(155,32) r23.75, band y52.5..57.5):
+    // strapB north stops below the envelope; earB notch/boss clear the top;
+    // widened pedB stays below the band and its top clears the B shaft (z28).
+    assert((chassis_width/2 - 20) + strapB_y1 <= 52.7, "Step-9 strapB north must stop at/below world 52.7");
+    assert((chassis_width/2 - 20) + strapB_y1 < v98_Bbev_y0, "Step-9 strapB must clear the teeth envelope bottom");
+    assert((notch_y1 + 14) - v98_Bbev_y1 >= 2, "Step-9 earB notch must clear the teeth top");
+    assert(14 + (earB[1]+ear/2-4) - v98_Bbev_y1 >= 0.5, "Step-9 earB boss must clear the teeth top");
+    assert(v98_Bbev_y0 - (14 + pedB[3]) >= 10, "Step-9 pedB north must stay below the teeth band");
+    assert(v98_Bz - 4 - (base_thick + pedB[4]) >= 1, "Step-9 pedB top must clear the B shaft");
     // No added solids: the part is exactly printable_folder().
     // Seeded pocket core must thread the 24-wide entry mouth.
     assert(12 - sqrt(pow(3.9, 2) + pow(3.4, 2)) >= 0.1,
@@ -127,10 +138,14 @@ module six_turner() {
                             scroll_sheet();
                 // Screw ears (z0..mount_h, M3 holes to the chassis).
                 translate([earA[0], earA[1], 0]) cube([ear, ear, mount_h]);
-                translate([earB[0], earB[1], 0]) cube([ear, ear, mount_h]);
+                // earB: north remnant above the teeth-band notch + boss around
+                // the M3 hole (153,62); notch local y45..notch_y1 stays open.
+                translate([earB[0], notch_y1, 0]) cube([ear, earB[1] + ear - notch_y1, mount_h]);
+                translate([earB[0]+ear/2, earB[1]+ear/2, 0]) cylinder(h=mount_h, r=4, center=false, $fn=60);
                 // Ground straps (z0..mount_h, tie ears to pedestal feet).
+                // strapB north shortened to strapB_y1 (clears the B teeth band).
                 translate([3, -11, 0]) cube([6, 25, mount_h]);
-                translate([24, 20, 0]) cube([6, 25, mount_h]);
+                translate([24, 20, 0]) cube([6, strapB_y1 - 20, mount_h]);
                 // Support pedestals (tops fused into the sheet floor wall).
                 translate([pedA[0], pedA[2], 0]) cube([pedA[1] - pedA[0], pedA[3] - pedA[2], pedA[4]]);
                 translate([pedB[0], pedB[2], 0]) cube([pedB[1] - pedB[0], pedB[3] - pedB[2], pedB[4]]);
@@ -157,7 +172,9 @@ module folding_plow() {
 // fold_start-tape_x0 = 51 (world 37..70, W-shallow->E-full) then a
 // STRAIGHT full-U transit (same section, no taper) local 84..140
 // (world 70..126, through the shroud slot, under the drum with air
-// gap, UNDER the hover pipe with a 10 gap to the plow mouth): bottom edges at
+// gap, UNDER the hover pipe with a 10 gap to the plow mouth), EXCEPT a
+// smooth Step-5/7 U dip DOWN (cosine, depth 8.5, width 16, center world 86,
+// 10 before the bore edge 96.2 so seed drops in): bottom edges at
 // +-hw rise via quarter-arc sides R=tape_bend_radius sweeping
 // tape_fold_angle, then straight vertical walls tape_fold_wall, then a
 // reverse S-shoulder per side (outward kink + foot landing back on the
@@ -169,17 +186,49 @@ module folding_plow() {
 // manifold, never zero-thickness.
 // Allowed modules only: union/cube/for/if/translate/rotate.
 // ============================================================
+// Step-5 U-dip profile (local x; world = local + tape_x0 = local - 14):
+// smooth cosine DOWN 10 before the dropper bore (world zone ~78..94,
+// center 86 = bore west edge 96.2 minus 10, depth 8.5, bottom ON the
+// Step-6 platform). Former collar (world 67) rides upstream of it;
+// turner/cradle sit downstream. dz = offset, sl = slope dz/dx.
+ubend_c = 86 - tape_x0;                // 100: dip center (local x)
+ubend_hw = 8;                          // dip half-width (world == local units)
+ubend_d = 8.5;                         // dip depth DOWN (-Z)
+function ubend_dz(lx) = (abs(lx - ubend_c) < ubend_hw) ? -ubend_d/2*(1+cos(180*(lx-ubend_c)/ubend_hw)) : 0;
+function ubend_sl(lx) = (abs(lx - ubend_c) < ubend_hw) ? ubend_d*PI/2/ubend_hw*sin(180*(lx-ubend_c)/ubend_hw) : 0;
+
 module seed_tape_bend() {
     fx0 = fold_start - tape_x0;        // 51: forming segment local x (world 37..70)
     dx = fold_len/tape_n_x;
     tx0 = fold_end - tape_x0;          // 84: transit local x (world 70..126)
-    n_t = ceil(transit_len/4);         // ~4mm straight chunks
-    dx_t = transit_len/n_t;
+    // Step-5 dip zone edges (dz=0 and slope=0 exactly at/beyond these).
+    zb0 = ubend_c - ubend_hw - 1;      // 91 local (world 77)
+    zb1 = ubend_c + ubend_hw + 1;      // 109 local (world 95)
+    n_a = ceil((zb0 - tx0)/4);         // straight chunks before the dip
+    dx_a = (zb0 - tx0)/n_a;
+    n_c = ceil((tx0 + transit_len - zb1)/4); // straight chunks after the dip
+    dx_c = (tx0 + transit_len - zb1)/n_c;
+    bdx = 0.5;                         // dipped shingles (sections stay normal)
+    n_b = ceil((zb1 - zb0)/bdx);
+    rdx = 0.5;                         // ribbon shingles follow the dip too
+    n_r = ceil(tape_len/rdx);
+    // Fail loud (Step-5 envelope):
+    assert(zb0 >= tx0 && zb1 <= tx0 + transit_len, "seed_tape_bend: U dip must sit inside the transit");
+    assert(tape_z - ubend_d > base_thick + 2, "seed_tape_bend: dip bottom must clear the base");
+    assert(tape_x0 + ubend_c >= 86 && tape_x0 + ubend_c <= 90, "seed_tape_bend: U centre must sit ~10 before the dropper (world 86..90)");
+    assert(tape_x0 + zb0 - (fold_end - 3) >= 5, "seed_tape_bend: former collar must stay upstream of the dip");
     union() {
         // Flat ribbon full length (base min_z=0, single-layer floor;
-        // v45: ends at tape_flat_end 208, the leader takes it from there)
-        translate([0, -paper_width/2, 0])
-            cube([tape_len, paper_width, tape_thick]);
+        // v45: ends at tape_flat_end 208, the leader takes it from there).
+        // Slope-matched shingles: identity outside the dip (same solid as
+        // the old single cube), smooth cosine inside.
+        for (i=[0:n_r-1]) {
+            xc = (i + 0.5)*rdx;
+            sl = ubend_sl(xc);
+            translate([xc, 0, tape_thick/2 + ubend_dz(xc)])
+                rotate([0, -atan(sl), 0])
+                    cube([rdx*sqrt(1+sl*sl) + 2*epsilon, paper_width, tape_thick], center=true);
+        }
         // v45 wind-up leader: narrow strip (folded-tube width) climbing
         // ribbon-top -> wound pack, fused into both (overlaps ribbon by
         // 2+ in x, ends inside the pack silhouette). Matches the viewer
@@ -199,9 +248,18 @@ module seed_tape_bend() {
         // Forming taper: W shallow -> E full-U exit
         for (xi=[0:tape_n_x-1])
             fold_section(fx0 + xi*dx, dx, 0.15 + 0.85*(xi + 0.5)/tape_n_x);
-        // Straight full-U transit (forming exit -> plow mouth via pipe)
-        for (ti=[0:n_t-1])
-            fold_section(tx0 + ti*dx_t, dx_t, 1);
+        // Full-U transit (forming exit -> plow mouth via pipe): straight,
+        // then dipped shingles through the U (cross-sections stay normal
+        // to the ribbon, fused by X-overlap), then straight to the mouth.
+        for (ai=[0:n_a-1])
+            fold_section(tx0 + ai*dx_a, dx_a, 1);
+        for (bi=[0:n_b-1]) {
+            bx = zb0 + bi*bdx;
+            xc = bx + bdx/2;
+            fold_section(bx, bdx, 1, ubend_dz(xc), atan(ubend_sl(xc)));
+        }
+        for (ci=[0:n_c-1])
+            fold_section(zb1 + ci*dx_c, dx_c, 1);
     }
 }
 
@@ -210,12 +268,13 @@ module seed_tape_bend() {
 // (n facets) from the ribbon top at [s*hw, base_top] sweeping
 // outward-up, vertical wall, shoulder kink (outward+slightly up) then
 // foot back down onto the ribbon wing at [s*(hw+r+2.5), base_top].
-module fold_section(x0, dx, sc) {
+module fold_section(x0, dx, sc, zoff=0, sang=0) {
     hw = fold_width/2;                 // 2.0 trough bottom half-width
     r = tape_bend_radius;              // 1.5
     a = tape_fold_angle;               // 90 = vertical walls (full U)
     sh_r = tape_shoulder_r;            // 1.5 reverse S-kink radius
     base_top = tape_thick;             // 0.4: ribbon top (trough floor, single layer)
+    xc = x0 + dx/2;                    // dip pivot line (zoff/sang rotate about it)
     for (s=[-1,1]) {
         // arc facets
         for (i=[0:tape_n_arc-1]) {
@@ -223,31 +282,37 @@ module fold_section(x0, dx, sc) {
             t1 = -90 + (i+1)*a/tape_n_arc;
             p0 = [s*(hw + r*cos(t0)), base_top + (r + r*sin(t0))*sc];
             p1 = [s*(hw + r*cos(t1)), base_top + (r + r*sin(t1))*sc];
-            seg_ribbon_taper(x0, dx, p0, p1);
+            seg_ribbon_taper(x0, dx, p0, p1, zoff, sang, xc);
         }
         te = a - 90;  // arc end angle (0 = vertical tangent)
         pa = [s*(hw + r*cos(te)), base_top + (r + r*sin(te))*sc];
         wd = [-s*sin(te), cos(te)];  // tangent dir at arc end
         pb = [pa[0] + wd[0]*tape_fold_wall*sc, pa[1] + wd[1]*tape_fold_wall*sc];
-        seg_ribbon_taper(x0, dx, pa, pb);
+        seg_ribbon_taper(x0, dx, pa, pb, zoff, sang, xc);
         // reverse S-shoulder: kink outward+up, then foot down to wing
         pk = [pb[0] + s*sh_r*0.9, pb[1] + sh_r*0.5*sc];
         pf = [s*(hw + r + 2.5), base_top];
-        seg_ribbon_taper(x0, dx, pb, pk);
-        seg_ribbon_taper(x0, dx, pk, pf);
+        seg_ribbon_taper(x0, dx, pb, pk, zoff, sang, xc);
+        seg_ribbon_taper(x0, dx, pk, pf, zoff, sang, xc);
     }
 }
 
 // Tapered ribbon segment between 2D path points p0/p1 ([y,z]), X-span
 // [x0, x0+dx+eps overlap], centered on the path (thickness tape_thick).
-module seg_ribbon_taper(x0, dx, p0, p1) {
+module seg_ribbon_taper(x0, dx, p0, p1, zoff=0, sang=0, xc=0) {
     dy = p1[0] - p0[0];
     dz = p1[1] - p0[1];
     seg = sqrt(dy*dy + dz*dz);
     if (seg > 0) {
-        translate([x0 + dx/2, (p0[0]+p1[0])/2, (p0[1]+p1[1])/2])
-            rotate([atan2(dz, dy), 0, 0])
-                cube([dx + 2*epsilon, seg + 2*epsilon, tape_thick], center=true);
+        // Rigid dip motion about the chunk pivot (chunk cross-section stays
+        // normal to the ribbon; X-length stretches 1/cos so shingles fuse).
+        // zoff=sang=0 is the identity: byte-identical straight solid.
+        translate([xc, 0, zoff])
+            rotate([0, -sang, 0])
+                translate([-xc, 0, -zoff])
+                    translate([x0 + dx/2, (p0[0]+p1[0])/2, (p0[1]+p1[1])/2 + zoff])
+                        rotate([atan2(dz, dy), 0, 0])
+                            cube([dx/cos(sang) + 2*epsilon, seg + 2*epsilon, tape_thick], center=true);
     }
 }
 

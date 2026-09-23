@@ -1,4 +1,22 @@
 module chassis() {
+    // Step-6 tape support platform datum (fused pillar under the dip approach):
+    // top AT the dip-bottom level (never pushes the tape up); footprint stops
+    // 10 before the dropper; feet stay in the lane, fused into the rails.
+    plat_x0 = 70; plat_x1 = 90;      // east edge 90 = 10 before drop centre 100 (Step 7: reaches under the shifted U bottom 86)
+    plat_y0 = 21; plat_y1 = 47;      // lane (paper 26 about Y34), clears slots
+    plat_top = tape_z - ubend_d;     // 19.5: meets dip bottom, no lift
+    assert(abs(plat_top - 19.5) < 0.001, "Step 6: platform top must be 19.5 (dip-bottom level)");
+    // Step-8 axle-root datum: tie ribs x168..173 (1mm back from the bevel
+    // toe 174.67; clear of the base slot x180+), lane-outside straps
+    // y3..21 / y47..65, z0..12; M3s at x169.5/172.5, z7 (rib-backed).
+    rib_x0 = 168; rib_x1 = 173; rib_z1 = 12;
+    assert(rib_x1 + 1 <= tw_bev_heel_x - tw_bev_face*cos(45), "Step-8 ribs must stay >=1 west of the bevel toe");
+    assert(rib_x1 + 2 <= tw_slot_x0, "Step-8 ribs must avoid the base slot");
+    assert(rib_x1 + 5 <= tw_disc_x0, "Step-8 ribs must clear the rotor disc in X");
+    assert(rib_x0 <= 169.5 && 172.5 <= rib_x1, "Step-8 M3s must sit in rib-backed wall");
+    assert(169.5 - (v97_Ax - axle_clearance_dia/2) >= 1, "Step-8 M3s must clear the A wall bore");
+    assert(plat_x1 <= drop_x - 10, "Step 7: platform east edge must stop 10 before the dropper");
+    assert(plat_x0 - ((fold_end - 3) + 3/2) >= 1, "Step 6: platform must clear the former collar");
     difference() {
         union() {
             translate([chassis_x0, 0, 0])
@@ -20,6 +38,17 @@ module chassis() {
                 cube([44, 8, 6 + 0.15]);
             translate([drum_axle_x - 22, chassis_width - 15, base_thick - 0.15])
                 cube([44, 8, 6 + 0.15]);
+            // Step-6 support pillar: solid block z4..plat_top under the dip
+            // approach (0.15 base overlap like the rails; 0.3 edge overlap
+            // into both track rails = fused rail feet, no screws needed).
+            translate([plat_x0, plat_y0, base_thick - 0.15])
+                cube([plat_x1 - plat_x0, plat_y1 - plat_y0, plat_top - (base_thick - 0.15)]);
+            // Step-8 tie ribs: pedestal foot to both walls (fused to walls +
+            // base + rails; below all sweeps, rotor parts start x174.67+).
+            translate([rib_x0, wall_thick, 0])
+                cube([rib_x1 - rib_x0, 21 - wall_thick, rib_z1]);
+            translate([rib_x0, chassis_width - wall_thick - 18, 0])
+                cube([rib_x1 - rib_x0, 18, rib_z1]);
             // Bearing blocks (pillow-block style)
             for (spec=[[drum_axle_x,   drum_axle_z,   bb_height_drum,   1],
                        [crank_axle_x,  crank_axle_z,  bb_height_roller, 1],
@@ -142,6 +171,18 @@ module chassis() {
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
         }
+        // Step-8 M3 wall screws (2 per side, rib-backed stations x169.5/172.5
+        // z7 — gear-free: below A30/idler bands, east of the A bore, west of
+        // the ext pillar): clearance through wall + nut trap on outer face.
+        for (sx=[169.5, 172.5])
+            for (side=[0,1]) {
+                translate([sx, side*(chassis_width-wall_thick)+wall_thick/2, 7])
+                    rotate([90,0,0])
+                        cylinder(h=wall_thick+2*epsilon, d=bolt_dia+2*tolerance, center=true);
+                translate([sx, side == 0 ? 0 : chassis_width, 7])
+                    rotate(side == 0 ? [90,0,0] : [-90,0,0])
+                        cylinder(h=nut_trap_depth+epsilon, r=(bolt_head_across+2*tolerance)/sqrt(3), $fn=6, center=false);
+            }
         // v48: NO idler stubs fuse into the back wall (zero exterior
         // gears) — the wall keeps full section everywhere. The solid
         // pull bridge needs no hole (tape-coupled nip, no drive tube).

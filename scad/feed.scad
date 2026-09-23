@@ -62,6 +62,16 @@ module hopper_body() {
     X_T0 = 77; X_T1 = 82;
     y_tip_neg_in = 24.5;                   // -Y inner face at tip
     y_tip_neg_out = y_tip_neg_in + wall;   // 27.0: uniform 2.5 cheek wall
+    // +Y/FRONT flare (Step 3b: FULL HEIGHT rebuild): narrow alongside the
+    // drum 40T gear X-span, then linear flare past the gear west edge (outer
+    // r42 -> edge local 42) with >=2 buffer; tip mirrors -Y for seed volume.
+    // Taper rules (rev3-5 + Step-3b lesson): void/floor +Y tapers share the
+    // cheek X stations (parallel, never steeper) so the void tracks the wall
+    // instead of eating through it; uniform 2.5 wall by construction.
+    XF_P0 = 46;                            // flare start (world 54, 4 west of gear edge 58)
+    y_tip_pos_in = 24.5;                   // +Y inner face at tip (mirrors -Y)
+    y_tip_pos_out = y_tip_pos_in + wall;   // 27.0: uniform 2.5 cheek wall
+    block_pos = y_tip_pos_out + 0.6;       // 27.6: nose block +Y half
     Xt_M = (27-25)/cos(LOW_TILT);        // taper starts past carve (r26)
     Xt_M1 = (32-25)/cos(LOW_TILT);       // taper hull-A box end
     Xt_T = (X_T0 - 25)/cos(LOW_TILT);      // tilted station mapping to X_T0
@@ -69,16 +79,27 @@ module hopper_body() {
     S_T = S_C*cos(LOW_TILT);               // tilt-corrected taper slope
     floorTipHalf = (cheek_in + 1.0) + S_T*(Xt_T - Xt_M);
     voidTipHalf = (cheek_in + 0.5) + S_T*(Xt_T - Xt_M);
+    Xt_P0 = (XF_P0 - 25)/cos(LOW_TILT);    // +Y flare start, tilt-mapped
+    S_PC = (y_tip_pos_in - cheek_in)/(X_T0 - XF_P0); // +Y plan slope (longer run, same rise)
+    S_PT = S_PC*cos(LOW_TILT);             // tilt-corrected +Y slope
+    floorTipHalfPos = (cheek_in + 1.0) + S_PT*(Xt_T - Xt_P0); // +Y floor tip (25.5, mirrors -Y)
+    voidTipHalfPos = (cheek_in + 0.5) + S_PT*(Xt_T - Xt_P0);  // +Y void tip (25.0, mirrors -Y)
     block_neg = y_tip_neg_out + 0.6;       // 27.6: nose block -Y half
     nose_x0 = 75; nose_len = 8;            // nose x75..83 (west tip world 17)
-    lug_pos_y0 = 9.6; lug_pos_y1 = 12.5;    // +Y lug: fused, clears gear band
+    // Step 4: +Y lug DELETED with the tall wall (no wall left to screw at height).
     lug_neg_y0 = -29.5; lug_neg_y1 = -26.6; // -Y lug: 1.5 off wall bore
     assert(27 > drum_radius + mouth_gap, "hopper flare: taper must start past carve");
     assert(floorTipHalf < y_tip_neg_out, "hopper flare: floor must not pierce cheek outer");
     assert(voidTipHalf < y_tip_neg_out - 1.5, "hopper flare: bowl wall >=1.5");
-    assert(block_neg < 31, "hopper flare: nose block must clear chassis walls");
-    assert(lug_pos_y1 + chassis_width/2 < chassis_width/2 + gear_off - gear_thick/2 - 2,
-           "hopper flare: +Y lug must stay 2 clear of drum gear face");
+    assert(floorTipHalfPos < y_tip_pos_out, "hopper flare: +Y floor must not pierce cheek outer");
+    assert(voidTipHalfPos < y_tip_pos_out - 1.5, "hopper flare: +Y bowl wall >=1.5");
+    assert(block_neg < 31 && block_pos < 31, "hopper flare: nose block must clear chassis walls");
+    // +Y flare passes WEST of the drum gear in X (nose x77..82 vs gear
+    // edge local 42); fail loud on X-buffer. (Step 4: lug X / lug-top
+    // asserts RETIRED with the deleted +Y lug.)
+    assert(XF_P0 - (drum_teeth*gear_module/2 + gear_module) >= 2,
+           "hopper flare: +Y flare must start 2 west of drum gear edge");
+    // (Step 3b: CUT_Z retired — +Y wall rebuilt to full height like -Y.)
     assert(100 - (nose_x0 + nose_len) >= 16.5,
            "hopper flare: nose west must stay clear of spool cone rim");
     // BOTTOM-CENTER hover pipe (v35 thinnest printable wall: 6-o'clock,
@@ -135,11 +156,16 @@ module hopper_body() {
         union() {
             // Cheek plates — ASYMMETRIC: +Y stock-straight (drum-gear side),
             // -Y tapered wide (free side). Mouth/drum interface unchanged.
+            // +Y cheek (Step 3b: FULL HEIGHT, mirrors -Y): narrow alongside
+            // the drum gear, then linear flare past the gear edge to the nose;
+            // wall band z49..73, uniform 2.5 (planar hull, identical z-spans).
+            translate([X_R0, cheek_in, cheek_bot_root])
+                cube([XF_P0 - X_R0, wall, cheek_top0 - cheek_bot_root]);
             hull() {
-                translate([X_R0, cheek_in, cheek_bot_root])
-                    cube([X_R1 - X_R0, wall, cheek_top0 - cheek_bot_root]);
-                translate([X_T0, cheek_in, cheek_bot_tip])
-                    cube([X_T1 - X_T0, wall, apex_top - cheek_bot_tip]);
+                translate([XF_P0, cheek_in, cheek_bot_root])
+                    cube([5, wall, cheek_top0 - cheek_bot_root]);
+                translate([X_T0, y_tip_pos_out - wall, cheek_bot_root])
+                    cube([X_T1 - X_T0, wall, cheek_top0 - cheek_bot_root]);
             }
             // -Y cheek — mouth box (stock section, carve trims flush: zero
             // sliver) + SMOOTH TAPER starting past carve (x27, no seed-trap
@@ -159,13 +185,24 @@ module hopper_body() {
             translate(tilt_pivot)
                 rotate([0, -LOW_TILT, 0])
                     union() {
+                        // Straight narrow box runs to Xt_P0+5 (buried inside the
+                        // -Y hull where they overlap; feeds the +Y flare start).
                         translate([-20, -floor_half, -floor_thick])
-                            cube([Xt_M1 + 1 + 20, 2*floor_half, floor_thick]);
+                            cube([Xt_P0 + 5 + 20, 2*floor_half, floor_thick]);
                         hull() {
                             translate([Xt_M, -floor_half, -floor_thick])
                                 cube([Xt_M1 - Xt_M, 2*floor_half, floor_thick]);
                             translate([Xt_T, -floorTipHalf, -floor_thick])
                                 cube([4, floorTipHalf + floor_half, floor_thick]);
+                        }
+                        // +Y flare hull (mirrors -Y): narrow start at Xt_P0,
+                        // flared tip at Xt_T; -Y edge stays narrow (buried in
+                        // the -Y hull), +Y edge flares on the cheek stations.
+                        hull() {
+                            translate([Xt_P0, -floor_half, -floor_thick])
+                                cube([5, 2*floor_half, floor_thick]);
+                            translate([Xt_T, -floor_half, -floor_thick])
+                                cube([4, floorTipHalfPos + floor_half, floor_thick]);
                         }
                     }
             // v17 BLUE side-closure fins (the ONLY cover<->trough joint):
@@ -183,16 +220,14 @@ module hopper_body() {
                             rotate_extrude(angle=92, convexity=10)
                                 translate([27.5, -s*(cheek_in + wall/2), 0])
                                     square([2, wall], center=true);
-            // Closed nose — ASYMMETRIC bowl: -Y wide (seed volume), +Y stock.
-            // x75..83 (west tip world x>=17 clears spool cone rim 16.5).
-            // Foot 53.5 swallows wide-floor west end + cheek tips.
+            // Closed nose — FULL bowl (Step 3b): -Y wide + +Y wide mirrored,
+            // x75..83 (west tip world x>=17 clears spool cone rim 16.5),
+            // z53.5..73.5. Foot swallows both floor flare ends + cheek tips.
             translate([nose_x0, -block_neg, 53.5])
-                cube([nose_len, block_neg + y_out + 0.6, 73.5 - 53.5]);
-            // Screwable side lugs (pair) at mid-nose height, M3 clearance
-            // along Y (holes cut below). +Y lug clears drum gear band;
-            // -Y lug clears wall bore and spool cone rim.
-            translate([77, lug_pos_y0, 63])
-                cube([5, lug_pos_y1 - lug_pos_y0, 5]);
+                cube([nose_len, block_neg + block_pos, 73.5 - 53.5]);
+            // Screwable side lug (-Y only now) at mid-nose height, M3
+            // clearance along Y (hole cut below); clears wall bore and
+            // spool cone rim. (+Y lug deleted with the tall wall.)
             translate([77, lug_neg_y0, 63])
                 cube([5, lug_neg_y1 - lug_neg_y0, 5]);
             // Root-top gussets (v19 SEAL: fill the carve-edge/fin-underside
@@ -236,6 +271,16 @@ module hopper_body() {
         translate(drum_c)
             rotate([90,0,0])
                 cylinder(h=2*y_out + 2*epsilon, r=drum_radius + mouth_gap, center=true);
+        // Step12: flange register grooves (female) — drum end flanges OD53
+        // r26.5, 1.5 wide at local Y +/-5 (world 29/39, from drum_len/2-2.5).
+        // Recess r26.8 w2.1 (0.3 radial + 0.6 width print clearance,
+        // EXPLICIT oversize). Full-disc subtraction only removes where
+        // hopper solid exists (carve wall + cover band + floor/funnel
+        // crossings); existing void is a no-op. Mouth_gap/drum untouched.
+        for (fy=[-flange_reg_y, flange_reg_y])
+            translate([0, fy, hopper_axis_z])
+                rotate([90,0,0])
+                    cylinder(h=flange_reg_w, r=flange_reg_r, center=true);
         // Open-top trough void — stock narrow channel behavior at the mouth
         // + smooth taper on tilt-mapped stations (bowl wall uniform 2.0,
         // no step, no seed-trap corners). Ramp-matched: void bottom tracks
@@ -243,19 +288,25 @@ module hopper_body() {
         translate(tilt_pivot)
             rotate([0, -LOW_TILT, 0])
                 union() {
+                    // Straight narrow box runs to Xt_P0+5 (feeds the +Y flare).
                     translate([-20, -(cheek_in + 0.5), -0.5])
-                        cube([Xt_M1 + 1 + 20, 2*(cheek_in + 0.5), 30.5]);
+                        cube([Xt_P0 + 5 + 20, 2*(cheek_in + 0.5), 30.5]);
                     hull() {
                         translate([Xt_M, -(cheek_in + 0.5), -0.5])
                             cube([Xt_M1 - Xt_M, 2*(cheek_in + 0.5), 30.5]);
                         translate([Xt_T, -voidTipHalf, -0.5])
                             cube([4, voidTipHalf + cheek_in + 0.5, 30.5]);
                     }
+                    // +Y void flare (mirrors -Y, same stations as the +Y cheek
+                    // so the bowl wall stays uniform instead of eating through).
+                    hull() {
+                        translate([Xt_P0, -(cheek_in + 0.5), -0.5])
+                            cube([5, 2*(cheek_in + 0.5), 30.5]);
+                        translate([Xt_T, -(cheek_in + 0.5), -0.5])
+                            cube([4, voidTipHalfPos + cheek_in + 0.5, 30.5]);
+                    }
                 };
-        // Side-lug M3 clearance holes (axis Y through each lug).
-        translate([79.5, lug_pos_y1 + epsilon, 65.5])
-            rotate([90, 0, 0])
-                cylinder(h=(lug_pos_y1 - lug_pos_y0) + 2*epsilon, d=bolt_dia + 2*tolerance, center=false);
+        // Side-lug M3 clearance hole (-Y only now, axis Y through the lug).
         translate([79.5, lug_neg_y0 - epsilon, 65.5])
             rotate([-90, 0, 0])
                 cylinder(h=(lug_neg_y1 - lug_neg_y0) + 2*epsilon, d=bolt_dia + 2*tolerance, center=false);

@@ -385,14 +385,40 @@
     roughness: 0.4, metalness: 0.0,
     emissive: 0x0d3a20, emissiveIntensity: 0.7
   });
-  // Flat ribbon (scrolls): BoxGeometry(X=len, Y=thick 0.4, Z=width 25.4).
-  // v33: mesh rides +0.2 so the ribbon base sits on the lane (world
-  // TAPE_Z..TAPE_Z+0.4, top 13.4 = hover-pipe reference, 10 below pipe bottom 23.4).
-  var tape = new THREE.Mesh(new THREE.BoxGeometry(TAPE_LEN, 0.4, 25.4), tapeMat);
-  tape.position.y = 0.2;
-  tape.castShadow = true;
+  // Flat ribbon with CAD cosine dip (Step-11 loop2 mechanical port of
+  // plow.scad ubend: centre world x86, half-width 8, depth 8.5 DOWN from
+  // TAPE_Z; bottom 19.5 meets the platform top. Upstream forming +
+  // downstream mouth unchanged. Dip STATIC in world (tape advances through
+  // it — CAD shingle precedent); animation hook below untouched.
+  // v33: meshes ride +0.2 so the ribbon base sits on the lane.
+  var TAPE_DIP_CX = 86, TAPE_DIP_HW = 8, TAPE_DIP_D = 8.5; // = ubend_c/hw/d (world)
+  function tapeDipDz(wx) {
+    var u = (wx - TAPE_DIP_CX) / TAPE_DIP_HW;
+    if (Math.abs(wx - TAPE_DIP_CX) >= TAPE_DIP_HW) return 0;
+    return -TAPE_DIP_D / 2 * (1 + Math.cos(Math.PI * u));
+  }
+  function tapeDipSlope(wx) {
+    var u = (wx - TAPE_DIP_CX) / TAPE_DIP_HW;
+    if (Math.abs(wx - TAPE_DIP_CX) >= TAPE_DIP_HW) return 0;
+    return TAPE_DIP_D * Math.PI / (2 * TAPE_DIP_HW) * Math.sin(Math.PI * u);
+  }
+  var TAPE_SEG = 1.0; // 1mm slope-matched shingles fuse with overlap (CAD rdx precedent)
   var tapeGroup = new THREE.Group();
-  tapeGroup.add(tape);
+  var tapeDipMeshes = [];
+  for (var dipX = -14; dipX < 220 - 1e-6; dipX += TAPE_SEG) {
+    var segW = Math.min(TAPE_SEG, 220 - dipX);
+    var segWx = dipX + segW / 2; // world x of shingle centre
+    var segGx = segWx - TAPE_CX; // group-local x (group sits at TAPE_CX)
+    var segDz = tapeDipDz(segWx);
+    var segAng = Math.atan(tapeDipSlope(segWx));
+    var segLen = segW / Math.cos(segAng) + 0.1;
+    var seg = new THREE.Mesh(new THREE.BoxGeometry(segLen, 0.4, 25.4), tapeMat);
+    seg.position.set(segGx, segDz + 0.2, 0);
+    seg.rotation.z = segAng;
+    seg.castShadow = true;
+    tapeGroup.add(seg);
+    tapeDipMeshes.push(seg);
+  }
   root.add(tapeGroup);
   // U-fold channel (static: forming taper 37..70 + straight full-U
   // transit 70..126; tape slides through, fold walls ride on the ribbon
@@ -649,7 +675,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 87; // v122 nose manifold rebuild (twister_axle), ASSET_V 86->87
+  var ASSET_V = 89; // 12-step geometry batch (hopper/chassis/twister_axle regen), ASSET_V 88->89
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, -15, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -854,8 +880,8 @@
         failures.map(function (f) { return '· ' + f; }).join('<br>');
     }
     refreshToggles();
-    statusEl.textContent = failures.length ? 'ready — some parts failed to load'
-                                           : 'ready — drag to orbit · scroll to zoom';
+    statusEl.textContent = (failures.length ? 'ready — some parts failed to load'
+                                           : 'ready — drag to orbit · scroll to zoom') + ' · v' + ASSET_V;
     setTimeout(function () { statusEl.style.opacity = '0.55'; }, 4000);
   }
 

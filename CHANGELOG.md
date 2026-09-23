@@ -4,6 +4,9 @@ Version-level changes only. Product requirements live in `REQUIREMENTS.md`.
 
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
 
+## v124 — 2026-09-23
+- Print-ready tooth clearance (user: teeth overlapped on the edges, no manual trimming): A10 was the only full-profile pinion meshing a full-profile gear (crank-A10 both 1.0, zero tangential clearance). Thinned A10 1.0->0.8 (v95 pinion precedent); crank stays full so the approved crank-drum mesh is untouched. Every mesh now has flank clearance: crank-A10 (A10 0.8), A30-idler (idler 0.8), idler-B10 (both 0.8), bevels (0.9/0.8 + asserted tooth-fit). Regen gear_A (forced, watertight TRUE), ASSET_V 87->88. Verify: echo asserts pass, verify_v123 PASSED 0 errors, crank-A10 closeups at 0deg + 2deg both daylight-both-flanks. $fn=60, tol=0.3 kept; no commit (awaiting approval).
+
 ## v123 — 2026-09-23
 - Step 6 done (user: every gear meshes tooth-into-gap): audit closeups of all 4 meshes (crank-A10, A30-idler, idler-B10, Bbev-twister) — every one interleaves correctly, no tip clashes, no adjustments needed. verify_v123 PASSED, 0 errors. No CAD/GLB change, no ASSET_V bump. $fn=60, tol=0.3 kept.
 

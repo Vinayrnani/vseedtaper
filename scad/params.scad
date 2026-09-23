@@ -166,8 +166,8 @@ assert(spool_axle_z == 80, "cone rod (spool_axle_z) must be 80 (+15 lift)");
 // ============================================================
 // Chassis
 // ============================================================
-chassis_x0    = -14; // v22: west edge (was 0); east edge chassis_x0+chassis_len=260 (v86: 248->260 seats take-up 238+16=254 + 6 margin)
-chassis_len   = 274; // v86: 262->274, east extension seats the wind-up reel clear of the pull nip (X gap 6)
+chassis_x0    = -34; // Step10: west -20 (was -14); east edge chassis_x0+chassis_len=270 (west margin for hopper nose, east +10 for takeup)
+chassis_len   = 304; // Step10: 274->304 (west -20 + east +10; east edge 270 seats take-up 238+16=254 + 16 margin)
 chassis_width = 68;
 lane_y = chassis_width / 2;  // lane center, was hardcoded 30
 chassis_height = 125;  // v87 +15: > max(spool top=105, drum top=117) + 5 = 122 ✓ (was 110)
@@ -244,6 +244,14 @@ hopper_axis_z   = 56;  // v87 +15 lift: frozen local axis (assembly Z = drum_axl
 wiper_slot      = 1.2;
 groove_w        = 7;     // inner-face groove width, matches drum cavity track (fits 6mm cavities d6.6)
 groove_d        = 0.7;   // v27 printable: 0.8 left only 1.175 wall (<1.2); 0.7 leaves ~1.275, still clears cavity protrusion 0.6
+// Step12: drum flange register (female) grooves — hopper ONLY (shroud removed).
+// Drum end flanges OD53 r26.5, 1.5 wide at local Y +/-5 (world 29/39).
+// Recess EXPLICIT oversize (not tolerance-derived): r26.65 + w1.8.
+flange_reg_r = 26.8; // recess radius (flange r26.5 + 0.3 print clearance)
+flange_reg_w = 2.1;   // recess width (flange 1.5 + 0.6 oversize)
+flange_reg_y = 5;     // groove centre offset local Y +/-5
+assert(flange_reg_r - (drum_dia + 3)/2 >= 0.2 && flange_reg_r - (drum_dia + 3)/2 <= 0.4, str("Step12: flange register radial clearance must be in [0.2,0.4] (0.3 print): ", flange_reg_r - (drum_dia + 3)/2));
+assert(flange_reg_w - 1.5 >= 0.2, str("Step12: flange register width oversize must be >=0.2: ", flange_reg_w - 1.5));
 
 // ============================================================
 // Crank (v79: at x=160, 20T gear meshes drum 40T at dist=60)
@@ -311,7 +319,7 @@ tape_fold_angle  = 90;
 tape_fold_wall   = 5.5;
 tape_shoulder_r  = 1.5;
 tape_shoulder_ang = 60;
-tape_x0          = chassis_x0;   // -14: spans spool(-6)..leader start (flat ribbon no longer dangles under/past the reel)
+tape_x0          = -14;   // Step10 DECOUPLED from chassis_x0 (was =chassis_x0): ribbon start fixed at spool approach; chassis west extends to -34 without dragging tape/dip. tape_len stays 234
 // v45 WIND-UP LEADER (forensic fix: the flat ribbon used to run UNDER the
 // bare reel core with a ~13 gap and dangle 14 past the reel to 256 while
 // the viewer scroll slid it +/-63 per rev). Now the flat ribbon ENDS at
@@ -663,8 +671,10 @@ assert(v115_I_y1 <= crank_mount_y + crank_arm_gap - 5, "idler tip must stay belo
 assert((v115_Ix - 11) - (v105_pillar_x[0]+3) >= 1, "idler gear must clear pillar0");
 // idler gear vs hopper drum (100,75 r33.8): radial:
 assert(sqrt(pow(v115_Ix-100,2)+pow(v115_Iz-75,2)) - 33.8 - 11 >= 1, "idler gear must clear the hopper radially");
-// idler gear (bottom y70) clears the B hub top (62.5) and twister sweep top (55.75):
-assert(v115_I15_y0 >= 63, "idler gear must clear the B hub");
+// idler gear (bottom y70) clears the B bevel top (57.5) and twister sweep top (55.75):
+// (Step 1: r8 hub + back web removed — tallest B part below the idler is now
+// the bevel envelope; root frustum r21 top sits at the heel 56.5.)
+assert(v115_I15_y0 >= v98_Bbev_y1 + 2, "idler gear must clear the B bevel top");
 assert(v115_I15_y0 - (32+23.75) >= 5, "idler gear must clear the twister sweep");
 // idler shaft (r4) vs A30 (r20.75) / B10 (r8.25) / B shaft (r4): true-distance:
 assert(28.875 - 20.75 - 4 >= 1, "idler shaft must clear the A30 blank");
@@ -692,8 +702,8 @@ assert(tw_relief_r0 <= 22.5 && 22.5 <= tw_relief_r1, "B heel corner must float i
 assert(tw_relief_r0 - 7.8 >= 1, "relief must keep >=1 wall to the tape bore");
 // B shaft east surface (Bx+4) clears the twister toe plane by >=1.5:
 assert((tw_bev_heel_x - tw_bev_face*cos(45)) - (v98_Bx + 4) >= 1.5, "B shaft must clear the twister toe plane");
-// B parts (bottom y43/41) clear the pedestal top edge (lane_y+5=39):
-assert(v98_B_y0 - 39 >= 1, "B shaft must clear the pedestal in y");
+// B parts (bottom y54) clear the pedestal/foot top Y edge (Step-8 foot to lane_y+7=41):
+assert(v98_B_y0 - (lane_y + 7) >= 1, "B shaft must clear the pedestal foot in y");
 // B shaft bottom vs plow exit flare (axis (159,34,32), r10.5 worst case):
 assert(sqrt(pow(v98_Bx-159,2)+pow(v98_B_y0-34,2)) - 10.5 >= 1.0, "B shaft must clear the plow exit flare");
 // Step 5 outboard wall asserts: A tip 2 deep in the plate bore (78-81);
@@ -753,7 +763,7 @@ assert(sqrt(pow(v98_Bx-crank_axle_x,2)+pow(v98_Bz-crank_axle_z,2)) - 7.5 - hex_a
 assert(v97_A30_y0 >= chassis_width + 2, "A30 must sit outside the front wall");
 assert(v97_A_cd - 20 - hex_axle_r >= 1, "A30 must clear the crank shaft (true-distance)");
 assert(v97_A30_y1 + 5 <= crank_mount_y + crank_arm_gap, "A30 must clear the crank-arm sweep");
-// B shaft spans hub + B10 (bevel fused via blank between):
+// B shaft spans bevel + B10 (bevel fused via root frustum between, shaft-pierced):
 assert(v98_Bbev_y0 <= v98_B_y0 && v98_B_y0 <= v98_Bbev_y1 && v98_B_y1 >= v98_B10_y1, "B shaft must span bevel and B10 (stub cut inside the bevel band)");
 // B station vs A cluster (A30 outer r20.75, shaft r4): true-distance:
 assert(sqrt(pow(v98_Bx-v97_Ax,2)+pow(v98_Bz-v97_Az,2)) - 20.75 - 4 >= 1, "B must clear the A cluster (true-distance)");
@@ -761,8 +771,8 @@ assert(sqrt(pow(v98_Bx-v97_Ax,2)+pow(v98_Bz-v97_Az,2)) - 20.75 - 4 >= 1, "B must
 assert(sqrt(pow(v98_Bx-v97_Ax,2)+pow(v98_Bz-v97_Az,2)) - 12 - 23.75 >= 1, "B bevel heel must clear the A10 blank by >=1");
 // B10 (outer r8.25) vs teeth sweep R27 about (34,32): radial:
 assert(sqrt(pow(v98_Bx-34,2)+pow(v98_Bz-32,2)) - 8.25 > 27, "B10 must clear the teeth sweep radially");
-// Bbev20 blank (tip bound r11) vs pin sweep R24: radial:
-assert(sqrt(pow(v98_Bx-34,2)+pow(v98_Bz-32,2)) - 11 > 24, "B bevel blank must clear the pin sweep radially");
+// Bbev36 heel (outer r23.75, was stale Bbev20 tip bound r11) vs pin sweep R24: radial:
+assert(sqrt(pow(v98_Bx-34,2)+pow(v98_Bz-32,2)) - 23.75 > 24, "B bevel heel must clear the pin sweep radially");
 // B10 top (Bz+8.25) vs crank-gear bottom (axle 104.93 - r22): z-clear:
 assert(v98_Bz + 8.25 < crank_axle_z - 22, "B10 must stay below the crank-gear sweep");
 // B10 east (Bx+8.25) vs pull nip: x-clear:
@@ -884,6 +894,8 @@ assert(abs(vpull_gap - 9.5) < 0.01, str("v52: cushioned nip gap must be 9.5+-0.0
 assert(abs(2*vpull_off - 2*vpull_sleeve_r - vpull_gap) < 0.01, str("v52: nip offset must satisfy 2*off - 2*sleeve_r == gap (12.4/7.65/9.5): ", 2*vpull_off - 2*vpull_sleeve_r));
 assert(takeup_x > pull_x, str("wind-up reel must sit east of the pull nip: ", takeup_x));
 assert(takeup_x + takeup_flange_r <= chassis_x0 + chassis_len + 4, str("take-up flange must stay ~inside the chassis east edge: ", takeup_x + takeup_flange_r));
+assert(spool_axle_x - chassis_x0 >= 20, str("Step10: west margin spool(-6) to west edge must be >=20: ", spool_axle_x - chassis_x0));
+assert(chassis_x0 + chassis_len - (takeup_x + takeup_flange_r) >= 10, str("Step10: east margin east edge to takeup flange must be >=10: ", chassis_x0 + chassis_len - (takeup_x + takeup_flange_r)));
 assert(takeup_z - takeup_flange_r >= 0, str("take-up flange bottom must stay >= 0: ", takeup_z - takeup_flange_r));
 assert(takeup_z + takeup_flange_r <= chassis_height, str("take-up flange top must fit below wall top: ", takeup_z + takeup_flange_r));
 assert(tape_x0 + tape_len >= tape_flat_end, str("v45: flat ribbon must reach the leader start: ", tape_x0 + tape_len));

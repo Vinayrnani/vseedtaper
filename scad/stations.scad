@@ -285,11 +285,21 @@ module twister_axle() {
     // v87 +15 lift: tube centre twister_axle_z=32, tube bottom 24.5 meets pedestal top 24.5.
     assert(twister_axle_z == 32, "twister_axle: bore centre must be 32 (tape_z 28 + 4)");
     assert(24.5 == twister_axle_z - 7.5, "twister_axle: pedestal top must meet lifted tube bottom (32-7.5)");
+    // Step-8 root foot envelope (westward flare skirt x166..174, y27..41, z0..6):
+    // east face flush with the pedestal (keeps the bevel-toe gap); top z6 stays
+    // 15 below the plow-flare bound (z21.5); clears the static collar (176.5).
+    assert(166 + 8 == tw_ped_x1, "Step-8 foot must end flush with pedestal east face");
+    assert((twister_axle_z - 10.5) - 6 >= 15, "Step-8 foot top must stay 15 below the plow-flare bound");
+    assert(tw_collar_x0 - 174 >= 2, "Step-8 foot must clear the static collar");
     difference() {
         union() {
             // Pedestal: x170..174, y lane_y-5..lane_y+5, z0..24.5 (fused)
             translate([tw_ped_x0, lane_y - 5, 0])
                 cube([4, 10, 24.5], center=false);
+            // Step-8 root foot: westward flare skirt x166..174, y27..41, z0..6
+            // (fused to pedestal + base; top ducks 15 under the plow flare).
+            translate([166, lane_y - 7, 0])
+                cube([8, 14, 6], center=false);
             translate([0, lane_y, twister_axle_z]) {
                 // Tube: x172..193.5, OD15, Ø10 through-bore (v122: truncated;
                 // east tip features retired with the old snap — nose at
