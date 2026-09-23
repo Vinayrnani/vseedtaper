@@ -4,6 +4,12 @@ Version-level changes only. Product requirements live in `REQUIREMENTS.md`.
 
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
 
+## v123 — 2026-09-23
+- Step 6 done (user: every gear meshes tooth-into-gap): audit closeups of all 4 meshes (crank-A10, A30-idler, idler-B10, Bbev-twister) — every one interleaves correctly, no tip clashes, no adjustments needed. verify_v123 PASSED, 0 errors. No CAD/GLB change, no ASSET_V bump. $fn=60, tol=0.3 kept.
+
+## v122 — 2026-09-23
+- Axle nose manifold rebuild (closes the v121 known issue): east-tip coplanar end-caps (tube/annulus/cap at x197) + stacked nose cylinders caused 219 non-manifold edges (histogram: 151 at the tip, nose itself clean). Fix: tube truncated to x193.5 with a single terminal face; annulus/groove/cap blocks deleted (spent old-snap features); collar inner embedded 0.1; nose rebuilt as one revolved annular profile. Regen twister_axle (forced) — watertight TRUE confirmed by trimesh. ASSET_V 86→87. Verify: echo asserts pass, verify_v118 PASSED (rebuilt nose closeups), 0 errors. $fn=60, tol=0.3 kept.
+
 ## v121 — 2026-09-23
 - Step 7 done (user: remove Cone A and Cone B, not needed): spool cones out of the assembly + dispatch + viewer (PART_DEFS, ORDER, spoolGroup) + regen script (ALL_GLB, cone_a/b cases); single_cone/spool_cones modules deleted (no callers remain); retired cone GLBs + print STLs deleted (v97 precedent). Spool rod + mounts + params + asserts stay (tape path untouched, feeds from off-machine supply now). No GLB regen needed (deletions only). Verify: echo asserts pass, verify_v98 + verify_v116 PASSED, 0 errors. Known issue carried: twister_axle nose non-manifold (watertight warning on regen — stacked-cylinder joints; rotate_extrude rebuild queued). $fn=60, tol=0.3 kept.
 

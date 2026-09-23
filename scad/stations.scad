@@ -291,70 +291,57 @@ module twister_axle() {
             translate([tw_ped_x0, lane_y - 5, 0])
                 cube([4, 10, 24.5], center=false);
             translate([0, lane_y, twister_axle_z]) {
-                // Tube: x172..197, OD15, Ø10 through-bore
+                // Tube: x172..193.5, OD15, Ø10 through-bore (v122: truncated;
+                // east tip features retired with the old snap — nose at
+                // 184-190 is the only retainer now; terminal annulus face
+                // at 193.5 is a single clean cap)
                 translate([tw_mouth_x, 0, 0])
                     rotate([0, 90, 0])
-                        cylinder(h=25, r=15/2, center=false, $fn=60);
+                        cylinder(h=21.5, r=15/2, center=false, $fn=60);
                 // Funnel flare at mouth x172 (flared entry for tape threading)
                 translate([tw_mouth_x, 0, 0])
                     rotate([0, 90, 0])
                         cylinder(h=3, r1=12, r2=15/2, center=false, $fn=60);
-                // Static collar ring r9 x176.5..178 (fused on tube exterior)
+                // Static collar ring r9 x176.5..178.5 (fused on tube exterior;
+                // inner r7.4 embeds 0.1 into the tube OD — kills the
+                // coincident-skin seam, invisible outside)
                 translate([tw_collar_x0, 0, 0])
                     rotate([0, 90, 0])
                         difference() {
                             cylinder(h=tw_collar_x1-tw_collar_x0, r=tw_collar_r, center=false, $fn=60);
                             translate([0, 0, -epsilon])
-                                cylinder(h=tw_collar_x1-tw_collar_x0+2*epsilon, r=15/2, center=false, $fn=60);
+                                cylinder(h=tw_collar_x1-tw_collar_x0+2*epsilon, r=15/2 - 0.1, center=false, $fn=60);
                         }
-                // Full annulus wall x186..197: r5..7.5 (2.5mm solid wall over r5 bore)
-                // Single 360° ring — NOT per-finger — keeps it chunky-solid
-                translate([tw_finger_base_x0, 0, 0])
+                // (v122: old full-annulus end wall deleted — its end caps at
+                // x197 coincided with the tube/cap caps (non-manifold); the
+                // nose solid + tube carry the tip now.)
+                // v122 Step-3 manifold rebuild: ONE solid of revolution for the
+                // whole nose profile (stacked face-touching cylinders broke
+                // watertightness). Annular profile (bore stays open): tube
+                // r7.5 -> shoulder r9 (catch) -> ramp -> ogive tip r5.5.
+                // Profile base embeds 1 into the tube; gap slots below split
+                // it into 2 flex legs at ±Z.
+                translate([tw_lock_x0 - 1, 0, 0])
                     rotate([0, 90, 0])
-                        linear_extrude(height=tw_finger_base_x1-tw_finger_base_x0)
-                            difference() {
-                                circle(r=7.5, $fn=60);
-                                circle(r=5, $fn=60);
-                            }
-                // v118 Step 3: Essentra-style snap arrow nose — full-360 profile;
-                // two gap slots below split it into 2 flex legs at ±Z.
-                // Shoulder cylinder r9 x184.5..185.5 (barb catch vs hub bore 7.8)
-                translate([tw_lock_x0, 0, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h=1, r=tw_lock_barb_r, center=false, $fn=60);
-                // Ramp cone r9→r7 x185.5..187.5 (hub-bore lead-in while seating)
-                translate([tw_lock_x0 + 1, 0, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h=2, r1=tw_lock_barb_r, r2=7, center=false, $fn=60);
-                // Ogive cone r7→r5.5 x187.5..190 (insertion lead-in to tip)
-                translate([tw_lock_x0 + 3, 0, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h=tw_lock_x1 - (tw_lock_x0 + 3), r1=7, r2=tw_lock_tip_r, center=false, $fn=60);
+                        rotate_extrude($fn=60)
+                            polygon(points=[
+                                [tw_bore_d/2, 0],
+                                [tw_axle_od/2, 0],
+                                [tw_axle_od/2, 1],
+                                [tw_lock_barb_r, 1],
+                                [tw_lock_barb_r, 2],
+                                [7, 4],
+                                [tw_lock_tip_r, 6.5],
+                                [tw_bore_d/2, 6.5]]);
             }
         }
-        // Through-bore Ø10 (full tube length)
+        // Through-bore Ø10 (full tube length, through the terminal face)
         translate([0, lane_y, twister_axle_z])
             translate([tw_mouth_x, 0, 0])
                 rotate([0, 90, 0])
-                    cylinder(h=25 + 2*epsilon, r=5, center=false, $fn=60);
-        // Hub bore groove r9 x193.5..196 (recess in bore wall)
-        translate([0, lane_y, twister_axle_z])
-            translate([tw_groove_x0, 0, 0])
-                rotate([0, 90, 0])
-                    difference() {
-                        cylinder(h=tw_groove_x1-tw_groove_x0, r=tw_groove_r, center=false, $fn=60);
-                        translate([0, 0, -epsilon])
-                            cylinder(h=tw_groove_x1-tw_groove_x0+2*epsilon, r=5, center=false, $fn=60);
-                    }
-        // Annular cap face at tip: r5..r7 ring x184.5..185 (1mm face, bore Ø10 through)
-        translate([0, lane_y, twister_axle_z])
-            translate([tw_cap_x0, 0, 0])
-                rotate([0, 90, 0])
-                    difference() {
-                        cylinder(h=tw_cap_x1-tw_cap_x0, r=tw_cap_r1, center=false, $fn=60);
-                        translate([0, 0, -epsilon])
-                            cylinder(h=tw_cap_x1-tw_cap_x0+2*epsilon, r=tw_cap_r0, center=false, $fn=60);
-                    }
+                    cylinder(h=21.5 + 2*epsilon, r=5, center=false, $fn=60);
+        // (v122: hub-bore groove + tip cap ring deleted — spent features of the
+        // old east retention; interior end caps fed the non-manifold cluster.)
         // 3 uniform through-slots at 60°, 180°, 300° (radial cuts through annulus)
         // v118: width 1.5mm uniform x180..183 (truncated; 0.5 ligament to leg root 183.5)
         translate([0, lane_y, twister_axle_z])
@@ -366,20 +353,8 @@ module twister_axle() {
                         translate([tw_slot_x1-epsilon, -tw_slot_w1/2, -tw_slot_r1])
                             cube([epsilon, tw_slot_w1, 2*tw_slot_r1]);
                     }
-        // v118: shave tube outside the nose profile x185.5..190 (tube r7.5 would
-        // otherwise fill the taper; ramp+ogive keep-solids protect the profile itself)
-        translate([0, lane_y, twister_axle_z])
-            difference() {
-                translate([tw_lock_x0 + 1, 0, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h=tw_lock_x1 - (tw_lock_x0 + 1), r=20, center=false, $fn=60);
-                translate([tw_lock_x0 + 1, 0, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h=2, r1=tw_lock_barb_r, r2=7, center=false, $fn=60);
-                translate([tw_lock_x0 + 3, 0, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h=tw_lock_x1 - (tw_lock_x0 + 3), r1=7, r2=tw_lock_tip_r, center=false, $fn=60);
-            }
+        // (v122: old shave-difference deleted with the stacked nose —
+        // the revolved profile needs no shaving.)
         // v118: two single-sided gap slots x183.5..190.5 split the nose into 2 legs
         // at ±Z (cut from y=4.5 outward, z-width tw_gap_w; legs at ±Z untouched)
         translate([0, lane_y, twister_axle_z])
