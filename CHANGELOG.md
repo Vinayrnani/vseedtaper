@@ -4,6 +4,18 @@ Version-level changes only. Product requirements live in `REQUIREMENTS.md`.
 
 Status: AWAITING USER FINAL APPROVAL — uncommitted.
 
+## v121 — 2026-09-23
+- Step 7 done (user: remove Cone A and Cone B, not needed): spool cones out of the assembly + dispatch + viewer (PART_DEFS, ORDER, spoolGroup) + regen script (ALL_GLB, cone_a/b cases); single_cone/spool_cones modules deleted (no callers remain); retired cone GLBs + print STLs deleted (v97 precedent). Spool rod + mounts + params + asserts stay (tape path untouched, feeds from off-machine supply now). No GLB regen needed (deletions only). Verify: echo asserts pass, verify_v98 + verify_v116 PASSED, 0 errors. Known issue carried: twister_axle nose non-manifold (watertight warning on regen — stacked-cylinder joints; rotate_extrude rebuild queued). $fn=60, tol=0.3 kept.
+
+## v120 — 2026-09-23
+- Step 5 done (user: twister stays put in X, spins free): collar east 178→178.5 (west running clearance 0.5 to hub face 179); total axial play 1.0 (0.5 snap + 0.5 collar) enforced fail-loud with thrust-overlap assert; bore slip 0.6 kept for free spin. Regen twister_axle (forced), ASSET_V 85→86. Verify: echo asserts pass, axle closeups + verify_v98/v116 PASSED, 0 errors. $fn=60, tol=0.3 kept; no commit (steps continue).
+
+## v119 — 2026-09-23
+- Rotation direction fix (user: idler ran opposite Gear A): viewer B/idler signs were flipped by a stale "negated angles" comment — corrected to preserve CAD sign (crank/drum approved mesh proves the convention). Train now alternates correctly: A -2x / idler +4x / B -6x / twister +6x (verified numerically incl. signs). Viewer-only change (no CAD/GLB), no ASSET_V bump. Verify: verify_v98 PASSED with signed ratios, 0 errors. No commit (steps continue).
+
+## v118 — 2026-09-23
+- Step 3 done (user: snap-fit twister axle like the Essentra split-shank arrow nose): axle east tip rebuilt — old 3-finger array removed, 2-leg arrow nose (legs at ±Z, 3.5mm gap slots, r9 shoulder ring with west face at x184.5 catching the seated hub east face 184, ~20° lead-in ramp, ogive tip to r5.5, legs root into full tube at x190); old slots truncated to x183 (0.5 ligament to leg roots); plain OD15 tube continues to x197 as insertion guide; groove/cap kept (rotor passes clear). Fail-loud asserts (barb catch 1.2, shoulder clearance 0.5, gap ≥2.5). Regen twister_axle (forced, watertight), ASSET_V 84→85. Verify: echo asserts pass, verify_v118 PASSED (nose solo + assembled snap closeups, 0 errors). $fn=60, tol=0.3 kept; no commit (steps continue).
+
 ## v117 — 2026-09-23
 - Step 2 done (user: extend outboard wall to support B; idler outboard; cut inboard stubs): wall plate lowered z40→26 + 2 new pillars + B bore re-added (wall carries A+idler+B, tips seated 2 deep); B shaft 45-76→54-80, idler 62-80→66-80, A 47-83→49.5-83 (functionless inboard tails cut). Fixed 2 defects the build surfaced: wall slip bores never cut the plate (wrong rotate sign since v108 — all three fixed together, why: a bore that misses its plate is a bug) + B hub floated into the idler gear (reseated on web). Idler outboard confirmed (tip in wall bore). Regen gear_A/gear_B/gear_I/gearwall (forced, watertight), ASSET_V 83→84. Verify: echo asserts pass, verify_v98 + verify_v116 PASSED, 0 errors. $fn=60, tol=0.3 kept; no commit (steps continue).
 

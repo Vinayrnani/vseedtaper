@@ -1,17 +1,4 @@
-module single_cone() {
-    difference() {
-        cylinder(h=cone_h, r1=cone_r_big, r2=cone_r_small, center=false);
-        translate([0,0,cone_h])
-            hex_hole(length=cone_h+2, flat_across=hex_axle_flat, clearance=tolerance);
-        translate([0,0,cone_h-1])
-            cylinder(h=2, r1=cone_r_small-1, r2=cone_r_small, center=false);
-    }
-}
-
-module spool_cones() {
-    single_cone();
-    translate([50, 0, 0]) single_cone();
-}
+// v121 Step 7: single_cone/spool_cones deleted with the cones (no callers remain).
 
 // ============================================================
 // 3. Hopper (v17: SINGLE printed piece — cover + trough joined at SIDES).

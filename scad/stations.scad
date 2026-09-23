@@ -281,6 +281,7 @@ module twister_axle() {
     // Absolute coordinates: pedestal (x170..174, y lane_y±5, z0..24.5)
     // fused with tube (x172..197, OD15, Ø10 through-bore) + collar (r9 x176.5..178)
     // + groove in hub bore (r9 x193.5..196) + full annulus wall (r5..7.5 x186..197) with 3 tapered slots.
+    // v118 Step 3: east-tip snap fingers removed; Essentra-style 2-leg nose x184.5..190 + gap slots x183.5..190.5.
     // v87 +15 lift: tube centre twister_axle_z=32, tube bottom 24.5 meets pedestal top 24.5.
     assert(twister_axle_z == 32, "twister_axle: bore centre must be 32 (tape_z 28 + 4)");
     assert(24.5 == twister_axle_z - 7.5, "twister_axle: pedestal top must meet lifted tube bottom (32-7.5)");
@@ -315,55 +316,20 @@ module twister_axle() {
                                 circle(r=7.5, $fn=60);
                                 circle(r=5, $fn=60);
                             }
-                // 3 barb fingers @120°: ramp r7.5→r9 + barb r9 + tip r9→r7
-                for (i=[0:tw_finger_n-1])
-                    rotate([i*120, 0, 0]) {
-                        // Ramp section x181..182: r7.5 → r9 (protruding ramp)
-                        translate([tw_finger_ramp_x0, 0, 0])
-                            rotate([0, 90, 0])
-                                hull() {
-                                    linear_extrude(height=epsilon)
-                                        intersection() {
-                                            circle(r=15/2, $fn=60);
-                                            rotate([-tw_finger_angle/2, 0, 0])
-                                                square([15, 15]);
-                                        }
-                                    translate([0, 0, tw_finger_ramp_x1-tw_finger_ramp_x0-epsilon])
-                                        linear_extrude(height=epsilon)
-                                            intersection() {
-                                                circle(r=tw_finger_barb_r, $fn=60);
-                                                rotate([-tw_finger_angle/2, 0, 0])
-                                                    square([15, 15]);
-                                            }
-                                }
-                        // Barb section x182..183.5: r9 (flat locking shoulder)
-                        translate([tw_finger_barb_x0, 0, 0])
-                            rotate([0, 90, 0])
-                                linear_extrude(height=tw_finger_barb_x1-tw_finger_barb_x0)
-                                    intersection() {
-                                        circle(r=tw_finger_barb_r, $fn=60);
-                                        rotate([-tw_finger_angle/2, 0, 0])
-                                            square([15, 15]);
-                                    }
-                        // Tip taper x183.5..185: r9 → r7
-                        translate([tw_finger_tip_x0, 0, 0])
-                            rotate([0, 90, 0])
-                                hull() {
-                                    linear_extrude(height=epsilon)
-                                        intersection() {
-                                            circle(r=tw_finger_barb_r, $fn=60);
-                                            rotate([-tw_finger_angle/2, 0, 0])
-                                                square([15, 15]);
-                                        }
-                                    translate([0, 0, tw_finger_tip_x1-tw_finger_tip_x0-epsilon])
-                                        linear_extrude(height=epsilon)
-                                            intersection() {
-                                                circle(r=tw_finger_tip_r, $fn=60);
-                                                rotate([-tw_finger_angle/2, 0, 0])
-                                                    square([15, 15]);
-                                            }
-                                }
-                    }
+                // v118 Step 3: Essentra-style snap arrow nose — full-360 profile;
+                // two gap slots below split it into 2 flex legs at ±Z.
+                // Shoulder cylinder r9 x184.5..185.5 (barb catch vs hub bore 7.8)
+                translate([tw_lock_x0, 0, 0])
+                    rotate([0, 90, 0])
+                        cylinder(h=1, r=tw_lock_barb_r, center=false, $fn=60);
+                // Ramp cone r9→r7 x185.5..187.5 (hub-bore lead-in while seating)
+                translate([tw_lock_x0 + 1, 0, 0])
+                    rotate([0, 90, 0])
+                        cylinder(h=2, r1=tw_lock_barb_r, r2=7, center=false, $fn=60);
+                // Ogive cone r7→r5.5 x187.5..190 (insertion lead-in to tip)
+                translate([tw_lock_x0 + 3, 0, 0])
+                    rotate([0, 90, 0])
+                        cylinder(h=tw_lock_x1 - (tw_lock_x0 + 3), r1=7, r2=tw_lock_tip_r, center=false, $fn=60);
             }
         }
         // Through-bore Ø10 (full tube length)
@@ -390,7 +356,7 @@ module twister_axle() {
                             cylinder(h=tw_cap_x1-tw_cap_x0+2*epsilon, r=tw_cap_r0, center=false, $fn=60);
                     }
         // 3 uniform through-slots at 60°, 180°, 300° (radial cuts through annulus)
-        // Width 1.5mm uniform x176..185, radial r4..r8
+        // v118: width 1.5mm uniform x180..183 (truncated; 0.5 ligament to leg root 183.5)
         translate([0, lane_y, twister_axle_z])
             for (g=[0:tw_finger_n-1])
                 rotate([g*120 + 60, 0, 0])
@@ -400,11 +366,27 @@ module twister_axle() {
                         translate([tw_slot_x1-epsilon, -tw_slot_w1/2, -tw_slot_r1])
                             cube([epsilon, tw_slot_w1, 2*tw_slot_r1]);
                     }
-        // Mouth chamfer: 0.5mm lead-in at x174 (bore r5 → annulus r7.5)
+        // v118: shave tube outside the nose profile x185.5..190 (tube r7.5 would
+        // otherwise fill the taper; ramp+ogive keep-solids protect the profile itself)
         translate([0, lane_y, twister_axle_z])
-            translate([tw_finger_base_x0, 0, 0])
-                rotate([0, 90, 0])
-                    cylinder(h=0.5, r1=5, r2=7.5, center=false, $fn=60);
+            difference() {
+                translate([tw_lock_x0 + 1, 0, 0])
+                    rotate([0, 90, 0])
+                        cylinder(h=tw_lock_x1 - (tw_lock_x0 + 1), r=20, center=false, $fn=60);
+                translate([tw_lock_x0 + 1, 0, 0])
+                    rotate([0, 90, 0])
+                        cylinder(h=2, r1=tw_lock_barb_r, r2=7, center=false, $fn=60);
+                translate([tw_lock_x0 + 3, 0, 0])
+                    rotate([0, 90, 0])
+                        cylinder(h=tw_lock_x1 - (tw_lock_x0 + 3), r1=7, r2=tw_lock_tip_r, center=false, $fn=60);
+            }
+        // v118: two single-sided gap slots x183.5..190.5 split the nose into 2 legs
+        // at ±Z (cut from y=4.5 outward, z-width tw_gap_w; legs at ±Z untouched)
+        translate([0, lane_y, twister_axle_z])
+            for (s = [0, 180])
+                rotate([s, 0, 0])
+                    translate([183.5, 4.5, -tw_gap_w/2])
+                        cube([tw_lock_x1 + 0.5 - 183.5, 20, tw_gap_w], center=false);
     }
 }
 

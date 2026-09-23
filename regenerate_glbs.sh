@@ -29,10 +29,10 @@ trap cleanup EXIT
 
 # Usage: ./regenerate_glbs.sh [--force] [part ...]
 #   --force   ignore skip-unchanged cache, regenerate everything selected
-#   part ...  optional subset of the 12 GLB names to (re)generate;
+#   part ...  optional subset of the GLB names to (re)generate;
 #             default is all parts. Valid names:
-#             chassis hopper cartridge plow crank cones rollers
-#             cone_a cone_b rollers_lower rollers_upper tape
+#             chassis hopper cartridge plow crank rollers
+#             rollers_lower rollers_upper tape
 #             twister pull_a pull_b takeup
 FORCE=0
 FILTER=()
@@ -44,7 +44,7 @@ for arg in "$@"; do
     fi
 done
 
-ALL_GLB="chassis hopper cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister twister_axle pull_a pull_b takeup gear_A gear_B gear_I gearwall"
+ALL_GLB="chassis hopper cartridge plow crank rollers rollers_lower rollers_upper tape twister twister_axle pull_a pull_b takeup gear_A gear_B gear_I gearwall"
 if [ "${#FILTER[@]}" -gt 0 ]; then
     for p in "${FILTER[@]}"; do
         case " $ALL_GLB " in
@@ -76,7 +76,7 @@ make_scad() {
 }
 
 # Only materialize temp .scad files for the requested (WANT) subset, one per
-# base. cone_a/cone_b/rlow_s/rup_s strip the all-assembly block and append
+# base. rlow_s/rup_s strip the all-assembly block and append
 # their single-shape call (pull_rollers() is fused; viewer pivots singles).
 ensure_scad_for_base() {
     local base="$1"
@@ -85,16 +85,6 @@ ensure_scad_for_base() {
         return 0
     fi
     case "$base" in
-        cone_a)
-            sed "s/part_to_render = \"all\"/part_to_render = \"cone_a\"/" "$SCAD_SRC" | \
-                sed '/^if (part_to_render == "all") {$/,/^}$/d' > "$out"
-            echo "single_cone();" >> "$out"
-            ;;
-        cone_b)
-            sed "s/part_to_render = \"all\"/part_to_render = \"cone_b\"/" "$SCAD_SRC" | \
-                sed '/^if (part_to_render == "all") {$/,/^}$/d' > "$out"
-            echo "translate([50, 0, 0]) single_cone();" >> "$out"
-            ;;
         rlow_s)
             sed "s/part_to_render = \"all\"/part_to_render = \"rollers\"/" "$SCAD_SRC" | \
                 sed '/^if (part_to_render == "all") {$/,/^}$/d' > "$out"

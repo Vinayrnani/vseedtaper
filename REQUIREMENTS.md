@@ -11,7 +11,7 @@ OpenSCAD CAD + static three.js viewer for a **seed-tape making machine** (v2). N
 ## Core functionality
 
 ### Machine (CAD — `seed_tape_machine_v2.scad`)
-- Builds the full assembly: chassis, hopper, drum/cartridge, cones, plow (six-turner), tape path + former collar, cradle, twister + twister axle + pedestal, pull rollers a/b + bridge, takeup, crank.
+- Builds the full assembly: chassis, hopper, drum/cartridge, plow (six-turner), tape path + former collar, cradle, twister (split-shank snap-arrow nose on the axle locks the hub; free spin, no X drift) + twister axle + pedestal, pull rollers a/b + bridge, takeup, crank. Tape feeds from off-machine supply (spool cones removed v121; spool rod stays).
 - Drive: crank → drum gear mesh (module 2, fail-loud mesh distance); crank shaft runs through the crank-gear bore, handle stands 20 off the wall. Live train: crank20 → A[10+30] (-2x) → idler 15T (+4x) → B[10+bev36] (-6x) → twister bevel 36T (+6x = 2.0 wraps/seed) via 45° mitre at apex (155,34,32). Outboard wall extended down to z26 carries A + idler + B tips (2 deep); functionless inboard shaft stubs cut. Seed rate unchanged at 3 seeds/crank rev.
 - Feed path: hopper drop → plow forms/folders tape → twister orients seed pocket → pull/takeup advance tape. Clearances asserted fail-loud on every stack-up.
 - CAD conventions: `$fn=60` curves, `tol=0.3` (all clearances derive from `tol`).
@@ -19,7 +19,7 @@ OpenSCAD CAD + static three.js viewer for a **seed-tape making machine** (v2). N
 - Fail-loud OpenSCAD asserts for gaps, coplanarity, sweeps, and stack-ups.
 
 ### Special GLB exports
-- `cone_a` / `cone_b`: `single_cone` ± offset.
+- Removed v121: spool cones (tape feeds from off-machine supply).
 - `rollers_lower` / `rollers_upper`: split from fused `pull_rollers()` for independent viewer pivots.
 
 ### Viewer (`web/`)

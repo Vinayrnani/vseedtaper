@@ -388,12 +388,22 @@ tw_snap_n = 3;                    // snap count
 tw_snap_x0 = 194;                 // snap west edge
 tw_snap_x1 = 197;                 // snap east edge
 tw_barb = 0.8;                    // barb lip thickness (radial protrusion)
-  tw_slot_x0 = 188;                 // slot west edge (9mm long, mouth zone start)
-  tw_slot_x1 = 197;                 // slot east edge (tube end)
+  tw_slot_x0 = 180;                 // v118: slot west edge (was 188; max-west under tw_teeth_x1<tw_slot_x0 assert; clear of collar 176.5-178)
+  tw_slot_x1 = 183;                 // v118: slot east edge (was 197; stops 0.5 before leg root 183.5; avoids inverted-hull slice)
   tw_slot_w0 = 1.5;                 // slot width (uniform, no taper)
   tw_slot_w1 = 1.5;                 // slot width (uniform, no taper)
   tw_slot_r0 = 4;                   // slot inner radius
   tw_slot_r1 = 8;                   // slot outer radius
+  // v118 Step 3: Essentra-style 2-leg split-shank snap arrow nose (east tip)
+  tw_lock_n = 2;                    // snap leg count
+  tw_lock_base_ang = 90;            // leg centre angle about X (deg, +Z leg)
+  tw_lock_arc = 150;                // nominal leg arc width (deg, from gap-slot cuts)
+  tw_gap_w = 3.5;                   // leg gap slot width (z-width of each radial cut)
+  tw_lock_x0 = 184.5;               // shoulder west face (seated hub east 184 + shoulder_clr)
+  tw_lock_x1 = 190;                 // nose tip x (plain OD15 guide tube continues to 197)
+  tw_lock_barb_r = 9;               // shoulder/barb outer radius (catch vs hub bore r7.8)
+  tw_lock_tip_r = 5.5;              // lead-in tip radius at nose apex
+  tw_shoulder_clr = 0.5;            // axial shoulder-to-seated-hub clearance (assert 0.3..0.8)
   // Back-face teeth: trapezoidal with angled flanks and back-to-front taper
   // (replaces boxy lugs from v67). Tooth axis along X; back face fuses disc west.
   tw_teeth_x0 = 172;                // teeth west edge (front face, tapered tip)
@@ -418,7 +428,7 @@ tw_groove_x0 = 193.5;             // groove west edge (hub bore recess)
 tw_groove_x1 = 196;               // groove east edge
 tw_groove_r = 9;                  // groove radius
 tw_collar_x0 = 176.5;             // collar west edge (static ring on tube)
-tw_collar_x1 = 178;               // collar east edge
+tw_collar_x1 = 178.5;              // v120 Step 5: collar east edge (west running clearance 0.5 to hub face 179)
 tw_collar_r = 9;                  // collar outer radius
   tw_finger_n = 3;                  // finger count (spring arms)
   tw_finger_angle = 60;             // 60° wide finger arcs (each finger 60°, gaps 60° = daylight)
@@ -837,6 +847,15 @@ assert(tw_finger_barb_x0 - (tw_bob_x0 + bob_h) >= 0.5, "bobbin-east vs barb-west
 assert(tw_eye_orbit - tw_eye_r - tw_finger_barb_r >= 1, "barb-vs-eyelet-inner radial >=1");
   // West play: hub_x0 vs collar_x1
   assert(tw_hub_x0 - tw_collar_x1 >= 0.5 && tw_hub_x0 - tw_collar_x1 <= 1.0, "west play hub_x0-collar_x1 in [0.5,1.0]");
+  // v120 Step 5: axial retention with free spin — total play (east snap
+  // clearance + west collar clearance) holds the rotor in place in X while
+  // the 0.6 diametral bore slip keeps it spinning free. Hub faces 179/184
+  // are rotor-code truth (local -5..0 at bind_x 184).
+  assert((tw_lock_x0 - 184) + (tw_hub_x0 - tw_collar_x1) >= 0.5
+      && (tw_lock_x0 - 184) + (tw_hub_x0 - tw_collar_x1) <= 1.5,
+      "v120: total axial play (snap + collar) must be 0.5..1.5 (stays put, spins free)");
+  assert(tw_collar_r - tw_hub_bore/2 >= 1.0,
+      "v120: collar thrust overlap ring (collar r - hub bore r) must be >=1.0");
   // Full annulus wall x174..185 (11mm axial span)
   assert(tw_finger_base_x1 - tw_finger_base_x0 == 11, "full annulus axial span must be 11mm");
   // Slot uniform: w0 == w1 == 1.5mm (no taper, kills see-through windows)
@@ -848,6 +867,16 @@ assert(tw_eye_orbit - tw_eye_r - tw_finger_barb_r >= 1, "barb-vs-eyelet-inner ra
   assert(tw_cap_r0 == 5 && tw_cap_r1 == 7, "cap ring inner/outer must be r5..r7");
   // Finger angle 60° for solid look
   assert(tw_finger_angle == 60, "finger angle must be 60 for solid look");
+
+// v118 Step 3: snap-fit nose lock geometry (fail-loud)
+assert(abs(tw_lock_barb_r - tw_hub_bore/2) >= 1.0 && abs(tw_lock_barb_r - tw_hub_bore/2) <= 1.5,
+       "v118: barb catch over hub bore must be 1.0..1.5mm (tw_lock_barb_r - tw_hub_bore/2)");
+assert(tw_lock_x0 - 184 >= 0.3 && tw_lock_x0 - 184 <= 0.8,
+       "v118: shoulder clearance to seated hub east face (hardcoded 184) must be 0.3..0.8mm");
+assert(tw_gap_w >= 2.5, "v118: tw_gap_w must be >= 2.5 (leg flex daylight)");
+assert(183.5 - tw_slot_x1 >= 0.5, "v118: old slot east must stop >=0.5 short of leg root x183.5");
+assert(tw_lock_tip_r + tw_gap_w/2 <= tw_axle_od/2 + 1,
+       "v118: tip r + half gap must stay within OD/2 + 1 (insertion chamfer budget)");
 // Pin tip vs finger base X note (comment only: radial separation >8.7, no conflict)
 assert(pull_x > bind_x, str("pull nip must sit east of the bind station: ", pull_x));
 assert(abs(vpull_spin - 4/3) < 0.001, str("v52: spin compensation must be roller_body_r/vpull_r = 10/7.5 = 4/3 (same surface speed, spacing preserved): ", vpull_spin));

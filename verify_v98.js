@@ -80,6 +80,7 @@ function check(cond, msg) {
         crank: window._crankSpinner.rotation.z,
         A: window._drive.pivots.A.rotation.z,
         B: window._drive.pivots.B.rotation.z,
+        I: window._drive.pivots.I.rotation.z,
         tw: window._pivots.twister.rotation.x,
         drum: window._drumPivot.rotation.z
       }));
@@ -98,7 +99,7 @@ function check(cond, msg) {
       const ok = Math.abs(got - want) < 0.03 * Math.abs(want) + 0.02;
       check(ok, k + ' ratio want ' + want + ' got ' + got.toFixed(3));
     };
-    ratio('A', -2); ratio('B', 6); ratio('tw', 6); ratio('drum', -0.5); // v116 Step 2: idler drives B (viewer signs), twister +6x
+    ratio('A', -2); ratio('B', -6); ratio('I', 4); ratio('tw', 6); ratio('drum', -0.5); // v118: external pairs alternate, twister +6x
 
     await page.evaluate(() => { window._overrideAngle = null; });
     await page.waitForTimeout(200);

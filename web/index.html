@@ -250,8 +250,10 @@
   // has M baked in (GLB geometry is raw OpenSCAD coords), so root-local IS the
   // Y-up machine frame: X[0,200] length, Y[0,110] height, Z[-60,0] width.
   // Chassis interior in root-local: X[0,200], Y[0,110], Z[-60,0].
-  // Axles (OpenSCAD +Y) -> root-local -Z, so animated pivots use rotation.z
-  // with negated OpenSCAD angles: rotation.z = -(angle about +Y).
+  // Axles (OpenSCAD +Y) map to pivots 1:1 — viewer rotation.z PRESERVES
+  // the CAD angle about +Y (crank/drum approved mesh proves it: opposite
+  // signs on external pairs). v118: an old "negated angles" note here was
+  // wrong and caused flipped B/idler signs — corrected.
   // Phase 2: +15 mm lift applied to drum/spool/cradle/plow/crank/pull/takeup/twister pivots
   // (root-Y = CAD-Z). Hopper pivot stays y=4; chassis def [0,-15,0] unchanged.
   // Recentered: machine is 200 long (x 0-200), height 110 (y 0-110).
@@ -293,12 +295,7 @@
     hopperPivot.position.set(100, 19, -34);
     root.add(hopperPivot);
 
-  // Spool cones at OpenSCAD (-6, 4, 80) and (-6, 56, 80) (+15)
-  // spoolGroup midpoint at OpenSCAD (-6, 30, 80) -> Three.js (-6, 80, -30)
-  // v22: spool moved west (10->-6), clear of back wall.
-  var spoolGroup = new THREE.Group();
-  spoolGroup.position.set(-6, 80, -34); // +15 lift (CAD spool_z 65→80)
-  root.add(spoolGroup);
+  // v121 Step 7: spoolGroup removed with the cones (spool rod stays in the chassis).
 
   // Seed cradle at OpenSCAD (126, 17.3, 19) -> Three.js (126, 19, -21.3) (+15)
   var cradlePivot = new THREE.Group();
@@ -596,13 +593,13 @@
   window._controls = controls;
   window._partMeshes = {};
    window._pivots = {
-    drum: drumPivot, hopper: hopperPivot, spool: spoolGroup,
+    drum: drumPivot, hopper: hopperPivot,
     cradle: cradlePivot, plow: plowPivot,
     crankMount: crankMount, crankSpinner: crankSpinner,
     twister: twisterPivot, pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
     pivotA: pivotA, pivotB: pivotB, pivotI: pivotI
   };
-  window._drive = { revs: { A: -2, B: 6, I: -4 },
+  window._drive = { revs: { A: -2, B: -6, I: 4 },
     pivots: { A: pivotA, B: pivotB, I: pivotI } };
     window._getPivotData = function() {
     	const data = {
@@ -629,8 +626,8 @@
     drumPivot.rotation.z = crankAngle * DRUM_RATIO + DRUM_PHASE;  // v81: drum -0.5x crank + phase (tooth-into-gap)
     twisterPivot.rotation.x = 6 * crankAngle;                        // v116 Step 2: twister +6x via idler+B+mitre (2.0 wraps/seed)
     pivotA.rotation.z = -2 * crankAngle;                         // v97: A -2x crank (about Y)
-    pivotB.rotation.z = 6 * crankAngle;                          // v116 Step 2: B -6x CAD (viewer negates about Y) via idler
-    pivotI.rotation.z = -4 * crankAngle;                         // v116 Step 2: idler +4x CAD (viewer negates about Y)
+    pivotB.rotation.z = -6 * crankAngle;                         // v118: B -6x CAD, viewer preserves CAD sign (external mesh alternates)
+    pivotI.rotation.z = 4 * crankAngle;                          // v118: idler +4x CAD (opposite A, opposite B)
     pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE);  // v52: nip side A
     pullBPivot.rotation.y = -PULL_SPIN * (2 * crankAngle + GEAR_PHASE); // v52: nip side B
     takeupPivot.rotation.z = -2 * crankAngle;                     // v79: takeup -2x crank
@@ -652,7 +649,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 84; // v117 Step-2 stub cuts + gearwall z0/ext-pillars/B bore, ASSET_V 83->84
+  var ASSET_V = 86; // v120 Step-5 axial retention (twister_axle collar), ASSET_V 85->86
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, -15, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -660,10 +657,6 @@
         parent: hopperPivot, pos: [0, 19.4, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.15 }, // v33: export drops 19.4 to min_z=0 (hover pipe bottom; was 19.9); +19.4 Y re-seats drum centre on pivot, pipe hovers 10 above ribbon top
       { id: 'cartridge', label: 'Cartridge/drum', file: 'stl/cartridge.glb', color: 0x4fa06a,
         parent: drumPivot, pos: [0, 0, 21.55], rot: [Math.PI, 0, 0] }, // v20: GLB drum raised (base 14.05, centre 21.55); Rx(180) keeps drum coaxial with pivot, gear now on front side. Was [0,0,7.5] for pre-v20 export.
-      { id: 'cones_a', label: 'Cones A', file: 'stl/cone_a.glb', color: 0xc96a2b,
-        parent: spoolGroup, pos: [0, 0, 26], rot: [Math.PI, 0, 0] },
-      { id: 'cones_b', label: 'Cones B', file: 'stl/cone_b.glb', color: 0xc96a2b,
-        parent: spoolGroup, pos: [-50, 0, -26], rot: [0, 0, 0] },
       { id: 'plow', label: '6-folder (thin-wall tapered, 0.8 shell)', file: 'stl/plow.glb', color: 0x8a8f98,
         parent: plowPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.6, roughness: 0.4 }, // v56 thin-wall: seeded first-stage U (37..126) arrives, pinched open-C entry dia ~12 (126) -> wide flare dia ~21 (159); outer wrap 300->315deg + inner hook to 160deg (2.5 slit); tail blade + skid flat sit; hollow bore; 2 small ears to chassis holes; part_to_render "plow" compat alias; screw-mounted after the drop (seed lands flat at 100 first)
       { id: 'crank', label: 'Crank (drum drive)', file: 'stl/crank.glb', color: 0xb03a2e,
@@ -688,8 +681,8 @@
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 }, // v108: absolute CAD coords, static
     ];
     // Display order for the parts panel (matches user checklist + tape/seeds extras).
-    var PART_ORDER = ['chassis', 'hopper', 'cartridge', 'cones_a',
-      'cones_b', 'plow', 'crank', 'gear_A', 'gear_B', 'gearwall',
+    var PART_ORDER = ['chassis', 'hopper', 'cartridge',
+      'plow', 'crank', 'gear_A', 'gear_B', 'gearwall',
       'twister', 'twister_axle', 'pull_a', 'pull_b', 'takeup', 'tape', 'seeds'];
 
   var toggleGroups = {};
@@ -952,8 +945,8 @@
     var twAngle = 6 * crankAngle;                                  // v116 Step 2: twister +6x (2.0 wraps/seed)
     twisterPivot.rotation.x = twAngle;
     pivotA.rotation.z = -2 * crankAngle;
-    pivotB.rotation.z = 6 * crankAngle; // v116 Step 2: B -6x CAD
-    pivotI.rotation.z = -4 * crankAngle; // v116 Step 2: idler +4x CAD
+    pivotB.rotation.z = -6 * crankAngle; // v118: B -6x CAD, viewer preserves sign
+    pivotI.rotation.z = 4 * crankAngle; // v118: idler +4x CAD, opposite A and B
     pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE);
     pullBPivot.rotation.y = -PULL_SPIN * (2 * crankAngle + GEAR_PHASE);
     takeupPivot.rotation.z = -2 * crankAngle;                     // v79: takeup -2x crank

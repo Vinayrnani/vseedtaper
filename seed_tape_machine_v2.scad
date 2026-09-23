@@ -6,7 +6,7 @@
       scad/params.scad    — global variables, kinematics, assertions, helpers
       scad/gears.scad     — hex_hole, round_axle_hole, spur_gear, bevel_gear, hex_bolt, bearing_block
       scad/chassis.scad   — chassis()
-      scad/feed.scad      — single_cone, spool_cones, hopper_body, seed_cartridge, seed_cradle
+      scad/feed.scad      — hopper_body, seed_cartridge, seed_cradle (v121: single_cone/spool_cones removed with the cones)
      scad/plow.scad      — scroll_sheet, six_turner, folding_plow
      scad/stations.scad  — seed_tape_bend, former_collar, knurled_roller, pull_rollers, thread_twister, vpull_roller, takeup_reel, crank_assembly
      scad/drive_train.scad — v97 composite take-off (A[10+30] only)
@@ -38,11 +38,8 @@ module animated_assembly() {
     // Static twister axle (absolute coords, no transform — pedestal + tube + snap fingers)
     twister_axle();
 
-    // Spool cones (v87 +15: spool_axle_z=80)
-    translate([spool_axle_x, wall_thick+1, spool_axle_z])
-        rotate([-90,0,0]) single_cone();
-    translate([spool_axle_x, chassis_width-wall_thick-1, spool_axle_z])
-        rotate([90,0,0]) single_cone();
+    // v121 Step 7: spool cones removed (tape feeds from off-machine supply).
+    // Spool rod in the chassis stays (mounts + bores untouched).
 
     // Drum
     translate([drum_axle_x, chassis_width/2, drum_axle_z])
@@ -170,8 +167,6 @@ if (part_to_render == "all") {
     translate([0, 0, -19.4]) hopper_body();
 } else if (part_to_render == "cartridge") {
     seed_cartridge(seed_dia, seed_depth);
-} else if (part_to_render == "cones") {
-    spool_cones();
 } else if (part_to_render == "plow" || part_to_render == "turner") {
     six_turner(); // v39: "plow" kept as compat alias, "turner" is the clean name (same 6-turner GLB)
 } else if (part_to_render == "tape") {
