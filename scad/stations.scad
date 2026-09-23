@@ -188,60 +188,31 @@ module thread_twister() {
                         translate([0, 0, -epsilon])
                             cylinder(h=3 + 2*epsilon, r=15.6/2, center=false, $fn=60);
                     }
-            // 24 trapezoidal teeth with angled flanks and back-to-front taper.
-            // Each tooth is a 3-section hull: back face (wide), mid-depth (visible taper),
-            // front face (narrow). Radial taper via flank_ang, axial taper via taper_ang.
-            // NO bevel_gear module; NO boxy lugs.
-            // Local x: hub east=0 (abs 184), disc= -5..-2 (abs 179..182),
-            // teeth back=-5 (abs 179), teeth front=-12 (abs 172).
-            for (i=[0:tw_teeth_n-1]) {
-                rotate([i*(360/tw_teeth_n), 0, 0]) {
-                    // Local x offsets (hub_east=184, teeth at abs x172..179)
-                    _bk = -5;   // back face (abs 179, fuse disc west)
-                    _fr = -12;  // front face (abs 172)
-                    _md = (_bk + _fr) / 2;  // mid-depth (abs 175.5)
-                    // Back face cross-section (wide)
-                    back_base = [_bk, (tw_teeth_r0+tw_teeth_r1)/2, 0];
-                    back_tip  = [_bk, (tw_teeth_r1+tw_teeth_top_r)/2, 0];
-                    // Mid-depth cross-section (visible taper)
-                    mid_base = [_md, (tw_teeth_r0+tw_teeth_r1)/2, 0];
-                    mid_tip  = [_md, (tw_teeth_r1+tw_teeth_top_r)/2, 0];
-                    // Front face cross-section (narrow, tapered)
-                    front_base = [_fr, (tw_teeth_r0+tw_teeth_r1)/2, 0];
-                    front_tip  = [_fr, (tw_teeth_r1+tw_teeth_top_r)/2, 0];
-                    // Root section (r0..r1): 3-section hull back→mid→front
-                    hull() {
-                        translate(back_base)
-                            cube([epsilon, tw_teeth_r1-tw_teeth_r0, tw_teeth_base_w], center=true);
-                        translate(mid_base)
-                            cube([epsilon, tw_teeth_r1-tw_teeth_r0, (tw_teeth_base_w+tw_teeth_front_base_w)/2], center=true);
-                        translate(front_base)
-                            cube([epsilon, tw_teeth_r1-tw_teeth_r0, tw_teeth_front_base_w], center=true);
-                    }
-                    // Tip section (r1..top_r): 3-section hull back→mid→front
-                    hull() {
-                        translate(back_tip)
-                            cube([epsilon, tw_teeth_top_r-tw_teeth_r1, tw_teeth_tip_w], center=true);
-                        translate(mid_tip)
-                            cube([epsilon, tw_teeth_top_r-tw_teeth_r1, (tw_teeth_tip_w+tw_teeth_front_tip_w)/2], center=true);
-                        translate(front_tip)
-                            cube([epsilon, tw_teeth_top_r-tw_teeth_r1, tw_teeth_front_tip_w], center=true);
-                    }
-                    // Flank connector: back-to-front at root level (radial flank taper)
-                    hull() {
-                        translate(back_base)
-                            cube([epsilon, 0.8, tw_teeth_base_w], center=true);
-                        translate(back_tip)
-                            cube([epsilon, 0.8, tw_teeth_tip_w], center=true);
-                    }
-                    hull() {
-                        translate(front_base)
-                            cube([epsilon, 0.8, tw_teeth_front_base_w], center=true);
-                        translate(front_tip)
-                            cube([epsilon, 0.8, tw_teeth_front_tip_w], center=true);
-                    }
-                }
-            }
+            // v113 straight-bevel ring (photo-style: teeth on a 45° cone
+            // converging at the shared apex, Tredgold form like the B
+            // bevel). v115: rim size, same OD as the twister disc — 36T
+            // m1.25 true mitre with Bbev36: heel pitch circle (local -6.5
+            // = abs 177.5, r22.5) at the disc face, toe (local -9.3 =
+            // abs 174.7, r19.7) solid over the bore. Root frustum + back
+            // web back the teeth; back-cone relief (difference) trims the
+            // heel backs like real bevels and catches the B heel corner.
+            // Disc/hub/pins/eyelets below UNCHANGED.
+            // Local x: hub east=0 (abs 184), apex local -29 (abs 155).
+            translate([16, 0, 0])
+                rotate([0, -90, 0])
+                    bev_teeth(tw_bev_n, 22.5, tw_bev_face, tw_bev_thin, tw_bev_phase, tw_bev_mod);
+            // Root cone frustum under the teeth (canonical z22..25.3 mapped,
+            // embedded 0.3 into the web for manifold union):
+            translate([16, 0, 0])
+                rotate([0, -90, 0])
+                    translate([0, 0, 21.7])
+                        cylinder(h=3.6, r1=21.1, r2=18.2, center=false, $fn=60);
+            // Back web solid r24 (canonical z18.6..22.5 mapped; embedded 0.3
+            // into the tooth heels; bore + relief cut it in the difference):
+            translate([16, 0, 0])
+                rotate([0, -90, 0])
+                    translate([0, 0, 18.6])
+                        cylinder(h=3.9, r=24, center=false, $fn=60);
             // 2 spindle pins: r3, orbit R19, 180 apart, arrow push-lock tips
             for (k=[0:twister_arms-1])
                 rotate([k*180, 0, 0]) {
@@ -285,6 +256,17 @@ module thread_twister() {
         translate([-8, 0, 0])
             rotate([0, 90, 0])
                 cylinder(h=16, r=15.6/2, center=false, $fn=60);
+        // v113 back-cone relief: annulus (r9-13, abs tw_relief_x0..x1)
+        // in the disc west face — catches the B heel corner (standard
+        // bevel back-cone relief; keeps >=1 wall to the bore).
+        // Local x: hub east=0 (abs 184).
+        translate([tw_relief_x0 - 184, 0, 0])
+            rotate([0, 90, 0])
+                difference() {
+                    cylinder(h=tw_relief_x1 - tw_relief_x0, r=tw_relief_r1, center=false, $fn=60);
+                    translate([0, 0, -epsilon])
+                        cylinder(h=tw_relief_x1 - tw_relief_x0 + 2*epsilon, r=tw_relief_r0, center=false, $fn=60);
+                }
         // Ø2 cross-hole near top of each eyelet post (~x=183)
         for (offset=[90, 270])
             rotate([offset, 0, 0]) {

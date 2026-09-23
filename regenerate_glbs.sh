@@ -44,7 +44,7 @@ for arg in "$@"; do
     fi
 done
 
-ALL_GLB="chassis hopper cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister twister_axle pull_a pull_b takeup gear_A gear_B gearwall"
+ALL_GLB="chassis hopper cartridge plow crank cones rollers cone_a cone_b rollers_lower rollers_upper tape twister twister_axle pull_a pull_b takeup gear_A gear_B gear_I gearwall"
 if [ "${#FILTER[@]}" -gt 0 ]; then
     for p in "${FILTER[@]}"; do
         case " $ALL_GLB " in
@@ -206,7 +206,7 @@ base_for = {"rollers_lower": "rlow_s", "rollers_upper": "rup_s"}
 RX90 = trimesh.transformations.rotation_matrix(np.pi / 2, [1, 0, 0])
 RYN90 = trimesh.transformations.rotation_matrix(-np.pi / 2, [0, 1, 0])
 RYP90 = trimesh.transformations.rotation_matrix(np.pi / 2, [0, 1, 0])
-print_rot = {"gear_A": RX90, "gear_B": RX90, "gearwall": RX90}
+print_rot = {"gear_A": RX90, "gear_B": RX90, "gear_I": RX90, "gearwall": RX90}
 
 def convert_one(glb_name):
     base = base_for.get(glb_name, glb_name)

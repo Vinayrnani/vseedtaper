@@ -101,35 +101,45 @@ A_ang = -70;   // A down-east of crank (hopper-clear for the 30T)
 v97_A_cd = (roller_teeth + 10) * gear_module / 2 + 0.75; // 30.75: crank20 -> A10 m2
 v97_Ax = crank_axle_x + v97_A_cd * cos(A_ang); // ~162.52
 v97_Az = crank_axle_z + v97_A_cd * sin(A_ang); // ~76.03
-v97_A_y0 = 47; v97_A_y1 = 83;      // shaft r4 (stub cut; crosses outboard wall, tip ~2 proud)
+v97_A_y0 = 49.5; v97_A_y1 = 83;      // shaft r4 (stub cut; crosses outboard wall, tip ~2 proud)
 v97_A10_y0 = 49; v97_A10_y1 = 55; // A10 m2 6 wide (Step 8: matches crank gear face 49-55)
 v97_A30_y0 = 70; v97_A30_y1 = 75;     // A30 m1.25 30T OUTSIDE the wall (Step 2; B10 follows in Step 3)
 A_rev = -2; // composite spins -2x crank (external mesh flips)
-// v98 second composite (user: 10T + 20T bevel UNDER the A composite):
-// B10(m1.25) meshes A30 in the same band (59-64) [3x step-up] + fused
-// Bbev20(m1.0) foot below (takeoff for the next stage). B on r25.75
-// about A at -15° (up-east, v95-proven clearances).
-B_ang = -90;   // Step 4: B STRAIGHT BELOW A (twister spur setup)
-v98_B_cd = (30 + 10) * 1.25 / 2 + 0.75; // 25.75: A30 -> B10 m1.25
-v98_Bx = v97_Ax + v98_B_cd * cos(B_ang); // =162.52 (under A)
-v98_Bz = v97_Az + v98_B_cd * sin(B_ang); // =50.29 (under A)
-v98_B_y0 = 54; v98_B_y1 = 83;      // shaft r4 (cut below bevel; crosses outboard wall, tip ~2 proud)
-v98_B10_y0 = 70; v98_B10_y1 = 75;  // B10 m1.25 OUTSIDE wall (Step 3: meshes A30 band 70-75)
+// v115 rim mitre (user: twister rim OD, same teeth both sides, 45°/45°):
+// 36T m1.25 both (pitch r22.5, outer r23.75 ≈ disc OD46). Shared apex FIRST.
+tw_apex_x = 155; tw_apex_z = 32;   // shared apex (apex y = lane_y = 34 on the twister X axis)
+tw_bev_n = 36;                     // same count both sides (true mitre 36/36, 45°/45°)
+tw_bev_mod = 1.25;                 // module (rim size)
+tw_bev_face = 4;                   // face along generator (toe r19.67 solid over the bore)
+tw_bev_thin = 0.9;                 // twister tangential thin (backlash)
+v113_B_thin = 0.8;                 // B tangential thin (backlash; v95 pinion-thinning precedent)
+tw_bev_phase = 0; v113_B_phase = 5; // tooth-into-gap (half-pitch of 36T): B teeth mesh twister gullets
+v113_B_heel_y = 56.5;              // B heel pitch circle (apex 34 + r22.5 @45°)
+tw_bev_heel_x = 177.5;             // twister heel pitch circle (apex 155 + r22.5 @45°), at the disc face
+tw_relief_x0 = 177.7; tw_relief_x1 = 179.5; // back-cone relief annulus (trims heel backs like real bevels, catches B heel corner)
+tw_relief_r0 = 20; tw_relief_r1 = 23;
+// B station: Y-axis THROUGH the apex (mate-driven, off the A circle).
+// B10 stays in the A30 band (idle; next-step intermediate meshes it).
+v98_Bx = tw_apex_x; v98_Bz = tw_apex_z;  // =(155, 32)
+v98_B_y0 = 54; v98_B_y1 = 80;      // shaft r4 (v117: inboard stub cut into the bevel band; tip 2 deep in the gearwall slip bore)
+v98_B10_y0 = 70; v98_B10_y1 = 75;  // B10 m1.25 kept (idle for the next step)
 // Step 5 outboard support wall (user: extra wall outside carrying the A/B
 // shaft tips): plate y78-81 over both axes + 4 pillars fused into the front
 // wall (y67-80); A/B shafts run to y80 (tips 2 deep in the d8.6 bores).
 // Gears (tops 75) stay 3 below the plate; plate top (81) stays under the arm.
 v105_wall_x0 = 132; v105_wall_x1 = 192; // plate X span (covers pillars + bores)
-v105_wall_z0 = 40;  v105_wall_z1 = 93;  // plate Z span (6 clear of crank shaft)
+v105_wall_z0 = 26;  v105_wall_z1 = 93;  // plate Z span (v117: z0 40->26 — covers B bore z32 + ext pillars; 6 clear of crank shaft)
 v105_wall_y0 = 78;  v105_wall_y1 = 81;  // plate Y span (3 = wall_thick)
 v105_pillar_x = [137, 187];             // pillar X centres (clear of A30 sweep)
 v105_pillar_z = [45, 88];               // pillar Z centres
 v105_pillar_s = 6;                      // pillar section (6x6, y67-80)
+v105_ext_x = [137, 187];                // v117 Step 2: extension pillar X centres (same stations, z32 row)
+v105_ext_z = 32;                        // v117 Step 2: extension pillar Z centre (B slip-bore row)
 // v106 bevel rework (user Step 4b: hub bump REMOVED, bevel near the wall).
 // Teeth (standard form, untouched) hang DOWN from a flat 2mm web that the
 // shaft pierces — no hub. Print frame rides up: backs embed in the web,
 // web top 1.5 below the wall inner face.
-v98_Bbev_y0 = 55; v98_Bbev_y1 = 63; // Bbev20 teeth envelope (fronts ~56, backs fuse into web)
+v98_Bbev_y0 = 52.5; v98_Bbev_y1 = 57.5; // v115 Bbev36 teeth envelope (toe 53.7, heel 56.5 + tip drift; apex-down mitre)
 v106_bev_web_top = 63.5; // web top: 1.5 below the wall inner face (65)
 v106_bev_lift = v106_bev_web_top + 6 - v98_B_y0; // print-frame z=0 plane: pins the web absolute whatever the origin
 // v103 slim bevel mount (superseded v106: hub removed, flat web only).
@@ -137,7 +147,18 @@ v106_bev_lift = v106_bev_web_top + 6 - v98_B_y0; // print-frame z=0 plane: pins 
 // the r4 shaft pierces it — no hub. v106 rides it near the wall (y61.5-63.5).
 v103_bev_flange_r = 10;  // >= tooth-back outer 9.3 + margin
 v103_bev_flange_t = 2;   // web thickness (print-frame z6..8)
-B_rev = 6; // B spins +6x crank (A -2x, flip, 30/10 step-up)
+B_rev = -6; // v116 Step 2: idler-driven (A -2x, two flips) -> B -6x crank; twister follows 1:1 mitre (2.0 wraps/seed)
+// v116 Step-2 idler (user: connect A and B with an intermediate gear):
+// 15T m1.25 spur bridging A30 (r18.75) and B10 (r6.25) in the shared band
+// 70-75. Two-circle solve: |I-A| = 18.75+9.375+0.75 = 28.875,
+// |I-B| = 6.25+9.375+0.75 = 16.375 -> west solution (east hits twister).
+// Idler is idler: B = -A.(30/10) = -6x regardless of idler size.
+v115_Ix = 154.30; v115_Iz = 48.35; // idler Y-axis (west of the A-B line)
+v115_I_y0 = 66; v115_I_y1 = 80;    // shaft r4 (front-wall bore + gearwall bore, tip 2 deep)
+v115_I15_y0 = 70; v115_I15_y1 = 75; // idler 15T band (meshes A30 + B10 bands)
+v115_I_phase = 12;                 // half-pitch tooth-into-gap (thin teeth + visual verify)
+v115_I_thin = 0.8;                 // idler thin (mesh forgiveness; v95 precedent)
+I_rev = 4; // idler spins +4x crank (-A.30/15)
 spool_axle_x  = -6;  // v22: 10->-6, clears roller back gear (box-level X gap 1.5)
 spool_axle_z  = 80;  // v87 +15 lift: 120mm max roll OD, height 80mm above base (was 65)
 assert(spool_axle_z == 80, "cone rod (spool_axle_z) must be 80 (+15 lift)");
@@ -334,8 +355,8 @@ takeup_z = 49;              // v87 +15 lift: reel axle height (flange 33..65: bo
 assert(takeup_z == 49, "takeup_z must be 49 (+15 lift from 34)");
 twister_axle_z = tape_z + 4;      // 32: v87 +15 lift: ring centre over the folded pocket (pocket top ~36)
 twister_arms = 2;                 // 2 bobbin spindles
-twister_wraps_per_seed = 2.5;            // v94: thread wraps per seed, user range [2,3] (nominal middle)
-twister_orbits_per_drum = num_divots * twister_wraps_per_seed; // 15: twister orbits per drum rev (2.5 per cavity)
+twister_wraps_per_seed = 2.0;            // v116 Step 2: idler train gives B -6x -> twister 6x = 2.0 wraps/seed (range floor; B8 later -> 2.5)
+twister_orbits_per_drum = num_divots * twister_wraps_per_seed; // 12: twister orbits per drum rev (2.0 per cavity)
 tw_bore_d = 10;                   // twister bore diameter (tape pocket 7.8 passes through)
 tw_axle_od = 15;                  // axle outer diameter
 tw_hub_bore = 15.6;               // hub bore (slip fit on axle)
@@ -388,6 +409,11 @@ tw_barb = 0.8;                    // barb lip thickness (radial protrusion)
   tw_teeth_front_tip_w = 0.8;       // tip tangential width at front face (back-to-front taper)
   tw_teeth_flank_ang = 45;          // flank taper angle (radial taper root→tip, degrees)
   tw_teeth_taper_ang = 15;          // back-to-front taper angle (axial narrowing, degrees)
+  // Step1-fix flat-flank spur profile (trapezoid polygon extrude): root+tip
+  // widths sum to 2x47% of circular pitch, so thickness at pitch (midspan
+  // r0..top_r) equals tooth_arc_frac like the spur/bevel gears.
+  tw_spur_root_w = 3.8;             // flat-flank root width at r0 (gap 0.9 at root circle)
+  tw_spur_tip_w = 1.8;              // flat tip land at top_r (>=0.8 printable)
 tw_groove_x0 = 193.5;             // groove west edge (hub bore recess)
 tw_groove_x1 = 196;               // groove east edge
 tw_groove_r = 9;                  // groove radius
@@ -603,26 +629,66 @@ assert(fold_width/2 + tape_bend_radius + tape_thick <= 5.0,
 assert(tape_x0 + tape_len >= plow_end, str("tape ribbon must reach the plow end: ", tape_x0 + tape_len));
 assert(bind_x > plow_end, str("bind station must sit east of the plow end: ", bind_x));
 assert(twister_arms == 2, "thread twister must carry exactly 2 thread arms");
+assert(tw_spur_tip_w >= 0.8, "twister spur tip land must be >=0.8 (standard-form printable)");
+assert(tw_spur_root_w + tw_spur_tip_w - 2*tooth_arc_frac*2*PI*tw_teeth_r1/tw_teeth_n < 0.15, "twister spur thickness at pitch must equal tooth_arc_frac (flat-flank standard form)");
 assert(twister_wraps_per_seed >= 2 && twister_wraps_per_seed <= 3, str("wraps per seed must be in [2,3], got ", twister_wraps_per_seed));
 assert(twister_orbits_per_drum == num_divots * twister_wraps_per_seed, "twister must orbit wraps-per-seed times per cavity (15 per drum rev, 2.5 binds per seed)");
 // v97 composite take-off asserts (mesh + clearances, fail loud):
 // crank->A mesh CD exact (pitch + 0.75 backlash prints + assembles):
 assert(abs(sqrt(pow(v97_Ax-crank_axle_x,2)+pow(v97_Az-crank_axle_z,2)) - v97_A_cd) < 0.05, "crank->A distance must equal mesh CD 30.75");
 assert(A_rev == -2, "composite rev must be -2 per crank rev");
-// v98 second-composite asserts (A->B mesh + clearances, fail loud):
-// A->B mesh CD exact (pitch + 0.75 backlash prints + assembles):
-assert(abs(sqrt(pow(v98_Bx-v97_Ax,2)+pow(v98_Bz-v97_Az,2)) - v98_B_cd) < 0.05, "A->B distance must equal mesh CD 25.75");
-assert(B_rev == 6, "B rev must be +6 per crank rev");
-// Step 4: B sits straight below A (same X, CD straight down):
-assert(abs(v98_Bx - v97_Ax) < 0.01 && abs((v97_Az - v98_Bz) - v98_B_cd) < 0.01,
-       "B must sit straight below A (Step 4)");
-// Step 4: B bevel (bottom z = Bz-11.5) vs plow exit flare (axis (159,34,32),
-// flare r10.5 worst case): plow material reaching the bevel's z-band stays at
-// y <= 34+sqrt(10.5^2-(dz)^2) = 42 < bevel y-start 44 (x overlaps, y saves it):
-assert(34 + sqrt(pow(10.5,2) - pow((v98_Bz - 11.5) - 32, 2)) <= v98_B_y0,
-       "B bevel must clear the plow exit flare (y-separation)");
-// Step 5 outboard wall asserts: shaft tips 2 deep in the plate bores (78-81):
-assert(v97_A_y1 == 83 && v98_B_y1 == 83, "A/B shafts must cross the outboard wall (tips ~2 proud outside)");
+// v113 mitre-mesh asserts (Bbev20 <-> twister bevel ring, fail loud):
+// A->B mesh RETIRED (A-mesh OPEN until the next-step intermediate):
+assert(B_rev == -6, "B rev must be -6 per crank rev (idler-driven: two flips, 30/10)");
+assert(I_rev == 4, "idler rev must be +4 per crank rev (-A.30/15)");
+// v116 idler mesh CDs exact (pitch + 0.75 backlash, like A/B):
+assert(abs(sqrt(pow(v115_Ix-v97_Ax,2)+pow(v115_Iz-v97_Az,2)) - (18.75+9.375+0.75)) < 0.05, "idler->A distance must equal mesh CD 28.875");
+assert(abs(sqrt(pow(v115_Ix-v98_Bx,2)+pow(v115_Iz-v98_Bz,2)) - (6.25+9.375+0.75)) < 0.05, "idler->B distance must equal mesh CD 16.375");
+// idler shaft spans hub + gear (front-wall bore + gearwall bore carry it):
+assert(v115_I_y0 <= 68 && v115_I_y1 >= v115_I15_y1, "idler shaft must span hub and gear");
+// idler gear top (75) stays below the plate (78) and tip below the arm sweep:
+assert(v115_I15_y1 <= v105_wall_y0 - 2, "idler gear must stay below the outboard plate");
+assert(v115_I_y1 <= crank_mount_y + crank_arm_gap - 5, "idler tip must stay below the crank-arm sweep");
+// idler gear (outer ~r11) clears pillar0 (x134-140, z42-48) by >=1:
+assert((v115_Ix - 11) - (v105_pillar_x[0]+3) >= 1, "idler gear must clear pillar0");
+// idler gear vs hopper drum (100,75 r33.8): radial:
+assert(sqrt(pow(v115_Ix-100,2)+pow(v115_Iz-75,2)) - 33.8 - 11 >= 1, "idler gear must clear the hopper radially");
+// idler gear (bottom y70) clears the B hub top (62.5) and twister sweep top (55.75):
+assert(v115_I15_y0 >= 63, "idler gear must clear the B hub");
+assert(v115_I15_y0 - (32+23.75) >= 5, "idler gear must clear the twister sweep");
+// idler shaft (r4) vs A30 (r20.75) / B10 (r8.25) / B shaft (r4): true-distance:
+assert(28.875 - 20.75 - 4 >= 1, "idler shaft must clear the A30 blank");
+assert(16.375 - 8.25 - 4 >= 1, "idler shaft must clear the B10 blank");
+assert(sqrt(pow(v115_Ix-v98_Bx,2)+pow(v115_Iz-v98_Bz,2)) - 4 - 4 >= 1, "idler shaft must clear the B shaft");
+// idler station inside the walls; gearwall plate covers its bore:
+assert(v115_Ix > chassis_x0 && v115_Ix < chassis_x0 + chassis_len && v115_Iz > 0 && v115_Iz < chassis_height, "idler wall bore must sit inside the front wall");
+assert(v105_wall_x0 <= v115_Ix && v115_Ix <= v105_wall_x1 && v105_wall_z0 <= v115_Iz && v115_Iz <= v105_wall_z1, "gearwall plate must cover the idler bore");
+// B Y-axis through the shared apex (mate-driven station):
+assert(v98_Bx == tw_apex_x && v98_Bz == tw_apex_z, "B axis must pass through the mitre apex (167, 32)");
+// apex on the twister axis (lane_y=34, z=twister_axle_z=32):
+assert(tw_apex_z == twister_axle_z, "apex must sit on the twister axis (z=32)");
+// mitre 45° heel pitch r22.5 both sides (apex+22.5 along each axis):
+assert(tw_bev_heel_x - tw_apex_x == 22.5 && v113_B_heel_y - 34 == 22.5, "mitre 45deg heel pitch r22.5 both sides");
+// mesh phase tooth-into-gap (half-pitch of 36T; visually verified):
+assert(tw_bev_phase == 0 && v113_B_phase == 5, "bevel mesh tooth-into-gap phase");
+// tooth-fit with backlash (B tip + tw pitch-width <= circular pitch - 0.2, m1.25):
+assert((tooth_arc_frac*PI*tw_bev_mod)*v113_B_thin + ((tooth_arc_frac*PI*tw_bev_mod+0.72*PI*tw_bev_mod)/2)*tw_bev_thin <= PI*tw_bev_mod - 0.2, "mesh tooth-fit with backlash");
+// twister toe (heel - face*cos45) clears the pedestal east edge by >=0.3:
+assert(tw_bev_heel_x - tw_bev_face*cos(45) - tw_ped_x1 >= 0.3, "twister bevel toe must clear the pedestal");
+// B heel corner (max-x = Bx+23.75) floats inside the back-cone relief with >=0.5 walls:
+assert(v98_Bx + 23.75 - tw_relief_x0 >= 0.5 && tw_relief_x1 - (v98_Bx + 23.75) >= 0.5, "B heel corner must float inside the relief (x)");
+assert(tw_relief_r0 <= 22.5 && 22.5 <= tw_relief_r1, "B heel corner must float inside the relief (r)");
+// relief keeps >=1 wall to the tape bore:
+assert(tw_relief_r0 - 7.8 >= 1, "relief must keep >=1 wall to the tape bore");
+// B shaft east surface (Bx+4) clears the twister toe plane by >=1.5:
+assert((tw_bev_heel_x - tw_bev_face*cos(45)) - (v98_Bx + 4) >= 1.5, "B shaft must clear the twister toe plane");
+// B parts (bottom y43/41) clear the pedestal top edge (lane_y+5=39):
+assert(v98_B_y0 - 39 >= 1, "B shaft must clear the pedestal in y");
+// B shaft bottom vs plow exit flare (axis (159,34,32), r10.5 worst case):
+assert(sqrt(pow(v98_Bx-159,2)+pow(v98_B_y0-34,2)) - 10.5 >= 1.0, "B shaft must clear the plow exit flare");
+// Step 5 outboard wall asserts: A tip 2 deep in the plate bore (78-81);
+// B tip stays below the plate (outboard open until the next step):
+assert(v97_A_y1 == 83 && v98_B_y1 == 80, "v117: A tip 2 proud of the plate (83); B tip 2 deep in the plate bore (80)");
 // gear tops (75) stay 3 below the plate (78):
 assert(v97_A30_y1 <= v105_wall_y0 - 2 && v98_B10_y1 <= v105_wall_y0 - 2,
        "A30/B10 must stay below the outboard plate");
@@ -642,6 +708,28 @@ assert(v105_wall_x0 <= v105_pillar_x[0]-3 && v105_wall_x1 >= v105_pillar_x[1]+3
        "outboard plate must cover pillars and bores");
 // wall bores slip on the r4 shafts:
 assert(axle_clearance_dia > 8, "outboard wall bores must slip on the r4 shafts");
+// v117 Step 2: plate lowered (z0 26) covers the z32 row — extension
+// pillars + re-added B slip bore, each with >=2 plate edge:
+assert(v105_wall_x0 + 2 <= v105_ext_x[0] - 3 && v105_ext_x[1] + 3 <= v105_wall_x1 - 2
+    && v105_wall_z0 + 2 <= v105_ext_z - 3,
+       "outboard plate must cover the extension pillars with >=2 edge");
+assert(v105_wall_x0 + 2 <= v98_Bx && v98_Bx <= v105_wall_x1 - 2
+    && v105_wall_z0 + 2 <= v98_Bz,
+       "outboard plate must cover the B slip bore with >=2 edge");
+// B10 (outer r8.25) vs extension pillar corners (140,35)/(184,35):
+assert(sqrt(pow(v105_ext_x[0] + 3 - v98_Bx, 2) + pow(v105_ext_z + 3 - v98_Bz, 2)) - 8.25 >= 1
+    && sqrt(pow(v105_ext_x[1] - 3 - v98_Bx, 2) + pow(v105_ext_z + 3 - v98_Bz, 2)) - 8.25 >= 1,
+       "B10 must clear the extension pillars (true-distance)");
+// idler gear (outer r11, pillar half-diag 4.3) vs the same corners:
+assert(sqrt(pow(v105_ext_x[0] + 3 - v115_Ix, 2) + pow(v105_ext_z + 3 - v115_Iz, 2)) - 11 - 4.3 >= 1
+    && sqrt(pow(v105_ext_x[1] - 3 - v115_Ix, 2) + pow(v105_ext_z + 3 - v115_Iz, 2)) - 11 - 4.3 >= 1,
+       "idler gear must clear the extension pillars (true-distance)");
+// east extension pillar clears the twister heel pitch x177.5 by >=1:
+assert(v105_ext_x[1] - 3 - tw_bev_heel_x >= 1, "east extension pillar must clear the twister heel");
+// v117 inboard stub cuts land inside their carrier bands:
+assert(v97_A_y0 >= 49 && v97_A_y0 <= 50, "A stub cut must end inside the A10 band [49,50]");
+assert(v98_B_y0 >= 53 && v98_B_y0 <= 57, "B stub cut must end inside the bevel band [53,57]");
+assert(v115_I_y0 >= 65 && v115_I_y0 <= 68, "idler stub cut must end inside the front wall [65,68]");
 assert(v98_B10_y0 == v97_A30_y0 && v98_B10_y1 == v97_A30_y1, "B10 must share the A30 band (mesh)");
 assert(v98_B10_y0 >= chassis_width + 2, "B10 must sit outside the front wall");
 assert(v98_B_y1 <= crank_mount_y + crank_arm_gap - 5, "B shaft tip must stay below the crank-arm sweep");
@@ -655,12 +743,12 @@ assert(sqrt(pow(v98_Bx-crank_axle_x,2)+pow(v98_Bz-crank_axle_z,2)) - 7.5 - hex_a
 assert(v97_A30_y0 >= chassis_width + 2, "A30 must sit outside the front wall");
 assert(v97_A_cd - 20 - hex_axle_r >= 1, "A30 must clear the crank shaft (true-distance)");
 assert(v97_A30_y1 + 5 <= crank_mount_y + crank_arm_gap, "A30 must clear the crank-arm sweep");
-// B shaft spans both fused bands:
-assert(v98_B_y0 <= v98_Bbev_y0 && v98_B_y1 >= v98_B10_y1, "B shaft must span both fused bands");
-// B shaft (r4) vs A30 blank (r20.75): true-distance (mesh CD by construction):
-assert(v98_B_cd - (20.75 + 4) >= 1, "B shaft must clear the A30 blank (true-distance) by >=1");
-// Bbev20 blank (tip bound r11, bands 50-58) vs A10 (r12, bands 50.5-54.5): XZ true-distance over y-overlap:
-assert(v98_B_cd - 12 - 11 >= 1, "B bevel blank must clear the A10 blank by >=1");
+// B shaft spans hub + B10 (bevel fused via blank between):
+assert(v98_Bbev_y0 <= v98_B_y0 && v98_B_y0 <= v98_Bbev_y1 && v98_B_y1 >= v98_B10_y1, "B shaft must span bevel and B10 (stub cut inside the bevel band)");
+// B station vs A cluster (A30 outer r20.75, shaft r4): true-distance:
+assert(sqrt(pow(v98_Bx-v97_Ax,2)+pow(v98_Bz-v97_Az,2)) - 20.75 - 4 >= 1, "B must clear the A cluster (true-distance)");
+// Bbev36 heel (outer r23.75) vs A10 (r12): true-distance:
+assert(sqrt(pow(v98_Bx-v97_Ax,2)+pow(v98_Bz-v97_Az,2)) - 12 - 23.75 >= 1, "B bevel heel must clear the A10 blank by >=1");
 // B10 (outer r8.25) vs teeth sweep R27 about (34,32): radial:
 assert(sqrt(pow(v98_Bx-34,2)+pow(v98_Bz-32,2)) - 8.25 > 27, "B10 must clear the teeth sweep radially");
 // Bbev20 blank (tip bound r11) vs pin sweep R24: radial:
@@ -676,15 +764,13 @@ assert(v98_Bx + 8.25 < pull_x - vpull_sleeve_r, "B10 must stay west of the pull 
 assert(v103_bev_flange_r >= 9.5, "bevel web must cover the tooth backs");
 // v106 flat web top (B_y0 + lift - 6 = 63.5) stays 1+ below the wall inner face (65):
 assert(v106_bev_web_top <= 64, "bevel web must stay below the wall");
-// Bbev20 teeth front (reach ~6.5 below band top, v106 lift) vs shaft start (44): stay on shaft:
-assert(v98_Bbev_y1 - 6.5 >= v98_B_y0, "B bevel teeth must not pass the shaft start");
 // B wall bore inside the front wall:
 assert(v98_Bx > chassis_x0 && v98_Bx < chassis_x0 + chassis_len && v98_Bz > 0 && v98_Bz < chassis_height, "B wall bore must sit inside the front wall");
 // (twister unpowered in v97: takeoff reserved for the next stage.)
 // y-rule (Step 2: shaft runs outboard carrying A30; tip stays 5 below the arm sweep):
 assert(v97_A_y1 <= crank_mount_y + crank_arm_gap - 5, "A shaft tip must stay below the crank-arm sweep");
 // Fused bands ride the shaft that carries them:
-assert(v97_A_y0 <= v97_A10_y0 && v97_A_y1 >= v97_A30_y1, "A shaft must span both fused bands");
+assert(v97_A_y0 <= 50 && v97_A_y1 >= v97_A30_y1, "A shaft must span the stub cut (A10 band 49-55) and A30");
 // A10 (4mm face) overlaps the crank-gear front plane 49-55:
 assert(v97_A10_y0 >= 49 && v97_A10_y1 <= 55 && (v97_A10_y1 - v97_A10_y0) >= 6, "A10 must mesh the crank-gear plane with 6mm face");
 // A30 outside (top 75) leaves room for the Step-5 outboard wall below the arm (88):

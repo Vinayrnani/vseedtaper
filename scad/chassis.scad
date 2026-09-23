@@ -136,6 +136,12 @@ module chassis() {
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
         }
+        // v116 Step-2 idler round shaft bore (r4 shaft -> d8.6) through both walls.
+        for (side=[0,1]) {
+            translate([v115_Ix, side*(chassis_width-wall_thick)+wall_thick/2, v115_Iz])
+                rotate([90,0,0])
+                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        }
         // v48: NO idler stubs fuse into the back wall (zero exterior
         // gears) — the wall keeps full section everywhere. The solid
         // pull bridge needs no hole (tape-coupled nip, no drive tube).

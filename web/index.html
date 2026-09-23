@@ -352,8 +352,11 @@
     pivotA.position.set(162.517, 76.038, -56); // A (162.52, 76.04)
     root.add(pivotA);
     var pivotB = new THREE.Group();
-    pivotB.position.set(162.52, 50.29, -56); // Step 4: B straight below A (was 187.39, 69.37)
+    pivotB.position.set(155, 32, -56); // v115: rim-mitre apex (was 166.5, 32)
     root.add(pivotB);
+    var pivotI = new THREE.Group();
+    pivotI.position.set(154.3, 48.35, -56); // v116 Step 2: idler bridging A30->B10
+    root.add(pivotI);
 
   // ---------- tape ribbon with center U-fold bend (procedural, v28 true mimic, v31 west + transit, v33 lane 13) ----------
   // Mirrors seed_tape_bend()/fold_section() in seed_tape_machine_v2.scad:
@@ -544,7 +547,7 @@
   window._sixTurner = { start: 126, end: 159, dropX: 100, wall: 0.8, boreR: 0,
     entryBore: 12.4, exitBore: 21, seamGap: 2.5,
     stages: '7-station thin-wall taper: pinched open-C entry -> 315deg wrap + 160deg hook exit (2.5 slit, hollow bore)', entry: 'pinched open-C dia ~12 (tail blade + skid, 2.5 top slit)', exit: 'wide flare dia ~21, 6-spiral hook, hollow bore (thin shell)' };
-  window._gearTrain = { chain: 'crank 20T (152,104.93, up on r60 mesh circle) -> A[10+30] (-2x) -> B[10+bevel] (+6x) -> corner -> C[bevel+15] (-6x) -> idler[12+12] (+7.5x) -> D[12+wheel] (-7.5x) -> twister (+7.5x friction flip) = 2.5 wraps/seed; pull nip tape-coupled 4/3 (no gears); takeup wind-up 2x crank', belts: false, exteriorGears: 9,
+  window._gearTrain = { chain: 'crank 20T -> A[10+30] (-2x) -> idler 15T (+4x) -> B[10+bev36] (-6x) @apex(155,32) -> twister bevel 36T m1.25 1:1 mitre (+6x = 2.0 wraps/seed)', belts: false, exteriorGears: 9,
     bevel: 'custom 10/10 m1.25 mitre corner (B->C, TRUE apex geometry, visual teeth interleave)',
     mesh: 'all spur meshes pitch-CD exact with backlash (fail-loud asserts); friction wheel tangent to disc OD',
      mounts: { crank: [152, 104.93], A: [162.52, 76.04], B: [162.52, 50.29], C: [47, 69.37], idler: [32.93, 80.4], D: [29.74, 64.72] } };
@@ -597,10 +600,10 @@
     cradle: cradlePivot, plow: plowPivot,
     crankMount: crankMount, crankSpinner: crankSpinner,
     twister: twisterPivot, pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
-    pivotA: pivotA, pivotB: pivotB
+    pivotA: pivotA, pivotB: pivotB, pivotI: pivotI
   };
-  window._drive = { revs: { A: -2, B: 6 },
-    pivots: { A: pivotA, B: pivotB } };
+  window._drive = { revs: { A: -2, B: 6, I: -4 },
+    pivots: { A: pivotA, B: pivotB, I: pivotI } };
     window._getPivotData = function() {
     	const data = {
     		crankSpinner: { pos: [crankSpinner.position.x, crankSpinner.position.y, crankSpinner.position.z], rot: [crankSpinner.rotation.x, crankSpinner.rotation.y, crankSpinner.rotation.z] },
@@ -624,9 +627,10 @@
   window._setRotations = function(crankAngle) {                        // meshed: crank 20T ↔ drum 40T front-plane
     crankSpinner.rotation.z = crankAngle;                          // v95: crank at (152,104.93)
     drumPivot.rotation.z = crankAngle * DRUM_RATIO + DRUM_PHASE;  // v81: drum -0.5x crank + phase (tooth-into-gap)
-    twisterPivot.rotation.x = 0;                                   // v97: twister unpowered (static, next stage TBD)
+    twisterPivot.rotation.x = 6 * crankAngle;                        // v116 Step 2: twister +6x via idler+B+mitre (2.0 wraps/seed)
     pivotA.rotation.z = -2 * crankAngle;                         // v97: A -2x crank (about Y)
-    pivotB.rotation.z = 6 * crankAngle;                          // v98: B +6x crank (about Y)
+    pivotB.rotation.z = 6 * crankAngle;                          // v116 Step 2: B -6x CAD (viewer negates about Y) via idler
+    pivotI.rotation.z = -4 * crankAngle;                         // v116 Step 2: idler +4x CAD (viewer negates about Y)
     pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE);  // v52: nip side A
     pullBPivot.rotation.y = -PULL_SPIN * (2 * crankAngle + GEAR_PHASE); // v52: nip side B
     takeupPivot.rotation.z = -2 * crankAngle;                     // v79: takeup -2x crank
@@ -648,7 +652,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 78; // v111 A10 6mm face (gear_A), ASSET_V 77->78
+  var ASSET_V = 84; // v117 Step-2 stub cuts + gearwall z0/ext-pillars/B bore, ASSET_V 83->84
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, -15, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -675,9 +679,11 @@
       { id: 'takeup', label: 'Take-up spool (slip clutch)', file: 'stl/takeup.glb', color: 0xc96a2b,
         parent: takeupPivot, pos: [0, 0, 20.5], rot: [Math.PI, 0, 0], metalness: 0.3 }, // v40: export height 31->41 (clutch discs+spring+nut on top); half 20.5 recentres the reel on the axle
       { id: 'gear_A', label: 'Gear A [10+30] (composite, -2x)', file: 'stl/gear_A.glb', color: 0xd97c2b,
-        parent: pivotA, pos: [0, 0, 9], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 }, // local y0-based: pos z = 56 - y0 (y0=47)
-      { id: 'gear_B', label: 'Gear B [10+bev20] (composite, +6x)', file: 'stl/gear_B.glb', color: 0xd97c2b,
+        parent: pivotA, pos: [0, 0, 6.5], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 }, // local y0-based: pos z = 56 - y0 (y0=49.5)
+      { id: 'gear_B', label: 'Gear B [10+bev36] (mitre mate, -6x)', file: 'stl/gear_B.glb', color: 0xd97c2b,
         parent: pivotB, pos: [0, 0, 2], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 }, // local y0-based: pos z = 56 - y0 (y0=54)
+      { id: 'gear_I', label: 'Idler 15T (+4x)', file: 'stl/gear_I.glb', color: 0x4fa06a,
+        parent: pivotI, pos: [0, 0, -10], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 }, // local y0-based: pos z = 56 - y0 (y0=66)
       { id: 'gearwall', label: 'Outboard wall (A/B shaft support)', file: 'stl/gearwall.glb', color: 0x8a8f98,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 }, // v108: absolute CAD coords, static
     ];
@@ -943,10 +949,11 @@
     // twister (+7.5x friction flip) = 2.5 wraps/seed; pull nip tape-coupled 4/3 with
     // the roller shaft (v52 d15 cushioned sleeve = spacing driver, same surface speed,
     // no crush); take-up tape-tension wind-up 2x crank (slip clutch).
-    var twAngle = 0;                                               // v97: twister unpowered (static, next stage TBD)
+    var twAngle = 6 * crankAngle;                                  // v116 Step 2: twister +6x (2.0 wraps/seed)
     twisterPivot.rotation.x = twAngle;
     pivotA.rotation.z = -2 * crankAngle;
-    pivotB.rotation.z = 6 * crankAngle;
+    pivotB.rotation.z = 6 * crankAngle; // v116 Step 2: B -6x CAD
+    pivotI.rotation.z = -4 * crankAngle; // v116 Step 2: idler +4x CAD
     pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE);
     pullBPivot.rotation.y = -PULL_SPIN * (2 * crankAngle + GEAR_PHASE);
     takeupPivot.rotation.z = -2 * crankAngle;                     // v79: takeup -2x crank

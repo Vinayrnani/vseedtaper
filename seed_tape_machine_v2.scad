@@ -27,7 +27,7 @@ module animated_assembly() {
     drum_angle = -360*$t + 4.5;  // v81: +4.5° half-pitch phase (40T drum) for tooth-into-gap mesh with crank 20T
     crank_angle = 720*$t;   // v79: crank 20T spins 2x drum (CW, meshes drum 40T)
     roller_angle = crank_angle + gear_mesh_phase; // mesh-phased crank gear
-    twister_angle = 0; // v97: twister unpowered (composite take-off only, next stage TBD)
+    twister_angle = 6 * crank_angle; // v116 Step 2: +6x via idler+B+mitre (2.0 wraps/seed)
     pull_a_angle = roller_angle*vpull_spin;   // v52: nip side A spin-compensated 4/3
     pull_b_angle = -roller_angle*vpull_spin;  // v52: nip side B counter-rotates 4/3
     takeup_angle = -1440*$t;       // v48: tape-tension wind-up
@@ -94,14 +94,18 @@ module animated_assembly() {
                 crank_assembly();
 
     // v97 composite take-off (user: revert gears, ONE composite 10->30):
-    // crank20 -> A[10+30] (-2, Y). v98 second composite (user: 10T + 20T
-    // bevel under A): A30 -> B[10+bev20] (+6, Y). Twister unpowered (next stage TBD).
+    // crank20 -> A[10+30] (-2, Y). v115: B at the mitre apex (155, 32).
+    // v116 Step 2: 15T idler bridges A30 -> B10 (same band 70-75); B -6x,
+    // twister +6x via the 1:1 mitre (2.0 wraps/seed).
     translate([v97_Ax, v97_A_y0, v97_Az])
         rotate([0, A_rev * crank_angle, 0])
             dt_cluster_A();
     translate([v98_Bx, v98_B_y0, v98_Bz])
         rotate([0, B_rev * crank_angle, 0])
             dt_cluster_B();
+    translate([v115_Ix, v115_I_y0, v115_Iz])
+        rotate([0, I_rev * crank_angle + v115_I_phase, 0])
+            dt_idler();
 
     // v37 Thread twister (v51 HOLLOW: ring + 2 rod bobbin holders
     // orbit the tape axis just east of the plow, binding each seed
@@ -192,6 +196,8 @@ if (part_to_render == "all") {
     dt_cluster_A(); // local Y frame (viewer pivot compensates, print rotated flat)
 } else if (part_to_render == "gear_B") {
     dt_cluster_B(); // local Y frame (viewer pivot compensates, print rotated flat)
+} else if (part_to_render == "gear_I") {
+    dt_idler(); // local Y frame (viewer pivot compensates, print rotated flat)
 } else if (part_to_render == "gearwall") {
     dt_gearwall(); // absolute CAD coords (viewer: parent root, no offset)
 } else {

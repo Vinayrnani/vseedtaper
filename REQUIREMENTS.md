@@ -12,7 +12,7 @@ OpenSCAD CAD + static three.js viewer for a **seed-tape making machine** (v2). N
 
 ### Machine (CAD — `seed_tape_machine_v2.scad`)
 - Builds the full assembly: chassis, hopper, drum/cartridge, cones, plow (six-turner), tape path + former collar, cradle, twister + twister axle + pedestal, pull rollers a/b + bridge, takeup, crank.
-- Drive: crank → drum gear mesh (module 2, fail-loud mesh distance); crank shaft runs through the crank-gear bore, handle stands 20 off the wall. Two composites: crank20 → A[10+30] (-2x, full-profile 6mm A10) → B[10+bev20] (+6x) with B straight below A; the A30↔B10 mesh lives OUTSIDE the front wall and both shafts cross an extra outboard support wall; slim 20T bevel (flat-web mount, no hub) rides near the wall as the takeoff; twister currently unpowered, next drive stage TBD. Seed rate unchanged at 3 seeds/crank rev.
+- Drive: crank → drum gear mesh (module 2, fail-loud mesh distance); crank shaft runs through the crank-gear bore, handle stands 20 off the wall. Live train: crank20 → A[10+30] (-2x) → idler 15T (+4x) → B[10+bev36] (-6x) → twister bevel 36T (+6x = 2.0 wraps/seed) via 45° mitre at apex (155,34,32). Outboard wall extended down to z26 carries A + idler + B tips (2 deep); functionless inboard shaft stubs cut. Seed rate unchanged at 3 seeds/crank rev.
 - Feed path: hopper drop → plow forms/folders tape → twister orients seed pocket → pull/takeup advance tape. Clearances asserted fail-loud on every stack-up.
 - CAD conventions: `$fn=60` curves, `tol=0.3` (all clearances derive from `tol`).
 - Single-object isolation: changing one part must not silently alter others.

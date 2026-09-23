@@ -58,7 +58,7 @@ function check(cond, msg) {
     }));
     console.log('RETIRED ' + JSON.stringify(retired));
     check(retired.defs === 0, 'no old-train refs in page');
-    check(JSON.stringify(retired.drive.sort()) === JSON.stringify(['A', 'B']), 'drive pivots [A,B] got ' + retired.drive);
+    check(JSON.stringify(retired.drive.sort()) === JSON.stringify(['A', 'B', 'I']), 'drive pivots [A,B,I] got ' + retired.drive);
 
     const piv = await page.evaluate(() => {
       window._root.updateMatrixWorld(true);
@@ -73,7 +73,7 @@ function check(cond, msg) {
     });
     console.log('PIVOTS ' + JSON.stringify(piv));
     check(Math.abs(piv.A[0] - 162.52) < 1.5 && Math.abs(piv.A[1] - 76.04) < 1.5, 'pivotA ~(162.5,76.0) got ' + piv.A);
-    check(Math.abs(piv.B[0] - 162.52) < 1.5 && Math.abs(piv.B[1] - 50.29) < 1.5, 'pivotB ~(162.5,50.3) got ' + piv.B);
+    check(Math.abs(piv.B[0] - 155) < 1.5 && Math.abs(piv.B[1] - 32) < 1.5, 'pivotB ~(155,32) got ' + piv.B); // v113 mitre apex
 
     async function rots() {
       return await page.evaluate(() => ({
@@ -98,7 +98,7 @@ function check(cond, msg) {
       const ok = Math.abs(got - want) < 0.03 * Math.abs(want) + 0.02;
       check(ok, k + ' ratio want ' + want + ' got ' + got.toFixed(3));
     };
-    ratio('A', -2); ratio('B', 6); ratio('tw', 0); ratio('drum', -0.5);
+    ratio('A', -2); ratio('B', 6); ratio('tw', 6); ratio('drum', -0.5); // v116 Step 2: idler drives B (viewer signs), twister +6x
 
     await page.evaluate(() => { window._overrideAngle = null; });
     await page.waitForTimeout(200);
