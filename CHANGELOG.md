@@ -4,6 +4,9 @@ Version-level changes only. Product requirements live in `REQUIREMENTS.md`.
 
 Status: current entry committed after user APPROVE; older entries historical.
 
+## v129 — 2026-09-24
+- Workflow rules (user APPROVE): (1) **Unclear step → skip, finish clear steps, then ask** — never guess requirements, never block the queue on one unclear step; (2) **Zero guesswork / zero hallucination (STRICT)** — never invent dims/paths/line numbers/intent; missing facts → stop and ask; re-verify disk, not stale memory. Docs-only AGENTS.md; no CAD/GLB/viewer change, no ASSET_V bump. Local snapshot `web/v129/`.
+
 ## v128 — 2026-09-24
 - Workflow order fix (user APPROVE): step done = **implementation → per-step final validation → preview** (not validation only at the end). Full gate runs **before every “Step N done”**: syntax/asserts (`openscad-nightly`), printability, watertight mesh where applicable, min moving gap from `tol=0.3`, then ≥3-angle visual review after preview. Never defer/batch validation across steps. Also track missing `.agents/skills/openscad/`. Docs-only; no CAD/GLB/viewer change, no ASSET_V bump. Local snapshot `web/v128/`.
 

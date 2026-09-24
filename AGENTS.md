@@ -44,7 +44,9 @@ Requirements
 Load skills before any step work: `code-philosophy`, `openscad`, `openscad-iterative-modeling` (state `Skills loaded: …` first).
 
 - Implement **step by step**: one step at a time. A step is done only after **implementation → per-step final validation → preview output** for that step; then immediately continue the next queued step.
-- User may give steps **at any time**, in any order of message arrival, but execute **strictly in order only** (queue arrivals; never skip ahead).
+- User may give steps **at any time**, in any order of message arrival, but execute **strictly in order only** (queue arrivals; never skip ahead) — **except** when a step’s requirements are unclear (see below).
+- **Unclear step → skip, finish clear, then ask:** if a step’s requirements are not clear, **do not implement or guess** — park it as skipped, proceed to the next **clear** step and finish the chain of clear steps, then **ask the user for the missing info** on every skipped step (in original order). Never block the whole queue on one unclear step; never invent requirements for a skipped step.
+- **Zero guesswork / zero hallucination (STRICT):** never invent dimensions, positions, part names, file paths, line numbers, prior decisions, or user intent. If a fact is not in the request, live HEAD code, or a tool result this session, **stop and ask** — do not fill gaps with plausible-sounding assumptions. Stale memory or old changelog text is not a source of truth for current work; re-verify on disk before acting.
 - If the user gives **no step number** or calls it **`feat:`**, treat it as **another step** (assign the next queue slot / label it as a step).
 - **Fresh on current code:** each step’s work builds on live HEAD as new work. Do **not** re-read old changelog entries to redo prior steps; do not “continue” an unfinished old attempt as if it were this step.
 - **Incorrect step → rollback:** if the user says a step’s work is wrong, **revert to the state immediately before that step**, then **redo the step from scratch** — no patching/adjusting the bad attempt.
