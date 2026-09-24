@@ -312,9 +312,9 @@
 
    // Crank mount at OpenSCAD (152, 76, 104.93) = crank axle with 20T gear,
     // outside FRONT wall (x = crank_mount_x = 152, y = crank_mount_y = 76) ->
-    // root-local (152, 104.93, -76). v95: crank swung up on the r60 mesh circle.
+    // Step 13 fresh crank station (160, 75) -> root-local (160, 75, -76).
     var crankMount = new THREE.Group();
-    crankMount.position.set(152, 104.933, -76); // v95 mesh-circle solve (CAD crank 160,75 -> 152,104.93)
+    crankMount.position.set(160, 75, -76); // fresh station, outside front wall
    root.add(crankMount);
    var crankSpinner = new THREE.Group();
    crankSpinner.position.set(0, 0, 0);
@@ -322,12 +322,16 @@
 
     // v38 respaced (v37 overlapped: twister 163..171 touched pull
     // 171..191, take-up 170..202 interpenetrated both).
-    // Thread twister at OpenSCAD (184, 34, 32) -> (184, 32, -34): ring
-    // axis along root X, spins rotation.x (same sign as scad Rx angle).
-    // Rotor bore stays coaxial with the axle bore (world 32).
+    // Step 13: the rotor keeps its explicit CAD 180Y frame about
+    // (182.75, 34, 32). The axle is separate and X-only reflected, then
+     // shifted 1.5mm east at its root-level placement.
+    var twisterFrame = new THREE.Group();
+    twisterFrame.position.set(182.75, 32, -34);
+    twisterFrame.rotation.z = Math.PI;
+    root.add(twisterFrame);
     var twisterPivot = new THREE.Group();
-    twisterPivot.position.set(184, 32, -34); // +15 lift (CAD twister_axle_z 17→32)
-    root.add(twisterPivot);
+    twisterPivot.position.set(0, 0, 0);
+    twisterFrame.add(twisterPivot);
     // Vertical-nip pull pair at OpenSCAD (206, 30-/+14.2, 19) ->
     // (206, 19, -21.6) / (206, 19, -46.4) (+15): vertical axes stay vertical
     // under child Rx(-90), spin about root Y (same sign as scad Rz).
@@ -346,13 +350,13 @@
     // v97 composite take-off pivot (root-local M = (x,z,-y); solved in scad/params.scad):
     // A spins about Y (mid-shaft y=56). Twister unpowered (static).
     var pivotA = new THREE.Group();
-    pivotA.position.set(162.517, 76.038, -56); // A (162.52, 76.04)
+    pivotA.position.set(189.702219, 67.041314, -56); // Step 13 fresh A station
     root.add(pivotA);
     var pivotB = new THREE.Group();
-    pivotB.position.set(155, 32, -56); // v115: rim-mitre apex (was 166.5, 32)
+    pivotB.position.set(210.5, 32, -56); // Step 13 fresh B/apex station
     root.add(pivotB);
     var pivotI = new THREE.Group();
-    pivotI.position.set(154.3, 48.35, -56); // v116 Step 2: idler bridging A30->B10
+    pivotI.position.set(211.695428, 48.331307, -56); // Step 13 fresh idler station
     root.add(pivotI);
 
   // ---------- tape ribbon with center U-fold bend (procedural, v28 true mimic, v31 west + transit, v33 lane 13) ----------
@@ -360,18 +364,18 @@
   // flat 25.4 ribbon full length (scrolls with crank) + static FORMING
   // taper (trough bottom 4.0/HW 2.0 + R1.5 quarter arcs + 5.5 walls +
   // reverse S-shoulder kink + foot back to the wings, single-layer floor,
-  // depth 0.15->1.0 W->E over 37..70) + straight full-U TRANSIT (same
-  // section, no taper, 70..126, under the drum
-  // with air gap, UNDER the hover pipe with a 10 gap to the plow mouth)
-  // + former collar shoe visual (root-local forming exit x=70, ride
-  // height y=13, centred z=-30; seed falls 10 from the x=100 bore into
-  // the folded pocket).
+  // depth 0.15->1.0 W->E over 37..70) + plain straight TRANSIT
+  // (70..126) under the drum and hover pipe. A separate hopper-mounted
+  // U-bend guide forms the tape at the drop; no collar rides the tape.
+
+
+
   var TAPE_LEN = 234; // = tape_len (flat ribbon -14..220). Leader 218..236.5 climbs to the pack; matches CAD seed_tape_bend() 1:1
   var TAPE_CX = 103; // static ribbon centre = tape_x0(-14) + TAPE_LEN/2 (CAD match; the old per-rev mod scroll slid the ribbon +/-63, uncovering spool/nip and overhanging the chassis)
   var TAPE_FOLD_START = 37;  // v31: = fold_start in .scad (forming starts west of drum)
   var TAPE_FOLD_LEN = 33;    // v31: = fold_len in .scad (forming length kept)
   var TAPE_FOLD_END = 70;    // v31: = fold_end (forming exit, 5 clear of drum face 75)
-  var TAPE_TRANSIT_END = 126; // v31: = transit_end = plow_start (straight full-U to plow mouth)
+  var TAPE_TRANSIT_END = 126; // v31: = transit_end = plow_start (plain straight tape)
   var TAPE_Z = 28;           // +15 lift (CAD tape_z 13→28; ribbon top 28.4)
   var TAPE_BEND_R = 1.5;     // v34: = tape_bend_radius in .scad (outer 7.8<OD10)
   var TAPE_FOLD_ANG = Math.PI / 2; // = tape_fold_angle 90deg (full U)
@@ -385,49 +389,28 @@
     roughness: 0.4, metalness: 0.0,
     emissive: 0x0d3a20, emissiveIntensity: 0.7
   });
-  // Flat ribbon with CAD cosine dip (Step-11 loop2 mechanical port of
-  // plow.scad ubend: centre world x86, half-width 8, depth 8.5 DOWN from
-  // TAPE_Z; bottom 19.5 meets the platform top. Upstream forming +
-  // downstream mouth unchanged. Dip STATIC in world (tape advances through
-  // it — CAD shingle precedent); animation hook below untouched.
-  // v33: meshes ride +0.2 so the ribbon base sits on the lane.
-  var TAPE_DIP_CX = 86, TAPE_DIP_HW = 8, TAPE_DIP_D = 8.5; // = ubend_c/hw/d (world)
-  function tapeDipDz(wx) {
-    var u = (wx - TAPE_DIP_CX) / TAPE_DIP_HW;
-    if (Math.abs(wx - TAPE_DIP_CX) >= TAPE_DIP_HW) return 0;
-    return -TAPE_DIP_D / 2 * (1 + Math.cos(Math.PI * u));
-  }
-  function tapeDipSlope(wx) {
-    var u = (wx - TAPE_DIP_CX) / TAPE_DIP_HW;
-    if (Math.abs(wx - TAPE_DIP_CX) >= TAPE_DIP_HW) return 0;
-    return TAPE_DIP_D * Math.PI / (2 * TAPE_DIP_HW) * Math.sin(Math.PI * u);
-  }
-  var TAPE_SEG = 1.0; // 1mm slope-matched shingles fuse with overlap (CAD rdx precedent)
+  // Plain straight ribbon: no dip, collar, saddle, or tape-mounted guide.
+  // The bottom support carries the ribbon; the separate hopper guide is
+  // rendered separately below.
+  var TAPE_SEG = 1.0; // straight 1mm shingles fuse with overlap
   var tapeGroup = new THREE.Group();
-  var tapeDipMeshes = [];
-  for (var dipX = -14; dipX < 220 - 1e-6; dipX += TAPE_SEG) {
-    var segW = Math.min(TAPE_SEG, 220 - dipX);
-    var segWx = dipX + segW / 2; // world x of shingle centre
-    var segGx = segWx - TAPE_CX; // group-local x (group sits at TAPE_CX)
-    var segDz = tapeDipDz(segWx);
-    var segAng = Math.atan(tapeDipSlope(segWx));
-    var segLen = segW / Math.cos(segAng) + 0.1;
-    var seg = new THREE.Mesh(new THREE.BoxGeometry(segLen, 0.4, 25.4), tapeMat);
-    seg.position.set(segGx, segDz + 0.2, 0);
-    seg.rotation.z = segAng;
+  var tapeMeshes = [];
+  for (var tapeX = -14; tapeX < 220 - 1e-6; tapeX += TAPE_SEG) {
+    var segW = Math.min(TAPE_SEG, 220 - tapeX);
+    var seg = new THREE.Mesh(new THREE.BoxGeometry(segW + 0.1, 0.4, 25.4), tapeMat);
+    seg.position.set(tapeX + segW / 2 - TAPE_CX, 0.2, 0);
     seg.castShadow = true;
     tapeGroup.add(seg);
-    tapeDipMeshes.push(seg);
+    tapeMeshes.push(seg);
   }
   root.add(tapeGroup);
-  // U-fold channel (static: forming taper 37..70 + straight full-U
-  // transit 70..126; tape slides through, fold walls ride on the ribbon
-  // top; transit runs under the drum with air gap UNDER the hover pipe
-  // (10 gap) to the plow mouth).
+  // U-fold channel (static upstream forming taper 37..70; the transit
+  // 70..126 is a plain flat ribbon and the separate hopper guide forms
+  // the U at the drop; the flat path runs under the drum and pipe).
   // Local frame: x centred on the forming zone, y up from ribbon top
   // (0.4), z across (centred 0). Single-layer floor (no double slab):
   // the flat ribbon IS the trough bottom. Forming depth tapers W->E
-  // (shallow entry to full-U exit); transit holds full-U; shoulders kick
+  // (shallow entry to full-U exit); transit stays plain and flat; shoulders
   // outward (reverse S) with feet landing back on the wings. Arc centers
   // (z=+-2.0, y=0.4+1.5=1.9) at full depth.
   var tapeFoldGroup = new THREE.Group();
@@ -476,12 +459,7 @@
       var sc = 0.15 + 0.85 * (xi + 0.5) / TAPE_N_X; // W shallow -> E full
       tapeFoldSection(-TAPE_FOLD_LEN / 2 + (xi + 0.5) * TAPE_DX, sc, TAPE_DX);
     }
-    // Straight full-U transit (forming exit -> plow mouth via pipe), 8mm chunks.
-    var TAPE_T_DX = 8;
-    for (var wx = TAPE_FOLD_END; wx < TAPE_TRANSIT_END - 0.01; wx += TAPE_T_DX) {
-      var wdx = Math.min(TAPE_T_DX, TAPE_TRANSIT_END - wx);
-      tapeFoldSection(wx + wdx / 2 - groupX, 1, wdx);
-    }
+    // Transit remains plain flat tape; the separate hopper guide forms the U.
   })();
   // v45 WIND-UP LEADER (static): narrow strip (folded-tube width 8)
   // climbing ribbon-top (218, 28.4) -> wound pack (236.5, 41.5, inside
@@ -498,23 +476,26 @@
   root.add(leader);
   window._windLeader = { x0: LEAD_X0, x1: LEAD_X1, z1: LEAD_Z1, w: LEAD_W,
     packCx: 238, packCz: 49, packR: 8, mesh: leader }; // +15 lift
-  // Former collar shoe visual (stainless transverse bridge with U notch
-  var collarMat = new THREE.MeshStandardMaterial({ color: 0xb9c0c7, roughness: 0.35, metalness: 0.85 });
-  var collarGroup = new THREE.Group();
-  var shoeW = 30, shoeT = 3, footW = (shoeW - (2 * TAPE_FOLD_HW + 0.6)) / 2;
-  var notchD = TAPE_FOLD_WALL + TAPE_BEND_R + 1.0;
-  [[-shoeW / 2, footW], [shoeW / 2 - footW, footW]].forEach(function (f) {
-    var foot = new THREE.Mesh(new THREE.BoxGeometry(shoeT, notchD, f[1]), collarMat);
-    foot.position.set(0, baseTop + notchD / 2, f[0] + f[1] / 2);
-    foot.castShadow = true;
-    collarGroup.add(foot);
+  // Separate Step-5 U-bend guide: 10mm along tape travel, downward press
+  // face, side cheeks touching the exit pipe. It is parented to the hopper
+  // frame, never to the tape group.
+  var uBendGuideFrame = new THREE.Group();
+  uBendGuideFrame.rotation.x = -Math.PI / 2;
+  hopperPivot.add(uBendGuideFrame);
+  var uBendGuideMat = new THREE.MeshStandardMaterial({ color: 0xb9c0c7, roughness: 0.35, metalness: 0.85 });
+  var guidePressZ = 9.7, guidePressT = 2, guideRailW = 2, guideRailTop = 21.4;
+  var guidePress = new THREE.Mesh(new THREE.BoxGeometry(10, 10, guidePressT), uBendGuideMat);
+  guidePress.position.set(0, 0, guidePressZ + guidePressT / 2);
+  guidePress.castShadow = true;
+  uBendGuideFrame.add(guidePress);
+  [-1, 1].forEach(function (s) {
+    var rail = new THREE.Mesh(new THREE.BoxGeometry(10, guideRailW, guideRailTop - guidePressZ), uBendGuideMat);
+    rail.position.set(0, s * 6, (guidePressZ + guideRailTop) / 2);
+    rail.castShadow = true;
+    uBendGuideFrame.add(rail);
   });
-  var bridge = new THREE.Mesh(new THREE.BoxGeometry(shoeT, 2.0, shoeW), collarMat);
-  bridge.position.set(0, baseTop + notchD + 1.0, 0);
-  bridge.castShadow = true;
-  collarGroup.add(bridge);
-  collarGroup.position.set(TAPE_FOLD_LEN / 2 - 3, 0, 0); // forming exit end (v31: world 67)
-  tapeFoldGroup.add(collarGroup);
+  window._uBendGuide = { frame: uBendGuideFrame, length: 10, pressZ: guidePressZ,
+    railTop: guideRailTop, pipeBottom: 19.4, tapeTop: 28.4, clearance: 0.3 };
   root.add(tapeFoldGroup);
   // Bend proof hooks: arc mesh centres must sit R=1.5 from the arc
   // centers (group-local z=+-2.0, y=1.9 at full depth) in the Z-Y plane.
@@ -532,7 +513,8 @@
   // (root-local x 177..191, centre BIND_X=184 = plow_end+25, axis at
   // y=29.5/z=-30 (+15 lift), helix radius 4.5 around the 7.8 pocket). Phase offset
   // PI = the 2 twister arms; helix advance + scroll follows the tape.
-  var BIND_X = 184, BIND_Y = 29.5, BIND_Z = -34, BIND_R = 4.5, BIND_HALF = 7; // +15 lift
+  var TWISTER_FRAME_X = 182.75;
+  var BIND_X = TWISTER_FRAME_X, BIND_Y = 29.5, BIND_Z = -34, BIND_R = 4.5, BIND_HALF = 7; // Step 13 frame centre
   var THREAD_N = 42;
   var threadMat = new THREE.LineBasicMaterial({ color: 0xf5ead0 });
   function makeThreadLine() {
@@ -540,21 +522,21 @@
     g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(THREAD_N * 3), 3));
     var l = new THREE.Line(g, threadMat);
     l.frustumCulled = false;
-    root.add(l);
+    twisterPivot.add(l);
     return l;
   }
   var threadLineA = makeThreadLine(), threadLineB = makeThreadLine();
   function updateThreadLine(line, twAngle, phase, advance) {
     var p = line.geometry.attributes.position;
     for (var i = 0; i < THREAD_N; i++) {
-      var x = BIND_X - BIND_HALF + i * (2 * BIND_HALF / (THREAD_N - 1));
-      var a = twAngle + phase + (x - BIND_X) * 0.45 + advance * 0.05;
-      p.setXYZ(i, x, BIND_Y + BIND_R * Math.cos(a), BIND_Z + BIND_R * Math.sin(a));
+      var x = BIND_X - TWISTER_FRAME_X - BIND_HALF + i * (2 * BIND_HALF / (THREAD_N - 1));
+      var a = twAngle + phase + (x - (BIND_X - TWISTER_FRAME_X)) * 0.45 + advance * 0.05;
+      p.setXYZ(i, x, BIND_Y - 32 + BIND_R * Math.cos(a), BIND_Z - (-34) + BIND_R * Math.sin(a));
     }
     p.needsUpdate = true;
   }
   window._twister = {
-    pivot: twisterPivot, bindX: BIND_X, arms: 2, orbitsPerDrum: 6,
+    pivot: twisterPivot, frame: twisterFrame, bindX: BIND_X, arms: 2, orbitsPerDrum: 6,
     lines: [threadLineA, threadLineB],
     pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
     pullX: 206, takeupX: 238
@@ -570,10 +552,10 @@
   window._sixTurner = { start: 126, end: 159, dropX: 100, wall: 0.8, boreR: 0,
     entryBore: 12.4, exitBore: 21, seamGap: 2.5,
     stages: '7-station thin-wall taper: pinched open-C entry -> 315deg wrap + 160deg hook exit (2.5 slit, hollow bore)', entry: 'pinched open-C dia ~12 (tail blade + skid, 2.5 top slit)', exit: 'wide flare dia ~21, 6-spiral hook, hollow bore (thin shell)' };
-  window._gearTrain = { chain: 'crank 20T -> A[10+30] (-2x) -> idler 15T (+4x) -> B[10+bev36] (-6x) @apex(155,32) -> twister bevel 36T m1.25 1:1 mitre (+6x = 2.0 wraps/seed)', belts: false, exteriorGears: 9,
+  window._gearTrain = { chain: 'crank 20T -> A[10+30] (-2x) -> idler 15T (+4x) -> B[10+bev36] (-6x) @apex(210.5,32) -> twister bevel 36T m1.25 1:1 mitre (+6x = 2.0 wraps/seed)', belts: false, exteriorGears: 9,
     bevel: 'custom 10/10 m1.25 mitre corner (B->C, TRUE apex geometry, visual teeth interleave)',
     mesh: 'all spur meshes pitch-CD exact with backlash (fail-loud asserts); friction wheel tangent to disc OD',
-     mounts: { crank: [152, 104.93], A: [162.52, 76.04], B: [162.52, 50.29], C: [47, 69.37], idler: [32.93, 80.4], D: [29.74, 64.72] } };
+     mounts: { crank: [160, 75], A: [189.702219, 67.041314], B: [210.5, 32], idler: [211.695428, 48.331307] } };
   window._slipClutch = {
     pivot: takeupPivot, discs: 2, baseRatio: '+2x crank (viewer sense; CAD -1440t)',
     // Slip logic: the geared base speed (+2x crank viewer sense) is constant; the
@@ -622,7 +604,7 @@
     drum: drumPivot, hopper: hopperPivot,
     cradle: cradlePivot, plow: plowPivot,
     crankMount: crankMount, crankSpinner: crankSpinner,
-    twister: twisterPivot, pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
+    twister: twisterPivot, twisterFrame: twisterFrame, pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
     pivotA: pivotA, pivotB: pivotB, pivotI: pivotI
   };
   window._drive = { revs: { A: -2, B: -6, I: 4 },
@@ -648,11 +630,11 @@
     	return data;
     };
   window._setRotations = function(crankAngle) {                        // meshed: crank 20T ↔ drum 40T front-plane
-    crankSpinner.rotation.z = crankAngle;                          // v95: crank at (152,104.93)
+    crankSpinner.rotation.z = crankAngle;                          // fresh crank at (160,75)
     drumPivot.rotation.z = crankAngle * DRUM_RATIO + DRUM_PHASE;  // v81: drum -0.5x crank + phase (tooth-into-gap)
     twisterPivot.rotation.x = 6 * crankAngle;                        // v116 Step 2: twister +6x via idler+B+mitre (2.0 wraps/seed)
     pivotA.rotation.z = -2 * crankAngle;                         // v97: A -2x crank (about Y)
-    pivotB.rotation.z = -6 * crankAngle;                         // v118: B -6x CAD, viewer preserves CAD sign (external mesh alternates)
+    pivotB.rotation.z = Math.PI - 6 * crankAngle;                 // Step 13: static 180Y frame + B -6x
     pivotI.rotation.z = 4 * crankAngle;                          // v118: idler +4x CAD (opposite A, opposite B)
     pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE);  // v52: nip side A
     pullBPivot.rotation.y = -PULL_SPIN * (2 * crankAngle + GEAR_PHASE); // v52: nip side B
@@ -675,7 +657,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 89; // 12-step geometry batch (hopper/chassis/twister_axle regen), ASSET_V 88->89
+  var ASSET_V = 91; // Axle C-slot geometry fix, ASSET_V 90->91
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, -15, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -690,7 +672,7 @@
       { id: 'twister', label: 'Thread twister (hollow 2-rod binder)', file: 'stl/twister.glb', color: 0xc9a227,
         parent: twisterPivot, pos: [0, -27.5, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 },
       { id: 'twister_axle', label: 'Twister axle (static pedestal+tube)', file: 'stl/twister_axle.glb', color: 0x5b7fa6,
-        parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
+        parent: root, pos: [1.5, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
       { id: 'pull_a', label: 'Vertical pull A (cushioned)', file: 'stl/pull_a.glb', color: 0x3f434a,
         parent: pullAPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.05, roughness: 0.9 }, // v52: soft rubber/silicone cushion sleeve (firm grip, no crush); OD ~d15 => 4/3 spin keeps surface speed, spacing driver
       { id: 'pull_b', label: 'Vertical pull B (cushioned)', file: 'stl/pull_b.glb', color: 0x3f434a,
@@ -708,7 +690,7 @@
     ];
     // Display order for the parts panel (matches user checklist + tape/seeds extras).
     var PART_ORDER = ['chassis', 'hopper', 'cartridge',
-      'plow', 'crank', 'gear_A', 'gear_B', 'gearwall',
+      'plow', 'crank', 'gear_A', 'gear_B', 'gear_I', 'gearwall',
       'twister', 'twister_axle', 'pull_a', 'pull_b', 'takeup', 'tape', 'seeds'];
 
   var toggleGroups = {};
@@ -749,6 +731,7 @@
   toggleGroups.axes = { label: 'Axes (XYZ)', color: 0x9aa4b2, objects: [axesGroup] };
 
   PART_DEFS.forEach(function (def) { trackToggle(def, null); });
+  if (toggleGroups.hopper) toggleGroups.hopper.objects.push(uBendGuideFrame);
 
   function refreshToggles() {
     togglesDiv.innerHTML = '';
@@ -971,7 +954,7 @@
     var twAngle = 6 * crankAngle;                                  // v116 Step 2: twister +6x (2.0 wraps/seed)
     twisterPivot.rotation.x = twAngle;
     pivotA.rotation.z = -2 * crankAngle;
-    pivotB.rotation.z = -6 * crankAngle; // v118: B -6x CAD, viewer preserves sign
+    pivotB.rotation.z = Math.PI - 6 * crankAngle; // Step 13 static 180Y frame + B -6x
     pivotI.rotation.z = 4 * crankAngle; // v118: idler +4x CAD, opposite A and B
     pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE);
     pullBPivot.rotation.y = -PULL_SPIN * (2 * crankAngle + GEAR_PHASE);

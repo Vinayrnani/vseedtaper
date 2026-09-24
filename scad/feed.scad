@@ -1,5 +1,36 @@
 // v121 Step 7: single_cone/spool_cones deleted with the cones (no callers remain).
 
+// Step 5: separate 10mm U-bend guide. It is attached to the hopper exit
+// pipe by its two side cheeks and presses downward above the plain tape.
+module u_bend_guide() {
+    guide_length = 10;
+    guide_press_t = 2;
+    guide_rail_w = 2;
+    guide_pipe_r = 5;
+    guide_rail_inner = guide_pipe_r;
+    guide_bore_r = 3.8;
+    guide_tape_top_local = tape_z + tape_thick - (drum_axle_z - hopper_axis_z);
+    guide_press_z = guide_tape_top_local + tolerance;
+    guide_pipe_bottom_local = guide_tape_top_local + 10;
+    guide_rail_top = guide_pipe_bottom_local + 2;
+    assert(guide_length == 10, "u_bend_guide: guide length must be 10mm");
+    assert(guide_press_z - guide_tape_top_local >= tolerance, "u_bend_guide: press face must clear plain tape");
+    assert(guide_press_z + guide_press_t < guide_pipe_bottom_local, "u_bend_guide: guide must stay below the pipe bore");
+    assert(guide_rail_inner == guide_pipe_r, "u_bend_guide: cheeks must meet the pipe OD");
+    assert(guide_bore_r == 3.8 && guide_rail_inner >= guide_bore_r + 1, "u_bend_guide: cheeks must keep the seed bore open");
+    assert(guide_rail_top >= guide_pipe_bottom_local + 1, "u_bend_guide: cheeks must overlap the pipe lower wall");
+    assert(guide_length == 2*guide_pipe_r, "u_bend_guide: guide must span the pipe station");
+    union() {
+        // Downward pressing face: its lower face is 0.3mm above the plain tape.
+        translate([-guide_length/2, -guide_pipe_r, guide_press_z])
+            cube([guide_length, 2*guide_pipe_r, guide_press_t]);
+        // Side cheeks touch the pipe at y=+-5 and rise to its lower wall.
+        for (s=[-1, 1])
+            translate([-guide_length/2, s*guide_rail_inner, guide_press_z])
+                cube([guide_length, guide_rail_w, guide_rail_top - guide_press_z]);
+    }
+}
+
 // ============================================================
 // 3. Hopper (v17: SINGLE printed piece — cover + trough joined at SIDES).
 //    v17 changes.jpg fixes (2026-09-16): RED = diagonal side pads DELETED

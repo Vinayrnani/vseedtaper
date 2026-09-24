@@ -165,69 +165,31 @@ module folding_plow() {
 }
 
 // ============================================================
-// 7b. Seed tape with center U-fold bend (v28 true mimic, v31 west,
-// v33 lane 13). Local frame: x 0..tape_len, y centred 0, z 0..fold-top,
-// min_z=0. Flat paper_width ribbon full length (single-layer trough
-// floor) + U-fold channel fused on top: FORMING taper over local x
-// fold_start-tape_x0 = 51 (world 37..70, W-shallow->E-full) then a
-// STRAIGHT full-U transit (same section, no taper) local 84..140
-// (world 70..126, through the shroud slot, under the drum with air
-// gap, UNDER the hover pipe with a 10 gap to the plow mouth), EXCEPT a
-// smooth Step-5/7 U dip DOWN (cosine, depth 8.5, width 16, center world 86,
-// 10 before the bore edge 96.2 so seed drops in): bottom edges at
-// +-hw rise via quarter-arc sides R=tape_bend_radius sweeping
-// tape_fold_angle, then straight vertical walls tape_fold_wall, then a
-// reverse S-shoulder per side (outward kink + foot landing back on the
-// ribbon wings so the sheet reads continuous, no floating free edge).
-// Fold depth tapers along X in forming (tape_n_x steps, scale
-// 0.15->1.0 W->E: shallow flat-entry, full-U exit = chamfered entry);
-// transit holds sc=1. Ribbon boxes centered ON the fold
-// path (thickness +-0.2) with epsilon overlap so the union stays
-// manifold, never zero-thickness.
+// 7b. Seed tape with upstream forming and a straight U transit.
+// The flat ribbon is plain: no dip, collar, saddle, or tape-mounted guide.
+// Local frame: x 0..tape_len, y centred 0, z 0..fold-top, min_z=0.
+// The upstream forming taper remains; the transit is a plain straight flat
+// ribbon so the separate hopper-mounted guide can form the tape into a U.
 // Allowed modules only: union/cube/for/if/translate/rotate.
 // ============================================================
-// Step-5 U-dip profile (local x; world = local + tape_x0 = local - 14):
-// smooth cosine DOWN 10 before the dropper bore (world zone ~78..94,
-// center 86 = bore west edge 96.2 minus 10, depth 8.5, bottom ON the
-// Step-6 platform). Former collar (world 67) rides upstream of it;
-// turner/cradle sit downstream. dz = offset, sl = slope dz/dx.
-ubend_c = 86 - tape_x0;                // 100: dip center (local x)
-ubend_hw = 8;                          // dip half-width (world == local units)
-ubend_d = 8.5;                         // dip depth DOWN (-Z)
-function ubend_dz(lx) = (abs(lx - ubend_c) < ubend_hw) ? -ubend_d/2*(1+cos(180*(lx-ubend_c)/ubend_hw)) : 0;
-function ubend_sl(lx) = (abs(lx - ubend_c) < ubend_hw) ? ubend_d*PI/2/ubend_hw*sin(180*(lx-ubend_c)/ubend_hw) : 0;
-
 module seed_tape_bend() {
     fx0 = fold_start - tape_x0;        // 51: forming segment local x (world 37..70)
     dx = fold_len/tape_n_x;
     tx0 = fold_end - tape_x0;          // 84: transit local x (world 70..126)
-    // Step-5 dip zone edges (dz=0 and slope=0 exactly at/beyond these).
-    zb0 = ubend_c - ubend_hw - 1;      // 91 local (world 77)
-    zb1 = ubend_c + ubend_hw + 1;      // 109 local (world 95)
-    n_a = ceil((zb0 - tx0)/4);         // straight chunks before the dip
-    dx_a = (zb0 - tx0)/n_a;
-    n_c = ceil((tx0 + transit_len - zb1)/4); // straight chunks after the dip
-    dx_c = (tx0 + transit_len - zb1)/n_c;
-    bdx = 0.5;                         // dipped shingles (sections stay normal)
-    n_b = ceil((zb1 - zb0)/bdx);
-    rdx = 0.5;                         // ribbon shingles follow the dip too
+    transit_dx = transit_len / ceil(transit_len/4);
+    rdx = 0.5;                         // straight ribbon shingles
     n_r = ceil(tape_len/rdx);
-    // Fail loud (Step-5 envelope):
-    assert(zb0 >= tx0 && zb1 <= tx0 + transit_len, "seed_tape_bend: U dip must sit inside the transit");
-    assert(tape_z - ubend_d > base_thick + 2, "seed_tape_bend: dip bottom must clear the base");
-    assert(tape_x0 + ubend_c >= 86 && tape_x0 + ubend_c <= 90, "seed_tape_bend: U centre must sit ~10 before the dropper (world 86..90)");
-    assert(tape_x0 + zb0 - (fold_end - 3) >= 5, "seed_tape_bend: former collar must stay upstream of the dip");
+    // Plain-tape and station invariants: no dip-specific geometry remains.
+    assert(tape_z - tape_thick/2 > base_thick + 2, "seed_tape_bend: plain tape must clear the base");
+    assert(tape_z + tape_thick < drum_axle_z - drum_radius, "seed_tape_bend: plain tape must clear the drum");
+    assert(tx0 + transit_len == plow_start - tape_x0, "seed_tape_bend: transit must end at the plow mouth");
+    assert(tape_z + tape_thick < tape_z + tape_thick + 10, "seed_tape_bend: tape must clear the exit pipe region");
     union() {
-        // Flat ribbon full length (base min_z=0, single-layer floor;
-        // v45: ends at tape_flat_end 208, the leader takes it from there).
-        // Slope-matched shingles: identity outside the dip (same solid as
-        // the old single cube), smooth cosine inside.
+        // Plain flat ribbon full length; all shingles are horizontal and fused.
         for (i=[0:n_r-1]) {
             xc = (i + 0.5)*rdx;
-            sl = ubend_sl(xc);
-            translate([xc, 0, tape_thick/2 + ubend_dz(xc)])
-                rotate([0, -atan(sl), 0])
-                    cube([rdx*sqrt(1+sl*sl) + 2*epsilon, paper_width, tape_thick], center=true);
+            translate([xc, 0, tape_thick/2])
+                cube([rdx + 2*epsilon, paper_width, tape_thick], center=true);
         }
         // v45 wind-up leader: narrow strip (folded-tube width) climbing
         // ribbon-top -> wound pack, fused into both (overlaps ribbon by
@@ -245,21 +207,11 @@ module seed_tape_bend() {
         translate([(lle_s + lle_e)/2 + 0.25*cos(lle_ang), 0, tape_thick + lle_dz/2 + 0.25*sin(lle_ang)])
             rotate([0, -lle_ang, 0])
                 cube([lle_len + 1, leader_w, tape_thick + 2*epsilon], center=true);
-        // Forming taper: W shallow -> E full-U exit
+        // Forming taper: W shallow -> E full-U exit.
         for (xi=[0:tape_n_x-1])
             fold_section(fx0 + xi*dx, dx, 0.15 + 0.85*(xi + 0.5)/tape_n_x);
-        // Full-U transit (forming exit -> plow mouth via pipe): straight,
-        // then dipped shingles through the U (cross-sections stay normal
-        // to the ribbon, fused by X-overlap), then straight to the mouth.
-        for (ai=[0:n_a-1])
-            fold_section(tx0 + ai*dx_a, dx_a, 1);
-        for (bi=[0:n_b-1]) {
-            bx = zb0 + bi*bdx;
-            xc = bx + bdx/2;
-            fold_section(bx, bdx, 1, ubend_dz(xc), atan(ubend_sl(xc)));
-        }
-        for (ci=[0:n_c-1])
-            fold_section(zb1 + ci*dx_c, dx_c, 1);
+        // Plain straight flat ribbon through the transit (forming exit ->
+        // plow mouth via pipe); the separate guide forms it at the drop.
     }
 }
 
@@ -268,7 +220,7 @@ module seed_tape_bend() {
 // (n facets) from the ribbon top at [s*hw, base_top] sweeping
 // outward-up, vertical wall, shoulder kink (outward+slightly up) then
 // foot back down onto the ribbon wing at [s*(hw+r+2.5), base_top].
-module fold_section(x0, dx, sc, zoff=0, sang=0) {
+module fold_section(x0, dx, sc) {
     hw = fold_width/2;                 // 2.0 trough bottom half-width
     r = tape_bend_radius;              // 1.5
     a = tape_fold_angle;               // 90 = vertical walls (full U)
@@ -282,37 +234,31 @@ module fold_section(x0, dx, sc, zoff=0, sang=0) {
             t1 = -90 + (i+1)*a/tape_n_arc;
             p0 = [s*(hw + r*cos(t0)), base_top + (r + r*sin(t0))*sc];
             p1 = [s*(hw + r*cos(t1)), base_top + (r + r*sin(t1))*sc];
-            seg_ribbon_taper(x0, dx, p0, p1, zoff, sang, xc);
+            seg_ribbon_taper(x0, dx, p0, p1);
         }
         te = a - 90;  // arc end angle (0 = vertical tangent)
         pa = [s*(hw + r*cos(te)), base_top + (r + r*sin(te))*sc];
         wd = [-s*sin(te), cos(te)];  // tangent dir at arc end
         pb = [pa[0] + wd[0]*tape_fold_wall*sc, pa[1] + wd[1]*tape_fold_wall*sc];
-        seg_ribbon_taper(x0, dx, pa, pb, zoff, sang, xc);
+        seg_ribbon_taper(x0, dx, pa, pb);
         // reverse S-shoulder: kink outward+up, then foot down to wing
         pk = [pb[0] + s*sh_r*0.9, pb[1] + sh_r*0.5*sc];
         pf = [s*(hw + r + 2.5), base_top];
-        seg_ribbon_taper(x0, dx, pb, pk, zoff, sang, xc);
-        seg_ribbon_taper(x0, dx, pk, pf, zoff, sang, xc);
+        seg_ribbon_taper(x0, dx, pb, pk);
+        seg_ribbon_taper(x0, dx, pk, pf);
     }
 }
 
 // Tapered ribbon segment between 2D path points p0/p1 ([y,z]), X-span
 // [x0, x0+dx+eps overlap], centered on the path (thickness tape_thick).
-module seg_ribbon_taper(x0, dx, p0, p1, zoff=0, sang=0, xc=0) {
+module seg_ribbon_taper(x0, dx, p0, p1) {
     dy = p1[0] - p0[0];
     dz = p1[1] - p0[1];
     seg = sqrt(dy*dy + dz*dz);
     if (seg > 0) {
-        // Rigid dip motion about the chunk pivot (chunk cross-section stays
-        // normal to the ribbon; X-length stretches 1/cos so shingles fuse).
-        // zoff=sang=0 is the identity: byte-identical straight solid.
-        translate([xc, 0, zoff])
-            rotate([0, -sang, 0])
-                translate([-xc, 0, -zoff])
-                    translate([x0 + dx/2, (p0[0]+p1[0])/2, (p0[1]+p1[1])/2 + zoff])
-                        rotate([atan2(dz, dy), 0, 0])
-                            cube([dx/cos(sang) + 2*epsilon, seg + 2*epsilon, tape_thick], center=true);
+        translate([x0 + dx/2, (p0[0]+p1[0])/2, (p0[1]+p1[1])/2])
+            rotate([atan2(dz, dy), 0, 0])
+                cube([dx + 2*epsilon, seg + 2*epsilon, tape_thick], center=true);
     }
 }
 
@@ -326,32 +272,6 @@ module seg_ribbon(fx0, p0, p1) {
         translate([fx0 + plow_len/2, (p0[0]+p1[0])/2, (p0[1]+p1[1])/2])
             rotate([atan2(dz, dy), 0, 0])
                 cube([plow_len, seg + 2*epsilon, tape_thick], center=true);
-    }
-}
-
-// Stainless former collar (v28 visual, v31 at the forming exit):
-// transverse shoe with a U notch straddling the full-U section at the
-// forming exit (world x ~67, 5+ clear of the drum face). Two feet ride
-// the flat wings + top bridge clears the pocket; the notch (inner width
-// fold_width+2*tol, depth wall+r) forms the paper around the trough.
-// Visual in assembly only (not a separate print export).
-module former_collar() {
-    shoe_w = 30;          // across-tape (covers 25.4 wings)
-    shoe_t = 3;           // along-tape thickness
-    foot_w = (shoe_w - (fold_width + 2*tolerance))/2;
-    notch_d = tape_fold_wall + tape_bend_radius + 1.0;
-    bridge_t = 2.0;
-    difference() {
-        union() {
-            // feet on the wings
-            translate([-shoe_t/2, -shoe_w/2, 0]) cube([shoe_t, foot_w, notch_d]);
-            translate([-shoe_t/2, shoe_w/2 - foot_w, 0]) cube([shoe_t, foot_w, notch_d]);
-            // top bridge
-            translate([-shoe_t/2, -shoe_w/2, notch_d]) cube([shoe_t, shoe_w, bridge_t]);
-        }
-        // U notch (open bottom): trough pocket clearance
-        translate([-shoe_t/2 - epsilon, -(fold_width + 2*tolerance)/2, -epsilon])
-            cube([shoe_t + 2*epsilon, fold_width + 2*tolerance, notch_d + epsilon]);
     }
 }
 

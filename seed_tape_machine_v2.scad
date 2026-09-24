@@ -8,7 +8,7 @@
       scad/chassis.scad   — chassis()
       scad/feed.scad      — hopper_body, seed_cartridge, seed_cradle (v121: single_cone/spool_cones removed with the cones)
      scad/plow.scad      — scroll_sheet, six_turner, folding_plow
-     scad/stations.scad  — seed_tape_bend, former_collar, knurled_roller, pull_rollers, thread_twister, vpull_roller, takeup_reel, crank_assembly
+     scad/stations.scad  — knurled_roller, pull_rollers, thread_twister, vpull_roller, takeup_reel, crank_assembly
      scad/drive_train.scad — v97 composite take-off (A[10+30] only)
 */
 
@@ -23,6 +23,25 @@ include <scad/plow.scad>;
 include <scad/stations.scad>;
 include <scad/drive_train.scad>;
 
+// Step 13: one explicit rigid frame for the twister rotor.
+// The axle uses the separate X-only reflection below; its Y/Z support frame
+// remains unchanged.
+module twister_rigid_frame() {
+    translate([twister_frame_cx, twister_frame_cy, twister_frame_cz])
+        rotate([0, 180, 0])
+            translate([-twister_frame_cx, -twister_frame_cy, -twister_frame_cz])
+                children();
+}
+
+// The axle is absolute-coordinate geometry. Reflect it in X only about the
+// same x datum, preserving its Y/Z support frame and base connection.
+module twister_axle_x_reflection() {
+    translate([twister_frame_cx, 0, 0])
+        mirror([1, 0, 0])
+            translate([-twister_frame_cx, 0, 0])
+                children();
+}
+
 module animated_assembly() {
     drum_angle = -360*$t + 4.5;  // v81: +4.5° half-pitch phase (40T drum) for tooth-into-gap mesh with crank 20T
     crank_angle = 720*$t;   // v79: crank 20T spins 2x drum (CW, meshes drum 40T)
@@ -35,8 +54,10 @@ module animated_assembly() {
     // Chassis
     chassis();
 
-    // Static twister axle (absolute coords, no transform — pedestal + tube + snap fingers)
-    twister_axle();
+    // Static axle uses the unchanged X-only reflection plus its axle-only west shift;
+    // it is not in the rotor's 180Y frame.
+    translate([twister_axle_x_shift, 0, 0])
+        twister_axle_x_reflection() twister_axle();
 
     // v121 Step 7: spool cones removed (tape feeds from off-machine supply).
     // Spool rod in the chassis stays (mounts + bores untouched).
@@ -55,23 +76,21 @@ module animated_assembly() {
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
 
+    // Step 5: separate pipe-mounted guide; it never touches the plain tape.
+    translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
+        u_bend_guide();
+
     // Seed cradle
     translate([plow_start, chassis_width/2 - 12.7, base_thick + 15])
         seed_cradle();
 
     // Seed tape with center U-fold (v34 OD10: narrow 4 trough,
     // R1.5, 5.5 walls, S-shoulders; v31: forming 37..70 fully west of
-    // the drum face + straight full-U transit 70..126 under the drum
+    // the drum face + plain straight transit 70..126 under the drum
     // (13.6 air gap) UNDER the hover pipe (10 gap) to the plow mouth;
     // static in CAD, scrolls in the viewer; single-layer floor, min_z=0).
     translate([tape_x0, chassis_width/2, tape_z])
         seed_tape_bend();
-
-    // Former collar (v28 visual, v31 at the forming exit): stainless
-    // transverse shoe with U notch straddling the full-U section at the
-    // forming exit (world x ~67, clear of the wheel).
-    translate([fold_end - 3, chassis_width/2, tape_z + tape_thick])
-        former_collar();
 
     // Folding plow (v39 REPLACED by the 6-turner/roller former: the
     // seeded tape rolls through the 6 curl east of the drop, world x
@@ -82,7 +101,7 @@ module animated_assembly() {
 
     // v79: rollers REMOVED; upper/lower roller lines deleted.
 
-    // Crank drives from (152,105) (v95: swung up on the r60 mesh circle):
+    // Crank drives from the fresh level station (160,75) on the r60 mesh circle:
     // 20T gear meshes drum 40T at dist=60. Front wall (Y=68), grip +Y
     // outward. Crank rotates 2x drum (720*$t).
     translate([crank_mount_x, crank_mount_y, crank_axle_z])
@@ -91,15 +110,16 @@ module animated_assembly() {
                 crank_assembly();
 
     // v97 composite take-off (user: revert gears, ONE composite 10->30):
-    // crank20 -> A[10+30] (-2, Y). v115: B at the mitre apex (155, 32).
-    // v116 Step 2: 15T idler bridges A30 -> B10 (same band 70-75); B -6x,
+    // crank20 -> A[10+30] (-2, Y). B at the fresh framed mitre apex (210.5, 32).
+    // 15T idler bridges A30 -> B10 (same band 70-75); B -6x,
     // twister +6x via the 1:1 mitre (2.0 wraps/seed).
     translate([v97_Ax, v97_A_y0, v97_Az])
         rotate([0, A_rev * crank_angle, 0])
             dt_cluster_A();
     translate([v98_Bx, v98_B_y0, v98_Bz])
-        rotate([0, B_rev * crank_angle, 0])
-            dt_cluster_B();
+        rotate([0, 180, 0])
+            rotate([0, B_rev * crank_angle, 0])
+                dt_cluster_B();
     translate([v115_Ix, v115_I_y0, v115_Iz])
         rotate([0, I_rev * crank_angle + v115_I_phase, 0])
             dt_idler();
@@ -108,9 +128,10 @@ module animated_assembly() {
     // orbit the tape axis just east of the plow, binding each seed
     // into the folded pocket; v97: unpowered, static in preview
     // (composite take-off only, next stage TBD).
-    translate([bind_x, chassis_width/2, twister_axle_z])
-        rotate([twister_angle, 0, 0])
-            thread_twister();
+    twister_rigid_frame()
+        translate([bind_x, chassis_width/2, twister_axle_z])
+            rotate([twister_angle, 0, 0])
+                thread_twister();
 
     // v37 Vertical-nip pull pair (spacing driver), v39 CUSHIONED:
     // two vertical-axis rollers stand on the base flanking the finished
@@ -177,8 +198,9 @@ if (part_to_render == "all") {
     // Export pose: translate only (no bobbin-down rotate; bobbins not rendered)
     translate([0, 0, tw_lift]) thread_twister();
 } else if (part_to_render == "twister_axle") {
-    // Static axle (absolute coords, no transform needed for export).
-    twister_axle();
+    // Bake the X-only axle reflection into the standalone GLB; the viewer applies
+    // the same axle-only west shift at its root-level placement.
+    twister_axle_x_reflection() twister_axle();
 } else if (part_to_render == "pull_a") {
     vpull_roller(); // base at z=0 already
 } else if (part_to_render == "pull_b") {

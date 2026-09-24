@@ -145,6 +145,11 @@ module dt_gearwall() {
             for (px = v105_ext_x)
                 translate([px - v105_pillar_s/2, 67, v105_ext_z - v105_pillar_s/2])
                     cube([v105_pillar_s, 13, v105_pillar_s]);
+            // Step 13: one same-section top pillar supports the east plate
+            // extension without entering either fresh gear band.
+            translate([v105_east_pillar_x - v105_pillar_s/2, 67,
+                       v105_east_pillar_z - v105_pillar_s/2])
+                cube([v105_pillar_s, 13, v105_pillar_s]);
         }
         // A shaft slip bore (through + epsilon both faces). v115: B bore
         // REMOVED — wall is A-only until the next-step intermediate brings
@@ -170,6 +175,12 @@ module dt_gearwall() {
             rotate([-90, 0, 0])
                 cylinder(h=(v105_wall_y1 - v105_wall_y0) + 2*epsilon,
                          d=axle_clearance_dia, center=false);
+        // Fresh crank at z75 passes through the extended plate's y78..81
+        // band; keep the existing hex-shaft clearance style explicit.
+        translate([crank_axle_x, v105_wall_y0 - epsilon, crank_axle_z])
+            rotate([-90, 0, 0])
+                cylinder(h=(v105_wall_y1 - v105_wall_y0) + 2*epsilon,
+                         r=hex_clearance_r, $fn=6, center=false);
     }
 }
 

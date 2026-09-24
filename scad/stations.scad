@@ -279,9 +279,10 @@ module thread_twister() {
 
 module twister_axle() {
     // Absolute coordinates: pedestal (x170..174, y lane_y±5, z0..24.5)
-    // fused with tube (x172..197, OD15, Ø10 through-bore) + collar (r9 x176.5..178)
-    // + groove in hub bore (r9 x193.5..196) + full annulus wall (r5..7.5 x186..197) with 3 tapered slots.
-    // v118 Step 3: east-tip snap fingers removed; Essentra-style 2-leg nose x184.5..190 + gap slots x183.5..190.5.
+    // fused with tube (x172..193.5, OD15, Ø10 through-bore) + collar (r9 x176.5..178.5)
+    // + one external +Z C-slot (x178.5..184.5, r5..10.3).
+    // v122: east-tip snap fingers and old hub-groove/cap geometry removed;
+    // the two ±Y 3.5mm nose flex gaps remain the only nose cuts.
     // v87 +15 lift: tube centre twister_axle_z=32, tube bottom 24.5 meets pedestal top 24.5.
     assert(twister_axle_z == 32, "twister_axle: bore centre must be 32 (tape_z 28 + 4)");
     assert(24.5 == twister_axle_z - 7.5, "twister_axle: pedestal top must meet lifted tube bottom (32-7.5)");
@@ -350,23 +351,16 @@ module twister_axle() {
             translate([tw_mouth_x, 0, 0])
                 rotate([0, 90, 0])
                     cylinder(h=21.5 + 2*epsilon, r=5, center=false, $fn=60);
-        // (v122: hub-bore groove + tip cap ring deleted — spent features of the
-        // old east retention; interior end caps fed the non-manifold cluster.)
-        // 3 uniform through-slots at 60°, 180°, 300° (radial cuts through annulus)
-        // v118: width 1.5mm uniform x180..183 (truncated; 0.5 ligament to leg root 183.5)
+        // One external C-slot: it starts at the bore boundary (r5) and
+        // opens to r10.3, clearing the hub OD20 by 0.3mm radially. The
+        // 6mm axial span covers the 5mm hub with 1mm total play; +Z keeps
+        // it clear of the two ±Y nose flex gaps.
         translate([0, lane_y, twister_axle_z])
-            for (g=[0:tw_finger_n-1])
-                rotate([g*120 + 60, 0, 0])
-                    hull() {
-                        translate([tw_slot_x0, -tw_slot_w0/2, -tw_slot_r1])
-                            cube([epsilon, tw_slot_w0, 2*tw_slot_r1]);
-                        translate([tw_slot_x1-epsilon, -tw_slot_w1/2, -tw_slot_r1])
-                            cube([epsilon, tw_slot_w1, 2*tw_slot_r1]);
-                    }
-        // (v122: old shave-difference deleted with the stacked nose —
-        // the revolved profile needs no shaving.)
-        // v118: two single-sided gap slots x183.5..190.5 split the nose into 2 legs
-        // at ±Z (cut from y=4.5 outward, z-width tw_gap_w; legs at ±Z untouched)
+            rotate([tw_slot_ang, 0, 0])
+                translate([tw_slot_x0, tw_slot_r0, -tw_slot_w/2])
+                    cube([tw_slot_len, tw_slot_r1 - tw_slot_r0, tw_slot_w]);
+        // Intentional two-leg nose flex gaps: x183.5..190.5, cut radially
+        // toward ±Y from y=4.5 with z-width tw_gap_w; the +Z C-slot is separate.
         translate([0, lane_y, twister_axle_z])
             for (s = [0, 180])
                 rotate([s, 0, 0])

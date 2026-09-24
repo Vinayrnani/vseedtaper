@@ -4,17 +4,17 @@ module chassis() {
     // 10 before the dropper; feet stay in the lane, fused into the rails.
     plat_x0 = 70; plat_x1 = 90;      // east edge 90 = 10 before drop centre 100 (Step 7: reaches under the shifted U bottom 86)
     plat_y0 = 21; plat_y1 = 47;      // lane (paper 26 about Y34), clears slots
-    plat_top = tape_z - ubend_d;     // 19.5: meets dip bottom, no lift
-    assert(abs(plat_top - 19.5) < 0.001, "Step 6: platform top must be 19.5 (dip-bottom level)");
-    // Step-8 axle-root datum: tie ribs x168..173 (1mm back from the bevel
-    // toe 174.67; clear of the base slot x180+), lane-outside straps
-    // y3..21 / y47..65, z0..12; M3s at x169.5/172.5, z7 (rib-backed).
-    rib_x0 = 168; rib_x1 = 173; rib_z1 = 12;
-    assert(rib_x1 + 1 <= tw_bev_heel_x - tw_bev_face*cos(45), "Step-8 ribs must stay >=1 west of the bevel toe");
-    assert(rib_x1 + 2 <= tw_slot_x0, "Step-8 ribs must avoid the base slot");
-    assert(rib_x1 + 5 <= tw_disc_x0, "Step-8 ribs must clear the rotor disc in X");
-    assert(rib_x0 <= 169.5 && 172.5 <= rib_x1, "Step-8 M3s must sit in rib-backed wall");
-    assert(169.5 - (v97_Ax - axle_clearance_dia/2) >= 1, "Step-8 M3s must clear the A wall bore");
+    plat_top = tape_z - tape_thick/2; // plain-tape underside support level
+    assert(abs(plat_top - (tape_z - tape_thick/2)) < 0.001, "Step 6: platform top must support the plain tape underside");
+    // Step-13 axle root shifted 1.5mm east: tie ribs x190.5..196.5,
+    // lane-outside straps y3..21 / y47..65, z0..12; M3s at x192/195,
+    // z7 (rib-backed). The reflected foot remains fused to the chassis base.
+    rib_x0 = 190.5; rib_x1 = 196.5; rib_z1 = 12;
+    assert(rib_x0 <= twister_axle_reflect_x - tw_bev_heel_x + tw_bev_face*cos(45) + 1, "Step-13 ribs must meet the reflected axle-root envelope");
+    assert(tw_slot_x1_reflected + 2 <= rib_x0, "Step-13 ribs must avoid the reflected base slot");
+    assert(twister_reflect_x - tw_disc_x1 + 5 <= rib_x0, "Step-13 ribs must clear the reflected rotor disc in X");
+    assert(rib_x0 <= 192 && 195 <= rib_x1, "Step-13 M3s must sit in the reflected rib-backed wall");
+    assert(v97_Az - axle_clearance_dia/2 - (7 + bolt_dia/2) >= 1, "Step-13 M3s must clear the fresh A station in Z");
     assert(plat_x1 <= drop_x - 10, "Step 7: platform east edge must stop 10 before the dropper");
     assert(plat_x0 - ((fold_end - 3) + 3/2) >= 1, "Step 6: platform must clear the former collar");
     difference() {
@@ -152,9 +152,9 @@ module chassis() {
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
         }
-        // v97: A composite round shaft bore (r4 shaft -> d8.6) through both walls.
+        // Step 13: A composite round shaft bore (r4 shaft -> d8.6) through both walls.
         // A cantilevers from the front-wall bore (demo loads).
-        // v98: B composite bore alongside (same mount, r4 shaft -> d8.6).
+        // B composite bore alongside (same mount, r4 shaft -> d8.6).
         for (side=[0,1]) {
             translate([v97_Ax, side*(chassis_width-wall_thick)+wall_thick/2, v97_Az])
                 rotate([90,0,0])
@@ -165,16 +165,16 @@ module chassis() {
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
         }
-        // v116 Step-2 idler round shaft bore (r4 shaft -> d8.6) through both walls.
+        // Fresh idler round shaft bore (r4 shaft -> d8.6) through both walls.
         for (side=[0,1]) {
             translate([v115_Ix, side*(chassis_width-wall_thick)+wall_thick/2, v115_Iz])
                 rotate([90,0,0])
                     cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
         }
-        // Step-8 M3 wall screws (2 per side, rib-backed stations x169.5/172.5
+        // Step-13 M3 wall screws (2 per side, rib-backed stations x192/195
         // z7 — gear-free: below A30/idler bands, east of the A bore, west of
         // the ext pillar): clearance through wall + nut trap on outer face.
-        for (sx=[169.5, 172.5])
+        for (sx=[192, 195])
             for (side=[0,1]) {
                 translate([sx, side*(chassis_width-wall_thick)+wall_thick/2, 7])
                     rotate([90,0,0])
@@ -208,8 +208,9 @@ module chassis() {
         translate([drum_axle_x - 20.2, chassis_width - 15 + (8-6.4)/2, base_thick - epsilon])
             cube([40.4, 6.4, 6 + 2*epsilon]);
         // Twister slot cutout (replaces old drop-pocket)
-        translate([tw_slot_x0, tw_slot_y0, -epsilon])
-            cube([tw_slot_x1-tw_slot_x0, tw_slot_y1-tw_slot_y0, base_thick+2*epsilon]);
+        translate([tw_slot_x0_reflected, tw_slot_y0, -epsilon])
+            cube([tw_slot_x1_reflected-tw_slot_x0_reflected,
+                  tw_slot_y1-tw_slot_y0, base_thick+2*epsilon]);
         // Lightening cutouts in walls
         translate([56, -epsilon, 64])
             cube([24, wall_thick+2*epsilon, 22]);
