@@ -4,6 +4,9 @@ Version-level changes only. Product requirements live in `REQUIREMENTS.md`.
 
 Status: current entry committed after user APPROVE; older entries historical.
 
+## v128 — 2026-09-24
+- Workflow order fix (user APPROVE): step done = **implementation → per-step final validation → preview** (not validation only at the end). Full gate runs **before every “Step N done”**: syntax/asserts (`openscad-nightly`), printability, watertight mesh where applicable, min moving gap from `tol=0.3`, then ≥3-angle visual review after preview. Never defer/batch validation across steps. Also track missing `.agents/skills/openscad/`. Docs-only; no CAD/GLB/viewer change, no ASSET_V bump. Local snapshot `web/v128/`.
+
 ## v127 — 2026-09-24
 - Docs/workflow (user APPROVE): AGENTS.md gained mandatory **Step-wise execution workflow** (ordered step queue, continuous chain after "Step N done", fresh-on-HEAD work, rollback+redo on wrong step, purge after each step, ≥3-angle visual review with object isolation, printability/watertight/min-gap gates). Skills section requires `code-philosophy` + `openscad` + `openscad-iterative-modeling` for step-wise CAD (receipt in first progress note). Project-local skills committed: `skills/` (code-philosophy, frontend-philosophy, openscad, openscad-iterative-modeling), `.agents/skills/openscad-iterative-modeling/`, `.opencode/skills/openscad-iterative-modeling/`, `skills-lock.json`. No CAD/GLB/viewer change, no ASSET_V bump. Local snapshot `web/v127/`.
 

@@ -43,7 +43,7 @@ Requirements
 
 Load skills before any step work: `code-philosophy`, `openscad`, `openscad-iterative-modeling` (state `Skills loaded: …` first).
 
-- Implement **step by step**: one step at a time. A step is done only after **implementation + preview output** for that step; then immediately continue the next queued step.
+- Implement **step by step**: one step at a time. A step is done only after **implementation → per-step final validation → preview output** for that step; then immediately continue the next queued step.
 - User may give steps **at any time**, in any order of message arrival, but execute **strictly in order only** (queue arrivals; never skip ahead).
 - If the user gives **no step number** or calls it **`feat:`**, treat it as **another step** (assign the next queue slot / label it as a step).
 - **Fresh on current code:** each step’s work builds on live HEAD as new work. Do **not** re-read old changelog entries to redo prior steps; do not “continue” an unfinished old attempt as if it were this step.
@@ -52,7 +52,7 @@ Load skills before any step work: `code-philosophy`, `openscad`, `openscad-itera
 - **Purge after each step:** clear tool output/logs from the completed step (screenshots prune via `scripts/cleanup-screenshots.sh`; drop temp helpers/caches for that step) before starting the next.
 - **Autonomous visual review:** each step is reviewed with **≥3 different angles/ways** (e.g. iso + side + top/close-up, or live preview + PNG views).
 - **Isolation while inspecting:** keep **only the objects this step touched** visible; uncheck/hide others for a clear view — **unless** the step’s requirement needs those other objects in frame.
-- **Printability gates where needed:** for solid/moving parts, check **printability**, **watertight** mesh, and **minimum gap for moving** pairs (derive clearances from `tol=0.3`).
+- **Per-step final validation (every step, not only at the end):** order is **implementation → validation → preview**. Before any preview, run the full validation gate for **that step’s** changes — syntax/asserts (`openscad-nightly`), **printability**, **watertight** mesh where applicable, and **minimum gap for moving** pairs (from `tol=0.3`), plus the visual review after preview. Only then report “Step N done”. Do **not** defer validation to the last step or batch it across steps; each step validates itself before the next starts.
 
 ## Gotchas — do not violate
 - **No repeated tool calls / no repeated work (STRICT):** never the same tool call, command, grep/read, or action more than **2 times** with the same result. Attempt once; change approach on the second attempt; after **2 identical attempts** STOP — no third try — report blocker + partial results. Applies to every agent (orchestrator, plan, coder, reviewer, general).
