@@ -1,98 +1,82 @@
-module chassis() {
-    // Step-6 tape support platform datum (fused pillar under the dip approach):
-    // top AT the dip-bottom level (never pushes the tape up); footprint stops
-    // 10 before the dropper; feet stay in the lane, fused into the rails.
-    plat_x0 = 70; plat_x1 = 90;      // east edge 90 = 10 before drop centre 100 (Step 7: reaches under the shifted U bottom 86)
-    plat_y0 = 21; plat_y1 = 47;      // lane (paper 26 about Y34), clears slots
-    plat_top = tape_z - tape_thick/2; // plain-tape underside support level
-    assert(abs(plat_top - (tape_z - tape_thick/2)) < 0.001, "Step 6: platform top must support the plain tape underside");
-    // Step-13 axle root shifted 1.5mm east: tie ribs x190.5..196.5,
-    // lane-outside straps y3..21 / y47..65, z0..12; M3s at x192/195,
-    // z7 (rib-backed). The reflected foot remains fused to the chassis base.
+module south_wall() {
+    south_y = chassis_width - wall_thick; // 65: inner mating face
     rib_x0 = 190.5; rib_x1 = 196.5; rib_z1 = 12;
-    assert(rib_x0 <= twister_axle_reflect_x - tw_bev_heel_x + tw_bev_face*cos(45) + 1, "Step-13 ribs must meet the reflected axle-root envelope");
-    assert(tw_slot_x1_reflected + 2 <= rib_x0, "Step-13 ribs must avoid the reflected base slot");
-    assert(twister_reflect_x - tw_disc_x1 + 5 <= rib_x0, "Step-13 ribs must clear the reflected rotor disc in X");
-    assert(rib_x0 <= 192 && 195 <= rib_x1, "Step-13 M3s must sit in the reflected rib-backed wall");
-    assert(v97_Az - axle_clearance_dia/2 - (7 + bolt_dia/2) >= 1, "Step-13 M3s must clear the fresh A station in Z");
-    assert(plat_x1 <= drop_x - 10, "Step 7: platform east edge must stop 10 before the dropper");
-    assert(plat_x0 - ((fold_end - 3) + 3/2) >= 1, "Step 6: platform must clear the former collar");
+    difference() {
+        union() {
+            // Step 2 removable SOUTH gear-mount wall, y=65..68.
+            translate([chassis_x0, south_y, 0])
+                cube([chassis_len, wall_thick, chassis_height]);
+            for (spec=[[drum_axle_x,   drum_axle_z,   bb_height_drum,   1],
+                       [crank_axle_x,  crank_axle_z,  bb_height_roller, 1],
+                       [spool_axle_x,  spool_axle_z,  bb_height_spool,  0]])
+                bearing_block(spec[0], spec[1], spec[2], spec[3]==1, chassis_width);
+            bearing_block(takeup_x, takeup_z, bb_height_spool, false, chassis_width);
+            // South-side tie rib and corner gussets stay attached to the removable wall.
+            translate([rib_x0, south_y - 18, 0])
+                cube([rib_x1 - rib_x0, 18, rib_z1]);
+            for (gy=[chassis_width - 6]) {
+                translate([chassis_x0 + 4, gy, base_thick - 0.15])
+                    hull() {
+                        cube([12, 6, 1.15]);
+                        translate([0, 0, 12]) cube([1.5, 6, 1]);
+                    }
+                translate([chassis_x0 + chassis_len - 16, gy, base_thick - 0.15])
+                    hull() {
+                        cube([12, 6, 1.15]);
+                        translate([10.5, 0, 12]) cube([1.5, 6, 1]);
+                    }
+            }
+        }
+        // South-wall axle/gear bores.
+        translate([spool_axle_x, south_wall_bore_y, spool_axle_z])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        translate([takeup_x, south_wall_bore_y, takeup_z])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        translate([crank_axle_x, south_wall_bore_y, crank_axle_z])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
+        translate([drum_axle_x, south_wall_bore_y, drum_axle_z])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
+        translate([v97_Ax, south_wall_bore_y, v97_Az])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        translate([v98_Bx, south_wall_bore_y, v98_Bz])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        translate([v115_Ix, south_wall_bore_y, v115_Iz])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        // Step 2 M3 interface: wall clearance and outer-face nut trap.
+        for (sx=wall_screw_x) {
+            translate([sx, south_wall_bore_y, wall_screw_z])
+                rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=wall_screw_clearance_d, center=true);
+            translate([sx, chassis_width, wall_screw_z])
+                rotate([90,0,0]) cylinder(h=nut_trap_depth+epsilon, r=wall_screw_nut_r, $fn=6, center=false);
+        }
+        // Existing south-side Step-13 M3 wall screws at x192/195, z7.
+        for (sx=[192, 195]) {
+            translate([sx, south_wall_bore_y, 7])
+                rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=bolt_dia+2*tolerance, center=true);
+            translate([sx, chassis_width, 7])
+                rotate([90,0,0]) cylinder(h=nut_trap_depth+epsilon, r=(bolt_head_across+2*tolerance)/sqrt(3), $fn=6, center=false);
+        }
+        // South-wall lightening cutout.
+        translate([90, south_y - epsilon, 18])
+            cube([30, wall_thick+2*epsilon, 22]);
+    }
+}
+
+module chassis() {
+    // Step 1: chassis floor is the exposed planar slab at z=0..4.
     difference() {
         union() {
             translate([chassis_x0, 0, 0])
                 cube([chassis_len, chassis_width, base_thick]);
             translate([chassis_x0, 0, 0])
                 cube([chassis_len, wall_thick, chassis_height]);
-            translate([chassis_x0, chassis_width - wall_thick, 0])
-                cube([chassis_len, wall_thick, chassis_height]);
-            // Track rails
-            rail_thick = 2;
-            rail_len = 200;
-            rail_x0 = 10;
-            translate([rail_x0, (chassis_width - paper_width)/2 - rail_thick, base_thick - 0.15])
-                cube([rail_len, rail_thick, track_depth + 0.15]);
-            translate([rail_x0, (chassis_width + paper_width)/2, base_thick - 0.15])
-                cube([rail_len, rail_thick, track_depth + 0.15]);
-            // Hopper slide rails
-            translate([drum_axle_x - 22, 7, base_thick - 0.15])
-                cube([44, 8, 6 + 0.15]);
-            translate([drum_axle_x - 22, chassis_width - 15, base_thick - 0.15])
-                cube([44, 8, 6 + 0.15]);
-            // Step-6 support pillar: solid block z4..plat_top under the dip
-            // approach (0.15 base overlap like the rails; 0.3 edge overlap
-            // into both track rails = fused rail feet, no screws needed).
-            translate([plat_x0, plat_y0, base_thick - 0.15])
-                cube([plat_x1 - plat_x0, plat_y1 - plat_y0, plat_top - (base_thick - 0.15)]);
-            // Step-8 tie ribs: pedestal foot to both walls (fused to walls +
-            // base + rails; below all sweeps, rotor parts start x174.67+).
-            translate([rib_x0, wall_thick, 0])
-                cube([rib_x1 - rib_x0, 21 - wall_thick, rib_z1]);
-            translate([rib_x0, chassis_width - wall_thick - 18, 0])
-                cube([rib_x1 - rib_x0, 18, rib_z1]);
-            // Bearing blocks (pillow-block style)
+            // Wall-local M3 interface holes are cut below; the floor stays flat.
+            // NORTH-side bearing blocks; south-side blocks move to south_wall().
             for (spec=[[drum_axle_x,   drum_axle_z,   bb_height_drum,   1],
                        [crank_axle_x,  crank_axle_z,  bb_height_roller, 1],
                        [spool_axle_x,  spool_axle_z,  bb_height_spool,  0]])
-                for (side=[0,1]) {
-                    // v27 printable: fuse blocks to BOTH walls (front y_off=0
-                    // -> Y -2..2 overlaps wall 0..3; back y_off=60 -> 58..62
-                    // overlaps wall 57..60). Old code ignored side (all at
-                    // front, back blocks floated unfused).
-                    bearing_block(spec[0], spec[1], spec[2], spec[3]==1,
-                                  side == 0 ? 0 : chassis_width);
-                }
-            // v37 wind-up reel bearing blocks (axle along Y at takeup_x/takeup_z)
-            for (side=[0,1])
-                bearing_block(takeup_x, takeup_z, bb_height_spool, false,
-                              side == 0 ? 0 : chassis_width);
-            // v40 MOUNTING LAYOUT (parametric on the station X positions):
-            // BOTTOM mount: 6-turner (M3 holes below) + wind-up reel
-            //   (take-up bearing blocks above ride the base).
-            // SIDE mount: twister ring + pull rollers + drum (axles pass
-            //   through the chassis walls: axle holes + blocks below).
-            // TOP mount: hopper+shroud (slide rails + sole-flange M3) +
-            //   tape input spools (spool blocks feed from above).
-            // v40 pull top bridge (side-mount story for the vertical nip):
-            // cross bar fused wall-to-wall over the nip at pull_x.
-            // v47: SOLID bridge (no tube hole — tape-coupled nip, zero
-            // exterior gears); cup B kept (bored) for the static pin B.
-            // v52 SHORTER stack (roller top 27): bridge 28, cup 25..28.
-            // v87 +15 lift: bridge 43, cup 40..43 (roller top 42).
-            translate([pull_x - 2, 0, 43])
-                cube([4, chassis_width, 3]);
-            translate([pull_x, chassis_width/2 + vpull_off, 40])
-                difference() {
-                    cylinder(h=3 + epsilon, r=6, center=false);
-                    translate([0, 0, -epsilon])
-                        cylinder(h=3 + 3*epsilon, d=axle_clearance_dia, center=false);
-                }
-            // v48 pull support pins (static bars: base-fused, slip-fit
-            // in roller bores + cup-B bore; the tape-coupled rotors
-            // spin on them — supported both ends, never coplanar).
-            translate([pull_x, chassis_width/2 - vpull_off, (pull_pinA_z0 + pull_pinA_z1)/2])
-                cylinder(h=pull_pinA_z1 - pull_pinA_z0, r=pull_pin_r, center=true);
-            translate([pull_x, chassis_width/2 + vpull_off, (pull_pinB_z0 + pull_pinB_z1)/2])
-                cylinder(h=pull_pinB_z1 - pull_pinB_z0, r=pull_pin_r, center=true);
+                bearing_block(spec[0], spec[1], spec[2], spec[3]==1, 0);
+            bearing_block(takeup_x, takeup_z, bb_height_spool, false, 0);
             // v97: no wall-to-wall drive bars (composite take-off only).
             // v45 DEAD AXLES (static bars, slip-fit through bores/holes):
             // drum hex through-shaft (fuses into the solid v48 drum spur,
@@ -111,111 +95,54 @@ module chassis() {
             translate([spool_axle_x, (spool_shaft_y0 + spool_shaft_y1)/2, spool_axle_z])
                 rotate([90, 0, 0])
                     cylinder(h=spool_shaft_y1 - spool_shaft_y0, r=axle_dia/2, center=true);
-            // v67 chassis feet (4x 12x12 cubes, z=tw_foot_z..0, fused into base overlap 0..1)
-            for (fx=[chassis_x0+2, chassis_x0+chassis_len-14])
-                for (fy=[4, chassis_width-16])
-                    translate([fx, fy, tw_foot_z])
-                        cube([12, 12, -tw_foot_z]);
-            // Corner gussets via hull() of cubes
-            for (gy=[0, chassis_width - 6]) {
-                translate([chassis_x0 + 4, gy, base_thick - 0.15])
-                    hull() {
-                        cube([12, 6, 1.15]);
-                        translate([0, 0, 12]) cube([1.5, 6, 1]);
-                    }
-                translate([chassis_x0 + chassis_len - 16, gy, base_thick - 0.15])
-                    hull() {
-                        cube([12, 6, 1.15]);
-                        translate([10.5, 0, 12]) cube([1.5, 6, 1]);
-                    }
-            }
         }
-        // Axle holes (nominal + 2*tolerance)
-        for (side=[0,1]) {
-            translate([spool_axle_x, side*(chassis_width-wall_thick)+wall_thick/2, spool_axle_z])
-                rotate([90,0,0])
-                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        // NORTH-wall axle bores; south-wall bores are in south_wall().
+        translate([spool_axle_x, wall_thick/2, spool_axle_z])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        translate([takeup_x, wall_thick/2, takeup_z])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        // Matching wall-local M3 interface in the north wall; south-wall holes are in south_wall().
+        for (sx=wall_screw_x) {
+            translate([sx, wall_thick/2, wall_screw_z])
+                rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=wall_screw_clearance_d, center=true);
+            translate([sx, 0, wall_screw_z])
+                rotate([-90,0,0]) cylinder(h=nut_trap_depth+epsilon, r=wall_screw_nut_r, $fn=6, center=false);
         }
-        for (side=[0,1]) {
-            translate([takeup_x, side*(chassis_width-wall_thick)+wall_thick/2, takeup_z])
-                rotate([90,0,0])
-                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
-        }
-        // v79: crank shaft hex hole (follows crank_axle, now up at v95 spot)
-        for (side=[0,1]) {
-            translate([crank_axle_x, side*(chassis_width-wall_thick)+wall_thick/2, crank_axle_z])
-                rotate([90,0,0])
-                    cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
-        }
-        for (side=[0,1]) {
-            translate([drum_axle_x, side*(chassis_width-wall_thick)+wall_thick/2, drum_axle_z])
-                rotate([90,0,0])
-                    cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
-        }
-        // Step 13: A composite round shaft bore (r4 shaft -> d8.6) through both walls.
+        // Step 6 plow ear A lateral screw aligns with the north wall hole.
+        translate([plow_wall_screw_x, plow_north_wall_y, plow_wall_screw_z])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=bolt_dia+2*tolerance, center=true);
+        translate([plow_wall_screw_x, 0, plow_wall_screw_z])
+            rotate([-90,0,0]) cylinder(h=nut_trap_depth+epsilon, r=wall_screw_nut_r, $fn=6, center=false);
+        // NORTH-wall crank and drum hex bores; south-wall bores are in south_wall().
+        translate([crank_axle_x, wall_thick/2, crank_axle_z])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
+        translate([drum_axle_x, wall_thick/2, drum_axle_z])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
+        // Step 13: A composite round shaft bore (r4 shaft -> d8.6) through the north wall.
         // A cantilevers from the front-wall bore (demo loads).
         // B composite bore alongside (same mount, r4 shaft -> d8.6).
-        for (side=[0,1]) {
-            translate([v97_Ax, side*(chassis_width-wall_thick)+wall_thick/2, v97_Az])
-                rotate([90,0,0])
-                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        translate([v97_Ax, wall_thick/2, v97_Az])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        translate([v98_Bx, wall_thick/2, v98_Bz])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        translate([v115_Ix, wall_thick/2, v115_Iz])
+            rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
+        // Existing north-side Step-13 M3 wall screws remain at x192/195, z7.
+        for (sx=[192, 195]) {
+            translate([sx, wall_thick/2, 7])
+                rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=bolt_dia+2*tolerance, center=true);
+            translate([sx, 0, 7])
+                rotate([90,0,0]) cylinder(h=nut_trap_depth+epsilon, r=(bolt_head_across+2*tolerance)/sqrt(3), $fn=6, center=false);
         }
-        for (side=[0,1]) {
-            translate([v98_Bx, side*(chassis_width-wall_thick)+wall_thick/2, v98_Bz])
-                rotate([90,0,0])
-                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
-        }
-        // Fresh idler round shaft bore (r4 shaft -> d8.6) through both walls.
-        for (side=[0,1]) {
-            translate([v115_Ix, side*(chassis_width-wall_thick)+wall_thick/2, v115_Iz])
-                rotate([90,0,0])
-                    cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
-        }
-        // Step-13 M3 wall screws (2 per side, rib-backed stations x192/195
-        // z7 — gear-free: below A30/idler bands, east of the A bore, west of
-        // the ext pillar): clearance through wall + nut trap on outer face.
-        for (sx=[192, 195])
-            for (side=[0,1]) {
-                translate([sx, side*(chassis_width-wall_thick)+wall_thick/2, 7])
-                    rotate([90,0,0])
-                        cylinder(h=wall_thick+2*epsilon, d=bolt_dia+2*tolerance, center=true);
-                translate([sx, side == 0 ? 0 : chassis_width, 7])
-                    rotate(side == 0 ? [90,0,0] : [-90,0,0])
-                        cylinder(h=nut_trap_depth+epsilon, r=(bolt_head_across+2*tolerance)/sqrt(3), $fn=6, center=false);
-            }
-        // v48: NO idler stubs fuse into the back wall (zero exterior
-        // gears) — the wall keeps full section everywhere. The solid
-        // pull bridge needs no hole (tape-coupled nip, no drive tube).
-        // 45° chamfers on base edges
-        translate([chassis_x0, chassis_width/2, base_thick])
-            rotate([0,45,0])
-                cube([2.5, chassis_width + 2*epsilon, 2.5], center=true);
-        translate([chassis_x0 + chassis_len, chassis_width/2, base_thick])
-            rotate([0,45,0])
-                cube([2.5, chassis_width + 2*epsilon, 2.5], center=true);
-        // Plow mounting holes
-        for (px=[plow_start + 6, plow_start + plow_len - 6])
-            for (py=[6, 62]) {
-                translate([px, py, base_thick/2])
-                    cylinder(h=base_thick + 2*epsilon, d=bolt_dia + 2*tolerance, center=true);
-                translate([px, py, -epsilon])
-                    cylinder(h=nut_trap_depth + epsilon,
-                             r=(bolt_head_across + 2*tolerance)/sqrt(3), $fn=6, center=false);
-            }
-        // Hopper rail slots
-        translate([drum_axle_x - 20.2, 7 + (8-6.4)/2, base_thick - epsilon])
-            cube([40.4, 6.4, 6 + 2*epsilon]);
-        translate([drum_axle_x - 20.2, chassis_width - 15 + (8-6.4)/2, base_thick - epsilon])
-            cube([40.4, 6.4, 6 + 2*epsilon]);
-        // Twister slot cutout (replaces old drop-pocket)
-        translate([tw_slot_x0_reflected, tw_slot_y0, -epsilon])
-            cube([tw_slot_x1_reflected-tw_slot_x0_reflected,
-                  tw_slot_y1-tw_slot_y0, base_thick+2*epsilon]);
-        // Lightening cutouts in walls
+        // Ear B keeps the unchanged vertical base screw at world (153,62).
+        translate([plow_start + plow_len - 6, 62, base_thick/2])
+            cylinder(h=base_thick + 2*epsilon, d=bolt_dia + 2*tolerance, center=true);
+        translate([plow_start + plow_len - 6, 62, -epsilon])
+            cylinder(h=nut_trap_depth + epsilon,
+                     r=(bolt_head_across + 2*tolerance)/sqrt(3), $fn=6, center=false);
+        // NORTH-wall lightening cutout; south-wall cutout is in south_wall().
         translate([56, -epsilon, 64])
             cube([24, wall_thick+2*epsilon, 22]);
-        translate([90, chassis_width - wall_thick - epsilon, 18])
-            cube([30, wall_thick+2*epsilon, 22]);
     }
 }
 

@@ -150,7 +150,7 @@
     Single wrap-around hopper: right wedge pickup (level top), 11→6 cover, hover pipe (ID6/OD10 L10, 10 gap) drops seeds at x=100 port.
     Two-stage forming: first-stage U (forming 37..70 + transit 70..126, seed drops at 100 into the open pocket) →
     6-folder second stage (126..159: seeded U arrives, thin-wall tapered shell sits AROUND the tape — pinched open-C entry dia ~12 flaring to wide dia ~21 exit, outer wrap 300->315deg + inner hook to 160deg with a 2.5 open slit full length, tail blade + flat skid sit; hollow bore, 2 small screw ears).
-    Thread twister (hollow ring + 2 rod bobbin holders, 6x at the layshaft via interior parallel-spur + 90° bevel: drum-coaxial spur 50T → parallel counter 10T (5x, beside the drum, high) → Y-bevel 12T → side X-pinion 10T (1.2x) → friction wheel on the ring OD; empty middle, tape passes through) binds each rolled seed past the 6-folder → cushioned vertical pull nip
+    Thread twister (hollow ring + 2 rod bobbin holders, -6x at the layshaft via the interior train and 1:1 mitre; empty middle, tape passes through) binds each rolled seed past the 6-folder → cushioned vertical pull nip
     (rubber sleeve, tape-coupled 4/3 with the roller, spacing driver, no gears) → wind-up reel (core d10, tape-tension wind-up with slip clutch: fast empty, slips full). Single exterior gear pair — front-plane crank 20T ↔ drum 40T mesh (dist 60); no other exterior gears, back wall clean solid.
     v81: Front-plane mesh: crank 20T front world y 49..55 (center ~52) ↔ drum 40T front y≈47.95, dist 60, external counter-rotation.
     Mounts — bottom: 6-folder + wind-up reel · side: twister + pull + drum (axles through walls) · top: hopper + input spools.
@@ -170,10 +170,10 @@
   // ---------- constants (from seed_tape_machine_v2.scad) ----------
   var TAPE_PER_CRANK_REV = Math.PI * 20;   // 62.8319 mm (PI * roller_dia = PI * 20T gear pitch dia)
   var DRUM_RATIO = -0.5;                     // roller_teeth / drum_teeth = 20/40 = 0.5 (front-plane external mesh, counter-rotation)
+  var TWISTER_RATIO = -6;                    // B -6x through the 1:1 mitre; intentionally opposite crank
   var GEAR_PHASE = Math.PI / 20;            // 9deg = gear_mesh_phase (20T half-pitch,
                                             // tooth-into-gap); applied to pull nip
   var DRUM_PHASE = 4.5 * Math.PI / 180;    // v81: 4.5deg = 40T drum half-pitch, tooth-into-gap mesh
-  var PULL_SPIN = 4 / 3;                    // v52: pull nip surface speed ratio (d15 cushioned sleeve, same surface speed)
   var CRANK_ANGLE_PER_REV = Math.PI * 2;
 
   // OpenSCAD axle positions (from .scad: axle layout + crank sections)
@@ -255,7 +255,7 @@
   // signs on external pairs). v118: an old "negated angles" note here was
   // wrong and caused flipped B/idler signs — corrected.
   // Phase 2: +15 mm lift applied to drum/spool/cradle/plow/crank/pull/takeup/twister pivots
-  // (root-Y = CAD-Z). Hopper pivot stays y=4; chassis def [0,-15,0] unchanged.
+  // (root-Y = CAD-Z). Hopper pivot stays y=4; chassis flat base is z=0.
   // Recentered: machine is 200 long (x 0-200), height 110 (y 0-110).
   // root.position = (-100, 0, 55) as specified.
   var root = new THREE.Group();
@@ -335,12 +335,6 @@
     // Vertical-nip pull pair at OpenSCAD (206, 30-/+14.2, 19) ->
     // (206, 19, -21.6) / (206, 19, -46.4) (+15): vertical axes stay vertical
     // under child Rx(-90), spin about root Y (same sign as scad Rz).
-    var pullAPivot = new THREE.Group();
-    pullAPivot.position.set(206, 19, -21.6); // +15 lift
-    root.add(pullAPivot);
-    var pullBPivot = new THREE.Group();
-    pullBPivot.position.set(206, 19, -46.4); // +15 lift
-    root.add(pullBPivot);
     // Wind-up reel at OpenSCAD (238, 30, 49) -> (238, 49, -30) (+15): axle
     // along root Z like the drum, spins rotation.z (negated scad angle).
     var takeupPivot = new THREE.Group();
@@ -538,7 +532,6 @@
   window._twister = {
     pivot: twisterPivot, frame: twisterFrame, bindX: BIND_X, arms: 2, orbitsPerDrum: 6,
     lines: [threadLineA, threadLineB],
-    pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
     pullX: 206, takeupX: 238
   };
   // v56 proof hooks: 6-folder THIN-WALL TAPERED shell (Front/Back/
@@ -552,7 +545,7 @@
   window._sixTurner = { start: 126, end: 159, dropX: 100, wall: 0.8, boreR: 0,
     entryBore: 12.4, exitBore: 21, seamGap: 2.5,
     stages: '7-station thin-wall taper: pinched open-C entry -> 315deg wrap + 160deg hook exit (2.5 slit, hollow bore)', entry: 'pinched open-C dia ~12 (tail blade + skid, 2.5 top slit)', exit: 'wide flare dia ~21, 6-spiral hook, hollow bore (thin shell)' };
-  window._gearTrain = { chain: 'crank 20T -> A[10+30] (-2x) -> idler 15T (+4x) -> B[10+bev36] (-6x) @apex(210.5,32) -> twister bevel 36T m1.25 1:1 mitre (+6x = 2.0 wraps/seed)', belts: false, exteriorGears: 9,
+  window._gearTrain = { chain: 'crank 20T -> A[10+30] (-2x) -> idler 15T (+4x) -> B[10+bev36] (-6x) @apex(210.5,32) -> twister bevel 36T m1.25 1:1 mitre (-6x = 2.0 wraps/seed magnitude)', belts: false, exteriorGears: 9,
     bevel: 'custom 10/10 m1.25 mitre corner (B->C, TRUE apex geometry, visual teeth interleave)',
     mesh: 'all spur meshes pitch-CD exact with backlash (fail-loud asserts); friction wheel tangent to disc OD',
      mounts: { crank: [160, 75], A: [189.702219, 67.041314], B: [210.5, 32], idler: [211.695428, 48.331307] } };
@@ -604,7 +597,6 @@
     drum: drumPivot, hopper: hopperPivot,
     cradle: cradlePivot, plow: plowPivot,
     crankMount: crankMount, crankSpinner: crankSpinner,
-    twister: twisterPivot, twisterFrame: twisterFrame, pullA: pullAPivot, pullB: pullBPivot, takeup: takeupPivot,
     pivotA: pivotA, pivotB: pivotB, pivotI: pivotI
   };
   window._drive = { revs: { A: -2, B: -6, I: 4 },
@@ -632,12 +624,10 @@
   window._setRotations = function(crankAngle) {                        // meshed: crank 20T ↔ drum 40T front-plane
     crankSpinner.rotation.z = crankAngle;                          // fresh crank at (160,75)
     drumPivot.rotation.z = crankAngle * DRUM_RATIO + DRUM_PHASE;  // v81: drum -0.5x crank + phase (tooth-into-gap)
-    twisterPivot.rotation.x = 6 * crankAngle;                        // v116 Step 2: twister +6x via idler+B+mitre (2.0 wraps/seed)
+    twisterPivot.rotation.x = TWISTER_RATIO * crankAngle;            // Step 3: twister -6x, opposite crank
     pivotA.rotation.z = -2 * crankAngle;                         // v97: A -2x crank (about Y)
     pivotB.rotation.z = Math.PI - 6 * crankAngle;                 // Step 13: static 180Y frame + B -6x
     pivotI.rotation.z = 4 * crankAngle;                          // v118: idler +4x CAD (opposite A, opposite B)
-    pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE);  // v52: nip side A
-    pullBPivot.rotation.y = -PULL_SPIN * (2 * crankAngle + GEAR_PHASE); // v52: nip side B
     takeupPivot.rotation.z = -2 * crankAngle;                     // v79: takeup -2x crank
   };
 
@@ -657,10 +647,12 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 91; // Axle C-slot geometry fix, ASSET_V 90->91
+  var ASSET_V = 96; // Step 7: extend twister C-slot west, ASSET_V 95->96
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
-        parent: root, pos: [0, -15, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
+        parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
+      { id: 'south_wall', label: 'South wall (gear-mount, removable)', file: 'stl/south_wall.glb', color: 0x5b7fa6,
+        parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
       { id: 'hopper', label: 'Hopper (wrap-around, bottom-drop)', file: 'stl/hopper.glb', color: 0xd9b23a,
         parent: hopperPivot, pos: [0, 19.4, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.15 }, // v33: export drops 19.4 to min_z=0 (hover pipe bottom; was 19.9); +19.4 Y re-seats drum centre on pivot, pipe hovers 10 above ribbon top
       { id: 'cartridge', label: 'Cartridge/drum', file: 'stl/cartridge.glb', color: 0x4fa06a,
@@ -673,10 +665,6 @@
         parent: twisterPivot, pos: [0, -27.5, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 },
       { id: 'twister_axle', label: 'Twister axle (static pedestal+tube)', file: 'stl/twister_axle.glb', color: 0x5b7fa6,
         parent: root, pos: [1.5, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
-      { id: 'pull_a', label: 'Vertical pull A (cushioned)', file: 'stl/pull_a.glb', color: 0x3f434a,
-        parent: pullAPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.05, roughness: 0.9 }, // v52: soft rubber/silicone cushion sleeve (firm grip, no crush); OD ~d15 => 4/3 spin keeps surface speed, spacing driver
-      { id: 'pull_b', label: 'Vertical pull B (cushioned)', file: 'stl/pull_b.glb', color: 0x3f434a,
-        parent: pullBPivot, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.05, roughness: 0.9 }, // v52: cushioned mate, counter-rotates 4/3
       { id: 'takeup', label: 'Take-up spool (slip clutch)', file: 'stl/takeup.glb', color: 0xc96a2b,
         parent: takeupPivot, pos: [0, 0, 20.5], rot: [Math.PI, 0, 0], metalness: 0.3 }, // v40: export height 31->41 (clutch discs+spring+nut on top); half 20.5 recentres the reel on the axle
       { id: 'gear_A', label: 'Gear A [10+30] (composite, -2x)', file: 'stl/gear_A.glb', color: 0xd97c2b,
@@ -689,9 +677,9 @@
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 }, // v108: absolute CAD coords, static
     ];
     // Display order for the parts panel (matches user checklist + tape/seeds extras).
-    var PART_ORDER = ['chassis', 'hopper', 'cartridge',
+    var PART_ORDER = ['chassis', 'south_wall', 'hopper', 'cartridge',
       'plow', 'crank', 'gear_A', 'gear_B', 'gear_I', 'gearwall',
-      'twister', 'twister_axle', 'pull_a', 'pull_b', 'takeup', 'tape', 'seeds'];
+      'twister', 'twister_axle', 'takeup', 'tape', 'seeds'];
 
   var toggleGroups = {};
   var togglesDiv = document.getElementById('toggles');
@@ -951,13 +939,11 @@
     // twister (+7.5x friction flip) = 2.5 wraps/seed; pull nip tape-coupled 4/3 with
     // the roller shaft (v52 d15 cushioned sleeve = spacing driver, same surface speed,
     // no crush); take-up tape-tension wind-up 2x crank (slip clutch).
-    var twAngle = 6 * crankAngle;                                  // v116 Step 2: twister +6x (2.0 wraps/seed)
+    var twAngle = TWISTER_RATIO * crankAngle;                      // Step 3: twister -6x (2.0 wraps/seed magnitude)
     twisterPivot.rotation.x = twAngle;
     pivotA.rotation.z = -2 * crankAngle;
     pivotB.rotation.z = Math.PI - 6 * crankAngle; // Step 13 static 180Y frame + B -6x
     pivotI.rotation.z = 4 * crankAngle; // v118: idler +4x CAD, opposite A and B
-    pullAPivot.rotation.y = PULL_SPIN * (2 * crankAngle + GEAR_PHASE);
-    pullBPivot.rotation.y = -PULL_SPIN * (2 * crankAngle + GEAR_PHASE);
     takeupPivot.rotation.z = -2 * crankAngle;                     // v79: takeup -2x crank
     updateThreadLine(threadLineA, twAngle, 0, advance);
     updateThreadLine(threadLineB, twAngle, Math.PI, advance);

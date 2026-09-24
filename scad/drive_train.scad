@@ -206,11 +206,19 @@ module dt_cluster_B() {
         translate([0, 25, 0])
             rotate([90, 0, 0])
                 bev_teeth(tw_bev_n, 22.5, tw_bev_face, v113_B_thin, v113_B_phase, tw_bev_mod);
-        // Root cone frustum under the teeth (canonical z22..25.3 mapped,
-        // solid, shaft-pierced, ring-carries the tooth heels):
+        // Step 4 full-radius backing web behind the nominal heel plane.
+        // It overlaps the existing root frustum by 0.3mm and stops before
+        // the toe/mesh plane; the shaft and root remain one fused cluster.
         translate([0, 25, 0])
             rotate([90, 0, 0])
-                translate([0, 0, 22])
-                    cylinder(h=3.3, r1=21, r2=18.2, center=false, $fn=60);
+                translate([0, 0, B_back_web_z0])
+                    cylinder(h=B_back_web_t, r=B_back_web_r, center=false, $fn=60);
+        // Existing root cone frustum, now named for the Step 4 overlap assert.
+        translate([0, 25, 0])
+            rotate([90, 0, 0])
+                translate([0, 0, B_root_frustum_z0])
+                    cylinder(h=B_root_frustum_z1 - B_root_frustum_z0,
+                             r1=B_root_frustum_r0, r2=B_root_frustum_r1,
+                             center=false, $fn=60);
     }
 }

@@ -149,7 +149,7 @@ module pull_rollers() {
 }
 
 // ============================================================
-// v37 Thread-bind + vertical pull + wind-up (v36 MVP backfill).
+// v37 Thread-bind + wind-up (v36 MVP backfill).
 // Allowed modules only; $fn=60 inherited; tol=0.3 clearances.
 // - thread_twister(): HOLLOW rotor CENTRED at origin, axis along X:
 //   hub sleeve (outer r10, bore 15.6) + disc (r23) + non-meshing
@@ -158,11 +158,6 @@ module pull_rollers() {
 //   the pins + 2 eyelet posts (orbit R12, 90/270 offset).
 //   Assembly spins it about X at [bind_x, lane_y, twister_axle_z]
 //   by twister_angle.
-// - vpull_roller(): ONE vertical-axis nip roller, base at z=0
-//   (body d15 h20 + caps/collar, min_z=0 in export AND assembly):
-//   pair stands on the base flanking the finished folded tape at
-//   [pull_x, lane_y +/- vpull_off], spins about Z (4/3 vs main
-//   roller, smaller dia => same surface speed => spacing preserved).
 // - takeup_reel(): wind-up reel built along Z for flat printing
 //   (bottom flange 0..3 + core r5 0..31 + top flange 28..31,
 //   min_z=0); assembly recentres, tilts to axle-Y, spins about
@@ -280,7 +275,9 @@ module thread_twister() {
 module twister_axle() {
     // Absolute coordinates: pedestal (x170..174, y lane_y±5, z0..24.5)
     // fused with tube (x172..193.5, OD15, Ø10 through-bore) + collar (r9 x176.5..178.5)
-    // + one external +Z C-slot (x178.5..184.5, r5..10.3).
+    // + one external +Z C-slot (source x178.5..188.5, r5..10.3).
+    // Source +X maps to final west after reflection. The 4mm extension moves
+    // the retaining nose/flex gaps with the slot so the slot cannot cut through it.
     // v122: east-tip snap fingers and old hub-groove/cap geometry removed;
     // the two ±Y 3.5mm nose flex gaps remain the only nose cuts.
     // v87 +15 lift: tube centre twister_axle_z=32, tube bottom 24.5 meets pedestal top 24.5.
@@ -302,13 +299,12 @@ module twister_axle() {
             translate([166, lane_y - 7, 0])
                 cube([8, 14, 6], center=false);
             translate([0, lane_y, twister_axle_z]) {
-                // Tube: x172..193.5, OD15, Ø10 through-bore (v122: truncated;
-                // east tip features retired with the old snap — nose at
-                // 184-190 is the only retainer now; terminal annulus face
-                // at 193.5 is a single clean cap)
+                // Tube: source x172..197.5, OD15, Ø10 through-bore.
+                // Source +X maps to final west; the 4mm extension is derived
+                // from tw_tube_west_extension and the moved nose remains inside.
                 translate([tw_mouth_x, 0, 0])
                     rotate([0, 90, 0])
-                        cylinder(h=21.5, r=15/2, center=false, $fn=60);
+                        cylinder(h=tw_tube_len, r=15/2, center=false, $fn=60);
                 // Funnel flare at mouth x172 (flared entry for tape threading)
                 translate([tw_mouth_x, 0, 0])
                     rotate([0, 90, 0])
@@ -350,7 +346,7 @@ module twister_axle() {
         translate([0, lane_y, twister_axle_z])
             translate([tw_mouth_x, 0, 0])
                 rotate([0, 90, 0])
-                    cylinder(h=21.5 + 2*epsilon, r=5, center=false, $fn=60);
+                    cylinder(h=tw_tube_len + 2*epsilon, r=5, center=false, $fn=60);
         // One external C-slot: it starts at the bore boundary (r5) and
         // opens to r10.3, clearing the hub OD20 by 0.3mm radially. The
         // 6mm axial span covers the 5mm hub with 1mm total play; +Z keeps
@@ -359,63 +355,13 @@ module twister_axle() {
             rotate([tw_slot_ang, 0, 0])
                 translate([tw_slot_x0, tw_slot_r0, -tw_slot_w/2])
                     cube([tw_slot_len, tw_slot_r1 - tw_slot_r0, tw_slot_w]);
-        // Intentional two-leg nose flex gaps: x183.5..190.5, cut radially
-        // toward ±Y from y=4.5 with z-width tw_gap_w; the +Z C-slot is separate.
+        // Intentional two-leg nose flex gaps, derived from the moved nose;
+        // cut radially toward ±Y from y=4.5 with z-width tw_gap_w.
         translate([0, lane_y, twister_axle_z])
             for (s = [0, 180])
                 rotate([s, 0, 0])
-                    translate([183.5, 4.5, -tw_gap_w/2])
-                        cube([tw_lock_x1 + 0.5 - 183.5, 20, tw_gap_w], center=false);
-    }
-}
-
-module vpull_roller() {
-    assert(vpull_sleeve_r <= 7.8, "vpull_roller: cushion sleeve must stay ~d15 (4/3 spin)");
-    difference() {
-      union() {
-        cylinder(h=vpull_h, r=vpull_r, center=false);
-        // v39 CUSHIONED nip (soft rubber/silicone sleeve visual over the
-        // steel core: firm grip without crushing the seed pocket; viewer
-        // paints it dark rubber). OD stays ~d15 (sleeve proud 0.15, caps
-        // r8.5 still dominate the envelope) => 4/3 spin keeps surface speed.
-        translate([0, 0, (vpull_h - vpull_sleeve_h)/2])
-            cylinder(h=vpull_sleeve_h, r=vpull_sleeve_r, center=false);
-        // Cushion grip ribs (shallow visual rings on the sleeve)
-        for (k=[0:5])
-            translate([0, 0, (vpull_h - vpull_sleeve_h)/2 + 2 + k*(vpull_sleeve_h - 4)/5])
-                difference() {
-                    cylinder(h=0.8, r=vpull_sleeve_r + 0.3, center=false);
-                    translate([0, 0, -epsilon])
-                        cylinder(h=0.8 + 2*epsilon, r=vpull_sleeve_r - 0.2, center=false);
-                }
-        // Diamond knurl band (visual grip, shallow so OD stays ~15)
-        for (k=[0:11]) {
-            t = k/11;
-            zpos = 4 + t*(vpull_h - 8);
-            rotate([0, 0, k*30])
-                translate([vpull_r - 0.5, 0, zpos])
-                    cube([1.2, 2.0, 2.6], center=true);
-        }
-        translate([0, 0, vpull_h])
-            difference() {
-                cylinder(h=3, d=17, center=false);
-                translate([0, 0, -epsilon])
-                    cylinder(h=3 + 2*epsilon, d=axle_clearance_dia, center=false);
-            }
-        // v45: mid collar rides LOW (centre vpull_collar_z=5.0 local, CAD top
-        // 4+5+1.5=10.5: clears the ribbon base tape_z=13 by 2.5; was 12
-        // with top 13.5+4 grazing into the tape). Top cap (20..23) is above
-        // the tape zone; sleeve/rib grip at the nip is intended (soft).
-        translate([0, 0, vpull_collar_z])
-            difference() {
-                cylinder(h=3, d=17, center=true);
-                translate([0, 0, 0])
-                    cylinder(h=3 + 2*epsilon, d=axle_clearance_dia, center=true);
-            }
-      }
-      // Axle bore through body + caps
-      translate([0, 0, -epsilon])
-          cylinder(h=vpull_h + 3 + 2*epsilon, d=axle_clearance_dia, center=false);
+                    translate([tw_lock_flex_x0, 4.5, -tw_gap_w/2])
+                        cube([tw_lock_flex_x1 - tw_lock_flex_x0, 20, tw_gap_w], center=false);
     }
 }
 
@@ -532,9 +478,7 @@ module crank_assembly() {
 // Sign convention (v79: crank at x=160, 20T meshes drum 40T at x=100):
 //   crank_angle = 720*$t (2:1 vs drum, CW about +Y).
 //   drum_angle = -360*$t (external mesh counter-rotation, 0.5× crank).
-//   twister_angle = 360*$t*twister_orbits_per_drum (v95: 15 orbits/drum rev = 2.5 wraps/seed, driven +7.5x by the D friction wheel below).
-//   pull nip pair spins about Z at ±roller_angle*vpull_spin (tape-coupled
-//   4/3 vs the main roller, v52 d15 dia => same surface speed).
+//   twister_angle = twister_rev*crank_angle (1:1 mitre, opposite crank).
 //   takeup_angle = -1440*$t about the reel axle.
 //   v79: rollers REMOVED; crank carries the 20T pinion at x=160.
 // ============================================================

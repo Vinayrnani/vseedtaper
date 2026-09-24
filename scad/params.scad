@@ -142,19 +142,29 @@ v105_ext_x = [137];                       // z32 extension pillar X centre
 v105_ext_z = 32;                        // z32 extension pillar Z centre
 v105_east_pillar_x = 217;                 // same-section top support for the extended plate
 v105_east_pillar_z = 88;                 // above the fresh B/I gear bands
-// v106 bevel rework (user Step 4b: hub bump REMOVED, bevel near the wall).
-// Teeth (standard form, untouched) hang DOWN from a flat 2mm web that the
-// shaft pierces — no hub. Print frame rides up: backs embed in the web,
-// web top 1.5 below the wall inner face.
+// Live B bevel support: standard 36T teeth remain unchanged and hang from
+// the full-radius Step 4 backing web; the web is behind the nominal heel
+// plane and overlaps the root frustum without extending into the toe/mesh.
 v98_Bbev_y0 = 52.5; v98_Bbev_y1 = 57.5; // v115 Bbev36 teeth envelope (toe 53.7, heel 56.5 + tip drift; apex-down mitre)
-v106_bev_web_top = 63.5; // web top: 1.5 below the wall inner face (65)
-v106_bev_lift = v106_bev_web_top + 6 - v98_B_y0; // print-frame z=0 plane: pins the web absolute whatever the origin
-// v103 slim bevel mount (superseded v106: hub removed, flat web only).
-// Flange/web (print-frame z6-8) catches every tooth back (outer r~9.3);
-// the r4 shaft pierces it — no hub. v106 rides it near the wall (y61.5-63.5).
-v103_bev_flange_r = 10;  // >= tooth-back outer 9.3 + margin
-v103_bev_flange_t = 2;   // web thickness (print-frame z6..8)
+// Step 4 live B backing web: full radius behind the nominal heel plane,
+// with a 0.3mm overlap into the existing root frustum.
+B_back_web_r = 24;
+B_back_web_t = 3;
+B_back_web_z0 = 19.3;
+B_back_web_z1 = 22.3;
+B_root_frustum_z0 = 22;
+B_root_frustum_z1 = 25.3;
+B_root_frustum_r0 = 21;
+B_root_frustum_r1 = 18.2;
+B_back_web_y0 = v98_B_y0 + 25 - B_back_web_z1; // assembly Y=56.7
+B_back_web_y1 = v98_B_y0 + 25 - B_back_web_z0; // assembly Y=59.7
+// Legacy v103/v106 helper parameters remain only for the unused dt_bevel_blank helper.
+v106_bev_web_top = 63.5; // legacy helper datum
+v106_bev_lift = v106_bev_web_top + 6 - v98_B_y0; // legacy helper datum
+v103_bev_flange_r = 10;  // legacy helper only
+v103_bev_flange_t = 2;   // legacy helper only
 B_rev = -6; // idler-driven train: A -2x, two flips, B -6x crank
+twister_rev = -6; // 1:1 mitre preserves B's -6x direction, intentionally reversed twister
 // v116 Step-2 idler (user: connect A and B with an intermediate gear):
 // 15T m1.25 spur bridging A30 (r18.75) and B10 (r6.25) in the shared band
 // 70-75. Two-circle solve: |I-A| = 18.75+9.375+0.75 = 28.875,
@@ -230,6 +240,19 @@ spool_shaft_y1 = 67;   // hidden in the front spool-block bore
 bolt_dia        = 3;
 bolt_head_across = 5.5;
 nut_trap_depth  = 2.5;
+
+// Step 1 flat floor + Step 2 wall-local M3 interface. Both walls carry
+// matching clearance holes/nut traps; no bosses or pilot holes occupy the floor.
+wall_screw_x = [chassis_x0 + 20, chassis_x0 + chassis_len - 20];
+wall_screw_z = 8;
+wall_screw_clearance_d = bolt_dia + 2*tolerance;
+wall_screw_nut_r = (bolt_head_across + 2*tolerance) / sqrt(3);
+south_wall_bore_y = chassis_width - wall_thick/2;
+// Step 6 plow ear A lateral north-wall screw interface.
+plow_wall_screw_x = plow_start + 6; // world x=132
+plow_wall_screw_z = wall_screw_z;   // world z=8
+plow_north_wall_y = wall_thick/2;   // wall center y=1.5
+plow_wall_ear_embed = wall_thick;   // ear A extends 3mm into y=0..3 wall
 
 // Bearing block dimensions
 bb_len = 14;
@@ -345,32 +368,20 @@ tape_n_arc       = 20;           // arc facets per side (smooth like $fn=60 curv
 tape_n_x         = 12;           // taper steps along X (progressive entry->exit)
 
 // ============================================================
-// v37 Thread-bind + vertical pull + wind-up (v36 MVP backfill:
-// hopper 9 o'clock -> 11-6 channel -> 6 o'clock drop onto the
-// 1in folded tape -> thread bind -> vertical pull -> wind-up).
-// All geared to the drum (6 cavities, 6in/152.4mm spacing intent):
-// pull nip runs 4/3 vs the main roller (v52 d15 => same surface
-// speed, spacing preserved); twister orbits once per cavity (6 per
-// drum rev, one bind per seed); take-up winds the same linear tape
-// (core d10 => 4 rev per $t, i.e. 2x crank). Bind sits just after
-// the plow (bind_x = plow_end+25); pull nip stacks vertically over
-// the finished tape at pull_x; reel sits east at takeup_x.
-// v86 RESPACED (v38 overlapped: twister 163..171 touched pull 171..191
-// at X=171, take-up 170..202 interpenetrated both in X/Y/Z).
-// Sequential eastward with >=5mm steel-to-steel X gaps:
-// plow end 159 -> twister 180..188 (gap 9) -> pull 198.35..213.65 (gap 8.35) ->
-// take-up 222..254 (gap 8.35). Centres 32 apart for pull->take-up vs
-// radii sum 7.65+16=23.65 (gap 8.35, margin kept).
+// v37 Thread-bind + wind-up (v36 MVP backfill):
+// hopper 9 o'clock -> 11-6 channel -> 6 o'clock drop -> thread bind
+// -> wind-up. Bind sits just after the plow; take-up sits east of it.
 // $fn=60, tol=0.3 kept.
 // ============================================================
+// ============================================================
 bind_x   = plow_end + 25;   // 184: thread orbit station east of the plow (rotor X half 4 -> 180..188, gap 9)
-pull_x   = plow_end + 47;   // 206: vertical-nip pull station (sleeve r7.65 -> 198.35..213.65, gap 8.35 to twister east)
 takeup_x = 238;             // wind-up reel east (flange r16 -> 222..254, gap 8.35 to pull east; chassis east 260)
 takeup_z = 49;              // v87 +15 lift: reel axle height (flange 33..65: bottom >= 0, top < 125)
 assert(takeup_z == 49, "takeup_z must be 49 (+15 lift from 34)");
+assert(takeup_x > bind_x, str("wind-up reel must sit east of the bind station: ", takeup_x));
 twister_axle_z = tape_z + 4;      // 32: v87 +15 lift: ring centre over the folded pocket (pocket top ~36)
 twister_arms = 2;                 // 2 bobbin spindles
-twister_wraps_per_seed = 2.0;            // v116 Step 2: idler train gives B -6x -> twister 6x = 2.0 wraps/seed (range floor; B8 later -> 2.5)
+twister_wraps_per_seed = 2.0;            // v116 Step 2: B -6x -> 1:1 mitre -> twister -6x (2.0 wraps/seed magnitude)
 twister_orbits_per_drum = num_divots * twister_wraps_per_seed; // 12: twister orbits per drum rev (2.0 per cavity)
 tw_bore_d = 10;                   // twister bore diameter (tape pocket 7.8 passes through)
 tw_axle_od = 15;                  // axle outer diameter
@@ -379,7 +390,9 @@ tw_hub_r = 10;                    // hub radius
 tw_hub_x0 = 179;                  // hub west edge
 tw_hub_x1 = 184;                  // hub east edge (hub length 5mm)
 tw_mouth_x = 172;                 // mouth position
-tw_tube_x1 = 196;                 // tube east end
+tw_tube_west_extension = 4;        // source +X = final west after reflection
+tw_tube_len = 21.5 + tw_tube_west_extension; // 25.5mm source tube length
+tw_tube_x1 = tw_mouth_x + tw_tube_len;       // 197.5 source tube end
 tw_ped_x0 = 170;                  // pedestal west edge
 tw_ped_x1 = 174;                  // pedestal east edge (mouth 160 inside zone, fused-base-by-design)
 tw_ped_w = 10;                    // pedestal width
@@ -404,11 +417,12 @@ tw_snap_x0 = 194;                 // snap west edge
 tw_snap_x1 = 197;                 // snap east edge
 tw_barb = 0.8;                    // barb lip thickness (radial protrusion)
   // One external C-slot: radial from the Ø10 bore boundary to OD20.6.
-  // The 6mm span gives the 5mm hub 1mm total axial play and ends at the
-  // retaining shoulder; the +Z radial direction clears the two ±Y nose gaps.
+  // Source +X maps to final west; extending the source high-X end by 4mm
+  // lengthens the visible final-west slot while its final-east edge stays fixed.
+  tw_slot_west_extension = 4;
   tw_slot_x0 = 178.5;
-  tw_slot_x1 = 184.5;
-  tw_slot_len = tw_slot_x1 - tw_slot_x0;
+  tw_slot_x1 = 184.5 + tw_slot_west_extension;
+  tw_slot_len = tw_slot_x1 - tw_slot_x0; // 10mm, 5mm total axial play
   tw_slot_w = 1.5;
   tw_slot_ang = 90;
   tw_slot_r0 = 5;                   // starts at the central bore boundary
@@ -420,8 +434,10 @@ tw_barb = 0.8;                    // barb lip thickness (radial protrusion)
   tw_lock_base_ang = 90;            // leg centre angle about X (deg, +Z leg)
   tw_lock_arc = 150;                // nominal leg arc width (deg, from gap-slot cuts)
   tw_gap_w = 3.5;                   // leg gap slot width (z-width of each radial cut)
-  tw_lock_x0 = 184.5;               // shoulder west face (seated hub east 184 + shoulder_clr)
-  tw_lock_x1 = 190;                 // nose tip x (plain OD15 guide tube continues to 197)
+  tw_lock_x0 = 184.5 + tw_slot_west_extension; // moved shoulder/nose start = 188.5
+  tw_lock_x1 = 190 + tw_slot_west_extension;   // moved nose tip = 194
+  tw_lock_flex_x0 = tw_lock_x0 - 1;            // derived nose flex-gap start
+  tw_lock_flex_x1 = tw_lock_x1 + 0.5;          // derived nose flex-gap end
   tw_lock_barb_r = 9;               // shoulder/barb outer radius (catch vs hub bore r7.8)
   tw_lock_tip_r = 5.5;              // lead-in tip radius at nose apex
   tw_shoulder_clr = 0.5;            // axial shoulder-to-seated-hub clearance (assert 0.3..0.8)
@@ -458,17 +474,10 @@ tw_collar_r = 9;                  // collar outer radius
   tw_pin_chamfer_ang = 45;         // arrow tip chamfer angle (degrees)
 tw_slot_y0 = 4;                   // slot south edge (v83: widened for lane_y=34)
 tw_slot_y1 = 64;                  // slot north edge (v83: widened for lane_y=34)
-tw_foot = 12;                     // foot height
-tw_foot_z = -15;                  // foot z position
+// The chassis base slab is the flat print floor at z=0..4; no downward feet.
+
 tw_lift = 27.5;                   // twister lift (teeth r27 + 0.5 clearance, tops clear z=0)
 assert(tw_lift >= tw_teeth_top_r + 0.5, "tw_lift must exceed tw_teeth_top_r + 0.5 (clearance over tooth tips)");
-vpull_r = 7.5;                     // vertical-axis nip roller radius (v52 d15; surface speed kept via vpull_spin 4/3)
-vpull_h = 20;                     // roller height (covers lane 13..21 + caps, base at 0; assembly top 4+20+3=27)
-vpull_sleeve_r = 7.65;            // v52 cushioned sleeve outer (d15 core proud 0.15, under the r8.5 caps: envelope kept)
-vpull_sleeve_h = 12;              // v52 shorter cushion band (was 16)
-vpull_gap = 9.5;                  // v52 cushioned surface-to-surface nip gap (param-driven, fail-loud asserted 9.5+-0.01)
-vpull_off = vpull_sleeve_r + vpull_gap/2; // 12.4: sleeve r + half gap (replaces r+2.0+1.5+0.4+tol = 14.2); Y = 30+-12.4 = 17.6/42.4
-vpull_spin = roller_body_r/vpull_r; // 4/3: spin compensation (smaller dia, same surface speed => spacing preserved)
 takeup_core_d = 10;               // wind-up core dia (rev = tape / (PI*core_d))
 takeup_core_r = takeup_core_d/2;
 takeup_flange_r = 16;
@@ -541,11 +550,7 @@ turner_curl_cz = 28;              // v87 +15 lift: bore-axis height (lane-centre
 
 // Pull support pins (static bars: base-fused, slip-fit in roller
 // bores + cup-B bore; the tape-coupled rotors spin on them).
-pull_pin_r = axle_dia/2;             // 4: static pin radius (slip in bores)
-pull_pinA_z0 = 2; pull_pinA_z1 = 42; // base-fused .. hidden in roller top cap (v87 stack top 42)
-pull_pinB_z0 = 2; pull_pinB_z1 = 42; // base-fused .. hidden in cup-B bore (v87 cup 40..43)
 // cup B kept (bored) for the static pin B (no tube hole v48).
-vpull_collar_z = 5.0;              // v45 mid-collar centre LOCAL (assembly lifts +base_thick: CAD top 4+5+1.5=10.5 clears ribbon base 13 by 2.5; was 12 grazing the tape)
 
 // ============================================================
 // Spool cones
@@ -610,9 +615,6 @@ assert(abs((twister_axle_z + tw_teeth_top_r) - (drum_axle_z - (roller_pitch_dia/
            twister_axle_z + tw_teeth_top_r, " gear_bottom=",
            drum_axle_z - (roller_pitch_dia/2 + addendum)));
 assert(axle_clearance_dia/2 > axle_dia/2, "v48: bores must slip on shafts (free spin, no fuse)");
-assert(pull_pinA_z0 >= 0 && pull_pinA_z0 <= base_thick, "v48: pull pin A must start fused in the base");
-assert(pull_pinA_z1 >= base_thick + 15 + vpull_h && pull_pinA_z1 <= base_thick + 15 + vpull_h + 3, str("v87: pull pin A top (42) must hide inside the roller top cap (39..42): ", pull_pinA_z1));
-assert(pull_pinB_z1 > 40 && pull_pinB_z1 <= 43, str("v87: pull pin B top (42) must hide inside cup-B bore (40..43): ", pull_pinB_z1));
 assert(spool_axle_z == 80, "spool_axle_z must be 80");
 assert(chassis_height > max(spool_axle_z + cone_h + bb_height_spool, drum_axle_z + drum_outer_r) + 5,
        str("chassis_height must hold tallest axle + clearance: need > ", max(spool_axle_z+cone_h+bb_height_spool, drum_axle_z+drum_outer_r)+5, " got ", chassis_height));
@@ -655,6 +657,7 @@ assert(A_rev == -2, "composite rev must be -2 per crank rev");
 // v113 mitre-mesh asserts (Bbev20 <-> twister bevel ring, fail loud):
 // A->B mesh RETIRED (A-mesh OPEN until the next-step intermediate):
 assert(B_rev == -6, "B rev must be -6 per crank rev (idler-driven: two flips, 30/10)");
+assert(twister_rev == -6, "twister rev must be -6 per crank rev through the 1:1 mitre");
 assert(I_rev == 4, "idler rev must be +4 per crank rev (-A.30/15)");
 // v116 idler mesh CDs exact (pitch + 0.75 backlash, like A/B):
 assert(abs(sqrt(pow(v115_Ix-v97_Ax,2)+pow(v115_Iz-v97_Az,2)) - (18.75+9.375+0.75)) < 0.05, "idler->A distance must equal mesh CD 28.875");
@@ -669,8 +672,8 @@ assert((v115_Ix - 11) - (v105_pillar_x[0]+3) >= 1, "idler gear must clear pillar
 // idler gear vs hopper drum (100,75 r33.8): radial:
 assert(sqrt(pow(v115_Ix-100,2)+pow(v115_Iz-75,2)) - 33.8 - 11 >= 1, "idler gear must clear the hopper radially");
 // idler gear (bottom y70) clears the B bevel top (57.5) and twister sweep top (55.75):
-// (Step 1: r8 hub + back web removed — tallest B part below the idler is now
-// the bevel envelope; root frustum r21 top sits at the heel 56.5.)
+// (Step 4: the r8 hub remains removed; the live full-radius backing web is
+// confined behind the heel plane, while the root frustum carries the teeth.)
 assert(v115_I15_y0 >= v98_Bbev_y1 + 2, "idler gear must clear the B bevel top");
 assert(v115_I15_y0 - (32+23.75) >= 5, "idler gear must clear the twister sweep");
 // idler shaft (r4) vs A30 (r20.75) / B10 (r8.25) / B shaft (r4): true-distance:
@@ -775,15 +778,28 @@ assert(sqrt(pow(v98_Bx-34,2)+pow(v98_Bz-32,2)) - 8.25 > 27, "B10 must clear the 
 assert(sqrt(pow(v98_Bx-34,2)+pow(v98_Bz-32,2)) - 23.75 > 24, "B bevel heel must clear the pin sweep radially");
 // B10 top (Bz+8.25) vs crank-gear bottom (axle 104.93 - r22): z-clear:
 assert(v98_Bz + 8.25 < crank_axle_z - 22, "B10 must stay below the crank-gear sweep");
+// Step 4 B backing web: full tooth-envelope support, 0.3mm root overlap,
+// behind the nominal heel plane, with wall/B10/shaft clearances.
+assert(B_back_web_r == 24 && B_back_web_t == 3, "Step 4: B back-web radius/thickness must be 24/3");
+assert(B_back_web_z0 == 19.3 && B_back_web_z1 == 22.3, "Step 4: B back-web canonical placement must be z=19.3..22.3");
+assert(abs(B_back_web_y0 - 56.7) < 0.001 && abs(B_back_web_y1 - 59.7) < 0.001,
+       "Step 4: B back-web assembly Y must be 56.7..59.7");
+assert(abs((B_back_web_z1 - B_back_web_z0) - B_back_web_t) < 0.001,
+       "Step 4: B back-web thickness must match its canonical span");
+assert(abs((min(B_root_frustum_z1, B_back_web_z1) - max(B_root_frustum_z0, B_back_web_z0)) - 0.3) < 0.001,
+       "Step 4: B back-web must overlap the root frustum by exactly 0.3mm");
+assert(B_back_web_z1 <= 22.5 && B_back_web_r >= 23.75,
+       "Step 4: B back-web must stay behind the heel plane and cover the tooth envelope");
+assert(B_back_web_r >= axle_dia/2 + tolerance && B_root_frustum_r0 >= axle_dia/2 + tolerance,
+       "Step 4: B back-web/root must clear the shaft envelope");
+assert((chassis_width - wall_thick) - B_back_web_y1 >= 5,
+       "Step 4: B back-web must clear the Y=65 wall by at least 5mm");
+assert(v98_B10_y0 - B_back_web_y1 >= 5,
+       "Step 4: B back-web must clear B10/outboard hardware by at least 5mm");
 // B10 and the fixed pull nip are separated by their existing Y bands:
-assert(v98_B10_y0 - (lane_y + vpull_off + vpull_sleeve_r) >= 5, "B10 must clear the fixed pull nip in Y");
 // Bbev20 band top (58) vs B10 band (70): Step-3 extended gap (12 bare shaft):
     assert(v98_B10_y0 - v98_Bbev_y1 >= 0.5, "B bevel must sit just under B10");
-// v103 slim mount: flange must catch the tooth backs (outer r~9.3) and the
-// hub must keep >=1.5 wall around the r4 shaft:
-assert(v103_bev_flange_r >= 9.5, "bevel web must cover the tooth backs");
-// v106 flat web top (B_y0 + lift - 6 = 63.5) stays 1+ below the wall inner face (65):
-assert(v106_bev_web_top <= 64, "bevel web must stay below the wall");
+// Legacy v103/v106 helper parameters are not used by the live B cluster.
 // B wall bore inside the front wall:
 assert(v98_Bx > chassis_x0 && v98_Bx < chassis_x0 + chassis_len && v98_Bz > 0 && v98_Bz < chassis_height, "B wall bore must sit inside the front wall");
 // (twister unpowered in v97: takeoff reserved for the next stage.)
@@ -798,7 +814,6 @@ assert(v97_A30_y1 <= crank_mount_y + crank_arm_gap - 10, "A30 must leave room fo
 // A30 (outer r20.75, m1.25) vs hopper (drum (100,75) max r33.8): radial:
 assert(sqrt(pow(v97_Ax-100,2)+pow(v97_Az-75,2)) - 20.75 > 33.8, "A30 must clear the hopper radially");
 // A30 and the fixed pull nip are separated by their existing Y bands:
-assert(v97_A30_y0 - (lane_y + vpull_off + vpull_sleeve_r) >= 5, "A30 must clear the fixed pull nip in Y");
 // A wall bore inside the front wall:
 assert(v97_Ax > chassis_x0 && v97_Ax < chassis_x0 + chassis_len && v97_Az > 0 && v97_Az < chassis_height, "A wall bore must sit inside the front wall");
 assert(twister_axle_z + tw_disc_r <= 56, "twister disc top needs margin (55 vs 56)");
@@ -806,14 +821,16 @@ assert(twister_axle_z + tw_disc_r <= 56, "twister disc top needs margin (55 vs 5
 assert(tw_mouth_x - plow_end >= 10 && tw_mouth_x - plow_end <= 16, "mouth gap tw_mouth_x-plow_end in [10,16]");
 assert(tw_ped_x1 + 0.5 <= tw_slot_x0, "slot edge tw_ped_x1+0.5<=tw_slot_x0");
 assert(tw_disc_x0 - tw_ped_x1 >= 2, "disc gap tw_disc_x0-tw_ped_x1>=2");
-assert((pull_x - vpull_sleeve_r) - tw_snap_x1 >= 1, "snap gap (pull_x-vpull_sleeve_r)-tw_snap_x1>=1");
 // disc-in-slot assert removed: disc x167..170 is separate from radial slots x174..185
 assert(lane_y - (tw_orbit + bob_d/2) >= tw_slot_y0 && lane_y + (tw_orbit + bob_d/2) <= tw_slot_y1, "sweep-in-slot-Y");
-assert((twister_axle_z - tw_orbit - bob_d/2) - tw_foot_z >= 2, "dip clearance");
+assert((twister_axle_z - tw_orbit - bob_d/2) >= 2, "dip clearance above the flat chassis floor");
 assert((tw_bore_d - 7.8) / 2 >= 1, "tape/bore clearance");
 assert(abs(tw_hub_bore - tw_axle_od - 0.6) < 0.001, "hub slip fit");
 assert(abs(tw_pin_hole - tw_pin_d - 0.6) < 0.001, "pin slip fit");
 assert(tw_hub_x0 - tw_ped_x1 >= 2, "hub-vs-pedestal");
+assert(tw_slot_west_extension == 4 && tw_tube_west_extension == 4
+    && tw_tube_len == 25.5 && tw_lock_x0 == 188.5 && tw_lock_x1 == 194,
+    "Step 7: all west extension/nose/tube dimensions must be the intended 4mm extension");
 assert(tw_snap_x0 - (tw_pin_x0 + tw_pin_len) >= 2, "pin-tip-vs-snap");
 // Arrow push-lock pin asserts
 assert(tw_pin_slot_w >= 2.5, "arrow pin slot width >=2.5mm");
@@ -837,10 +854,19 @@ assert(tw_teeth_r0 < tw_teeth_r1 && tw_teeth_r1 < tw_teeth_top_r,
 // Main C-slot fit and retention assertions.
 assert(tw_slot_r0 >= tw_bore_d/2, "C-slot inner radius must start at or outside the axle bore");
 assert(tw_slot_r1 >= tw_hub_r + 0.3, "C-slot outer radius must clear the hub by 0.3mm");
+assert(tw_slot_len == 10, "Step 7: C-slot must be the extended 10mm source span");
 assert(tw_slot_len >= tw_hub_x1 - tw_hub_x0, "C-slot axial length must cover the hub");
-assert(tw_slot_len >= (tw_hub_x1 - tw_hub_x0) + 1, "C-slot must provide 1mm total axial play");
+assert(tw_slot_len - (tw_hub_x1 - tw_hub_x0) == 5, "Step 7: C-slot must provide intended 5mm total axial play");
 assert(tw_slot_x0 >= tw_collar_x1, "C-slot must clear the static collar");
-assert(tw_slot_x1 <= tw_lock_x0, "C-slot must end at the retaining shoulder");
+assert(tw_slot_x1 == tw_lock_x0, "Step 7: extended C-slot must end at the moved retaining shoulder");
+tw_hub_x0_reflected = twister_axle_reflect_x - tw_hub_x1;
+tw_hub_x1_reflected = twister_axle_reflect_x - tw_hub_x0;
+assert(tw_slot_x0_reflected <= tw_hub_x0_reflected
+    && tw_slot_x1_reflected >= tw_hub_x1_reflected,
+    "Step 7: final reflected C-slot must cover the hub span");
+assert(tw_hub_x0_reflected - tw_slot_x0_reflected == 4.5
+    && tw_slot_x1_reflected - tw_hub_x1_reflected == 0.5,
+    "Step 7: final reflected C-slot axial play must be 4.5/0.5mm");
 assert(tw_slot_ang == 90, "C-slot must stay on +Z, clear of the two ±Y nose flex gaps");
 assert(tw_axle_od/2 - tw_slot_r0 >= 2, "axle tube wall at the C-slot root must remain >=2mm");
 assert(tw_bore_d/2 == 5, "bore radius must be 5 (Ø10 through-hole)");
@@ -855,9 +881,8 @@ assert(tw_eye_orbit - tw_eye_r - tw_lock_barb_r >= 1, "barb-vs-eyelet-inner radi
   // clearance + west collar clearance) holds the rotor in place in X while
   // the 0.6 diametral bore slip keeps it spinning free. Hub faces 179/184
   // are rotor-code truth (local -5..0 at bind_x 184).
-  assert((tw_lock_x0 - tw_hub_x1) + (tw_hub_x0 - tw_collar_x1) >= 0.5
-      && (tw_lock_x0 - tw_hub_x1) + (tw_hub_x0 - tw_collar_x1) <= 1.5,
-      "v120: total axial play (snap + collar) must be 0.5..1.5 (stays put, spins free)");
+  assert((tw_lock_x0 - tw_hub_x1) + (tw_hub_x0 - tw_collar_x1) == 5,
+      "Step 7: moved nose plus collar must provide the intended 5mm total axial play");
   assert(tw_collar_r - tw_hub_bore/2 >= 1.0,
       "v120: collar thrust overlap ring (collar r - hub bore r) must be >=1.0");
   // Cap ring thickness
@@ -868,17 +893,16 @@ assert(tw_eye_orbit - tw_eye_r - tw_lock_barb_r >= 1, "barb-vs-eyelet-inner radi
 // v118 Step 3: snap-fit nose lock geometry (fail-loud)
 assert(abs(tw_lock_barb_r - tw_hub_bore/2) >= 1.0 && abs(tw_lock_barb_r - tw_hub_bore/2) <= 1.5,
        "v118: barb catch over hub bore must be 1.0..1.5mm (tw_lock_barb_r - tw_hub_bore/2)");
-assert(tw_lock_x0 - tw_hub_x1 >= 0.3 && tw_lock_x0 - tw_hub_x1 <= 0.8,
-       "shoulder clearance to seated hub east face must be 0.3..0.8mm");
+assert(tw_lock_x0 - tw_hub_x1 == tw_slot_west_extension + tw_shoulder_clr,
+       "Step 7: moved shoulder must retain the 4mm extension plus nominal shoulder clearance");
+assert(tw_lock_x0 - tw_hub_x1 >= 1 && tw_lock_x1 - tw_lock_x0 >= 1,
+       "Step 7: moved nose must remain materially clear of the rotating hub sweep");
+assert(tw_tube_x1 - tw_lock_x1 >= 3,
+       "Step 7: extended tube must retain material beyond the moved nose");
 assert(tw_gap_w >= 2.5, "v118: tw_gap_w must be >= 2.5 (leg flex daylight)");
 assert(tw_lock_tip_r + tw_gap_w/2 <= tw_axle_od/2 + 1,
        "v118: tip r + half gap must stay within OD/2 + 1 (insertion chamfer budget)");
 // Pin tip vs finger base X note (comment only: radial separation >8.7, no conflict)
-assert(pull_x > bind_x, str("pull nip must sit east of the bind station: ", pull_x));
-assert(abs(vpull_spin - 4/3) < 0.001, str("v52: spin compensation must be roller_body_r/vpull_r = 10/7.5 = 4/3 (same surface speed, spacing preserved): ", vpull_spin));
-assert(abs(vpull_gap - 9.5) < 0.01, str("v52: cushioned nip gap must be 9.5+-0.01: ", vpull_gap));
-assert(abs(2*vpull_off - 2*vpull_sleeve_r - vpull_gap) < 0.01, str("v52: nip offset must satisfy 2*off - 2*sleeve_r == gap (12.4/7.65/9.5): ", 2*vpull_off - 2*vpull_sleeve_r));
-assert(takeup_x > pull_x, str("wind-up reel must sit east of the pull nip: ", takeup_x));
 assert(takeup_x + takeup_flange_r <= chassis_x0 + chassis_len + 4, str("take-up flange must stay ~inside the chassis east edge: ", takeup_x + takeup_flange_r));
 assert(spool_axle_x - chassis_x0 >= 20, str("Step10: west margin spool(-6) to west edge must be >=20: ", spool_axle_x - chassis_x0));
 assert(chassis_x0 + chassis_len - (takeup_x + takeup_flange_r) >= 10, str("Step10: east margin east edge to takeup flange must be >=10: ", chassis_x0 + chassis_len - (takeup_x + takeup_flange_r)));
@@ -891,13 +915,12 @@ assert(sqrt(pow(leader_x1 - takeup_x, 2) + pow(leader_z1 - takeup_z, 2)) <= tape
 assert(tape_pack_r == takeup_core_r + 3, str("v45: leader pack radius must match the takeup_reel() pack visual: ", tape_pack_r));
 // v39/v40 edge-to-edge station gaps (6-turner replaces the plow closer,
 // same footprint so the v38 numbers hold; restated on turner_* names):
-// turner_end 159 -> twister 180..188 (gap 9) -> pull 198.35..213.65 (gap 8.35)
-// -> take-up 222..254 (gap 8.35). Fail loud, never silent.
+// turner_end 159 -> twister 180..188 -> take-up 222..254.
+// Fail loud, never silent.
 assert(turner_start == plow_start && turner_end == plow_end && turner_len == plow_len,
        "v39: 6-turner footprint must equal the plow footprint (compat + clearance inheritance)");
 assert(turner_start - drop_x >= 8,
        str("v40: 6-turner mouth must sit a little AFTER the drop point (flat landing first): ", turner_start - drop_x));
-assert(vpull_sleeve_r <= 7.8, str("v52: cushion sleeve must stay ~d15 (spin-compensated 4/3 surface speed): ", vpull_sleeve_r));
 assert(takeup_core_d < roller_dia, "v39: wind-up must step UP vs the roller (core d10 < d20)");
 assert(clutch_stack == 10, str("v40: slip-clutch stack must be 10: ", clutch_stack));
 assert(clutch_disc_r < takeup_flange_r, "v40: clutch discs must stay inside the flange envelope (X gap kept)");
@@ -915,10 +938,37 @@ assert(takeup_shaft_y1 >= 66 && takeup_shaft_y1 <= 68, str("v45: take-up shaft m
 assert(axle_clearance_dia/2 > axle_dia/2, "v45: reel/wall/block bores must slip on the take-up shaft");
 assert(spool_shaft_y0 >= 0 && spool_shaft_y0 <= 2, str("v45: spool shaft must start hidden in the back block bore: ", spool_shaft_y0));
 assert(spool_shaft_y1 >= 66 && spool_shaft_y1 <= 68, str("v45: spool shaft must end hidden in the front block bore: ", spool_shaft_y1));
-assert(tape_z - (base_thick + vpull_collar_z + 1.5) >= 2, str("v45: pull mid-collar top must clear the ribbon base by >=2 (assembly lifts +base_thick): ", tape_z - (base_thick + vpull_collar_z + 1.5)));
-assert(base_thick + 15 + vpull_h + 3 > 40 && base_thick + 15 + vpull_h + 3 <= 43, str("v87: pull roller B top (42) must engage cup B (cup 40..43, bridge 43): ", base_thick + 15 + vpull_h + 3));
-assert(base_thick + 15 + vpull_h + 3 >= pull_pinA_z0 && base_thick + 15 + vpull_h + 3 <= pull_pinA_z1 + 3, str("v87: pull roller A top cap (42) must ride on the static pin (pin 2..42): ", base_thick + 15 + vpull_h + 3));
-assert(base_thick == 4 && tw_foot_z == -15, "v87: base slab 0..4 and feet -15..0 must stay unchanged");
+assert(base_thick == 4, "flat chassis floor: base slab must span z=0..4");
+// Step 2 wall-local interface: matching wall clearance/nut traps, below all
+// axle/gear bands, with no screw bosses or pilot holes in the open floor.
+assert(wall_screw_x == [chassis_x0 + 20, chassis_x0 + chassis_len - 20],
+       "Step 2: wall screw X positions must stay at the two chassis end stations");
+assert(wall_screw_x[1] - wall_screw_x[0] >= 200,
+       "Step 2: wall screws must be at least 200mm apart");
+assert(wall_screw_x[0] > chassis_x0 + 8 && wall_screw_x[1] < chassis_x0 + chassis_len - 8,
+       "Step 2: wall screws must stay inside the chassis end margins");
+assert(wall_screw_clearance_d == bolt_dia + 2*tolerance && wall_screw_nut_r > bolt_dia/2,
+       "Step 2: wall M3 clearance and nut-trap diameters must be consistent");
+assert(wall_screw_z < min([spool_axle_z, drum_axle_z, crank_axle_z,
+       takeup_z, v97_Az, v98_Bz, v115_Iz, tw_apex_z]),
+       "Step 2: wall screws must stay below all axle/gear bands");
+assert(nut_trap_depth < wall_thick, "Step 2: wall nut traps must leave a wall web");
+assert(south_wall_bore_y > chassis_width - wall_thick && south_wall_bore_y < chassis_width,
+       "Step 2: south-wall bearing/gear bores must remain centered in the gear-mount wall");
+// Step 6 plow north-wall interface: centered M3 hole, wall material around it,
+// and support kept west of the twister apex and B bevel western envelope.
+assert(plow_wall_screw_x == plow_start + 6 && plow_wall_screw_z == wall_screw_z,
+       "Step 6: plow wall screw must use world x=132, z=8");
+assert(plow_north_wall_y == wall_thick/2 && plow_wall_ear_embed == wall_thick,
+       "Step 6: plow ear must engage the north wall through its full 3mm thickness");
+assert(bolt_dia + 2*tolerance == 3.6
+       && plow_wall_screw_z - (bolt_dia + 2*tolerance)/2 > 0
+       && chassis_height - (plow_wall_screw_z + (bolt_dia + 2*tolerance)/2) > 0,
+       "Step 6: plow wall M3 clearance must leave wall material above and below");
+assert(tw_apex_x_frame - plow_wall_screw_x >= 10,
+       "Step 6: plow support must stay >=10mm west of the twister apex");
+assert((v98_Bx - 23.75) - plow_wall_screw_x >= 10,
+       "Step 6: plow support must stay >=10mm west of the B bevel western envelope");
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
 assert(crank_mount_x == crank_axle_x, str("crank_mount_x must equal crank_axle_x (160): ", crank_mount_x));
 assert(crank_mount_y == chassis_width + 8, str("crank_mount_y must sit outside the front wall (68): ", crank_mount_y));

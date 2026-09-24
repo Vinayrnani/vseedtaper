@@ -31,9 +31,9 @@ trap cleanup EXIT
 #   --force   ignore skip-unchanged cache, regenerate everything selected
 #   part ...  optional subset of the GLB names to (re)generate;
 #             default is all parts. Valid names:
-#             chassis hopper cartridge plow crank rollers
+#             chassis south_wall hopper cartridge plow crank rollers
 #             rollers_lower rollers_upper tape
-#             twister pull_a pull_b takeup
+#             twister takeup
 FORCE=0
 FILTER=()
 for arg in "$@"; do
@@ -44,7 +44,7 @@ for arg in "$@"; do
     fi
 done
 
-ALL_GLB="chassis hopper cartridge plow crank rollers rollers_lower rollers_upper tape twister twister_axle pull_a pull_b takeup gear_A gear_B gear_I gearwall"
+ALL_GLB="chassis south_wall hopper cartridge plow crank rollers rollers_lower rollers_upper tape twister twister_axle takeup gear_A gear_B gear_I gearwall"
 if [ "${#FILTER[@]}" -gt 0 ]; then
     for p in "${FILTER[@]}"; do
         case " $ALL_GLB " in

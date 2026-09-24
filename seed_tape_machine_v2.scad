@@ -5,10 +5,10 @@
     Includes (monolith order):
       scad/params.scad    — global variables, kinematics, assertions, helpers
       scad/gears.scad     — hex_hole, round_axle_hole, spur_gear, bevel_gear, hex_bolt, bearing_block
-      scad/chassis.scad   — chassis()
+      scad/chassis.scad   — chassis(), south_wall()
       scad/feed.scad      — hopper_body, seed_cartridge, seed_cradle (v121: single_cone/spool_cones removed with the cones)
      scad/plow.scad      — scroll_sheet, six_turner, folding_plow
-     scad/stations.scad  — knurled_roller, pull_rollers, thread_twister, vpull_roller, takeup_reel, crank_assembly
+     scad/stations.scad  — knurled_roller, pull_rollers, thread_twister, takeup_reel, crank_assembly
      scad/drive_train.scad — v97 composite take-off (A[10+30] only)
 */
 
@@ -46,13 +46,12 @@ module animated_assembly() {
     drum_angle = -360*$t + 4.5;  // v81: +4.5° half-pitch phase (40T drum) for tooth-into-gap mesh with crank 20T
     crank_angle = 720*$t;   // v79: crank 20T spins 2x drum (CW, meshes drum 40T)
     roller_angle = crank_angle + gear_mesh_phase; // mesh-phased crank gear
-    twister_angle = 6 * crank_angle; // v116 Step 2: +6x via idler+B+mitre (2.0 wraps/seed)
-    pull_a_angle = roller_angle*vpull_spin;   // v52: nip side A spin-compensated 4/3
-    pull_b_angle = -roller_angle*vpull_spin;  // v52: nip side B counter-rotates 4/3
+    twister_angle = twister_rev * crank_angle; // Step 3: -6x via the 1:1 mitre, opposite crank
     takeup_angle = -1440*$t;       // v48: tape-tension wind-up
 
-    // Chassis
+    // Chassis with its removable south gear-mount wall
     chassis();
+    south_wall();
 
     // Static axle uses the unchanged X-only reflection plus its axle-only west shift;
     // it is not in the rotor's 180Y frame.
@@ -112,7 +111,7 @@ module animated_assembly() {
     // v97 composite take-off (user: revert gears, ONE composite 10->30):
     // crank20 -> A[10+30] (-2, Y). B at the fresh framed mitre apex (210.5, 32).
     // 15T idler bridges A30 -> B10 (same band 70-75); B -6x,
-    // twister +6x via the 1:1 mitre (2.0 wraps/seed).
+    // twister -6x via the 1:1 mitre (2.0 wraps/seed magnitude).
     translate([v97_Ax, v97_A_y0, v97_Az])
         rotate([0, A_rev * crank_angle, 0])
             dt_cluster_A();
@@ -132,19 +131,6 @@ module animated_assembly() {
         translate([bind_x, chassis_width/2, twister_axle_z])
             rotate([twister_angle, 0, 0])
                 thread_twister();
-
-    // v37 Vertical-nip pull pair (spacing driver), v39 CUSHIONED:
-    // two vertical-axis rollers stand on the base flanking the finished
-    // folded tape at pull_x (side-mounted: top bridge from the chassis
-    // walls caps the axles), pinching the closed pocket and pulling it
-    // at the same surface speed as the main roller (v52 d15 at 4/3 spin, spacing
-    // preserved). Soft rubber/silicone sleeve grips without crushing.
-    translate([pull_x, chassis_width/2 - vpull_off, base_thick + 15])
-        rotate([0, 0, pull_a_angle])
-            vpull_roller();
-    translate([pull_x, chassis_width/2 + vpull_off, base_thick + 15])
-        rotate([0, 0, pull_b_angle])
-            vpull_roller();
 
     // v37 Take-up spool (wind-up reel east, BOTTOM mounted), v40 SLIP
     // CLUTCH: reel built along Z is recentred, tilted to axle-Y, spun
@@ -180,7 +166,9 @@ if (num_divots == 6) {
 if (part_to_render == "all") {
     assemble_all();
 } else if (part_to_render == "chassis") {
-    translate([0, 0, 15]) chassis(); // feet z=-15 → min_z=0
+    chassis(); // flat base z=0
+} else if (part_to_render == "south_wall") {
+    south_wall(); // flat base z=0
 } else if (part_to_render == "hopper") {
     // v33 printable: standalone export drops to print base min_z=0
     // (local hover-pipe bottom 19.4 -> 0; was 19.9/25.9/26.5);
@@ -201,10 +189,6 @@ if (part_to_render == "all") {
     // Bake the X-only axle reflection into the standalone GLB; the viewer applies
     // the same axle-only west shift at its root-level placement.
     twister_axle_x_reflection() twister_axle();
-} else if (part_to_render == "pull_a") {
-    vpull_roller(); // base at z=0 already
-} else if (part_to_render == "pull_b") {
-    vpull_roller(); // base at z=0 already
 } else if (part_to_render == "takeup") {
     takeup_reel(); // built along Z, base at z=0 already
 } else if (part_to_render == "crank") {
