@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "openscad-iterative-modeling": {
+      "source": "fboldo/openscad-mcp-server",
+      "sourceType": "github",
+      "skillPath": "skills/openscad-iterative-modeling/SKILL.md",
+      "computedHash": "da2f171f32e87e871d34df335a48151fdd3a0cddc0a67336a6c99ec5d866cd78"
+    }
+  }
+}

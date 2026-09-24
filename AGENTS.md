@@ -39,6 +39,21 @@ Requirements
 6. **User APPROVE:** present short layman wording + live preview. Reviewer PASS alone never authorizes commit.
 7. **ONE commit + push** covering `REQUIREMENTS.md` (only if product functionality changed) + `CHANGELOG.md` (vN entry) + code + ASSET_V bump — only after explicit user APPROVE. Never two commits. Snapshot first (local-only, never committed): copy `web/index.html` + `web/js/` + `web/stl/*.glb` into `web/vNN/` (GLB only, never `.stl`). `web/v*/` is gitignored — snapshots stay on disk for local reference, never in git.
 
+## Step-wise execution workflow (MANDATORY for CAD/feature steps)
+
+Load skills before any step work: `code-philosophy`, `openscad`, `openscad-iterative-modeling` (state `Skills loaded: …` first).
+
+- Implement **step by step**: one step at a time. A step is done only after **implementation + preview output** for that step; then immediately continue the next queued step.
+- User may give steps **at any time**, in any order of message arrival, but execute **strictly in order only** (queue arrivals; never skip ahead).
+- If the user gives **no step number** or calls it **`feat:`**, treat it as **another step** (assign the next queue slot / label it as a step).
+- **Fresh on current code:** each step’s work builds on live HEAD as new work. Do **not** re-read old changelog entries to redo prior steps; do not “continue” an unfinished old attempt as if it were this step.
+- **Incorrect step → rollback:** if the user says a step’s work is wrong, **revert to the state immediately before that step**, then **redo the step from scratch** — no patching/adjusting the bad attempt.
+- **Continuous chain:** do **not** wait for a “continue/go” prompt between steps. After “Step N done”, start Step N+1 automatically until the queue is empty. Only stop for a genuine user decision.
+- **Purge after each step:** clear tool output/logs from the completed step (screenshots prune via `scripts/cleanup-screenshots.sh`; drop temp helpers/caches for that step) before starting the next.
+- **Autonomous visual review:** each step is reviewed with **≥3 different angles/ways** (e.g. iso + side + top/close-up, or live preview + PNG views).
+- **Isolation while inspecting:** keep **only the objects this step touched** visible; uncheck/hide others for a clear view — **unless** the step’s requirement needs those other objects in frame.
+- **Printability gates where needed:** for solid/moving parts, check **printability**, **watertight** mesh, and **minimum gap for moving** pairs (derive clearances from `tol=0.3`).
+
 ## Gotchas — do not violate
 - **No repeated tool calls / no repeated work (STRICT):** never the same tool call, command, grep/read, or action more than **2 times** with the same result. Attempt once; change approach on the second attempt; after **2 identical attempts** STOP — no third try — report blocker + partial results. Applies to every agent (orchestrator, plan, coder, reviewer, general).
 - Never edit v1 scad or `web/backup/` except to restore.
@@ -75,7 +90,7 @@ Maximise parallel execution. Independent work = parallel tool calls + parallel s
 
 ## Skills (mandatory load)
 Every subagent loads skills BEFORE work; states `Skills loaded: <names>` in first progress note. No receipt → work not started. Skill load fail → BLOCKED: skill `<name>` failed.
-- SCAD/.scad/STL→GLB → `openscad` + `code-philosophy` (order)
+- SCAD/.scad/STL→GLB → `openscad` + `code-philosophy` (order); step-wise CAD/feature work also loads `openscad-iterative-modeling`
 - Viewer JS/HTML/CSS → `frontend-philosophy`
 - Regen/pool/verify scripts → `code-philosophy`
 - Plan / plan-analysis / audit / diff → `plan-protocol` + **`plan` agent only** (never general)
