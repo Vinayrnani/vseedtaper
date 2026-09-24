@@ -109,8 +109,12 @@ A_rev = -2; // composite spins -2x crank (external mesh flips)
 tw_apex_x = 155; tw_apex_z = 32;   // source apex before the rigid twister frame
 twister_frame_cx = 182.75; twister_frame_cy = 34; twister_frame_cz = 32;  // explicit 180Y frame center
 twister_reflect_x = 2 * twister_frame_cx;  // rotor reflection datum: x' = 365.5 - x
-twister_axle_x_shift = 1.5;  // axle-only east correction; rotor datum remains unchanged
-twister_axle_reflect_x = twister_reflect_x + twister_axle_x_shift;  // final axle reflection datum: x' = 367 - x
+twister_axle_x_shift = 6;  // axle-only east correction; rotor datum remains unchanged
+twister_axle_reflect_x = twister_reflect_x + twister_axle_x_shift;  // final axle reflection datum: x' = 371.5 - x
+twister_support_rib_x0 = 195; twister_support_rib_x1 = 201;  // axle support follows +6mm axle shift
+twister_support_m3_x = [196.5, 199.5];  // axle support M3 stations follow +6mm axle shift
+tw_axle_foot_x0 = 166;  // west edge of the fused printable axle foot
+tw_axle_support_x1_reflected = twister_axle_reflect_x - tw_axle_foot_x0;
 tw_apex_x_frame = twister_reflect_x - tw_apex_x;  // 210.5 final twister apex
 tw_bev_n = 36;                     // same count both sides (true mitre 36/36, 45°/45°)
 tw_bev_mod = 1.25;                 // module (rim size)
@@ -859,14 +863,38 @@ assert(tw_slot_len >= tw_hub_x1 - tw_hub_x0, "C-slot axial length must cover the
 assert(tw_slot_len - (tw_hub_x1 - tw_hub_x0) == 5, "Step 7: C-slot must provide intended 5mm total axial play");
 assert(tw_slot_x0 >= tw_collar_x1, "C-slot must clear the static collar");
 assert(tw_slot_x1 == tw_lock_x0, "Step 7: extended C-slot must end at the moved retaining shoulder");
-tw_hub_x0_reflected = twister_axle_reflect_x - tw_hub_x1;
-tw_hub_x1_reflected = twister_axle_reflect_x - tw_hub_x0;
-assert(tw_slot_x0_reflected <= tw_hub_x0_reflected
-    && tw_slot_x1_reflected >= tw_hub_x1_reflected,
-    "Step 7: final reflected C-slot must cover the hub span");
-assert(tw_hub_x0_reflected - tw_slot_x0_reflected == 4.5
-    && tw_slot_x1_reflected - tw_hub_x1_reflected == 0.5,
-    "Step 7: final reflected C-slot axial play must be 4.5/0.5mm");
+// Rotor and axle have intentionally distinct reflection datums. The rotor
+// remains at its pre-correction mesh position while the axle moves east 6mm.
+tw_hub_x0_reflected = twister_reflect_x - tw_hub_x1;
+tw_hub_x1_reflected = twister_reflect_x - tw_hub_x0;
+tw_lock_shoulder_x_reflected = twister_axle_reflect_x - tw_lock_x0;
+tw_collar_x0_reflected = twister_axle_reflect_x - tw_collar_x0;
+assert(tw_hub_x0_reflected == 181.5 && tw_hub_x1_reflected == 186.5,
+    "twister rotor must remain unchanged at hub X181.5..186.5");
+assert(tw_slot_x0_reflected == 183 && tw_slot_x1_reflected == 193,
+    "east-shifted twister axle C-slot must be X183..193");
+assert(tw_slot_x0_reflected <= tw_hub_x1_reflected
+    && tw_slot_x1_reflected >= tw_hub_x0_reflected,
+    "east-shifted C-slot must retain hub overlap");
+assert(tw_lock_shoulder_x_reflected == 183
+    && tw_lock_shoulder_x_reflected >= tw_hub_x0_reflected
+    && tw_lock_shoulder_x_reflected <= tw_hub_x1_reflected,
+    "east-shifted shoulder must remain captured by the unchanged hub span");
+assert(tw_slot_x1_reflected - tw_hub_x1_reflected == 6.5,
+    "east-shifted slot must retain 6.5mm travel beyond the unchanged hub");
+assert(tw_hub_bore > tw_axle_od
+    && tw_slot_r1 >= tw_hub_r + tolerance,
+    "east-shifted hub/slot must clear the axle tube radially");
+assert(tw_collar_x0_reflected - tw_hub_x1_reflected >= tolerance,
+    "east-shifted rotor must not collide with the axle collar");
+assert(twister_axle_x_shift == 6 && twister_axle_reflect_x == 371.5,
+    "axle must carry the requested +6mm east shift");
+assert(twister_support_rib_x0 == 195 && twister_support_rib_x1 == 201
+    && twister_support_m3_x == [196.5, 199.5],
+    "axle support rib/M3 stations must follow the +6mm shift");
+assert(tw_axle_support_x1_reflected == 205.5
+    && takeup_x - takeup_flange_r - tw_axle_support_x1_reflected >= 10,
+    "east-shifted axle support must clear the fixed pull/take-up flange");
 assert(tw_slot_ang == 90, "C-slot must stay on +Z, clear of the two ±Y nose flex gaps");
 assert(tw_axle_od/2 - tw_slot_r0 >= 2, "axle tube wall at the C-slot root must remain >=2mm");
 assert(tw_bore_d/2 == 5, "bore radius must be 5 (Ø10 through-hole)");

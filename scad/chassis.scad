@@ -1,6 +1,6 @@
 module south_wall() {
     south_y = chassis_width - wall_thick; // 65: inner mating face
-    rib_x0 = 190.5; rib_x1 = 196.5; rib_z1 = 12;
+    rib_x0 = twister_support_rib_x0; rib_x1 = twister_support_rib_x1; rib_z1 = 12; // follows axle +6mm east shift
     difference() {
         union() {
             // Step 2 removable SOUTH gear-mount wall, y=65..68.
@@ -49,8 +49,8 @@ module south_wall() {
             translate([sx, chassis_width, wall_screw_z])
                 rotate([90,0,0]) cylinder(h=nut_trap_depth+epsilon, r=wall_screw_nut_r, $fn=6, center=false);
         }
-        // Existing south-side Step-13 M3 wall screws at x192/195, z7.
-        for (sx=[192, 195]) {
+        // East-shifted Step-13 axle-support M3 wall screws at x196.5/199.5, z7.
+        for (sx=twister_support_m3_x) {
             translate([sx, south_wall_bore_y, 7])
                 rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=bolt_dia+2*tolerance, center=true);
             translate([sx, chassis_width, 7])
@@ -127,8 +127,8 @@ module chassis() {
             rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
         translate([v115_Ix, wall_thick/2, v115_Iz])
             rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
-        // Existing north-side Step-13 M3 wall screws remain at x192/195, z7.
-        for (sx=[192, 195]) {
+        // East-shifted Step-13 axle-support M3 wall screws at x196.5/199.5, z7.
+        for (sx=twister_support_m3_x) {
             translate([sx, wall_thick/2, 7])
                 rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=bolt_dia+2*tolerance, center=true);
             translate([sx, 0, 7])

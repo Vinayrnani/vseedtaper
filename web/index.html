@@ -323,14 +323,15 @@
     // v38 respaced (v37 overlapped: twister 163..171 touched pull
     // 171..191, take-up 170..202 interpenetrated both).
     // Step 13: the rotor keeps its explicit CAD 180Y frame about
-    // (182.75, 34, 32). The axle is separate and X-only reflected, then
-     // shifted 1.5mm east at its root-level placement.
+    // (182.75, 34, 32). The rotor remains at its pre-correction mesh position;
+    // the axle is separately X-only reflected, then shifted 6mm east at
+    // root level while the rotor remains at its unchanged mesh position.
     var twisterFrame = new THREE.Group();
     twisterFrame.position.set(182.75, 32, -34);
     twisterFrame.rotation.z = Math.PI;
     root.add(twisterFrame);
     var twisterPivot = new THREE.Group();
-    twisterPivot.position.set(0, 0, 0);
+    twisterPivot.position.set(0, 0, 0); // pre-correction rotor position; bevel mesh unchanged
     twisterFrame.add(twisterPivot);
     // Vertical-nip pull pair at OpenSCAD (206, 30-/+14.2, 19) ->
     // (206, 19, -21.6) / (206, 19, -46.4) (+15): vertical axes stay vertical
@@ -647,7 +648,7 @@
    // Chassis GLB is raw OpenSCAD coords, so it takes rot [-PI/2,0,0] like the rest.
   // Cache-bust for regenerated geometry: bump ASSET_V with every GLB regen
   // so deployed users fetch fresh parts instead of stale cached .glb files.
-  var ASSET_V = 96; // Step 7: extend twister C-slot west, ASSET_V 95->96
+  var ASSET_V = 91; // Twister rotor seating correction cache version
   var PART_DEFS = [
       { id: 'chassis', label: 'Chassis', file: 'stl/chassis.glb', color: 0x5b7fa6,
         parent: root, pos: [0, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
@@ -664,7 +665,7 @@
       { id: 'twister', label: 'Thread twister (hollow 2-rod binder)', file: 'stl/twister.glb', color: 0xc9a227,
         parent: twisterPivot, pos: [0, -27.5, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.7, roughness: 0.35 },
       { id: 'twister_axle', label: 'Twister axle (static pedestal+tube)', file: 'stl/twister_axle.glb', color: 0x5b7fa6,
-        parent: root, pos: [1.5, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
+        parent: root, pos: [6, 0, 0], rot: [-Math.PI / 2, 0, 0], metalness: 0.4 },
       { id: 'takeup', label: 'Take-up spool (slip clutch)', file: 'stl/takeup.glb', color: 0xc96a2b,
         parent: takeupPivot, pos: [0, 0, 20.5], rot: [Math.PI, 0, 0], metalness: 0.3 }, // v40: export height 31->41 (clutch discs+spring+nut on top); half 20.5 recentres the reel on the axle
       { id: 'gear_A', label: 'Gear A [10+30] (composite, -2x)', file: 'stl/gear_A.glb', color: 0xd97c2b,

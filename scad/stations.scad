@@ -349,7 +349,7 @@ module twister_axle() {
                     cylinder(h=tw_tube_len + 2*epsilon, r=5, center=false, $fn=60);
         // One external C-slot: it starts at the bore boundary (r5) and
         // opens to r10.3, clearing the hub OD20 by 0.3mm radially. The
-        // 6mm axial span covers the 5mm hub with 1mm total play; +Z keeps
+        // 10mm axial span backs the 5mm hub with 5mm total play; +Z keeps
         // it clear of the two ±Y nose flex gaps.
         translate([0, lane_y, twister_axle_z])
             rotate([tw_slot_ang, 0, 0])
