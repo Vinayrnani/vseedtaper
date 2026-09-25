@@ -11,9 +11,12 @@ OpenSCAD CAD + static three.js viewer for a **seed-tape making machine** (v2). N
 ## Core functionality
 
 ### Machine (CAD — `seed_tape_machine_v2.scad`)
-- Builds the full assembly: chassis, hopper, drum/cartridge, plow (six-turner), tape path + former collar, cradle, twister (split-shank snap-arrow nose on the axle locks the hub; free spin, no X drift) + twister axle + pedestal, pull rollers a/b + bridge, takeup, crank. Tape feeds from off-machine supply (spool cones removed v121; spool rod stays).
-- Drive: crank → drum gear mesh (module 2, fail-loud mesh distance); crank shaft runs through the crank-gear bore, handle stands 20 off the wall. Live train: crank20 → A[10+30] (-2x) → idler 15T (+4x) → B[10+bev36] (-6x) → twister bevel 36T (+6x = 2.0 wraps/seed) via 45° mitre at apex (155,34,32). Outboard wall extended down to z26 carries A + idler + B tips (2 deep); functionless inboard shaft stubs cut. Seed rate unchanged at 3 seeds/crank rev.
+- Builds the full assembly: chassis, hopper, drum/cartridge, plow (six-turner), tape path + former collar, cradle, twister (free spin, no X drift) + static twister axle + support, pull rollers a/b + bridge, takeup, crank. Tape feeds from off-machine supply (spool cones removed v121; spool rod stays).
+- Drive: crank → drum gear mesh (module 2, fail-loud mesh distance); crank shaft runs through the crank-gear bore, handle stands 20 off the wall. Live train: crank20 → A[10+30] (-2x) → idler 15T (+4x) → B[10+bev36] (-6x) → twister bevel 36T (+6x = 2.0 wraps/seed) via 45° mitre at apex (155,34,32). The outboard has four distinct screwable wall supports with inside-driven M3 interfaces; its plate extends east to X234 and down to Z20, carrying A + idler + B tips (2 deep); functionless inboard shaft stubs are cut. Seed rate unchanged at 3 seeds/crank rev.
 - Feed path: hopper drop → plow forms/folders tape → twister orients seed pocket → pull/takeup advance tape. Clearances asserted fail-loud on every stack-up.
+- Plow mounting uses vertical underside screws at world (132,9) and (153,62); the long wall-reaching support is not used.
+- The static twister axle uses a minimal fused Γ support whose wall and floor legs meet at the axle center, with local wall/floor M3 pilots; no Z7 support interfaces remain, and the south rib remains.
+- The take-up-facing east funnel flare at source X172..175 is absent; the main OD15/ID10 tube remains straight and open at that end. The west/hopper-facing retaining nose is unchanged, with an r5.5 tip, r9 shoulder/barb, C-slot, and two flex legs.
 - CAD conventions: `$fn=60` curves, `tol=0.3` (all clearances derive from `tol`).
 - Single-object isolation: changing one part must not silently alter others.
 - Fail-loud OpenSCAD asserts for gaps, coplanarity, sweeps, and stack-ups.

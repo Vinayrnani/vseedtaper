@@ -124,10 +124,9 @@ module dt_bevel_blank(pitch_r, back_r, h, phase_deg, teeth_n) {
 }
 
 // ---- Step-5 outboard support wall (static part): plate y78-81 over both
-// axes (v117: z0 40->26) + 4 pillars + 2 z32 extension pillars fused into
-// the front wall; d8.6 slip bores carry A + idler + B (v117 B re-added;
-// tips: A y83 proud 2, idler/B y80 deep 2). Own printable part
-// (gearwall), absolute CAD coords.
+// axes (v117: z0 40->20) + four canonical 6x6 supports fused into the
+// removable south wall at Y68; d8.6 slip bores carry A + idler + B.
+// Own printable part (gearwall), absolute CAD coords.
 module dt_gearwall() {
     difference() {
         union() {
@@ -136,20 +135,11 @@ module dt_gearwall() {
                 cube([v105_wall_x1 - v105_wall_x0,
                       v105_wall_y1 - v105_wall_y0,
                       v105_wall_z1 - v105_wall_z0]);
-            // pillars (y67-80: 1 into the front wall, 2 into the plate)
-            for (px = v105_pillar_x) for (pz = v105_pillar_z)
-                translate([px - v105_pillar_s/2, 67, pz - v105_pillar_s/2])
-                    cube([v105_pillar_s, 13, v105_pillar_s]);
-            // v117 Step 2: extension pillars (z32 row, same 6x6 section) —
-            // fuse the lowered plate into the front wall at the B bore level.
-            for (px = v105_ext_x)
-                translate([px - v105_pillar_s/2, 67, v105_ext_z - v105_pillar_s/2])
-                    cube([v105_pillar_s, 13, v105_pillar_s]);
-            // Step 13: one same-section top pillar supports the east plate
-            // extension without entering either fresh gear band.
-            translate([v105_east_pillar_x - v105_pillar_s/2, 67,
-                       v105_east_pillar_z - v105_pillar_s/2])
-                cube([v105_pillar_s, 13, v105_pillar_s]);
+            // Four canonical 6x6 supports: Y68 face-touch, Y78..80 plate fuse.
+            for (station = v105_pillar_xz)
+                translate([station[0] - v105_pillar_half, v105_pillar_y0,
+                           station[1] - v105_pillar_half])
+                    cube([v105_pillar_s, v105_pillar_y1 - v105_pillar_y0, v105_pillar_s]);
         }
         // A shaft slip bore (through + epsilon both faces). v115: B bore
         // REMOVED — wall is A-only until the next-step intermediate brings
@@ -181,6 +171,17 @@ module dt_gearwall() {
             rotate([-90, 0, 0])
                 cylinder(h=(v105_wall_y1 - v105_wall_y0) + 2*epsilon,
                          r=hex_clearance_r, $fn=6, center=false);
+        // Four continuous M3 passages and outboard hex nut traps.
+        for (station = v105_pillar_xz) {
+            translate([station[0], v105_pillar_y0 - epsilon, station[1]])
+                rotate([-90, 0, 0])
+                    cylinder(h=v105_nut_trap_floor - v105_pillar_y0 + epsilon,
+                             d=v105_pillar_screw_d, center=false);
+            translate([station[0], v105_wall_y1, station[1]])
+                rotate([90, 0, 0])
+                    cylinder(h=nut_trap_depth + epsilon,
+                             r=v105_pillar_nut_r, $fn=6, center=false);
+        }
     }
 }
 

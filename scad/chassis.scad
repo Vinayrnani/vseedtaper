@@ -49,13 +49,11 @@ module south_wall() {
             translate([sx, chassis_width, wall_screw_z])
                 rotate([90,0,0]) cylinder(h=nut_trap_depth+epsilon, r=wall_screw_nut_r, $fn=6, center=false);
         }
-        // East-shifted Step-13 axle-support M3 wall screws at x196.5/199.5, z7.
-        for (sx=twister_support_m3_x) {
-            translate([sx, south_wall_bore_y, 7])
-                rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=bolt_dia+2*tolerance, center=true);
-            translate([sx, chassis_width, 7])
-                rotate([90,0,0]) cylinder(h=nut_trap_depth+epsilon, r=(bolt_head_across+2*tolerance)/sqrt(3), $fn=6, center=false);
-        }
+        // Step 2 four canonical outboard support M3 wall clearances.
+        for (station = v105_pillar_xz)
+            translate([station[0], south_wall_bore_y, station[1]])
+                rotate([90, 0, 0])
+                    cylinder(h=wall_thick+2*epsilon, d=v105_pillar_screw_d, center=true);
         // South-wall lightening cutout.
         translate([90, south_y - epsilon, 18])
             cube([30, wall_thick+2*epsilon, 22]);
@@ -108,11 +106,12 @@ module chassis() {
             translate([sx, 0, wall_screw_z])
                 rotate([-90,0,0]) cylinder(h=nut_trap_depth+epsilon, r=wall_screw_nut_r, $fn=6, center=false);
         }
-        // Step 6 plow ear A lateral screw aligns with the north wall hole.
-        translate([plow_wall_screw_x, plow_north_wall_y, plow_wall_screw_z])
+        // Step-3a fixed north-wall clearance for the local support wall pilot.
+        translate([twister_support_wall_anchor_final_x, wall_thick/2, twister_support_wall_anchor_z])
             rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=bolt_dia+2*tolerance, center=true);
-        translate([plow_wall_screw_x, 0, plow_wall_screw_z])
-            rotate([-90,0,0]) cylinder(h=nut_trap_depth+epsilon, r=wall_screw_nut_r, $fn=6, center=false);
+        // Step-3a floor clearance for the local support floor pilot; no nut trap.
+        translate([twister_support_floor_anchor_final_x, twister_support_floor_anchor_y, base_thick/2])
+            cylinder(h=base_thick+2*epsilon, d=bolt_dia+2*tolerance, center=true);
         // NORTH-wall crank and drum hex bores; south-wall bores are in south_wall().
         translate([crank_axle_x, wall_thick/2, crank_axle_z])
             rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, r=hex_clearance_r, $fn=6, center=true);
@@ -127,13 +126,12 @@ module chassis() {
             rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
         translate([v115_Ix, wall_thick/2, v115_Iz])
             rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
-        // East-shifted Step-13 axle-support M3 wall screws at x196.5/199.5, z7.
-        for (sx=twister_support_m3_x) {
-            translate([sx, wall_thick/2, 7])
-                rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=bolt_dia+2*tolerance, center=true);
-            translate([sx, 0, 7])
-                rotate([90,0,0]) cylinder(h=nut_trap_depth+epsilon, r=(bolt_head_across+2*tolerance)/sqrt(3), $fn=6, center=false);
-        }
+        // Plow underside screw at world (132,9), clear of the fixed wall.
+        translate([plow_base_screw_x, plow_base_screw_y, base_thick/2])
+            cylinder(h=base_thick + 2*epsilon, d=bolt_dia + 2*tolerance, center=true);
+        translate([plow_base_screw_x, plow_base_screw_y, -epsilon])
+            cylinder(h=nut_trap_depth + epsilon,
+                     r=(bolt_head_across + 2*tolerance)/sqrt(3), $fn=6, center=false);
         // Ear B keeps the unchanged vertical base screw at world (153,62).
         translate([plow_start + plow_len - 6, 62, base_thick/2])
             cylinder(h=base_thick + 2*epsilon, d=bolt_dia + 2*tolerance, center=true);

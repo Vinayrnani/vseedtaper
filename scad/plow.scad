@@ -59,7 +59,7 @@ module six_turner() {
     // y 20+10=34 = ring centre), so the exit faces the twister straight;
     // entry mouth rims sit at lane height. Supports: 2 ground pedestals
     // fused under the sheet floor (tops +15: 19.3/22.7) + straps to 2
-    // chassis ears on the M3 holes (world 132/6, 153/62).
+    // chassis support points on the M3 holes (world 132/9, 153/62).
     cy = 20;                        // sheet centre (local y, world tape centre 34 = lane_y)
     axis_z = 28;                    // v87 +15: sheet axis height (exit = twister bore height)
     mouth_x0 = -12;                 // sheet mouth (world 114, exit lands 159)
@@ -70,8 +70,6 @@ module six_turner() {
     ear = 6;                        // ear edge length (6x6 footprint)
     ear_t = 1;                      // ear flange thickness (stack-up keeps 1)
     mount_h = ear_t + 9;            // Step 9: ear/strap column height z0..10 (slim; base-fused, M3 through base kept)
-    earA = [3, -14];                // extended north: local y=-14..-5 -> world y=0..9
-    earA_len = ear + plow_wall_ear_embed; // 9mm, retains the inner/east edge at y=-5
     earB = [24, 45];                // ear B corner, centre (27,48) -> world (153,62)
     hole_d = bolt_dia + 2*tolerance; // M3 clearance 3.6
     // ---- v63 fail-loud: exact-scroll placement ----
@@ -101,25 +99,23 @@ module six_turner() {
         "six_turner: pedestal tops must be +15 lift values (19.3 / 22.7)");
     assert(pedA[0] >= mouth_x0 && pedA[1] <= mouth_x0 + length, "six_turner: mid pedestal must sit under the sheet");
     assert(pedB[0] >= mouth_x0 && pedB[1] <= mouth_x0 + length, "six_turner: exit pedestal must sit under the sheet");
-    // Ear A extends north into the chassis wall for one lateral M3 screw;
+    // Strap A receives a vertical M3 screw from below at world (132,9);
     // ear B keeps its unchanged vertical base screw into the chassis floor.
-    // Straps tie both ears to the pedestal feet (volumetric overlaps).
-    assert(ear == 6 && ear_t == 1, "six_turner: ears must stay 6x6x1 (small, minimal)");
-    assert(earA[0] + ear/2 == plow_wall_screw_x - plow_start
-        && earB[0] + ear/2 == turner_len - 6
-        && earB[0] + ear/2 + plow_start == 153,
-        "six_turner: ear A/B centers must hit world X 132/153");
-    assert(earA[1] == -14 && earA[1] + earA_len == -5
-        && earA[1] + (chassis_width/2 - 20) == 0
-        && earA[1] + earA_len + (chassis_width/2 - 20) == 9,
-        "six_turner: extended ear A must span world Y=0..9");
-    assert(earB[1] + ear/2 + (chassis_width/2 - 20) == 62,
-        "six_turner: ear B must retain its world Y=62 base attachment");
-    assert(hole_d == bolt_dia + 2*tolerance && plow_wall_screw_z - base_thick == 4,
-        "six_turner: lateral M3 hole must be clearance-sized and centered in the ear height");
-    assert(plow_wall_screw_z - base_thick - hole_d/2 > 0
-        && base_thick + mount_h - (plow_wall_screw_z + hole_d/2) > 0,
-        "six_turner: lateral M3 hole must retain material around the ear");
+    // Straps tie the supports to the pedestal feet (volumetric overlaps).
+    assert(plow_base_screw_x - plow_start == 6 && plow_base_screw_y == 9,
+        "six_turner: underside M3 station must be exactly world (132,9)");
+    assert(((chassis_width/2 - 20) + (-10)) - wall_thick >= 1.0,
+        "six_turner: strap A north edge must keep a 1.0mm gap from the fixed wall");
+    assert(3 - hole_d/2 >= 1.0
+        && ((-5) - (-10) - hole_d/2) >= 1.0
+        && (14 - (-5) - hole_d/2) >= 1.0,
+        "six_turner: strap A must retain at least 1.0mm X/Y ligaments around the M3 hole");
+    assert(bolt_head_across <= 6,
+        "six_turner: pan head must fit the 6mm strap A (0.25mm/side accepted)");
+    assert(earB[0] + ear/2 == turner_len - 6
+        && earB[0] + ear/2 + plow_start == 153
+        && earB[1] + ear/2 + (chassis_width/2 - 20) == 62,
+        "six_turner: ear B must retain its world station (153,62)");
     // Step-9 B-teeth clearance (sweep XZ c(155,32) r23.75, band y52.5..57.5):
     // strapB north stops below the envelope; earB notch/boss clear the top;
     // widened pedB stays below the band and its top clears the B shaft (z28).
@@ -134,8 +130,8 @@ module six_turner() {
     assert(12 - sqrt(pow(3.9, 2) + pow(3.4, 2)) >= 0.1,
         "six_turner: seeded pocket core must thread the entry mouth");
     // v66 solid: bare user scroll sheet (oriented + placed) + 2 floor
-    // pedestals + 2 ground straps + 2 chassis ears (union). Ear A uses one
-    // lateral north-wall M3 hole; ear B keeps its vertical base M3 hole.
+    // pedestals + 2 ground straps + 2 chassis ears (union). Strap A uses
+    // one vertical underside M3 hole; ear B keeps its vertical base M3 hole.
     // The $fn=6 spheres inside the user code
     // stay untouched (1225 hulls: $fn=60 spheres would not render).
     union() {
@@ -148,26 +144,23 @@ module six_turner() {
                     rotate([0, 90, 0])
                         rotate([0, 0, -90])
                             scroll_sheet();
-                // Extended north ear A: local y=-14..-5 engages the y=0..3 wall.
-                translate([earA[0], earA[1], 0]) cube([ear, earA_len, mount_h]);
                 // earB: north remnant above the teeth-band notch + boss around
                 // the M3 hole (153,62); notch local y45..notch_y1 stays open.
                 translate([earB[0], notch_y1, 0]) cube([ear, earB[1] + ear - notch_y1, mount_h]);
                 translate([earB[0]+ear/2, earB[1]+ear/2, 0]) cylinder(h=mount_h, r=4, center=false, $fn=60);
-                // Ground straps (z0..mount_h, tie ears to pedestal feet).
-                // strapB north shortened to strapB_y1 (clears the B teeth band).
-                translate([3, -11, 0]) cube([6, 25, mount_h]);
+                // Ground straps (z0..mount_h, tie supports to pedestal feet).
+                // strapA north stays 1.0mm clear of the wall; strapB clears the B teeth band.
+                translate([3, -10, 0]) cube([6, 24, mount_h]);
                 translate([24, 20, 0]) cube([6, strapB_y1 - 20, mount_h]);
                 // Support pedestals (tops fused into the sheet floor wall).
                 translate([pedA[0], pedA[2], 0]) cube([pedA[1] - pedA[0], pedA[3] - pedA[2], pedA[4]]);
                 translate([pedB[0], pedB[2], 0]) cube([pedB[1] - pedB[0], pedB[3] - pedB[2], pedB[4]]);
             }
-            // Lateral north-wall M3 clearance through the full extended ear A.
-            translate([plow_wall_screw_x - plow_start,
-                       earA[1] - epsilon,
-                       plow_wall_screw_z - base_thick])
-                rotate([-90,0,0])
-                    cylinder(h=earA_len+2*epsilon, d=hole_d, center=true);
+            // Vertical underside M3 clearance through strap A.
+            translate([plow_base_screw_x - plow_start,
+                       plow_base_screw_y - 14,
+                       -epsilon])
+                cylinder(h=mount_h+2*epsilon, d=hole_d, center=false);
             // Ear B retains its unchanged vertical base screw.
             translate([earB[0]+ear/2, earB[1]+ear/2, -epsilon])
                 cylinder(h=mount_h+2*epsilon, d=hole_d, center=false);

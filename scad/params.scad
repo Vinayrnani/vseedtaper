@@ -113,6 +113,23 @@ twister_axle_x_shift = 6;  // axle-only east correction; rotor datum remains unc
 twister_axle_reflect_x = twister_reflect_x + twister_axle_x_shift;  // final axle reflection datum: x' = 371.5 - x
 twister_support_rib_x0 = 195; twister_support_rib_x1 = 201;  // axle support follows +6mm axle shift
 twister_support_m3_x = [196.5, 199.5];  // axle support M3 stations follow +6mm axle shift
+// Step-3a source-frame fused Γ support: final world X = 371.5 - source X.
+twister_support_x0 = 169; twister_support_x1 = 175;
+twister_support_wall_y0 = 3; twister_support_wall_y1 = 34;
+twister_support_wall_z0 = 29; twister_support_wall_z1 = 35;
+twister_support_floor_y0 = 31; twister_support_floor_y1 = 37;
+twister_support_floor_z0 = 4; twister_support_floor_z1 = 32;
+twister_support_wall_pilot_d = 2.5; twister_support_floor_pilot_d = 2.5;
+twister_support_wall_pilot_y0 = 3; twister_support_wall_pilot_y1 = 13;
+twister_support_floor_pilot_z0 = 4; twister_support_floor_pilot_z1 = 10;
+twister_support_anchor_source_x = [172, 172];  // wall + floor local M3 anchors
+twister_support_anchor_count = len(twister_support_anchor_source_x);
+twister_support_wall_anchor_z = 32; twister_support_floor_anchor_y = 34;
+twister_support_final_x0 = twister_axle_reflect_x - twister_support_x1;
+twister_support_final_x1 = twister_axle_reflect_x - twister_support_x0;
+twister_support_wall_anchor_final_x = twister_axle_reflect_x - twister_support_anchor_source_x[0];
+twister_support_floor_anchor_final_x = twister_axle_reflect_x - twister_support_anchor_source_x[1];
+twister_support_legacy_m3_z = 7;  // retired Step-13 interface, intentionally unused
 tw_axle_foot_x0 = 166;  // west edge of the fused printable axle foot
 tw_axle_support_x1_reflected = twister_axle_reflect_x - tw_axle_foot_x0;
 tw_apex_x_frame = twister_reflect_x - tw_apex_x;  // 210.5 final twister apex
@@ -133,19 +150,22 @@ v98_Bx = tw_apex_x_frame; v98_Bz = tw_apex_z;  // Step 13 B/apex station (210.5,
 v98_B_y0 = 54; v98_B_y1 = 80;      // shaft r4 (v117: inboard stub cut into the bevel band; tip 2 deep in the gearwall slip bore)
 v98_B10_y0 = 70; v98_B10_y1 = 75;  // B10 m1.25 kept (idle for the next step)
 // Step 5 outboard support wall (user: extra wall outside carrying the A/B
-// shaft tips): plate y78-81 over both axes + 4 pillars fused into the front
-// wall (y67-80); A/B shafts run to y80 (tips 2 deep in the d8.6 bores).
-// Gears (tops 75) stay 3 below the plate; plate top (81) stays under the arm.
-v105_wall_x0 = 132; v105_wall_x1 = 222; // extended plate X span (covers fresh A/I/B bores + east support)
-v105_wall_z0 = 26;  v105_wall_z1 = 93;  // plate Z span (covers fresh A/I/B bores + supports)
-v105_wall_y0 = 78;  v105_wall_y1 = 81;  // plate Y span (3 = wall_thick)
-v105_pillar_x = [137];                    // west pillar keeps the fresh A30 sweep clear
-v105_pillar_z = [45, 88];               // pillar Z centres
-v105_pillar_s = 6;                      // pillar section (6x6, y67-80)
-v105_ext_x = [137];                       // z32 extension pillar X centre
-v105_ext_z = 32;                        // z32 extension pillar Z centre
-v105_east_pillar_x = 217;                 // same-section top support for the extended plate
-v105_east_pillar_z = 88;                 // above the fresh B/I gear bands
+// shaft tips): plate y78-81 over both axes + four canonical 6x6 supports
+// face-touching the removable south wall at y68 and fusing into the plate.
+bolt_dia = 3;
+bolt_head_across = 5.5;
+nut_trap_depth = 2.5;
+v105_wall_x0 = 132; v105_wall_x1 = 234; // extended plate X span
+v105_wall_z0 = 20;  v105_wall_z1 = 93;  // plate Z span, extended 6mm downward
+v105_wall_y0 = 78;  v105_wall_y1 = 81;  // plate Y span
+v105_pillar_xz = [[137, 32], [137, 88], [217, 88], [229, 32]];
+v105_pillar_y0 = 68; v105_pillar_y1 = 80; // face-touch south wall, fuse into plate
+v105_pillar_s = 6; v105_pillar_half = v105_pillar_s/2;
+v105_pillar_corner_r = v105_pillar_half * sqrt(2);
+v105_pillar_screw_d = bolt_dia + 2*tolerance;
+v105_pillar_nut_r = (bolt_head_across + 2*tolerance) / sqrt(3);
+v105_nut_trap_floor = 78.45; // v105_wall_y1 - (nut_trap_depth + epsilon)
+
 // Live B bevel support: standard 36T teeth remain unchanged and hang from
 // the full-radius Step 4 backing web; the web is behind the nominal heel
 // plane and overlaps the root frustum without extending into the toe/mesh.
@@ -241,10 +261,6 @@ takeup_shaft_y0 = 1;  // hidden in the back wall/block bore (wall 0..3)
 takeup_shaft_y1 = 67; // hidden in the front take-up block bore
 spool_shaft_y0 = 1;    // hidden in the back spool-block bore
 spool_shaft_y1 = 67;   // hidden in the front spool-block bore
-bolt_dia        = 3;
-bolt_head_across = 5.5;
-nut_trap_depth  = 2.5;
-
 // Step 1 flat floor + Step 2 wall-local M3 interface. Both walls carry
 // matching clearance holes/nut traps; no bosses or pilot holes occupy the floor.
 wall_screw_x = [chassis_x0 + 20, chassis_x0 + chassis_len - 20];
@@ -252,11 +268,9 @@ wall_screw_z = 8;
 wall_screw_clearance_d = bolt_dia + 2*tolerance;
 wall_screw_nut_r = (bolt_head_across + 2*tolerance) / sqrt(3);
 south_wall_bore_y = chassis_width - wall_thick/2;
-// Step 6 plow ear A lateral north-wall screw interface.
-plow_wall_screw_x = plow_start + 6; // world x=132
-plow_wall_screw_z = wall_screw_z;   // world z=8
-plow_north_wall_y = wall_thick/2;   // wall center y=1.5
-plow_wall_ear_embed = wall_thick;   // ear A extends 3mm into y=0..3 wall
+// Step 1 plow underside screw interface.
+plow_base_screw_x = plow_start + 6; // world x=132
+plow_base_screw_y = 9; // world y=9, inboard of fixed wall inner face y=3
 
 // Bearing block dimensions
 bb_len = 14;
@@ -395,8 +409,8 @@ tw_hub_x0 = 179;                  // hub west edge
 tw_hub_x1 = 184;                  // hub east edge (hub length 5mm)
 tw_mouth_x = 172;                 // mouth position
 tw_tube_west_extension = 4;        // source +X = final west after reflection
-tw_tube_len = 21.5 + tw_tube_west_extension; // 25.5mm source tube length
-tw_tube_x1 = tw_mouth_x + tw_tube_len;       // 197.5 source tube end
+ tw_tube_len = 21.5 + tw_tube_west_extension; // 25.5mm source tube length
+ tw_tube_x1 = tw_mouth_x + tw_tube_len;       // 197.5 source tube end
 tw_ped_x0 = 170;                  // pedestal west edge
 tw_ped_x1 = 174;                  // pedestal east edge (mouth 160 inside zone, fused-base-by-design)
 tw_ped_w = 10;                    // pedestal width
@@ -671,8 +685,6 @@ assert(v115_I_y0 <= 68 && v115_I_y1 >= v115_I15_y1, "idler shaft must span hub a
 // idler gear top (75) stays below the plate (78) and tip below the arm sweep:
 assert(v115_I15_y1 <= v105_wall_y0 - 2, "idler gear must stay below the outboard plate");
 assert(v115_I_y1 <= crank_mount_y + crank_arm_gap - 5, "idler tip must stay below the crank-arm sweep");
-// idler gear (outer ~r11) clears pillar0 (x134-140, z42-48) by >=1:
-assert((v115_Ix - 11) - (v105_pillar_x[0]+3) >= 1, "idler gear must clear pillar0");
 // idler gear vs hopper drum (100,75 r33.8): radial:
 assert(sqrt(pow(v115_Ix-100,2)+pow(v115_Iz-75,2)) - 33.8 - 11 >= 1, "idler gear must clear the hopper radially");
 // idler gear (bottom y70) clears the B bevel top (57.5) and twister sweep top (55.75):
@@ -712,47 +724,61 @@ assert((v98_Bx + 4) - (tw_apex_x_frame - 22.5 - tw_bev_face*cos(45)) >= 1.5, "B 
 assert(v98_B_y0 - (lane_y + 7) >= 1, "B shaft must clear the pedestal foot in y");
 // B shaft bottom vs plow exit flare (axis (159,34,32), r10.5 worst case):
 assert(sqrt(pow(v98_Bx-159,2)+pow(v98_B_y0-34,2)) - 10.5 >= 1.0, "B shaft must clear the plow exit flare");
-// Step 5 outboard wall asserts: A tip 2 deep in the plate bore (78-81);
-// B tip stays below the plate (outboard open until the next step):
-assert(v97_A_y1 == 83 && v98_B_y1 == 80, "v117: A tip 2 proud of the plate (83); B tip 2 deep in the plate bore (80)");
-// gear tops (75) stay 3 below the plate (78):
-assert(v97_A30_y1 <= v105_wall_y0 - 2 && v98_B10_y1 <= v105_wall_y0 - 2,
-       "A30/B10 must stay below the outboard plate");
-// plate top (81) stays under the crank-arm sweep (88):
-assert(v105_wall_y1 <= crank_mount_y + crank_arm_gap - 5, "outboard plate must stay below the arm");
-// The fresh level crank is relieved through the extended plate by a
-// positive hex clearance bore in dt_gearwall().
-assert(v105_wall_z1 >= v97_Az + 2, "outboard plate must still cover the fresh A bore");
-// west pillars (6x6 at x137, z45/88, y67-80) clear the fresh A30 sweep (r20.75) by >=1:
-assert(sqrt(pow((v105_pillar_x[0]+3)-v97_Ax,2)+pow((v105_pillar_z[1]-3)-v97_Az,2)) >= 21.75
-    && sqrt(pow((v105_pillar_x[0]+3)-v97_Ax,2)+pow((v105_pillar_z[0]+3)-v97_Az,2)) >= 21.75
-    && sqrt(pow((v105_east_pillar_x+3)-v97_Ax,2)+pow((v105_east_pillar_z-3)-v97_Az,2)) >= 21.75
-    && sqrt(pow((v105_east_pillar_x-3)-v97_Ax,2)+pow((v105_east_pillar_z+3)-v97_Az,2)) >= 21.75,
-       "outboard pillars must clear the A30 sweep");
-// plate covers pillars + bores with >=2 edge:
-assert(v105_wall_x0 <= v105_pillar_x[0]-3 && v105_wall_x1 >= v105_east_pillar_x+3
-    && v105_wall_z0 <= v105_pillar_z[0]-3 && v105_wall_z1 >= v105_pillar_z[1]+3,
-       "outboard plate must cover pillars and bores");
-// wall bores slip on the r4 shafts:
-assert(axle_clearance_dia > 8, "outboard wall bores must slip on the r4 shafts");
-// v117 Step 2: plate lowered (z0 26) covers the z32 row — extension
-// pillars + re-added B slip bore, each with >=2 plate edge:
-assert(v105_wall_x0 + 2 <= v105_ext_x[0] - 3
-    && v105_wall_z0 + 2 <= v105_ext_z - 3,
-       "outboard plate must cover the extension pillars with >=2 edge");
-assert(v105_wall_x0 + 2 <= v98_Bx && v98_Bx <= v105_wall_x1 - 2
-    && v105_wall_z0 + 2 <= v98_Bz,
-       "outboard plate must cover the B slip bore with >=2 edge");
-// B10 (outer r8.25) vs extension pillar corners (140,35)/(184,35):
-assert(sqrt(pow(v105_ext_x[0] + 3 - v98_Bx, 2) + pow(v105_ext_z + 3 - v98_Bz, 2)) - 8.25 >= 1,
-       "B10 must clear the extension pillars (true-distance)");
-// idler gear (outer r11, pillar half-diag 4.3) vs the same corners:
-assert(sqrt(pow(v105_ext_x[0] + 3 - v115_Ix, 2) + pow(v105_ext_z + 3 - v115_Iz, 2)) - 11 - 4.3 >= 1,
-       "idler gear must clear the extension pillars (true-distance)");
-// east extension pillar clears the twister heel pitch x177.5 by >=1:
-assert(67 - (lane_y + tw_disc_r) >= 1, "z32 extension pillars must clear the twister radial envelope in Y");
-assert(v105_wall_x0 + 2 <= v105_east_pillar_x - 3 && v105_east_pillar_x + 3 <= v105_wall_x1 - 2
-     && v105_wall_z0 + 2 <= v105_east_pillar_z - 3, "extended plate must cover the east support pillar");
+// Step 2 outboard wall asserts: canonical four-support layout, face contact,
+// continuous screw cavities, and all existing gear/keep-out constraints.
+assert(len(v105_pillar_xz) == 4 && v105_pillar_xz == [[137, 32], [137, 88], [217, 88], [229, 32]],
+       "Step 2: gearwall must use exactly the four canonical pillar stations");
+assert(v105_wall_x0 == 132 && v105_wall_x1 == 234
+    && v105_wall_y0 == 78 && v105_wall_y1 == 81
+    && v105_wall_z0 == 20 && v105_wall_z1 == 93,
+    "Step 2: gearwall plate extents must stay X132..234/Y78..81/Z20..93");
+assert(v105_wall_z0 == 20
+    && (v98_Bz - 8.25) - v105_wall_z0 >= 2,
+    "Step 2: plate bottom Z20 must clear the B10 lower envelope Z23.75 by >=2mm");
+assert(v105_pillar_y0 == 68 && v105_pillar_y1 == 80
+    && v105_pillar_y0 == south_wall_bore_y + wall_thick/2
+    && v105_pillar_y0 >= chassis_width,
+    "Step 2: pillars must face-touch the south wall at Y68 without overlap");
+assert(v105_pillar_s == 6 && v105_pillar_half == 3
+    && (v105_pillar_s - v105_pillar_screw_d)/2 >= 1,
+    "Step 2: each pillar must retain >=1mm M3 hole edge web");
+assert(v105_nut_trap_floor == v105_wall_y1 - (nut_trap_depth + epsilon)
+    && v105_nut_trap_floor == 78.45
+    && v105_nut_trap_floor - v105_wall_y0 >= 0.4,
+    "Step 2: nut-trap floor must leave the approved 0.45mm plate web");
+for (station = v105_pillar_xz) {
+    assert(v105_wall_x0 + 2 <= station[0] - v105_pillar_half
+        && station[0] + v105_pillar_half <= v105_wall_x1 - 2
+        && v105_wall_z0 + 2 <= station[1] - v105_pillar_half
+        && station[1] + v105_pillar_half <= v105_wall_z1 - 2,
+        "Step 2: every pillar must retain >=2mm plate edge");
+    for (sx = [-1, 1]) for (sz = [-1, 1]) {
+        corner_x = station[0] + sx*v105_pillar_half;
+        corner_z = station[1] + sz*v105_pillar_half;
+        assert(sqrt(pow(corner_x-v97_Ax, 2)+pow(corner_z-v97_Az, 2)) >= 21.75,
+            "Step 2: every pillar corner must clear A30 by the 21.75mm rule");
+        assert(sqrt(pow(corner_x-v98_Bx, 2)+pow(corner_z-v98_Bz, 2)) - 8.25 - v105_pillar_corner_r >= 1,
+            "Step 2: every pillar corner must clear B10 by >=1mm");
+        assert(sqrt(pow(corner_x-v115_Ix, 2)+pow(corner_z-v115_Iz, 2)) - 11 - v105_pillar_corner_r >= 1,
+            "Step 2: every pillar corner must clear idler by >=1mm");
+        assert(sqrt(pow(corner_x-crank_axle_x, 2)+pow(corner_z-crank_axle_z, 2)) - hex_clearance_r - v105_pillar_corner_r >= 1,
+            "Step 2: every pillar corner must clear the crank hex relief by >=1mm");
+        assert(corner_x + 1 <= takeup_x - bb_len/2
+            || corner_x - 1 >= takeup_x + bb_len/2
+            || corner_z + 1 <= takeup_z - bb_height_spool
+            || corner_z - 1 >= takeup_z + 2,
+            "Step 2: every pillar corner must clear the takeup bore/block by >=1mm");
+    }
+}
+assert(max([v97_A30_y1, v98_B10_y1, v115_I15_y1]) <= v105_wall_y0 - 3,
+    "Step 2: every gear top must stay >=3mm below the plate");
+assert(v105_wall_y1 <= crank_mount_y + crank_arm_gap - 5
+    && v105_pillar_y1 <= crank_mount_y + crank_arm_gap - 5,
+    "Step 2: plate and pillars must stay clear of the crank sweep");
+assert(chassis_width/2 + takeup_h_total/2 + 1 <= v105_pillar_y0,
+    "Step 2: takeup reel must retain axial Y separation from the pillars");
+assert($fn == 60 && tolerance == 0.3 && bolt_dia == 3 && bolt_head_across == 5.5 && nut_trap_depth == 2.5,
+    "Step 2: $fn, tolerance, and M3 dimensions must remain unchanged");
 // v117 inboard stub cuts land inside their carrier bands:
 assert(v97_A_y0 >= 49 && v97_A_y0 <= 50, "A stub cut must end inside the A10 band [49,50]");
 assert(v98_B_y0 >= 53 && v98_B_y0 <= 57, "B stub cut must end inside the bevel band [53,57]");
@@ -967,6 +993,54 @@ assert(axle_clearance_dia/2 > axle_dia/2, "v45: reel/wall/block bores must slip 
 assert(spool_shaft_y0 >= 0 && spool_shaft_y0 <= 2, str("v45: spool shaft must start hidden in the back block bore: ", spool_shaft_y0));
 assert(spool_shaft_y1 >= 66 && spool_shaft_y1 <= 68, str("v45: spool shaft must end hidden in the front block bore: ", spool_shaft_y1));
 assert(base_thick == 4, "flat chassis floor: base slab must span z=0..4");
+// Step-3a fused Γ support invariants: source geometry is intentional and the
+// viewer-facing conversion is final X = 371.5 - source X.
+assert(twister_axle_reflect_x == 371.5 && twister_support_final_x0 == 196.5
+    && twister_support_final_x1 == 202.5
+    && twister_support_wall_anchor_final_x == 199.5
+    && twister_support_floor_anchor_final_x == 199.5,
+    "Step-3a: support source/final X conversion must remain exact");
+assert(twister_support_wall_y0 == wall_thick && twister_support_floor_z0 == base_thick,
+    "Step-3a: support must contact the fixed wall and floor faces");
+assert(twister_support_wall_z1 - twister_support_wall_z0 == 6
+    && twister_support_wall_y1 == twister_support_floor_anchor_y
+    && twister_support_floor_z1 == twister_support_wall_anchor_z,
+    "Step-3a: support legs must meet at the axle center Y34/Z32");
+assert(twister_support_wall_pilot_d == 2.5 && twister_support_floor_pilot_d == 2.5
+    && twister_support_wall_pilot_y0 == 3 && twister_support_wall_pilot_y1 == 13
+    && twister_support_floor_pilot_z0 == 4 && twister_support_floor_pilot_z1 == 10
+    && bolt_dia + 2*tolerance == 3.6,
+    "Step-3a: local M3 pilot and chassis clearance dimensions must remain exact");
+assert(twister_support_x0 < tw_ped_x0 && twister_support_x1 > tw_ped_x1
+    && twister_support_floor_y0 <= tw_ped_w/2 + lane_y
+    && twister_support_floor_y1 >= lane_y - tw_ped_w/2,
+    "Step-3a: support must deliberately overlap the current pedestal/root");
+assert(twister_support_x0 < twister_support_x1 && twister_support_final_x0 < twister_support_final_x1,
+    "Step-3a: support slice must be a positive source/final envelope");
+assert(twister_support_anchor_count == 2
+    && twister_support_anchor_source_x == [172, 172]
+    && twister_support_wall_anchor_z == twister_axle_z
+    && twister_support_floor_anchor_y == lane_y,
+    "Step-3a: exactly two local M3 anchors are required");
+assert(tw_bore_d == 10 && tw_bore_d < tw_axle_od
+    && twister_support_wall_z0 > twister_axle_z - 5
+    && twister_support_floor_z1 == twister_axle_z,
+    "Step-3a: support must preserve the open Ø10 bore/rotor passage");
+assert(twister_support_wall_z0 - (tape_z + tape_thick) >= tolerance,
+    "Step-3a: support wall leg must clear the tape top");
+assert(twister_support_final_x1 < v98_Bx
+    && twister_support_wall_y1 < v97_A_y0
+    && twister_support_wall_y1 < v98_B_y0
+    && twister_support_wall_y1 < v115_I_y0
+    && twister_support_final_x1 < takeup_x - takeup_flange_r,
+    "Step-3a: support must clear A/B/idler and take-up envelopes");
+assert(twister_support_wall_y1 < 47 && twister_support_floor_z0 >= 0,
+    "Step-3a: support must preserve the disconnected south gear-wall rib");
+assert(twister_support_m3_x == [196.5, 199.5] && twister_support_legacy_m3_z == 7,
+    "Step-3a: obsolete axle-support M3 stations are retired data, not live anchors");
+assert($fn == 60 && tolerance == 0.3,
+    "Step-3a: $fn60 and tolerance0.3 must remain unchanged");
+
 // Step 2 wall-local interface: matching wall clearance/nut traps, below all
 // axle/gear bands, with no screw bosses or pilot holes in the open floor.
 assert(wall_screw_x == [chassis_x0 + 20, chassis_x0 + chassis_len - 20],
@@ -983,20 +1057,29 @@ assert(wall_screw_z < min([spool_axle_z, drum_axle_z, crank_axle_z,
 assert(nut_trap_depth < wall_thick, "Step 2: wall nut traps must leave a wall web");
 assert(south_wall_bore_y > chassis_width - wall_thick && south_wall_bore_y < chassis_width,
        "Step 2: south-wall bearing/gear bores must remain centered in the gear-mount wall");
-// Step 6 plow north-wall interface: centered M3 hole, wall material around it,
+// Step 1 plow underside interface: exact station, strap/wall clearance,
 // and support kept west of the twister apex and B bevel western envelope.
-assert(plow_wall_screw_x == plow_start + 6 && plow_wall_screw_z == wall_screw_z,
-       "Step 6: plow wall screw must use world x=132, z=8");
-assert(plow_north_wall_y == wall_thick/2 && plow_wall_ear_embed == wall_thick,
-       "Step 6: plow ear must engage the north wall through its full 3mm thickness");
-assert(bolt_dia + 2*tolerance == 3.6
-       && plow_wall_screw_z - (bolt_dia + 2*tolerance)/2 > 0
-       && chassis_height - (plow_wall_screw_z + (bolt_dia + 2*tolerance)/2) > 0,
-       "Step 6: plow wall M3 clearance must leave wall material above and below");
-assert(tw_apex_x_frame - plow_wall_screw_x >= 10,
-       "Step 6: plow support must stay >=10mm west of the twister apex");
-assert((v98_Bx - 23.75) - plow_wall_screw_x >= 10,
-       "Step 6: plow support must stay >=10mm west of the B bevel western envelope");
+assert(plow_base_screw_x == 132 && plow_base_screw_y == 9,
+       "Step 1: plow underside screw must use world (132,9)");
+assert((plow_base_screw_y - wall_screw_clearance_d/2) > wall_thick
+       && (plow_base_screw_y - wall_screw_nut_r) > wall_thick,
+       "Step 1: plow screw hole and nut trap must clear the fixed wall inner face");
+assert(((chassis_width/2 - 20) + (-10)) == 4
+       && ((chassis_width/2 - 20) + 14) == 28
+       && (4 - wall_thick) >= 1.0,
+       "Step 1: strap A must span world Y4..28 with a 1.0mm wall gap");
+assert(3 - wall_screw_clearance_d/2 >= 1.0
+       && ((-5) - (-10) - wall_screw_clearance_d/2) >= 1.0
+       && (14 - (-5) - wall_screw_clearance_d/2) >= 1.0,
+       "Step 1: strap A must retain 1.0mm X/Y ligaments around the M3 hole");
+assert(bolt_head_across <= 6,
+       "Step 1: pan head must fit strap A (0.25mm/side accepted)");
+assert(tw_apex_x_frame - plow_base_screw_x >= 10,
+       "Step 1: plow support must stay >=10mm west of the twister apex");
+assert((v98_Bx - 23.75) - plow_base_screw_x >= 10,
+       "Step 1: plow support must stay >=10mm west of the B bevel western envelope");
+assert(153 == plow_start + 27 && 62 == 14 + 48,
+       "Step 1: ear B must retain its world station (153,62)");
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
 assert(crank_mount_x == crank_axle_x, str("crank_mount_x must equal crank_axle_x (160): ", crank_mount_x));
 assert(crank_mount_y == chassis_width + 8, str("crank_mount_y must sit outside the front wall (68): ", crank_mount_y));

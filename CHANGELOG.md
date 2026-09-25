@@ -4,6 +4,9 @@ Version-level changes only. Product requirements live in `REQUIREMENTS.md`.
 
 Status: current entry committed after user APPROVE; older entries historical.
 
+## v132 — 2026-09-25
+- Step 1: plow mounting uses a vertical underside screw at world (132,9) and retains the second underside screw at (153,62); the long wall-reaching support is retired. Step 2: the outboard has four distinct screwable wall supports with inside-driven M3 interfaces; its plate extends east to X234 and down to Z20, and gearwall/south_wall were regenerated. Step 3a: the static twister axle has a minimal fused Γ support, with the wall and floor legs meeting at the axle center and local wall/floor M3 pilots; the old Z7 support interfaces are retired and the south rib remains. Step 3b: the take-up-facing east funnel flare at source X172..175 was removed; the main OD15/ID10 tube remains straight and open at that end. The west/hopper-facing retaining nose is unchanged, with an r5.5 tip, r9 shoulder/barb, C-slot, and two flex legs. ASSET_V=96; no v132 code commit. Validation: OpenSCAD nightly NoError/manifold; regenerated GLBs watertight; verify_v123 PASSED, 0 console errors; scoped source/visual reviews passed. Formal oracle skill review was unavailable in the agent environment, but explorer source audits and observer visual gates passed.
+
 ## v129 — 2026-09-24
 - Workflow rules (user APPROVE): (1) **Unclear step → skip, finish clear steps, then ask** — never guess requirements, never block the queue on one unclear step; (2) **Zero guesswork / zero hallucination (STRICT)** — never invent dims/paths/line numbers/intent; missing facts → stop and ask; re-verify disk, not stale memory. Docs-only AGENTS.md; no CAD/GLB/viewer change, no ASSET_V bump. Local snapshot `web/v129/`.
 

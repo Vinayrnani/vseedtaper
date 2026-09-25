@@ -298,6 +298,17 @@ module twister_axle() {
             // (fused to pedestal + base; top ducks 15 under the plow flare).
             translate([166, lane_y - 7, 0])
                 cube([8, 14, 6], center=false);
+            // Step-3a fused two-axis Γ support: source X169..175, wall to axle
+            // center and axle center to floor; the Y31..34/Z29..32 overlap is
+            // intentional fused material. No separate bracket or central fastener.
+            translate([twister_support_x0, twister_support_wall_y0, twister_support_wall_z0])
+                cube([twister_support_x1 - twister_support_x0,
+                      twister_support_wall_y1 - twister_support_wall_y0,
+                      twister_support_wall_z1 - twister_support_wall_z0], center=false);
+            translate([twister_support_x0, twister_support_floor_y0, twister_support_floor_z0])
+                cube([twister_support_x1 - twister_support_x0,
+                      twister_support_floor_y1 - twister_support_floor_y0,
+                      twister_support_floor_z1 - twister_support_floor_z0], center=false);
             translate([0, lane_y, twister_axle_z]) {
                 // Tube: source x172..197.5, OD15, Ø10 through-bore.
                 // Source +X maps to final west; the 4mm extension is derived
@@ -305,10 +316,6 @@ module twister_axle() {
                 translate([tw_mouth_x, 0, 0])
                     rotate([0, 90, 0])
                         cylinder(h=tw_tube_len, r=15/2, center=false, $fn=60);
-                // Funnel flare at mouth x172 (flared entry for tape threading)
-                translate([tw_mouth_x, 0, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h=3, r1=12, r2=15/2, center=false, $fn=60);
                 // Static collar ring r9 x176.5..178.5 (fused on tube exterior;
                 // inner r7.4 embeds 0.1 into the tube OD — kills the
                 // coincident-skin seam, invisible outside)
@@ -342,11 +349,20 @@ module twister_axle() {
                                 [tw_bore_d/2, 6.5]]);
             }
         }
-        // Through-bore Ø10 (full tube length, through the terminal face)
+        // Step-3a local pilots: M3 threads into the fused support; the matching
+        // chassis holes are the only mating clearances and have no nut traps.
+        translate([twister_support_anchor_source_x[0], twister_support_wall_pilot_y0, twister_support_wall_anchor_z])
+            rotate([-90, 0, 0])
+                cylinder(h=twister_support_wall_pilot_y1 - twister_support_wall_pilot_y0,
+                         d=twister_support_wall_pilot_d, center=false, $fn=60);
+        translate([twister_support_anchor_source_x[1], twister_support_floor_anchor_y, twister_support_floor_pilot_z0])
+            cylinder(h=twister_support_floor_pilot_z1 - twister_support_floor_pilot_z0,
+                     d=twister_support_floor_pilot_d, center=false, $fn=60);
+        // Through-bore Ø10 extends west through the complete support slice.
         translate([0, lane_y, twister_axle_z])
-            translate([tw_mouth_x, 0, 0])
+            translate([twister_support_x0, 0, 0])
                 rotate([0, 90, 0])
-                    cylinder(h=tw_tube_len + 2*epsilon, r=5, center=false, $fn=60);
+                    cylinder(h=tw_tube_x1 - twister_support_x0 + 2*epsilon, r=5, center=false, $fn=60);
         // One external C-slot: it starts at the bore boundary (r5) and
         // opens to r10.3, clearing the hub OD20 by 0.3mm radially. The
         // 10mm axial span backs the 5mm hub with 5mm total play; +Z keeps
