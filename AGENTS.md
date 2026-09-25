@@ -44,6 +44,8 @@ Requirements
 Load skills before any step work: `code-philosophy`, `openscad`, `openscad-iterative-modeling` (state `Skills loaded: …` first).
 
 - Implement **step by step**: one step at a time. A step is done only after **implementation → per-step final validation → preview output** for that step; then immediately continue the next queued step.
+- **Steps are isolated units:** only one step is open at a time. Do **not** start step N+1 until step N is **completely done** (implemented + validated + preview generated). Never batch work across steps, never merge steps, never start the next step “while waiting” on the current one.
+- **Report each step as it finishes — not a batch report at the end of the queue:** as soon as step N completes, post a short **“Step N done”** message (1–3 lines: what changed + validation/preview result). Then proceed to step N+1. **Forbidden:** a single combined “all steps finished” report after the queue, or holding back individual step reports until the end.
 - User may give steps **at any time**, in any order of message arrival, but execute **strictly in order only** (queue arrivals; never skip ahead) — **except** when a step’s requirements are unclear (see below).
 - **Unclear step → skip, finish clear, then ask:** if a step’s requirements are not clear, **do not implement or guess** — park it as skipped, proceed to the next **clear** step and finish the chain of clear steps, then **ask the user for the missing info** on every skipped step (in original order). Never block the whole queue on one unclear step; never invent requirements for a skipped step.
 - **Zero guesswork / zero hallucination (STRICT):** never invent dimensions, positions, part names, file paths, line numbers, prior decisions, or user intent. If a fact is not in the request, live HEAD code, or a tool result this session, **stop and ask** — do not fill gaps with plausible-sounding assumptions. Stale memory or old changelog text is not a source of truth for current work; re-verify on disk before acting.
@@ -55,6 +57,13 @@ Load skills before any step work: `code-philosophy`, `openscad`, `openscad-itera
 - **Autonomous visual review:** each step is reviewed with **≥3 different angles/ways** (e.g. iso + side + top/close-up, or live preview + PNG views).
 - **Isolation while inspecting:** keep **only the objects this step touched** visible; uncheck/hide others for a clear view — **unless** the step’s requirement needs those other objects in frame.
 - **Per-step final validation (every step, not only at the end):** order is **implementation → validation → preview**. Before any preview, run the full validation gate for **that step’s** changes — syntax/asserts (`openscad-nightly`), **printability**, **watertight** mesh where applicable, and **minimum gap for moving** pairs (from `tol=0.3`), plus the visual review after preview. Only then report “Step N done”. Do **not** defer validation to the last step or batch it across steps; each step validates itself before the next starts.
+
+## Communication with the user (MANDATORY)
+When **asking the user a question** (or explaining status/options): use **very layman terms** or **Telugu** — the user is **not** familiar with 3D CAD or gear terminology.
+- No jargon: avoid “mitre/bevel/pinion/manifold/watertight/CSG/tolerance stack” etc. Say it like “angled teeth meeting”, “one solid piece with no holes in the surface”, “gap between moving parts”, “prints without supports failing”.
+- Prefer simple everyday words + short sentences; one idea at a time.
+- If Telugu is clearer for the user, write the question in **Telugu** (plain conversational Telugu is fine).
+- Technical names (file names, port 9099, step numbers, “Step 2 done”) stay as-is; the *explanation* around them is what must be simple.
 
 ## Gotchas — do not violate
 - **No repeated tool calls / no repeated work (STRICT):** never the same tool call, command, grep/read, or action more than **2 times** with the same result. Attempt once; change approach on the second attempt; after **2 identical attempts** STOP — no third try — report blocker + partial results. Applies to every agent (orchestrator, plan, coder, reviewer, general).
@@ -91,12 +100,18 @@ Consult git history / `web/vNN/` / old commits ONLY when the request relates to 
 Maximise parallel execution. Independent work = parallel tool calls + parallel subagents. Sequential only on real dependencies. One owner per task. Coder splits still fully self-contained. Batch independent greps/reads/verifies.
 
 ## Skills (mandatory load)
-Every subagent loads skills BEFORE work; states `Skills loaded: <names>` in first progress note. No receipt → work not started. Skill load fail → BLOCKED: skill `<name>` failed.
-- SCAD/.scad/STL→GLB → `openscad` + `code-philosophy` (order); step-wise CAD/feature work also loads `openscad-iterative-modeling`
-- Viewer JS/HTML/CSS → `frontend-philosophy`
+Every subagent loads skills BEFORE work; states `Skills loaded: <names>` in first progress note. No receipt → work not started.
+- **SCAD/.scad/STL→GLB (any CAD/feature step):** load **all three together** — `code-philosophy`, `openscad`, `openscad-iterative-modeling` (order as listed). Iterative loads **along** `openscad`, not only sometimes.
+- Viewer JS/HTML/CSS → `frontend-philosophy` (+ `code-philosophy` if logic-heavy)
 - Regen/pool/verify scripts → `code-philosophy`
 - Plan / plan-analysis / audit / diff → `plan-protocol` + **`plan` agent only** (never general)
 - Review / verify → `code-review`
+**If the skill tool says a skill is “not found”:** do **not** BLOCK and do **not** ask for `.opencode` folder access. Read the skill file directly (all paths are readable, no extra permission needed), then state the receipt:
+- `<repo>/skills/<name>/SKILL.md`
+- `<repo>/.opencode/skills/<name>/SKILL.md`
+- `<repo>/.agents/skills/<name>/SKILL.md`
+- `~/.config/opencode/skills/<name>/SKILL.md`
+Exact tool names are case-sensitive: `code-philosophy`, `openscad`, `openscad-iterative-modeling`, `frontend-philosophy`. Only report BLOCKED if the SKILL.md is missing from **all four** paths.
 Reviewer rejects if receipt missing.
 
 ## Docs tasks go to general
