@@ -133,47 +133,69 @@ echo "=== Cache: ${#DIRTY[@]} dirty, ${#SKIPPED[@]} up-to-date (use --force for 
 if [ "${#SKIPPED[@]}" -gt 0 ]; then
     echo "  Skipped: ${SKIPPED[*]}"
 fi
+# A no-op run is NOT a "nothing happened, nothing can be wrong" run. The sha256
+# cache is exactly what let a stale print STL hide: the stale STL's partner GLB
+# is fresh, the source hash still matches, so the run reported "nothing to do"
+# and exited 0 BEFORE any gate ran - no mesh table, no agreement table, no
+# failure. The agreement check therefore does NOT depend on the cache: it reads
+# both files back from disk and runs on every run, no-op or not. Only the
+# export/convert steps are skipped when nothing is dirty.
+NOOP=0
 if [ "${#DIRTY[@]}" -eq 0 ]; then
-    echo "  Nothing to do - all requested parts up-to-date."
-    echo ""
-    echo "=== Verification ==="
-    ls -lh "$STL_DIR"/*.glb 2>/dev/null | awk '{print $5, $9}'
-    echo ""
-    echo "=== Done ==="
-    exit 0
+    NOOP=1
+    echo "  Nothing to rebuild - all requested parts up-to-date."
+    echo "  Still verifying that every part's print STL matches its viewer GLB."
+else
+    echo "  Dirty: ${DIRTY[*]}"
 fi
-echo "  Dirty: ${DIRTY[*]}"
 
 JOBS="$(nproc)"
 
-echo ""
-echo "=== Step 1: Exporting STL files with $OPENSCAD_BIN (-P$JOBS) ==="
+if [ "$NOOP" -eq 0 ]; then
+    echo ""
+    echo "=== Step 1: Exporting STL files with $OPENSCAD_BIN (-P$JOBS) ==="
 
-export_part() {
-    local base="$1"
-    echo "  Exporting $base..."
-    if env -u DISPLAY QT_QPA_PLATFORM=offscreen "$OPENSCAD_BIN" \
-        --backend=manifold --export-format binstl -q \
-        -o "$TMPDIR/${base}.stl" "$TMPDIR/${base}.scad" 2>&1; then
-        return 0
-    fi
-    echo "  WARNING: manifold failed for $base, retrying with cgal" >&2
-    env -u DISPLAY QT_QPA_PLATFORM=offscreen "$OPENSCAD_BIN" \
-        --backend=cgal --export-format binstl -q \
-        -o "$TMPDIR/${base}.stl" "$TMPDIR/${base}.scad" 2>&1 \
-        || echo "  WARNING: $base export failed (both backends)"
-}
-export TMPDIR OPENSCAD_BIN
-export -f export_part
+    export_part() {
+        local base="$1"
+        echo "  Exporting $base..."
+        if env -u DISPLAY QT_QPA_PLATFORM=offscreen "$OPENSCAD_BIN" \
+            --backend=manifold --export-format binstl -q \
+            -o "$TMPDIR/${base}.stl" "$TMPDIR/${base}.scad" 2>&1; then
+            return 0
+        fi
+        echo "  WARNING: manifold failed for $base, retrying with cgal" >&2
+        env -u DISPLAY QT_QPA_PLATFORM=offscreen "$OPENSCAD_BIN" \
+            --backend=cgal --export-format binstl -q \
+            -o "$TMPDIR/${base}.stl" "$TMPDIR/${base}.scad" 2>&1 \
+            || echo "  WARNING: $base export failed (both backends)"
+    }
+    export TMPDIR OPENSCAD_BIN
+    export -f export_part
 
-DIRTY_BASES=()
-for glb in "${DIRTY[@]}"; do
-    DIRTY_BASES+=("$(scad_base_for "$glb")")
-done
-printf "%s\n" "${DIRTY_BASES[@]}" | xargs -r -P "$JOBS" -I{} bash -c 'export_part "$@"' _ {}
+    DIRTY_BASES=()
+    for glb in "${DIRTY[@]}"; do
+        DIRTY_BASES+=("$(scad_base_for "$glb")")
+    done
+    printf "%s\n" "${DIRTY_BASES[@]}" | xargs -r -P "$JOBS" -I{} bash -c 'export_part "$@"' _ {}
+else
+    echo ""
+    echo "=== Step 1: skipped (nothing dirty) ==="
+fi
 
-echo ""
-echo "=== Step 2: Converting STL to GLB (single persistent python, $JOBS workers) ==="
+if [ "$NOOP" -eq 0 ]; then
+    echo ""
+    echo "=== Step 2: Converting STL to GLB (single persistent python, $JOBS workers) ==="
+else
+    # Deliberate asymmetry: the MESH gate judges what this run just wrote, so it
+    # has nothing to say about a part it did not rebuild. The AGREEMENT gate
+    # judges what is on disk, which is a different question and must be asked
+    # even when the cache says there is nothing to do.
+    echo ""
+    echo "=== Step 2: Verifying print STL vs viewer GLB on disk (no export needed) ==="
+    echo "  The mesh gate stays silent on this path by design (it only judges"
+    echo "  parts rebuilt by THIS run); the STL/GLB agreement check is not"
+    echo "  cache-dependent and runs on every run, including no-op runs."
+fi
 # NOTE: converts run after the export barrier (all STLs ready). Overlapping
 # converts with exports was considered but skipped: marginal gain for 12
 # parts, extra failure modes; the barrier keeps failures loud and simple.
@@ -181,7 +203,12 @@ echo "=== Step 2: Converting STL to GLB (single persistent python, $JOBS workers
 # if any part is defective; capture that status so the run still finishes
 # (cache refresh + file listing) before failing at the end.
 VERIFY_RC=0
-python3 - "$JOBS" "$TMPDIR" "$STL_DIR" "$SCRIPT_DIR/print" "${DIRTY[@]}" <<'PYEOF' || VERIFY_RC=$?
+# argv: JOBS TMPDIR STL_DIR PRINT_DIR SCOPE_DIRTY
+#   SCOPE = every part in this run (so the STL/GLB cross-check also covers the
+#   cache-skipped ones, whose committed artifacts nothing else would compare);
+#   DIRTY  = the parts actually rebuilt here. The export/convert logic below
+#   works off DIRTY exactly as before.
+python3 - "$JOBS" "$TMPDIR" "$STL_DIR" "$SCRIPT_DIR/print" "$WANT" "${DIRTY[@]}" <<'PYEOF' || VERIFY_RC=$?
 import os
 import sys
 import numpy as np
@@ -190,9 +217,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 jobs = max(1, int(sys.argv[1]))
 tmpdir, stldir, printdir = sys.argv[2], sys.argv[3], sys.argv[4]
-wanted = sys.argv[5:]
-if not wanted:
-    sys.exit(0)
+scope = sys.argv[5].split()   # every part in this run
+wanted = sys.argv[6:]         # the parts rebuilt here
+scope = scope or wanted
+# `wanted` is legitimately empty on a no-op run (nothing dirty, nothing
+# converted). That must NOT short-circuit the agreement check: it is the exact
+# case a stale print STL used to hide in. The mesh gate below simply has no
+# parts to judge, and the agreement gate covers the whole scope from disk.
 os.makedirs(printdir, exist_ok=True)
 
 base_for = {"rollers_lower": "rlow_s", "rollers_upper": "rup_s"}
@@ -248,6 +279,32 @@ EXPECT_ZERO_AREA = {
     "twister": 2,
 }
 DEFAULT_ZERO_AREA = 0
+
+# --- Cross-check: print/<part>.stl vs web/stl/<part>.glb --------------------
+# WHY this check exists: both files are written from ONE export in ONE run, so
+# within a run they can never disagree. A disagreement ON DISK means one of the
+# two was restored, copied or committed from a different export than the other -
+# exactly how print/gearwall.stl and print/twister_axle.stl sat in the repo for
+# several versions (~18% wrong volume, axle in its old position) with a FRESH
+# glb sitting next to a STALE stl and nothing anywhere to compare them.
+#
+# Metrics: volume, surface area and the three side lengths (bounds), all cheap.
+# Volume alone misses a swap of two similar lumps, area alone misses a bulge
+# traded against a dent, and extents miss any interior-only change - together
+# they pin a shape down for the cost of two extra file loads.
+#
+# Bounds are compared as SORTED extents: the print copy may be rigidly rotated
+# (see print_rot) and dropped onto the bed, so per-axis bounds are not
+# comparable between the two files while the sorted side lengths are.
+#
+# Tolerance: 1% relative on each of the 5 numbers (see CROSS_TOL_REL), plus a
+# tiny per-metric absolute floor so a near-zero metric cannot manufacture a huge
+# relative error out of float32 round-trip noise. 1% is far tighter than any
+# real CAD edit (the stale parts were ~18% out) and far looser than STL/GLB
+# round-trip error, so it flags a stale artifact without flapping.
+CROSS_TOL_REL = 0.01
+CROSS_TOL_ABS = {"volume": 1e-3, "area": 1e-3, "extent": 1e-2}
+CROSS_CHECKS = 5  # volume + area + 3 sorted extents
 # print orientation: rotate assembly frame flat, then drop to min_z=0.
 # The A composite (Y-cluster) stands tower-style (discs horizontal);
 # everything else prints as-oriented.
@@ -303,6 +360,53 @@ def verify_one(glb_name, mesh):
         reasons.append("volume not positive (%.3f)" % volume)
     return (not reasons), reasons, nums
 
+def as_mesh(loaded):
+    """Flatten whatever trimesh.load returned into one mesh (GLB -> Scene)."""
+    if isinstance(loaded, trimesh.Scene):
+        return trimesh.util.concatenate(tuple(loaded.geometry.values()))
+    return loaded
+
+def cross_check(glb_name):
+    """Compare the on-disk print STL with the on-disk viewer GLB.
+
+    Both are read back from disk, so this compares the committed artifacts and
+    not the in-memory mesh of this run. Returns (ok, reasons, (agree, worst))
+    where `agree` is the number of metrics within tolerance out of
+    CROSS_CHECKS and `worst` is the largest relative deviation seen.
+    A missing file is a FAIL, never a skip: a missing print STL or GLB is
+    exactly the state this gate exists to notice.
+    """
+    stl_path = os.path.join(printdir, glb_name + ".stl")
+    glb_path = os.path.join(stldir, glb_name + ".glb")
+    for path in (stl_path, glb_path):
+        if not os.path.isfile(path):
+            return False, ["missing file: %s" % path], (0, 0.0)
+    try:
+        stl_mesh = as_mesh(trimesh.load(stl_path, force="mesh"))
+        glb_mesh = as_mesh(trimesh.load(glb_path, force="mesh"))
+    except Exception as exc:
+        return False, ["could not load: %s" % exc], (0, 0.0)
+    try:
+        pairs = [("volume", stl_mesh.volume, glb_mesh.volume, "volume"),
+                 ("area", stl_mesh.area, glb_mesh.area, "area")]
+        pairs += [("extent[%d]" % i, sv, gv, "extent")
+                  for i, (sv, gv) in enumerate(
+                      zip(np.sort(stl_mesh.extents), np.sort(glb_mesh.extents)))]
+    except Exception as exc:
+        return False, ["metrics could not run: %s" % exc], (0, 0.0)
+    reasons, agree, worst = [], 0, 0.0
+    for label, sv, gv, tol_key in pairs:
+        sv, gv = float(sv), float(gv)
+        basis = max(abs(sv), abs(gv))
+        rel = abs(sv - gv) / basis if basis > 0.0 else 0.0
+        worst = max(worst, rel)
+        if abs(sv - gv) <= max(CROSS_TOL_REL * basis, CROSS_TOL_ABS[tol_key]):
+            agree += 1
+        else:
+            reasons.append("%s print=%.4f glb=%.4f (%.2f%% apart, allowed %.2f%%)"
+                           % (label, sv, gv, rel * 100.0, CROSS_TOL_REL * 100.0))
+    return (not reasons), reasons, (agree, worst)
+
 RESULTS = {}
 
 def convert_one(glb_name):
@@ -330,30 +434,53 @@ with ThreadPoolExecutor(max_workers=jobs) as pool:
     for line in pool.map(convert_one, wanted):
         print(line, flush=True)
 
+# --- STL/GLB agreement: read both files back from disk, for EVERY part in
+# this run (including cache-skipped parts - a stale print STL sitting next to
+# a fresh GLB is exactly the state that stayed invisible for several
+# versions) ---
+CROSS = {name: cross_check(name) for name in sorted(scope)}
+
 # --- Per-part verification summary (full numbers, so a failure is
 # diagnosable without re-running) ---
-hdr = "  %-16s %-9s %-6s %-6s %-9s %-11s %s" % (
-    "part", "watertight", "bodies", "worst", "zero_ar", "volume", "verdict")
+ROW = "  %-16s %-9s %-6s %-6s %-9s %-11s %-13s %s"
+hdr = ROW % ("part", "watertight", "bodies", "worst", "zero_ar", "volume",
+             "stl~glb", "verdict")
 # Column note: zero_ar is "measured/allowed" zero-area faces, mirroring the
 # bodies column, so an allowance is always visible in the table and never
-# silently absorbs a regression.
+# silently absorbs a regression. stl~glb is "agreed/total metrics (worst
+# relative deviation)" for the print-STL vs viewer-GLB cross-check, so the
+# agreement is printed on every run and never silently assumed.
 print("\n" + hdr, flush=True)
 print("  " + "-" * (len(hdr) - 2), flush=True)
 failed = []
-for glb_name in sorted(RESULTS):
-    ok, reasons, n = RESULTS[glb_name]
+stale = []
+for glb_name in sorted(scope):
+    xok, xreasons, (xagree, xworst) = CROSS[glb_name]
+    xcol = "%d/%d %.2f%%" % (xagree, CROSS_CHECKS, xworst * 100.0)
+    res = RESULTS.get(glb_name)
+    if not xok:
+        stale.append(glb_name)
+    if res is None:
+        # Not converted this run (cache-skipped, or no export to convert).
+        # The mesh columns say "not rebuilt" rather than inventing numbers.
+        print(ROW % (glb_name, "not rebuilt", "-", "-", "-", "-", xcol,
+                     "stale" if not xok else "ok"), flush=True)
+        continue
+    ok, reasons, n = res
     if not n:
-        print("  %-16s %s" % (glb_name, "CHECKS DID NOT RUN"), flush=True)
+        print(ROW % (glb_name, "CHECKS DID NOT RUN", "-", "-", "-", "-", xcol,
+                     "FAIL"), flush=True)
         failed.append(glb_name)
         continue
-    print("  %-16s %-9s %-6s %-6s %-9s %-11s %s" % (
+    print(ROW % (
         glb_name,
         "yes" if n["watertight"] else "NO",
         "%d/%d" % (n["bodies"], n["expect"]),
         n["worst_mult"],
         "%d/%d" % (n["zero_area"], n["zero_expect"]),
         "%.1f" % n["volume"],
-        "ok" if ok else "FAIL"), flush=True)
+        xcol,
+        "ok" if (ok and xok) else "FAIL"), flush=True)
     if not ok:
         failed.append(glb_name)
 
@@ -370,9 +497,34 @@ if failed:
               flush=True)
     print("  Regeneration is NOT successful: a broken artifact must never be"
           "\n  reported as a successful regeneration.", flush=True)
+
+if stale:
+    # Reported after the mesh section, never merged into it: a stale print STL
+    # is not a broken MESH (the mesh gate legitimately passes), it is a
+    # print/viewer pair that came from two different exports. It is also kept
+    # out of verify_fail.txt, which only means "this mesh is broken".
+    print("\n  PRINT/VIEWER STL-GLB DISAGREEMENT for %d part(s):" % len(stale),
+          flush=True)
+    for glb_name in stale:
+        xok, xreasons, (xagree, xworst) = CROSS[glb_name]
+        print("    %s: %s" % (glb_name, "; ".join(xreasons) or "unknown"),
+              flush=True)
+        print("      -> re-run: ./regenerate_glbs.sh --force %s" % glb_name,
+              flush=True)
+    print("  The STL and the GLB are written from ONE export, so they cannot"
+          "\n  disagree inside a run: one of the two came from a different"
+          "\n  export (restored / copied / committed separately). --force on the"
+          "\n  part above rewrites both from the same export.", flush=True)
+
+if failed or stale:
     sys.exit(1)
-print("  All %d regenerated part(s) passed mesh verification." % len(RESULTS),
-      flush=True)
+if wanted:
+    print("  All %d regenerated part(s) passed mesh verification; all %d part(s) "
+          "in this run have a print STL that matches its viewer GLB."
+          % (len(RESULTS), len(CROSS)), flush=True)
+else:
+    print("  Nothing rebuilt (all up-to-date). All %d part(s) in this run have a"
+          "\n  print STL that matches its viewer GLB." % len(CROSS), flush=True)
 sys.exit(0)
 PYEOF
 
@@ -402,9 +554,11 @@ ls -lh "$STL_DIR"/*.glb 2>/dev/null | awk '{print $5, $9}'
 # "=== Done ===" and status 0 after printing mesh defects.
 if [ "$VERIFY_RC" -ne 0 ]; then
     echo ""
-    echo "=== FAILED: mesh verification gate rejected this regeneration ==="
+    echo "=== FAILED: the verification gate rejected this regeneration ==="
     echo "  See the per-part summary above. Fix the CAD, then re-run"
-    echo "  ./regenerate_glbs.sh --force <part>. Nothing is reported as Done."
+    echo "  ./regenerate_glbs.sh --force <part>. If the part was reported"
+    echo "  stale (print STL vs viewer GLB), just re-run --force on it."
+    echo "  Nothing is reported as Done."
     exit 1
 fi
 
