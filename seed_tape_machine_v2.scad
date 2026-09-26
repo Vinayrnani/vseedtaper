@@ -45,7 +45,12 @@ module twister_axle_x_reflection() {
 module animated_assembly() {
     drum_angle = -360*$t + 4.5;  // v81: +4.5° half-pitch phase (40T drum) for tooth-into-gap mesh with crank 20T
     crank_angle = 720*$t;   // v79: crank 20T spins 2x drum (CW, meshes drum 40T)
-    roller_angle = crank_angle + gear_mesh_phase; // mesh-phased crank gear
+    // v140: NO roller_angle here any more. There is no live drum-mesh phase
+    // constant: the drum<->crank mesh phase is drum_angle's baked +4.5 above,
+    // and gear_mesh_phase (params.scad) is documentation-only, referenced by
+    // nothing. The crank<->A10 mesh phase is crank_mesh_phase (0, baked into
+    // the printed crank gear in stations.scad) plus the A-side total
+    // v140_A_tooth_phase / v97_A_phase below.
     twister_angle = twister_rev * crank_angle; // Step 3: -6x via the 1:1 mitre, opposite crank
     takeup_angle = -1440*$t;       // v48: tape-tension wind-up
 
@@ -121,7 +126,7 @@ module animated_assembly() {
     // 15T idler bridges A30 -> B10 (same band 70-75); B -6x,
     // twister -6x via the 1:1 mitre (2.0 wraps/seed magnitude).
     translate([v97_Ax, v97_A_y0, v97_Az])
-        rotate([0, A_rev * crank_angle, 0])
+        rotate([0, A_rev * crank_angle + v97_A_phase, 0])
             dt_cluster_A();
     translate([v98_Bx, v98_B_y0, v98_Bz])
         rotate([0, 180, 0])

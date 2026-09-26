@@ -69,22 +69,38 @@ module six_turner() {
     // ---- v66 twister-aimed mounts (bare sheet kept) ----
     // Axis 28 (v87 +15 from 13): exit bore lands DEAD on the twister
     // bore (assembly lifts +base_thick=4 -> world 32 = twister_axle_z,
-    // y 20+10=34 = ring centre), so the exit faces the twister straight;
-    // entry mouth rims sit at lane height. Supports: 2 ground pedestals
-    // fused under the sheet floor (tops +15: 19.3/22.7) + straps to 2
-    // chassis support points on the M3 holes (world 132/9, 153/62).
-    cy = 20;                        // sheet centre (local y, world tape centre 34 = lane_y)
+    // local y 20 + plow_frame_y0 14 = world 34 = lane centre), so the exit
+    // faces the twister straight; entry mouth rims sit at lane height.
+    // Supports: 2 ground pedestals fused under the sheet floor (tops +15:
+    // 19.3/22.7). v141: no legs - each pedestal IS a foot, carrying one
+    // vertical M3 at world (133,34) / (151,34).
+    cy = plow_axis_local_y;         // sheet centre (local y, world tape centre 34 = lane_y)
     axis_z = 28;                    // v87 +15: sheet axis height (exit = twister bore height)
     mouth_x0 = -12;                 // sheet mouth (world 114, exit lands 159)
     pedA = [4, 10, 12, 28, 19.3];    // Step 9: widened X to 6 (world 130..136), top/embed unchanged
     pedB = [22, 28, 14, 26, 22.7]; // Step 9: widened X to 6 (world 148..154), top/embed unchanged
-    strapB_y1 = 38.3;              // Step 9: strapB north end (world 52.3 — below teeth envelope 52.5)
-    notch_y1 = 45.8;               // Step 9: earB notch top (world 59.8 — above teeth top 57.5)
-    ear = 6;                        // ear edge length (6x6 footprint)
-    ear_t = 1;                      // ear flange thickness (stack-up keeps 1)
-    mount_h = ear_t + 9;            // Step 9: ear/strap column height z0..10 (slim; base-fused, M3 through base kept)
-    earB = [24, 45];                // ear B corner, centre (27,48) -> world (153,62)
+    // ---- v143: BOTH screws are fitted from above, one per short L-arm ----
+    // Arm A (north) stops plow_arm_gap short of the fixed wall. Arm B (south)
+    // grows off pedestal B into the only sky-clear band south of the scroll
+    // (world y 55.7..64.8, 41mm below the crank/drum gear rim). Each hole is a
+    // GENUINE through hole and each head sits on its arm's top face.
     hole_d = bolt_dia + 2*tolerance; // M3 clearance 3.6
+    screw_a = [plow_screw_a_x - plow_start, plow_screw_a_y - plow_frame_y0]; // 6, 4
+    screw_b = [plow_screw_b_x - plow_start, plow_screw_b_y - plow_frame_y0]; // 22, 42
+    // Arm A, derived from the screw and the gap so the two cannot disagree.
+    arm_x0 = screw_a[0] - plow_arm_w/2;                             // 3  (world 129)
+    arm_x1 = arm_x0 + plow_arm_w;                                     // 9  (world 135)
+    arm_y0 = screw_a[1] - hole_d/2 - plow_arm_end_ligament;          // 1  (world 15)
+    arm_y1 = pedA[2] + plow_arm_fuse;                                 // 15 (world 29)
+    // Arm B, the same construction mirrored: it reaches south past pedestal B
+    // to the free band, so its end is the free band's edge and its far end
+    // overlaps the pedestal.
+    arm2_x0 = screw_b[0] - plow_arm2_w/2;                            // 19 (world 145)
+    arm2_x1 = arm2_x0 + plow_arm2_w;                                  // 25 (world 151)
+    arm2_y0 = pedB[2] - plow_arm2_fuse;                               // 23 (world 37)
+    arm2_y1 = screw_b[1] + hole_d/2 + plow_arm2_end_ligament;         // 45 (world 59)
+    sheet_y0 = cy - scroll_base_r0 - thickness/2;                     // 7.2 (world 21.2)
+    sheet_y1 = cy + scroll_base_r0 + thickness/2;                     // 32.8 (world 46.8)
     // ---- v63 fail-loud: exact-scroll placement ----
     assert(turner_len == 33 && plow_start == 126 && turner_end == 159,
         "six_turner: slot datum must stay 126..159");
@@ -136,39 +152,132 @@ module six_turner() {
         "six_turner: pedestal tops must be +15 lift values (19.3 / 22.7)");
     assert(pedA[0] >= mouth_x0 && pedA[1] <= mouth_x0 + length, "six_turner: mid pedestal must sit under the sheet");
     assert(pedB[0] >= mouth_x0 && pedB[1] <= mouth_x0 + length, "six_turner: exit pedestal must sit under the sheet");
-    // Strap A receives a vertical M3 screw from below at world (132,9);
-    // ear B keeps its unchanged vertical base screw into the chassis floor.
-    // Straps tie the supports to the pedestal feet (volumetric overlaps).
-    assert(plow_base_screw_x - plow_start == 6 && plow_base_screw_y == 9,
-        "six_turner: underside M3 station must be exactly world (132,9)");
-    assert(((chassis_width/2 - 20) + (-10)) - wall_thick >= 1.0,
-        "six_turner: strap A north edge must keep a 1.0mm gap from the fixed wall");
-    assert(3 - hole_d/2 >= 1.0
-        && ((-5) - (-10) - hole_d/2) >= 1.0
-        && (14 - (-5) - hole_d/2) >= 1.0,
-        "six_turner: strap A must retain at least 1.0mm X/Y ligaments around the M3 hole");
-    assert(bolt_head_across <= 6,
-        "six_turner: pan head must fit the 6mm strap A (0.25mm/side accepted)");
-    assert(earB[0] + ear/2 == turner_len - 6
-        && earB[0] + ear/2 + plow_start == 153
-        && earB[1] + ear/2 + (chassis_width/2 - 20) == 62,
-        "six_turner: ear B must retain its world station (153,62)");
-    // Step-9 B-teeth clearance (sweep XZ c(155,32) r23.75, band y52.5..57.5):
-    // strapB north stops below the envelope; earB notch/boss clear the top;
-    // widened pedB stays below the band and its top clears the B shaft (z28).
-    assert((chassis_width/2 - 20) + strapB_y1 <= 52.7, "Step-9 strapB north must stop at/below world 52.7");
-    assert((chassis_width/2 - 20) + strapB_y1 < v98_Bbev_y0, "Step-9 strapB must clear the teeth envelope bottom");
-    assert((notch_y1 + 14) - v98_Bbev_y1 >= 2, "Step-9 earB notch must clear the teeth top");
-    assert(14 + (earB[1]+ear/2-4) - v98_Bbev_y1 >= 0.5, "Step-9 earB boss must clear the teeth top");
-    assert(v98_Bbev_y0 - (14 + pedB[3]) >= 10, "Step-9 pedB north must stay below the teeth band");
+    // ---- v143: side A, the top-down screw and its short L-arm ----
+    // A used to hang off a 24mm floor strap that stopped 1mm from the fixed
+    // wall - that reach is what the user objected to. The arm is now 14mm long
+    // with an 11mm overhang past the pedestal and stops 12mm short of the wall,
+    // and the screw's head sits on the arm's TOP face in open sky.
+    assert(plow_screw_a_x == plow_start + 6 && plow_screw_a_y == 18,
+        "six_turner: the north screw must be at world (132,18)");
+    // The arm's ligaments around the hole: 1.2 west and east (a 6mm arm hosting
+    // a 3.6mm bore is the limit: (6-3.6)/2 = 1.2) and 1.2 to the arm's end
+    // face. Toward the pedestal the arm is solid, so there is no fourth face.
+    assert((screw_a[0] - arm_x0 - hole_d/2) >= plow_foot_ligament
+        && (arm_x1 - screw_a[0] - hole_d/2) >= plow_foot_ligament
+        && (screw_a[1] - arm_y0 - hole_d/2) >= plow_foot_ligament,
+        str("six_turner: the north screw must keep ", plow_foot_ligament,
+            "mm ligaments in arm A; got W ", screw_a[0] - arm_x0 - hole_d/2,
+            " E ", arm_x1 - screw_a[0] - hole_d/2,
+            " N ", screw_a[1] - arm_y0 - hole_d/2));
+    // The head is the only thing of this screw above the arm, and it lives
+    // NORTH of the scroll: its footprint stops short of the sheet's south face
+    // (local sheet_y0 7.2 vs the head's north edge 6.75), so no part of the
+    // screw or its head can ever be inside the rolled paper.
+    assert((screw_a[1] + bolt_head_across/2) <= sheet_y0,
+        str("six_turner: the north head must stay clear of the scroll's south face: got ",
+            screw_a[1] + bolt_head_across/2, " vs sheet ", sheet_y0));
+    // The arm is a cantilever, but it must FUSE into the pedestal, never touch
+    // it: the overlap has to be positive in x AND y, or the union splits into
+    // a floating second body. Measured: 5mm in x, plow_arm_fuse 3mm in y.
+    assert((min(arm_x1, pedA[1]) - max(arm_x0, pedA[0])) >= plow_foot_ligament
+        && (arm_y1 - pedA[2]) >= plow_foot_ligament
+        && arm_y0 < pedA[2],
+        "six_turner: arm A must overlap pedestal A volumetrically, not touch it");
+    // The overhang past the pedestal face is 10..15mm: long enough to be an L,
+    // short enough that the wall gap is plainly visible.
+    assert((pedA[2] - arm_y0) >= 10 && (pedA[2] - arm_y0) <= 15,
+        str("six_turner: arm A's overhang must be 10..15mm, got ", pedA[2] - arm_y0));
+    // ---- v143: side B, the same L mirrored, into the free band ----
+    assert(plow_screw_b_x == plow_end - 8 - plow_arm2_w/2 && plow_screw_b_y == 56,
+        "six_turner: the south screw must be at world (148,56)");
+    // Same three ligaments, mirrored: 1.2 E/W and 1.2 to arm B's south end.
+    assert((screw_b[0] - arm2_x0 - hole_d/2) >= plow_foot_ligament
+        && (arm2_x1 - screw_b[0] - hole_d/2) >= plow_foot_ligament
+        && (arm2_y1 - screw_b[1] - hole_d/2) >= plow_foot_ligament,
+        str("six_turner: the south screw must keep ", plow_foot_ligament,
+            "mm ligaments in arm B; got W ", screw_b[0] - arm2_x0 - hole_d/2,
+            " E ", arm2_x1 - screw_b[0] - hole_d/2,
+            " S ", arm2_y1 - screw_b[1] - hole_d/2));
+    // Same volumetric fuse into pedestal B, measured the same way: 3mm in x
+    // (arm B is 19..25, pedestal B is 22..28) and plow_arm2_fuse in y.
+    assert((min(arm2_x1, pedB[1]) - max(arm2_x0, pedB[0])) >= plow_foot_ligament
+        && (pedB[2] - arm2_y0) >= plow_foot_ligament
+        && arm2_y1 > pedB[2],
+        "six_turner: arm B must overlap pedestal B volumetrically, not touch it");
+    // Arm B reaches SOUTH past the pedestal, and the paper lane is north of it:
+    // the arm may not climb into the sheet, or the scroll would be fouled.
+    assert(arm2_y0 > sheet_y1 || arm2_y1 > sheet_y1,
+        "six_turner: arm B must grow away from the sheet, not into it");
+    // Both bores are THROUGH, not blind, and the geometry that makes them so is
+    // named here so it can be asserted instead of assumed: each bore starts
+    // BELOW the arm's bottom face (z0) and ends ABOVE its top face, so it
+    // necessarily breaks out at both ends - nothing caps it at the bottom for
+    // the nut, and the head lands on the top face.
+    bore_a_z0 = -epsilon;  bore_a_h = plow_arm_h + 2*epsilon;
+    bore_b_z0 = -epsilon;  bore_b_h = plow_arm2_h + 2*epsilon;
+    assert(bore_a_z0 < 0 && bore_a_z0 + bore_a_h > plow_arm_h
+        && bore_b_z0 < 0 && bore_b_z0 + bore_b_h > plow_arm2_h,
+        str("six_turner: both bores must be THROUGH - they must start below z0 and "
+            , "end above the arm top; A ", bore_a_z0, "..", bore_a_z0 + bore_a_h,
+            " of 0..", plow_arm_h, ", B ", bore_b_z0, "..", bore_b_z0 + bore_b_h,
+            " of 0..", plow_arm2_h));
+    // Both heads sit on top of an arm in open sky, and the highest thing either
+    // screw puts above the chassis floor is the head: base_thick 4 + arm 10 +
+    // head 2 = 16, with the packet lane starting at tape_z 28.
+    for (h = [plow_arm_h, plow_arm2_h])
+        assert(base_thick + h + m3_head_h <= tape_z - 5,
+            "six_turner: both arms and heads must stay >=5mm below the packet lane");
+    assert(base_thick + plow_arm2_h + m3_head_h <= drum_axle_z - 20,
+        str("six_turner: the south head must stay clear of the gear plane; drum gear bottom ",
+            drum_axle_z - 42));
+    // ---- v143: the part's Y footprint, and what is allowed outside the sheet ----
+    // The two feet and the sheet stay inside the sheet's Y span; the two arms
+    // are the only solids outside it, and they are the things that stop short
+    // of their walls. Nothing else can creep out.
+    assert(pedA[2] >= sheet_y0 && pedA[3] <= sheet_y1
+        && pedB[2] >= sheet_y0 && pedB[3] <= sheet_y1,
+        "six_turner: both feet must sit inside the sheet's Y span");
+    assert(arm_y0 < sheet_y0 && arm2_y1 > sheet_y1
+        && arm_y0 <= min([pedA[2], pedB[2], arm2_y0])
+        && arm2_y1 >= max([pedB[3], sheet_y1, arm_y1]),
+        "six_turner: the two arms alone may reach outside the sheet's Y span, and they define the part's Y extremes");
+    // The footprint is arm A's end to arm B's end: 20..46mm. The old
+    // wall-reaching legs, plus the ear that reached to y 66, made it 62.
+    assert((arm2_y1 - arm_y0) <= plow_foot_max_span
+        && (arm2_y1 - arm_y0) >= 20,
+        str("six_turner: the plow Y footprint must be 20..", plow_foot_max_span,
+            " (it was 62 with the wall-reaching legs and the y=66 ear): got ",
+            arm2_y1 - arm_y0));
+    // ---- v143: the walls, the gears and the lane, for BOTH stations ----
+    // Both stations clear the fixed north wall (y 0..3) by more than the hole
+    // radius and than the nut trap's circumradius.
+    assert(min(plow_screw_y) - wall_screw_clearance_d/2 > wall_thick
+        && min(plow_screw_y) - wall_screw_nut_r > wall_thick,
+        "six_turner: both floor screws must clear the fixed wall's inner face");
+    for (i = [0:1])
+        assert(tw_apex_x_frame - plow_screw_x[i] >= 10
+            && (v98_Bx - tw_bevel_outer_r) - plow_screw_x[i] >= 10,
+            str("six_turner: floor screw ", i, " must stay >=10mm west of the apex / "
+                , "B bevel western envelope"));
+    // Arm A's head clears the teeth band in y; arm B reaches into the band in y,
+    // so for B the relief is X - the teeth only exist east of the bevel
+    // envelope, 38.75mm east of screw B.
+    assert(v98_Bbev_y0 - (plow_screw_a_y + bolt_head_across/2) >= 1.0
+        && (v98_Bx - tw_bevel_outer_r) - max(plow_screw_x) >= 10,
+        "six_turner: the heads must clear the B teeth band (A in y, B in x)");
+    // B-side checks that stay on y: pedB is south of the teeth band, and its
+    // top clears the B shaft.
+    assert(v98_Bbev_y0 - (plow_frame_y0 + pedB[3]) >= 10, "Step-9 pedB north must stay below the teeth band");
     assert(v98_Bz - 4 - (base_thick + pedB[4]) >= 1, "Step-9 pedB top must clear the B shaft");
     // No added solids: the part is exactly printable_folder().
     // Seeded pocket core must thread the 24-wide entry mouth.
     assert(12 - sqrt(pow(3.9, 2) + pow(3.4, 2)) >= 0.1,
         "six_turner: seeded pocket core must thread the entry mouth");
-    // v66 solid: bare user scroll sheet (oriented + placed) + 2 floor
-    // pedestals + 2 ground straps + 2 chassis ears (union). Strap A uses
-    // one vertical underside M3 hole; ear B keeps its vertical base M3 hole.
+    // v143 solid: bare user scroll sheet (oriented + placed) + the 2 floor
+    // pedestals + TWO short L-arms, one off each pedestal (union). Both screws
+    // are fitted from above: each head sits on its arm's top face and each hole
+    // passes clean through. Nothing reaches a wall any more - arm A stops 12mm
+    // short of the fixed wall, arm B 6mm short of the south gear wall.
     // The $fn=6 spheres inside the user code
     // stay untouched (1225 hulls: $fn=60 spheres would not render).
     union() {
@@ -181,26 +290,22 @@ module six_turner() {
                     rotate([0, 90, 0])
                         rotate([0, 0, -90])
                             scroll_sheet();
-                // earB: north remnant above the teeth-band notch + boss around
-                // the M3 hole (153,62); notch local y45..notch_y1 stays open.
-                translate([earB[0], notch_y1, 0]) cube([ear, earB[1] + ear - notch_y1, mount_h]);
-                translate([earB[0]+ear/2, earB[1]+ear/2, 0]) cylinder(h=mount_h, r=4, center=false, $fn=60);
-                // Ground straps (z0..mount_h, tie supports to pedestal feet).
-                // strapA north stays 1.0mm clear of the wall; strapB clears the B teeth band.
-                translate([3, -10, 0]) cube([6, 24, mount_h]);
-                translate([24, 20, 0]) cube([6, strapB_y1 - 20, mount_h]);
                 // Support pedestals (tops fused into the sheet floor wall).
                 translate([pedA[0], pedA[2], 0]) cube([pedA[1] - pedA[0], pedA[3] - pedA[2], pedA[4]]);
                 translate([pedB[0], pedB[2], 0]) cube([pedB[1] - pedB[0], pedB[3] - pedB[2], pedB[4]]);
+                // The two L-arms: flat 6mm-wide slabs, each overlapping its
+                // pedestal in BOTH x and y - a true volumetric fuse, not a face
+                // touch, which is what keeps this one watertight body.
+                translate([arm_x0, arm_y0, 0]) cube([arm_x1 - arm_x0, arm_y1 - arm_y0, plow_arm_h]);
+                translate([arm2_x0, arm2_y0, 0]) cube([arm2_x1 - arm2_x0, arm2_y1 - arm2_y0, plow_arm2_h]);
             }
-            // Vertical underside M3 clearance through strap A.
-            translate([plow_base_screw_x - plow_start,
-                       plow_base_screw_y - 14,
-                       -epsilon])
-                cylinder(h=mount_h+2*epsilon, d=hole_d, center=false);
-            // Ear B retains its unchanged vertical base screw.
-            translate([earB[0]+ear/2, earB[1]+ear/2, -epsilon])
-                cylinder(h=mount_h+2*epsilon, d=hole_d, center=false);
+            // The two M3 holes. Both are GENUINE through holes: each spans its
+            // arm's full height and breaks out at the bottom face, so nothing
+            // caps the screw and the head lands on the top face.
+            translate([screw_a[0], screw_a[1], bore_a_z0])
+                cylinder(h=bore_a_h, d=hole_d, center=false);
+            translate([screw_b[0], screw_b[1], bore_b_z0])
+                cylinder(h=bore_b_h, d=hole_d, center=false);
         }
     }
 }

@@ -167,22 +167,18 @@ module thread_twister() {
     assert(twister_arms == 2, "thread_twister: must carry exactly 2 spindles");
     difference() {
         union() {
-            // Hub sleeve: outer r10, bore 15.6 (local x -5..0 = abs 179..184)
+            // Hub sleeve: outer r10 (local x -5..0 = abs 179..184). v143: the
+            // r15.6 bore is NOT cut here - the single open-axis bore in the
+            // outer difference below already clears it, and cutting the same
+            // r7.8 wall a second and third time left coincident cylindrical
+            // faces that manifold triangulated into degenerate faces.
             translate([-5, 0, 0])
                 rotate([0, 90, 0])
-                    difference() {
-                        cylinder(h=5, r=10, center=false, $fn=60);
-                        translate([0, 0, -epsilon])
-                            cylinder(h=5 + 2*epsilon, r=15.6/2, center=false, $fn=60);
-                    }
-            // Disc: r23, local -5..-2 = abs 179..182
+                    cylinder(h=5, r=10, center=false, $fn=60);
+            // Disc: r23, local -5..-2 = abs 179..182 (bore: see the hub note)
             translate([-5, 0, 0])
                 rotate([0, 90, 0])
-                    difference() {
-                        cylinder(h=3, r=23, center=false, $fn=60);
-                        translate([0, 0, -epsilon])
-                            cylinder(h=3 + 2*epsilon, r=15.6/2, center=false, $fn=60);
-                    }
+                    cylinder(h=3, r=23, center=false, $fn=60);
             // v113 straight-bevel ring (photo-style: teeth on a 45° cone
             // converging at the shared apex, Tredgold form like the B
             // bevel). v115: rim size, same OD as the twister disc — 36T
@@ -193,21 +189,24 @@ module thread_twister() {
             // heel backs like real bevels and catches the B heel corner.
             // Disc/hub/pins/eyelets below UNCHANGED.
             // Local x: hub east=0 (abs 184), apex local -29 (abs 155).
-            translate([16, 0, 0])
+            translate([tw_bev_blank_x_off, 0, 0])
                 rotate([0, -90, 0])
                     bev_teeth(tw_bev_n, 22.5, tw_bev_face, tw_bev_thin, tw_bev_phase, tw_bev_mod);
             // Root cone frustum under the teeth (canonical z22..25.3 mapped,
             // embedded 0.3 into the web for manifold union):
-            translate([16, 0, 0])
+            translate([tw_bev_blank_x_off, 0, 0])
                 rotate([0, -90, 0])
-                    translate([0, 0, 21.7])
-                        cylinder(h=3.6, r1=21.1, r2=18.2, center=false, $fn=60);
+                    translate([0, 0, tw_bev_blank_z_rootcone])
+                        cylinder(h=tw_bev_blank_h_rootcone, r1=tw_bev_blank_r_rootcone_heel,
+                                 r2=tw_bev_blank_r_rootcone_toe, center=false, $fn=60);
             // Back web solid r24 (canonical z18.6..22.5 mapped; embedded 0.3
-            // into the tooth heels; bore + relief cut it in the difference):
-            translate([16, 0, 0])
+            // into the tooth heels; the v142 open-axis bore + relief cut it in
+            // the difference, leaving an annulus r7.8..r24 that still backs the
+            // blank end to end):
+            translate([tw_bev_blank_x_off, 0, 0])
                 rotate([0, -90, 0])
-                    translate([0, 0, 18.6])
-                        cylinder(h=3.9, r=24, center=false, $fn=60);
+                    translate([0, 0, tw_bev_blank_z_web])
+                        cylinder(h=tw_bev_blank_h_web, r=tw_bev_blank_r_web, center=false, $fn=60);
             // 2 spindle pins: r3, orbit R19, 180 apart, arrow push-lock tips
             for (k=[0:twister_arms-1])
                 rotate([k*180, 0, 0]) {
@@ -247,13 +246,20 @@ module thread_twister() {
                             cylinder(h=15, r=2, center=false, $fn=60);
                 }
         }
-        // Central bore through hub sleeve + disc (tape path)
-        translate([-8, 0, 0])
+        // v142: central bore, OPEN END TO END on the twister's own axis. It
+        // spans the whole on-axis material (blank toe at tw_bore_x0 through
+        // the rotor east face at tw_bore_x1) with the file's standard epsilon
+        // overshoot at both ends, so the bevel blank's solid toe can no longer
+        // cap the axle's path (pre-v142 the bore stopped 1.3mm short of it).
+        translate([tw_bore_x0 - bind_x, 0, 0])
             rotate([0, 90, 0])
-                cylinder(h=16, r=15.6/2, center=false, $fn=60);
-        // v113 back-cone relief: annulus (r9-13, abs tw_relief_x0..x1)
-        // in the disc west face — catches the B heel corner (standard
-        // bevel back-cone relief; keeps >=1 wall to the bore).
+                translate([0, 0, -epsilon])
+                    cylinder(h=tw_bore_len + 2*epsilon, r=tw_hub_bore/2, center=false, $fn=60);
+        // v113 back-cone relief: annulus (tw_relief_r0..tw_relief_r1 = 20..23,
+        // abs tw_relief_x0..x1) in the disc west face — catches the B heel
+        // corner (standard bevel back-cone relief). It sits far OUTBOARD of
+        // the hub bore, not near it: a stale "r9-13" comment here once sent a
+        // diagnosis hunting for a nonexistent 1.2 mm ring beside the bore.
         // Local x: hub east=0 (abs 184).
         translate([tw_relief_x0 - 184, 0, 0])
             rotate([0, 90, 0])
@@ -457,11 +463,25 @@ module crank_assembly() {
             translate([pivot_x, arm_yc - s*16, pivot_z])
                 rotate([90,0,0])
                     cylinder(h=hex_shaft_len, r=hex_axle_r, $fn=6, center=true);
-            // Crank gear (20T) at front plane, meshes drum 40T
+            // Crank gear (20T) at front plane, meshes drum 40T AND the A10.
+            // v140: the phase goes in as spur_gear(tooth_phase=...) so it turns
+            // the TEETH only. It must NOT be wrapped around this call: the
+            // module is drawn under rotate([-90,0,0]), so a wrapper turns the
+            // hex bore too, and 15 deg is not a multiple of the 60 deg a $fn=6
+            // hex has - the flats move off the (unrotated) hex shaft and the
+            // bore buries 11.03 mm3 of it, 0.167mm deep at worst.
+            // crank_mesh_phase is 0 and the constant stays wired anyway: the
+            // drum 40T mesh in the SAME y band only clears at 0, so the whole
+            // crank<->A10 phase is carried by v97_A_phase on the A cluster,
+            // which is an assembly-time rotation. See params.scad for the
+            // measurement table. Zero teeth turned here also keeps the printed
+            // crank byte-identical to HEAD.
             translate([pivot_x, gear_local_y, pivot_z])
                 rotate([-90,0,0])
                     spur_gear(teeth=roller_teeth, module_mm=gear_module, thickness=gear_thick,
-                              bore_flat=hex_axle_flat, is_hex=true, hub_dia=20, hub_len=8, lightened=true);
+                              bore_flat=hex_axle_flat, is_hex=true,
+                              hub_dia=crank_gear_hub_dia, hub_len=crank_gear_hub_len, lightened=true,
+                              tooth_phase=crank_mesh_phase);
             // Handle riser
             translate([handle_x, arm_yc, 0])
                 cylinder(h=pivot_z + 5.5, r=5.5, center=false);

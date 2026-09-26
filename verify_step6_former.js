@@ -302,7 +302,7 @@ async function run() {
         hasTapeFoldGlobals: /TAPE_FOLD_/.test(document.documentElement.innerHTML)
       };
     });
-    check(viewerState.assetVersion === '100', 'ASSET_V=100 got ' + viewerState.assetVersion);
+    check(viewerState.assetVersion === '104', 'ASSET_V=104 got ' + viewerState.assetVersion);
     check(viewerState.failures === '', 'viewer load failures are empty');
     check(viewerState.status.includes('ready') && !viewerState.status.includes('failed'),
       'viewer status is ready without load failures');

@@ -126,18 +126,23 @@ module chassis() {
             rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
         translate([v115_Ix, wall_thick/2, v115_Iz])
             rotate([90,0,0]) cylinder(h=wall_thick+2*epsilon, d=axle_clearance_dia, center=true);
-        // Plow underside screw at world (132,9), clear of the fixed wall.
-        translate([plow_base_screw_x, plow_base_screw_y, base_thick/2])
-            cylinder(h=base_thick + 2*epsilon, d=bolt_dia + 2*tolerance, center=true);
-        translate([plow_base_screw_x, plow_base_screw_y, -epsilon])
-            cylinder(h=nut_trap_depth + epsilon,
-                     r=(bolt_head_across + 2*tolerance)/sqrt(3), $fn=6, center=false);
-        // Ear B keeps the unchanged vertical base screw at world (153,62).
-        translate([plow_start + plow_len - 6, 62, base_thick/2])
-            cylinder(h=base_thick + 2*epsilon, d=bolt_dia + 2*tolerance, center=true);
-        translate([plow_start + plow_len - 6, 62, -epsilon])
-            cylinder(h=nut_trap_depth + epsilon,
-                     r=(bolt_head_across + 2*tolerance)/sqrt(3), $fn=6, center=false);
+        // v143 plow floor screws - BOTH are now fitted from above, so both
+        // stations are identical: a clearance hole through the floor plus an
+        // underside hex pocket that SEATS the nut (it is a seat, not an access
+        // point - the screw is driven from above through the plow's arm). The
+        // stations are the plow's two L-arms: A (132,18) and B (148,56). The
+        // former wall-reaching stations at (132,9) and (153,62) are gone with
+        // the legs that reached them, and the old bottom-up station at (151,34)
+        // is gone because nothing on this machine is driven from underneath any
+        // more. The floor is continuous at both (asserted in params, probed on
+        // the mesh); no other feature is cut.
+        for (i = [0:1]) {
+            translate([plow_screw_x[i], plow_screw_y[i], base_thick/2])
+                cylinder(h=base_thick + 2*epsilon, d=bolt_dia + 2*tolerance, center=true);
+            translate([plow_screw_x[i], plow_screw_y[i], -epsilon])
+                cylinder(h=nut_trap_depth + epsilon,
+                         r=(bolt_head_across + 2*tolerance)/sqrt(3), $fn=6, center=false);
+        }
         // NORTH-wall lightening cutout; south-wall cutout is in south_wall().
         translate([56, -epsilon, 64])
             cube([24, wall_thick+2*epsilon, 22]);

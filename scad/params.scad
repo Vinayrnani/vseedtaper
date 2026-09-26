@@ -35,6 +35,15 @@ gear_thick    = 6;           // shared spur-gear face thickness (drum/crank)
 addendum   = 1.0 * gear_module;   // 2.0
 dedendum   = 1.25 * gear_module;  // 2.5
 tooth_arc_frac = 0.47;            // ~47% tooth thickness at pitch circle
+// Root fillet (gears.scad, root corners of every tooth): a SINGLE cylinder of
+// radius root_fillet_r whose centre sits root_fillet_offset OUTSIDE the root
+// circle, so the fillet reaches root_r + root_fillet_offset + root_fillet_r.
+// It lives HERE, not in gears.scad, because params.scad is included first: the
+// clearance bound below reads these two numbers, and gears.scad reads the same
+// two, so the bound cannot drift from the geometry when the fillet changes.
+root_fillet_offset = 0.2;   // cylinder centre, outside the root circle
+root_fillet_r     = 0.9;   // cylinder radius
+v140_root_fillet_outer = root_fillet_offset + root_fillet_r; // 1.1
 
 // Derived gear dimensions
 roller_pitch_dia = gear_module * roller_teeth;   // 40
@@ -52,12 +61,21 @@ drum_root_r    = drum_root_dia/2;
 roller_dia = 20;
 roller_body_r = roller_dia/2;
 
-// Gear mesh phase (v21): half-pitch of the 20T roller pinion (360/20/2 = 9°).
-// The drum (40T) has a tooth centered on the line of centers at $t=0, so the
-// roller needs a half-pitch offset for tooth-into-gap mesh. Applied to the
-// roller shaft rotation (lower roller + crank, one rigid shaft) in
-// animated_assembly; mirrored in the viewer as GEAR_PHASE.
-gear_mesh_phase = 360/roller_teeth/2;   // 9
+// Gear mesh phase (v21: half-pitch of the 20T roller pinion (360/20/2 = 9°)).
+// v140: RETIRED AS A VARIABLE - nothing in the CAD references it any more, so
+// the old claim ("applied to the roller shaft rotation in animated_assembly")
+// was false. It is kept as the one-line record of WHY the drum and crank
+// meshes are phase-shifted at all, and the LIVE phases are:
+//   drum<->crank : drum_angle's baked +4.5 deg (seed_tape_machine_v2.scad),
+//                  the 40T drum half-pitch, tooth-into-gap;
+//   crank<->A10  : crank_mesh_phase (baked into the printed crank gear, 0) plus
+//                  the A-side total, which is split in two with opposing signs
+//                  - v140_A_tooth_phase (A10 teeth only) and v97_A_phase
+//                  (whole A cluster) - all below.
+// Do not wire anything back to this name: a rigid phase bake is only
+// admissible modulo the gear's own tooth pitch, and that is the whole reason
+// the two crank phases below are not simply 9 deg.
+gear_mesh_phase = 360/roller_teeth/2;   // 9 (documentation only)
 
 // Circumference for tooth angular spacing
 roller_circ_pitch = PI * gear_module;
@@ -103,9 +121,15 @@ v97_Az = 67.041314;  // Step 13 fresh station
 v97_A_y0 = 49.5; v97_A_y1 = 83;      // shaft r4 (stub cut; crosses outboard wall, tip ~2 proud)
 v97_A10_y0 = 49; v97_A10_y1 = 55; // A10 m2 6 wide (Step 8: matches crank gear face 49-55)
 v97_A30_y0 = 70; v97_A30_y1 = 75;     // A30 m1.25 30T OUTSIDE the wall (Step 2; B10 follows in Step 3)
+v97_A30_outer_r = 20.75;              // A30 tip circle (m1.25 addendum); v140 hub-guard datum
 A_rev = -2; // composite spins -2x crank (external mesh flips)
 // v115 rim mitre (user: twister rim OD, same teeth both sides, 45°/45°):
 // 36T m1.25 both (pitch r22.5, outer r23.75 ≈ disc OD46). Shared apex FIRST.
+tw_bevel_outer_r = 23.75;  // the mitre bevel ring's tip circle (m1.25 addendum on r22.5).
+                           // v140: named because it is the radius of the B-side
+                           // teeth ENVELOPE, a cylinder about the B axis - the
+                           // plow's floor-screw stations are stated against it
+                           // (v141: they cleared it in x, not on a strap bridge).
 tw_apex_x = 155; tw_apex_z = 32;   // source apex before the rigid twister frame
 twister_frame_cx = 182.75; twister_frame_cy = 34; twister_frame_cz = 32;  // explicit 180Y frame center
 twister_reflect_x = 2 * twister_frame_cx;  // rotor reflection datum: x' = 365.5 - x
@@ -198,6 +222,167 @@ v115_Ix = 211.695428; v115_Iz = 48.331307; // Step 13 fresh idler station
 v115_I_y0 = 66; v115_I_y1 = 80;    // shaft r4 (front-wall bore + gearwall bore, tip 2 deep)
 v115_I15_y0 = 70; v115_I15_y1 = 75; // idler 15T band (meshes A30 + B10 bands)
 v115_I_phase = 12;                 // half-pitch tooth-into-gap (thin teeth + visual verify)
+// ---- crank20 <-> A10 static mesh PHASE (v140) --------------------------------
+// The line of centres crank->A is EXACTLY -15 deg in global coords: from the
+// crank at (160, 75) to the A10 at (189.702219, 67.041314),
+// atan2(67.041314-75, 189.702219-160) = -15.0000007 deg.
+// The crank gear is DRAWN under rotate([-90,0,0]) (stations.scad), and that
+// rotation maps (x,y,z) -> (x,z,-y), so a crank-LOCAL angle is the NEGATIVE of
+// the global X->Z angle. spur_gear() draws teeth on multiples of 360/teeth, so
+// a phase is only defined modulo the tooth pitch, and the A10's is 36 deg.
+// dt_cluster_A is under rotate([90,0,0]), so an A-LOCAL angle IS the global
+// angle, and a Y rotation of psi maps a global angle phi to phi - psi, while a
+// spur_gear tooth_phase of theta adds +theta: the A10's tooth set therefore
+// sits at 36j + v140_A_tooth_phase - v97_A_phase globally, and the
+// A->crank line is at 165 deg.
+// Centre distance stays 30.75: the 0.75 over theoretical 30.00 is deliberate
+// operating slack (1.25 radial at the tips), so this is a PHASE fix only.
+//
+// WHY crank_mesh_phase IS 0 AND THE A-SIDE TOTAL IS -9 (v140, measured not
+// assumed):
+// The crank gear meshes TWO gears in the same y band 49..55 - the drum 40T and
+// the A10 - and the two requirements are 15 deg apart modulo the crank's own
+// 18 deg tooth pitch, so NO single rigid phase can satisfy both. Measured with
+// a trimesh intersection sweep of the two real meshes (crank angle 0):
+//
+//   crank_mesh_phase   crank<->drum40    crank<->A10 at v97_A_phase -3
+//        0  (HEAD)         4.2018              11.9819
+//       -3                 42.2840              0.0000
+//       +3                 42.2840             -
+//       +6                 90.2131             -
+//       +9                118.5083             -
+//   (-18 and +18 reproduce 0 exactly: the drum column is 18 deg periodic,
+//    which is the proof that a rigid bake only exists modulo the tooth pitch.)
+//   (The A10 column is the single-dial scan with v140_A_tooth_phase 0, i.e. the
+//    whole A phase on the cluster alone.)
+//
+// So the drum 40T mesh - the approved one, and the one the crank exists to
+// drive - admits exactly one rigid phase, 0, and 0 is HEAD. The crank<->A10
+// mesh is therefore fixed on the A side instead, where the phase costs no
+// printed geometry at all: it is an ASSEMBLY-time rotation.
+//
+// v140: the A-side phase is carried by TWO constants with OPPOSING signs, and
+// the split is not cosmetic:
+//   v140_A_tooth_phase  +6  deg  turns the A10's TEETH ONLY (spur_gear's
+//                               tooth_phase) - bores/hub stay at phase 0;
+//   v97_A_phase         -3  deg  rotates the whole A cluster about Y at
+//                               assembly, which is a MINUS on the A10's global
+//                               tooth angle (a Y rotation of psi maps a global
+//                               angle phi to phi - psi).
+// So the effective A10 phase in the assembly convention (params comment above:
+// teeth at 36j + v140_A_tooth_phase - v97_A_phase) is
+//   v97_A_phase - v140_A_tooth_phase = -3 - 6 = -9,
+// i.e. byte-for-byte the HEAD single-dial -9. Measured: crank<->A10 overlap
+// 0.0000 mm3 at crank 0/4.5/9/13.5/18/22.5/27, crank<->drum 4.2016 mm3
+// (unchanged), at every one of those angles.
+//
+// WHY IT IS SPLIT INSTEAD OF ONE DIAL: v97_A_phase rotates the WHOLE cluster,
+// and the cluster also carries the A30 takeoff disc and its 15T idler. The -9
+// one-dial value moves the A30<->idler mesh too, and that mesh already
+// interferes; -9 makes it worse (16.3 -> 29.4 mm3 at crank 0). Only the A10
+// needs the mesh phase, so only the A10 gets it, and the cluster rotation is
+// cut to -3 - the smallest assembly phase that leaves the crank<->A10 total at
+// -9. -3 is the most cluster rotation is allowed to keep, not the target: the
+// target is the -9 TOTAL.
+v140_A_tooth_phase = 6; // deg: A10 TEETH only (drive_train.scad:26); +ve = CCW
+v97_A_phase = -3;   // deg: whole A cluster about Y at assembly (mirrored in the viewer as
+                     // A_GEAR_PHASE). Total A10 phase = v97_A_phase - v140_A_tooth_phase.
+crank_mesh_phase = 0;    // deg: the drum 40T mesh admits no other rigid phase
+crank_tooth_pitch = 360/roller_teeth;   // 18 deg: the modulus a crank phase lives in
+crank_A_mesh_target = -9;  // deg: the coupled crank/A TOTAL phase, measured (see 5b)
+// v140: the A10 is thinned (tooth_scale) so its flanks clear the crank's root
+// fillets. drive_train.scad:22 reads this constant - do not re-inline 0.8 there.
+v140_A_thin = 0.8;
+v140_A_teeth = 10;         // A10 tooth count (drive_train.scad:22); fixes the 36 deg gap pitch
+// ---- v141 starting-angle alignment of the m1.25 TAIL meshes ----------------
+// MEASURED, not assumed. Method: a throwaway /tmp probe exported the boolean
+// intersection() of each pair at the TRUE assembly transforms, unioned with a
+// 1 mm3 marker cube parked at (-900, 0, -900) so a genuine zero still yields a
+// readable STL; trimesh read (sum of body volumes - 1.0). Every dial was swept
+// in 0.5 deg steps over at least one full tooth pitch.
+//
+// THE COMPLETE MESH TABLE of the live assembly (animated_assembly):
+//   pair            teeth/mod    centres (x,z)          LoC      CD       free side
+//   crank20-drum40  20/40 m2     (160,75)-(100,75)       0 deg    60.00    NONE (both fixed)
+//                                (LoC is drum->crank; crank->drum is 180)
+//   crank20-A10     20/10 m2     (160,75)-(189.70,67.04) -15 deg  30.75    A10 (total -9)
+//   A30-idler15     30/15 m1.25  (189.70,67.04)-(211.70,48.33) -40.4  28.875  A30 + idler
+//   idler15-B10     15/10 m1.25  (211.70,48.33)-(210.50,32)  -94.2  16.375   idler + B10
+//   Bbev36-twister36 mitre 36/36 m1.25, 45/45, apex (210.5, 32)         B + twister bevel
+// The drum meshes with NOTHING except the crank (both rows above are its only
+// partner), and neither the drum nor the crank is re-phased here: the drum
+// angle is baked in seed_tape_machine_v2.scad (+4.5) and crank_mesh_phase
+// must stay 0 (assert 5 below). The mitre pair is a bevel mesh carrying its
+// own phase_deg in bev_teeth (tw_bev_phase 0 / v113_B_phase 5, half-pitch of
+// 36T); it is not a spur mesh and v141 does not touch it.
+//
+// RESULT (mm3 of overlap: crank angle 0 / worst over the 6 deg crank period in
+// which each mesh's configuration repeats, sampled at 0.5 deg of crank - the
+// SAME 13 samples for every row, HEAD and v141 alike):
+//   pair            HEAD (ca0 / worst)   v141 (ca0 / worst)
+//   crank20-drum40  4.2016 / 4.4478      4.2016 / 4.4478   (untouched, forbidden)
+//   crank20-A10     0.0000 / 0.0000      0.0000 / 0.0000   (untouched, preserved)
+//   A30-idler15     16.3321 / 18.1454    0.1098 / 0.9064   (worst of the two dials)
+//   idler15-B10     32.2040 / 32.3811    0.0158 / 0.0433
+// A static phase cannot hold a fixed overlap through the revolution, because
+// these are trapezoidal teeth, not conjugate profiles: as a pair rolls, the
+// contact keeps conjugacy but the interference breathes. The "worst" column is
+// therefore the number that decides, and it is what every dial was minimised
+// on. (The coarser 7-angle HEAD spot-check reads 4.8528 / 18.1613 / 32.8412 -
+// same picture, coarser sampling.)
+//
+// The idler is in TWO meshes and the two required phases are 6.7 deg apart
+// (A30-idler wants 19.2, idler-B10 wants 12.5), so no single idler value is
+// clean for both. The train has three free dials for two meshes, so the third
+// (the B10) absorbs the difference: v115_I_phase stays 12 and the A30-idler
+// correction rides on the idler TEETH, and the B10 carries its own. The worst
+// mesh is what was minimised; the residuals are stated, not hidden.
+//
+// WHY tooth_phase AND NOT A CLUSTER ROTATION: spur_gear(tooth_phase=) turns
+// the teeth only, so every bore, hub and collar stays at phase 0 and the part
+// still drops onto a shaft drawn at phase 0. v115_I_phase (12) is kept as the
+// idler's assembly rotation and the new v141 dial is the idler's teeth; the
+// idler gear is solid (no bore) so the two are interchangeable there, but the
+// teeth-only form is the one that cannot move a bore.
+v141_A30_tooth_phase = 0;    // deg: A30 TEETH only (dt_cluster_A). THE MEASURED
+                             // OPTIMUM IS ALREADY HEAD. Swept 0..12 at 0.5 deg at the
+                             // FINAL idler phase, worst over the 6 deg period:
+                             // -0.3 -> 1.2416, -0.2 -> 1.0319, -0.1 -> 0.9304,
+                             //  0.0 -> 0.9064 (the minimum, and the lowest mean
+                             //  0.4383 too), 0.1 -> 0.9233, 0.2 -> 0.9839,
+                             //  0.3 -> 1.1501. So the A30<->idler correction is
+                             // carried ENTIRELY by the idler and the printed gear_A
+                             // stays byte-identical to v140 (verified: identical STL
+                             // volume AND identical bounds). The dial is wired anyway
+                             // as the fail-loud record of that measurement.
+v141_I15_tooth_phase = 4.8;  // deg: idler 15T TEETH only (dt_idler). SIGN NOTE: the
+                             // sweep dial was the CLUSTER rotation (a Y rotation of
+                             // psi maps a global angle phi to phi - psi), so the dial
+                             // that measured best, 19.2, is a global tooth phase of
+                             // -(12 + 19.2) = -31.2. The cluster already supplies -12,
+                             // so the teeth carry -31.2 + 12 + 24 = 4.8 - identical
+                             // gear (one 24 deg pitch), and 4.8 - 12 = -7.2 = -31.2 + 24.
+                             // Swept 0..24 at 0.5 deg (worst over the 6 deg period,
+                             // 0.75-deg crank sampling):
+                             // 0 -> 18.1613, 12 (HEAD) -> 31.1313, 18.5 -> 1.2898,
+                             // 19.0 -> 0.9262, 19.1 -> 0.9120, 19.2 -> 0.9064 (the
+                             // minimum), 19.3 -> 0.9122, 19.5 -> 0.9674, 24 -> 18.1613
+                             // (24 deg periodic: the proof that a rigid phase lives
+                             // only modulo the tooth pitch). Plateau 19.0..19.3 spans
+                             // 0.9064..0.9262, so the value is not knife-edge.
+v141_B10_tooth_phase = 9.3;  // deg: B10 TEETH only (dt_cluster_B). Swept 0..36 at
+                             // 0.5 deg with the idler at 19.2: 0 -> 15.9742 (ca0),
+                             // 8.5 -> 0.4131 worst, 9.0 -> 0.1299, 9.2 -> 0.0635,
+                             // 9.3 -> 0.0433 (the minimum), 9.5 -> 0.0719, 10.0 ->
+                             // 0.3118, 10.5 -> ca0 0.000000 BUT worst 0.6749 (the clean
+                             // window slides with the crank angle), 11.0 -> 1.1410,
+                             // 36 -> 15.9742 (36 deg periodic).
+// WHAT THE VIEWER MIRRORS: only the ASSEMBLY-time phases, because a
+// tooth_phase is already inside the exported teeth (web/index.html carries the
+// full bookkeeping). So pivotI.rotation.z gets v115_I_phase (12 deg) and NOT
+// v141_I15_tooth_phase; the B10's 9.3 comes out of the gear_B regen, and the A10's
+// 6 (v140) out of the gear_A regen. The idler's resulting GLOBAL tooth phase is
+// v141_I_live below, which is what the measured mesh line is stated against.
 v115_I_thin = 0.8;                 // idler thin (mesh forgiveness; v95 precedent)
 I_rev = 4; // idler spins +4x crank (-A.30/15)
 spool_axle_x  = -6;  // v22: 10->-6, clears roller back gear (box-level X gap 1.5)
@@ -274,9 +459,43 @@ wall_screw_z = 8;
 wall_screw_clearance_d = bolt_dia + 2*tolerance;
 wall_screw_nut_r = (bolt_head_across + 2*tolerance) / sqrt(3);
 south_wall_bore_y = chassis_width - wall_thick/2;
-// Step 1 plow underside screw interface.
-plow_base_screw_x = plow_start + 6; // world x=132
-plow_base_screw_y = 9; // world y=9, inboard of fixed wall inner face y=3
+// v143 BOTH plow screws are now fitted FROM ABOVE - there is no screw anywhere
+// on this machine that has to be reached from underneath to drive. Each side is
+// an L: a vertical pedestal plus a SHORT horizontal arm whose top face carries
+// the screw head, with the shaft down through the arm and the chassis floor and
+// a hex nut underneath.
+//  A (north, world 132,18): the arm stops 12mm short of the fixed wall.
+//  B (south, world 148,56): measured on the assembled machine, the only
+//    sky-clear columns south of the scroll are y 47.4..48.3 - a 0.9mm slot
+//    under the paper lane, which no driver shaft can enter - and y 55.7..64.8,
+//    a 9.1mm band sitting 41mm below the crank/drum gear rim. B therefore sits
+//    in the 9.1mm band, and the gear's shadow band (y 48.4..55.6) between the
+//    pedestals and that band is what makes B's arm longer than A's.
+plow_axis_local_y = 20;                          // scroll axis in plow-local y
+plow_frame_y0 = lane_y - plow_axis_local_y;      // 14: world y of plow-local y0
+plow_arm_w = 6;                // arm A width in x (the old strap width)
+plow_arm_h = 10;               // arm A height z0..10; its TOP face carries the head
+plow_arm_gap = 12;             // fixed-wall inner face -> arm A's outer end
+plow_arm_fuse = 3;             // volumetric overlap of arm A into pedestal A
+plow_arm_end_ligament = 1.2;   // material between arm A's hole and its end face
+plow_arm_end_y = wall_thick + plow_arm_gap;     // 15
+plow_screw_a_x = plow_start + 6;                // 132 = arm A's x midline
+plow_screw_a_y = plow_arm_end_y + (bolt_dia + 2*tolerance)/2 + plow_arm_end_ligament;  // 18
+plow_screw_a_len = 20;          // M3x20 = arm 10 + floor 4 + nut 2.5 + 3.5 spare
+plow_arm2_w = 6;               // arm B width in x
+plow_arm2_h = 10;              // arm B height z0..10
+plow_arm2_gap = 6;             // south gear-wall inner face -> arm B's outer end
+plow_arm2_fuse = 3;            // volumetric overlap of arm B into pedestal B
+plow_arm2_end_ligament = 1.2;  // material between arm B's hole and its end face
+plow_arm2_end_y = chassis_width - wall_thick - plow_arm2_gap;                    // 59
+plow_screw_b_x = plow_end - 8 - plow_arm2_w/2; // 148: pedestal B's centre (151) less half the arm
+plow_screw_b_y = plow_arm2_end_y - (bolt_dia + 2*tolerance)/2 - plow_arm2_end_ligament;  // 56
+plow_screw_b_len = 20;         // M3x20, same stack as A
+m3_head_h = 2.0;               // M3 cheese head DIN 1207: dk 5.5 (bolt_head_across) x k 2.0
+plow_screw_x = [plow_screw_a_x, plow_screw_b_x];   // the two chassis stations
+plow_screw_y = [plow_screw_a_y, plow_screw_b_y];
+plow_foot_ligament = 1.0;      // min material around a floor screw
+plow_foot_max_span = 46;       // max allowed Y footprint (both arms set it)
 
 // Bearing block dimensions
 bb_len = 14;
@@ -386,6 +605,8 @@ crank_pivot_x   = crank_arm_w / 2; // 5
 crank_pivot_z   = crank_arm_t + hex_axle_r - 0.15; // ~8.47
 hex_shaft_len   = 58;          // v102: 28+30 — arm boss, wall hole, full through gear bore
 crank_arm_gap   = 12;          // v102: arm inner face 20 clear of front-wall outer (was 8)
+crank_gear_hub_dia = 20;       // v140: spur_gear hub_dia on the crank gear (stations.scad)
+crank_gear_hub_len = 8;        // v140: spur_gear hub_len; hub spans y 55..63 (north face)
 
 // ============================================================
 // Seed cradle
@@ -1084,9 +1305,13 @@ twister_axle_z = tape_z + 4;      // 32: v87 +15 lift: ring centre over the fold
 twister_arms = 2;                 // 2 bobbin spindles
 twister_wraps_per_seed = 2.0;            // v116 Step 2: B -6x -> 1:1 mitre -> twister -6x (2.0 wraps/seed magnitude)
 twister_orbits_per_drum = num_divots * twister_wraps_per_seed; // 12: twister orbits per drum rev (2.0 per cavity)
-tw_bore_d = 10;                   // twister bore diameter (the Ø7.9 packet passes through)
+// NOTE: tw_bore_d and tw_hub_bore are DIFFERENT features on DIFFERENT parts.
+// tw_bore_d is the through-bore in the AXLE (stations.scad), the passage the
+// Ø7.9 tape packet runs through down the hollow middle. tw_hub_bore is the
+// twister's axle seat, in the twister. Do not size one from the other.
+tw_bore_d = 10;                   // AXLE through-bore: tape passage (packet Ø7.9 runs through it) - NOT the twister seat
 tw_axle_od = 15;                  // axle outer diameter
-tw_hub_bore = 15.6;               // hub bore (slip fit on axle)
+tw_hub_bore = 15.6;               // TWISTER axle seat (slip fit: 0.3 radial / 0.6 diametral = tol)
 tw_hub_r = 10;                    // hub radius
 tw_hub_x0 = 179;                  // hub west edge
 tw_hub_x1 = 184;                  // hub east edge (hub length 5mm)
@@ -1175,6 +1400,39 @@ tw_collar_r = 9;                  // collar outer radius
   tw_pin_chamfer_ang = 45;         // arrow tip chamfer angle (degrees)
 tw_slot_y0 = 4;                   // slot south edge (v83: widened for lane_y=34)
 tw_slot_y1 = 64;                  // slot north edge (v83: widened for lane_y=34)
+// ---- v142: bevel-blank dimensions + the OPEN-AXIS bore of the twister ----
+// thread_twister() builds the bevel blank inside a translate([off,0,0])
+// rotate([0,-90,0]) frame, so canonical z maps to source x as
+//   source_x = bind_x + (tw_bev_blank_x_off - canonical_z)
+// The three blank primitives (root cone, back web) are named here so the
+// open-axis asserts below are stated against real source geometry instead of
+// against bare literals buried in stations.scad.
+tw_bev_blank_x_off = 16;                   // canonical z -> source x = bind_x + (off - z)
+tw_bev_blank_z_rootcone = 21.7;            // root cone frustum canonical start (heel end)
+tw_bev_blank_h_rootcone = 3.6;             // root cone frustum length
+tw_bev_blank_r_rootcone_heel = 21.1;       // root cone radius at the heel end
+tw_bev_blank_r_rootcone_toe = 18.2;        // root cone radius at the toe end
+tw_bev_blank_z_web = 18.6;                 // back web canonical start
+tw_bev_blank_h_web = 3.9;                  // back web length
+tw_bev_blank_r_web = 24;                   // back web outer radius
+// Source-frame (absolute CAD x) extents of the blank, derived from the above:
+tw_blank_rootcone_x0 = bind_x + tw_bev_blank_x_off - (tw_bev_blank_z_rootcone + tw_bev_blank_h_rootcone); // 174.7 toe
+tw_blank_rootcone_x1 = bind_x + tw_bev_blank_x_off - tw_bev_blank_z_rootcone;                             // 178.3 heel
+tw_blank_web_x0 = bind_x + tw_bev_blank_x_off - (tw_bev_blank_z_web + tw_bev_blank_h_web);               // 177.5 heel
+tw_blank_web_x1 = bind_x + tw_bev_blank_x_off - tw_bev_blank_z_web;                                     // 181.4
+// Westernmost on-axis material in the whole rotor = the blank's solid toe.
+tw_blank_x0_west = min(tw_blank_rootcone_x0, tw_blank_web_x0);
+tw_blank_x1_east_on_axis = tw_hub_x1;        // 184: hub east face closes the on-axis material
+// The hub bore is cut ONCE, over the WHOLE on-axis span: from the blank's solid
+// toe (west) through the hub east face (east). East of the hub east face there
+// is no on-axis material, so the cutter stops there and thread_twister() adds
+// the file's standard epsilon overshoot, which carries it past the face so the
+// cutter cap is never coincident with the hub's own east face.
+tw_bore_x0 = tw_blank_x0_west;       // 174.7: west end = the blank's solid toe face
+tw_bore_x1 = tw_hub_x1;              // 184: east end = the hub east face; the module's
+                                     // epsilon overshoot carries it past the face so
+                                     // the cutter cap is never coincident with it
+tw_bore_len = tw_bore_x1 - tw_bore_x0;
 // The chassis base slab is the flat print floor at z=0..4; no downward feet.
 
 tw_lift = 27.5;                   // twister lift (teeth r27 + 0.5 clearance, tops clear z=0)
@@ -1372,6 +1630,201 @@ assert(twister_orbits_per_drum == num_divots * twister_wraps_per_seed, "twister 
 // crank->A mesh CD exact (pitch + 0.75 backlash prints + assembles):
 assert(abs(sqrt(pow(v97_Ax-crank_axle_x,2)+pow(v97_Az-crank_axle_z,2)) - v97_A_cd) < 0.05, "crank->A distance must equal mesh CD 30.75");
 assert(A_rev == -2, "composite rev must be -2 per crank rev");
+// ---- v140 crank20 <-> A10 mesh guards (fail loud, all values evaluated live) ----
+// 1. the station pair still realises the mesh CD it claims:
+assert(abs(sqrt(pow(v97_Ax-crank_axle_x,2)+pow(v97_Az-crank_axle_z,2)) - v97_A_cd) < 0.05,
+    str("crank->A distance must equal v97_A_cd: cd ", v97_A_cd, " actual ",
+        sqrt(pow(v97_Ax-crank_axle_x,2)+pow(v97_Az-crank_axle_z,2))));
+// 2. never CLOSER than the theoretical pitch sum (30.00); the 0.75 above it is
+//    deliberate operating slack and must not be spent:
+// assert -> v97_A_cd 30.75 >= 30.0
+assert(v97_A_cd >= (roller_teeth + v140_A_teeth) * gear_module / 2,
+    str("crank->A centre distance must be >= the theoretical pitch sum 30.0: got ", v97_A_cd));
+// 3. crank tip + A10 root must clear by >= tolerance (1.25):
+// assert -> 30.75 - (20+2.0) - (10-2.5) = 1.25 >= 0.3
+assert(v97_A_cd - (roller_teeth * gear_module / 2 + addendum)
+               - (v140_A_teeth * gear_module / 2 - dedendum) >= tolerance,
+    str("crank tip + A10 root must clear by >= tol: got ",
+        v97_A_cd - (roller_teeth * gear_module / 2 + addendum) - (v140_A_teeth * gear_module / 2 - dedendum)));
+// 4. the line of centres is still exactly -15 deg (it is what both phases bake).
+//    OpenSCAD's atan2() already returns DEGREES, so there is no *180/PI here:
+// assert -> abs(-15 + 15) = 0 < 0.01
+assert(abs(atan2(v97_Az-crank_axle_z, v97_Ax-crank_axle_x) + 15) < 0.01,
+    str("crank->A line of centres must stay at -15 deg: got ",
+        atan2(v97_Az-crank_axle_z, v97_Ax-crank_axle_x)));
+// 5. crank_mesh_phase must be 0 - the drum 40T mesh admits no other rigid
+//    phase, and that is the whole reason the crank/A phase lives on the A side.
+//    Measured (trimesh, crank<->drum40 overlap, mm3): 0 -> 4.2018 (= HEAD),
+//    -3 -> 42.2840, +3 -> 42.2840, +6 -> 90.2131, +9 -> 118.5083, and the
+//    column repeats exactly at 18 deg. The v140 draft's +15 (and its -3 twin -
+//    same gear, 15-18) sits 10x worse than HEAD on the approved drum mesh.
+// assert -> crank_mesh_phase 0 == 0
+assert(crank_mesh_phase == 0,
+    str("crank_mesh_phase must stay 0: the drum 40T mesh only clears at 0 (4.2018 mm3) "
+        , "and buries 42.2840 mm3 at +-3 and 118.5083 at +-9 (the crank repeats every "
+        , crank_tooth_pitch, " deg, and the whole column is 18 deg periodic). Phase the "
+        , "crank<->A10 mesh on the A side instead (v140_A_tooth_phase + v97_A_phase). Got "
+        , crank_mesh_phase));
+// 5b. the crank<->A10 mesh phase, as a COUPLED condition on the A-side TOTAL.
+//     The total is the sum of the two A dials in the ASSEMBLY convention, and
+//     their signs oppose, so it is v97_A_phase - v140_A_tooth_phase:
+//       +v140_A_tooth_phase  the A10's teeth only (inside spur_gear)
+//       -v97_A_phase         the whole A cluster about Y (a Y rotation of psi
+//                            maps a global angle phi to phi - psi)
+//     The clean window moves with the crank phase (measured, trimesh, crank
+//     angle 0, single dial i.e. v140_A_tooth_phase 0):
+//       crank  0 -> clean v97_A_phase -11..-7, minimum at -10/-9 (0.0000 mm3)
+//       crank -3 -> clean v97_A_phase  -4..-2, minimum at  -3    (0.0000 mm3)
+//     i.e. 2 deg of A phase per 1 deg of crank phase, so the constants are one
+//     machine, not independent dials. The modulus is the A10's own 36 deg tooth
+//     pitch: the crank repeats at 18, the A10 at 36.
+//     Drifting EITHER half alone breaks the mesh, which is the point: at the
+//     live split (-3, +6) the total is -9, and moving v97_A_phase to -9 with
+//     v140_A_tooth_phase still 6 would put the total at -15, 6 deg off the
+//     window.
+// assert -> (-3 - 6 - 0 - (-9))/36 = 0 exactly -> 0 < 0.01
+//         crank -3 with total -3 gives (-3 +6 +9)/36 = 0.3333 -> 12 deg, which
+//         FAILS: that pair only works because -3 is not on the machine.
+// Zero overlap is required at EVERY crank angle and is: the A spins A_rev = -2
+// x crank, exactly the 20T->10T ratio, so a correct static pair stays correct
+// through the whole revolution (measured at 0/4.5/9/13.5/18/22.5/27 deg).
+assert(abs((v97_A_phase - v140_A_tooth_phase - 2*crank_mesh_phase - crank_A_mesh_target) / (360/v140_A_teeth)
+           - round((v97_A_phase - v140_A_tooth_phase - 2*crank_mesh_phase - crank_A_mesh_target) / (360/v140_A_teeth)))
+           * (360/v140_A_teeth) < 0.01,
+    str("the crank/A TOTAL A-side phase (v97_A_phase - v140_A_tooth_phase = ",
+        v97_A_phase - v140_A_tooth_phase, " deg) must sit on the measured crank/A mesh line (",
+        crank_A_mesh_target, " deg, tracking 2:1 against crank_mesh_phase, modulo the A10's ",
+        360/v140_A_teeth, " deg tooth pitch): it is off by ",
+        abs((v97_A_phase - v140_A_tooth_phase - 2*crank_mesh_phase - crank_A_mesh_target) / (360/v140_A_teeth)
+            - round((v97_A_phase - v140_A_tooth_phase - 2*crank_mesh_phase - crank_A_mesh_target) / (360/v140_A_teeth)))
+            * (360/v140_A_teeth),
+        " deg with v97_A_phase ", v97_A_phase, ", v140_A_tooth_phase ",
+        v140_A_tooth_phase, " and crank_mesh_phase ", crank_mesh_phase));
+// 6. pitch-circle backlash for the THINNED pair (A10 runs tooth_scale 0.8) must
+//    stay positive, else the flanks have nothing left to give:
+// assert -> 6.2832 - (0.47*6.2832 + 0.47*6.2832*0.8) = 0.9676 >= 0.3
+assert(PI * gear_module
+       - (tooth_arc_frac * PI * gear_module
+          + tooth_arc_frac * PI * gear_module * v140_A_thin) >= tolerance,
+    str("crank20/A10 pitch-circle backlash must stay >= tol: got ",
+        PI * gear_module - (tooth_arc_frac * PI * gear_module
+                            + tooth_arc_frac * PI * gear_module * v140_A_thin)));
+// 7. the thinned A10 tip must stay inside the crank root fillets. This is the
+//    conservative (angle-blind) bound, so it can never be beaten by phasing:
+// assert -> 30.75 - (10+2.0) - (20-2.5+1.1) = 0.15 > 0
+assert(v97_A_cd - (v140_A_teeth * gear_module / 2 + addendum)
+               - (roller_root_dia / 2 + v140_root_fillet_outer) > 0,
+    str("A10 tip must stay clear of the crank root fillets: got ",
+        v97_A_cd - (v140_A_teeth * gear_module / 2 + addendum)
+                   - (roller_root_dia / 2 + v140_root_fillet_outer)));
+// 8. the A10 face must still live in the crank gear band 49..55 and be gear_thick:
+// assert -> 49..55, 6 == gear_thick 6
+assert(v97_A10_y0 >= 49 && v97_A10_y1 <= 55 && (v97_A10_y1 - v97_A10_y0) == gear_thick,
+    str("A10 face must equal gear_thick inside the crank band 49..55: got ",
+        v97_A10_y0, "..", v97_A10_y1));
+// 9. GUARD for a future centre-distance change. v97_A30_outer_r + the crank hub
+//    radius is 20.75 + 10 = 30.75, EXACTLY the current centre distance, so the
+//    A30 rim and the crank hub are already tangent in the XZ plane. Dropping the
+//    CD to the theoretical 30.00 would drive the A30 rim straight THROUGH the
+//    crank hub, and the hex-shaft guard at the A30 block (which only tests
+//    hex_axle_r, not the hub radius) would NOT catch it. The only thing keeping
+//    them apart is the Y banding: the crank hub stands on the gear's north face
+//    (y 55..63) while the A30 disc sits outboard (y 70..75). That gap must hold:
+// assert -> 70 > 63, Y separation 7.0.  Strict > on purpose: at exactly 63 the
+//    hub's north face and the A30's south face would be coplanar AND their XZ
+//    circles tangent, i.e. a rubbing point contact, not a clearance.
+assert(v97_A30_y0 > crank_mount_y + gear_local_y + gear_thick / 2 + crank_gear_hub_len,
+    str("crank hub (r10, y 55..63) and A30 rim (r20.75, y 70..75) are tangent in XZ: "
+        , "their Y bands must not overlap, A30 y0 must be >= ",
+        crank_mount_y + gear_local_y + gear_thick / 2 + crank_gear_hub_len,
+        " got ", v97_A30_y0));
+// ---- v141 tail-mesh starting-angle guards (fail loud, per mesh) ----------
+// Every value below is MEASURED (trimesh intersection of the real pair at the
+// true assembly transforms; sweeps in 0.5 deg steps over >= one tooth pitch).
+// The guards are written as MODULUS checks against the measured mesh line, not
+// as frozen literals, so a legitimate re-measurement can move a constant
+// without touching the guard - but any drift off the measured line fails loud.
+// (Measured overlaps, mm3, crank angle 0 / worst over the 6 deg period in which
+//  each tail mesh's configuration repeats:
+//    crank<->drum  4.2016 / 4.4478   (untouched: the drum is FORBIDDEN to move)
+//    crank<->A10   0.0000 / 0.0000   (untouched: v140's -9 total is preserved)
+//    A30<->idler  16.3321 / 18.1454 -> 0.1098 / 0.9064
+//    idler<->B10  32.2040 / 32.3811 -> 0.0158 / 0.0433)
+v141_A30_mesh_line = 0;      // deg: the A30 dial's measured optimum IS HEAD (0.0)
+v141_I_mesh_line  = 16.8;    // deg: the idler's required GLOBAL tooth phase
+v141_B_mesh_line  = 9.3;     // deg: the B10's required tooth phase
+v141_A30_pitch = 360/30;     // 12 deg: the modulus an A30 phase lives in
+v141_I15_pitch = 360/15;     // 24 deg: the modulus an idler phase lives in
+v141_B10_pitch = 360/10;     // 36 deg: the modulus a B10 phase lives in
+// the idler's LIVE global tooth phase = its tooth_phase minus the cluster's Y
+// rotation (a Y rotation of psi maps a global angle phi to phi - psi).
+v141_I_live = v141_I15_tooth_phase - v115_I_phase;   // 4.8 - 12 = -7.2 = 16.8 - 24
+// 1. structural: no v141 phase may exceed one tooth pitch of its own gear. This
+//    mirrors spur_gear's own assert so a bad dial fails loud even in a run that
+//    never builds the gear.
+// assert -> |0|<=12, |4.8|<=24, |9.3|<=36
+assert(abs(v141_A30_tooth_phase) <= v141_A30_pitch && abs(v141_I15_tooth_phase) <= v141_I15_pitch
+       && abs(v141_B10_tooth_phase) <= v141_B10_pitch,
+    str("v141: a tooth_phase may not exceed one tooth pitch of its gear "
+        , "(A30 <= ", v141_A30_pitch, ", idler <= ", v141_I15_pitch
+        , ", B10 <= ", v141_B10_pitch, "), got A30 ", v141_A30_tooth_phase
+        , " idler ", v141_I15_tooth_phase, " B10 ", v141_B10_tooth_phase));
+// 2. A30<->idler: the A30 must sit ON the measured line (which is HEAD, 0).
+//    Any non-zero dial is measured worse: -0.1 -> 0.9304, 0.1 -> 0.9233,
+//    -0.2 -> 1.0319, 0.2 -> 0.9839 (worst over the crank period, vs 0.9064 at 0).
+// assert -> (0-0)/12 = 0 exactly -> 0 < 0.01
+assert(abs((v141_A30_tooth_phase - v141_A30_mesh_line) / v141_A30_pitch
+           - round((v141_A30_tooth_phase - v141_A30_mesh_line) / v141_A30_pitch))
+           * v141_A30_pitch < 0.01,
+    str("v141: the A30<->idler mesh wants the A10-style measured line at "
+        , v141_A30_mesh_line, " deg (which is HEAD, so the A30 is left untouched and the "
+        , "idler carries the correction); v141_A30_tooth_phase is off it by ",
+        abs((v141_A30_tooth_phase - v141_A30_mesh_line) / v141_A30_pitch
+            - round((v141_A30_tooth_phase - v141_A30_mesh_line) / v141_A30_pitch))
+            * v141_A30_pitch, " deg modulo the A30's ", v141_A30_pitch, " deg pitch"));
+// 3. idler<->A30: the idler's LIVE global phase must sit on its measured line.
+// assert -> (-7.2 - 16.8)/24 = -1 exactly -> 0 < 0.01
+assert(abs((v141_I_live - v141_I_mesh_line) / v141_I15_pitch
+           - round((v141_I_live - v141_I_mesh_line) / v141_I15_pitch))
+           * v141_I15_pitch < 0.01,
+    str("v141: the idler's live global tooth phase (v141_I15_tooth_phase - v115_I_phase = "
+        , v141_I_live, " deg) must sit on the measured A30<->idler mesh line at "
+        , v141_I_mesh_line, " deg modulo the idler's ", v141_I15_pitch
+        , " deg pitch: it is off by ",
+        abs((v141_I_live - v141_I_mesh_line) / v141_I15_pitch
+            - round((v141_I_live - v141_I_mesh_line) / v141_I15_pitch))
+            * v141_I15_pitch, " deg (measured: 0.5 deg off is already 1.19 mm3)"));
+// 4. idler<->B10: the B10 must sit on its measured line.
+// assert -> (9.3 - 9.3)/36 = 0 exactly -> 0 < 0.01
+assert(abs((v141_B10_tooth_phase - v141_B_mesh_line) / v141_B10_pitch
+           - round((v141_B10_tooth_phase - v141_B_mesh_line) / v141_B10_pitch))
+           * v141_B10_pitch < 0.01,
+    str("v141: the idler<->B10 mesh wants the B10 on its measured line at "
+        , v141_B_mesh_line, " deg; v141_B10_tooth_phase is off it by ",
+        abs((v141_B10_tooth_phase - v141_B_mesh_line) / v141_B10_pitch
+            - round((v141_B10_tooth_phase - v141_B_mesh_line) / v141_B10_pitch))
+            * v141_B10_pitch, " deg (measured: 0.2 deg off is 0.0635 vs 0.0433, "
+        , "1.0 deg off is 0.3118, 0.5 deg off the other way is 0.6749)"));
+// 5. THE A30<->idler MESH CANNOT REACH ZERO, and this is the guard that says so.
+//    A starting angle rotates teeth; it cannot change radii. The idler's tip
+//    circle (9.375 + 1.25 = 10.625) reaches 0.0375 mm PAST the A30's root
+//    fillet envelope (18.75 - 1.5625 + 1.1 = 18.2875) at the 28.875 CD, so a
+//    residual of this order is GEOMETRIC, not a phasing error. Measured worst
+//    over the crank period: 0.9064 mm3 at the best possible phase (0.1098 at
+//    crank 0) vs 18.1454 at HEAD. Fixing it needs a tooth form, a tip chamfer
+//    or the CD - all out of scope for a starting-angle pass.
+// assert -> 28.875 - 18.2875 - 10.625 = -0.0375 > -0.05
+v141_A30_root_fillet_r = 30 * 1.25 / 2 - dedendum * (1.25 / gear_module) + v140_root_fillet_outer;
+v141_I15_tip_r        = 15 * 1.25 / 2 + addendum * (1.25 / gear_module);
+v141_a30_idler_cd     = (30 * 1.25 / 2) + (15 * 1.25 / 2) + 0.75;
+v141_a30_idler_overlap = v141_a30_idler_cd - v141_A30_root_fillet_r - v141_I15_tip_r;
+assert(v141_a30_idler_overlap > -0.05,
+    str("v141: the A30<->idler mesh has a ", -v141_a30_idler_overlap
+        , " mm radial tip-to-root-fillet overlap at CD ", v141_a30_idler_cd
+        , " (A30 root+fillet ", v141_A30_root_fillet_r, " + idler tip "
+        , v141_I15_tip_r, "). It is bounded by -0.05 on purpose: it is the reason "
+        , "that mesh can only be phased down to ~0.9 mm3 and never to 0.0000, and a "
+        , "change that pushes it past -0.05 needs a tooth form, not a starting angle."));
 // v113 mitre-mesh asserts (Bbev20 <-> twister bevel ring, fail loud):
 // A->B mesh RETIRED (A-mesh OPEN until the next-step intermediate):
 assert(B_rev == -6, "B rev must be -6 per crank rev (idler-driven: two flips, 30/10)");
@@ -1558,6 +2011,18 @@ assert((twister_axle_z - tw_orbit - bob_d/2) >= 2, "dip clearance above the flat
 // (the old "(tw_bore_d - 7.8)/2 >= 1" tape/bore assert is DELETED: same
 // retired 7.8 tape bore - the packet roll is 7.9 across.)
 assert(abs(tw_hub_bore - tw_axle_od - 0.6) < 0.001, "hub slip fit");
+// The two bores are different features on different parts. These exist so a
+// reader who sees "tw_bore_d 10" next to "tw_axle_od 15" is corrected by the
+// build, not by guesswork: tw_bore_d is the AXLE's tape passage, tw_hub_bore is
+// the TWISTER's axle seat.
+assert(abs(tw_hub_bore/2 - tw_axle_od/2 - tolerance) < 0.001,
+    str("twister hub seat must clear the axle OD by tol 0.3 radial / 0.6 diametral, got ",
+        tw_hub_bore/2 - tw_axle_od/2));
+assert(tw_axle_od/2 - tw_bore_d/2 >= 2,
+    str("axle tube wall at the tape through-bore must stay >=2mm, got ",
+        tw_axle_od/2 - tw_bore_d/2));
+assert(tw_bore_d < tw_hub_bore,
+    "the tape through-bore (tw_bore_d) and the twister seat (tw_hub_bore) are DIFFERENT features - do not size the hub from tw_bore_d");
 assert(abs(tw_pin_hole - tw_pin_d - 0.6) < 0.001, "pin slip fit");
 assert(tw_hub_x0 - tw_ped_x1 >= 2, "hub-vs-pedestal");
 assert(tw_slot_west_extension == 4 && tw_tube_west_extension == 4
@@ -1645,6 +2110,32 @@ assert(tw_eye_orbit - tw_eye_r - tw_lock_barb_r >= 1, "barb-vs-eyelet-inner radi
   assert(tw_cap_x1 - tw_cap_x0 >= 0.49 && tw_cap_x1 - tw_cap_x0 <= 0.51, "cap ring must be ~0.5mm thick");
   // Cap ring radials
   assert(tw_cap_r0 == 5 && tw_cap_r1 == 7, "cap ring inner/outer must be r5..r7");
+
+// v142: the twister must be OPEN END TO END on its own axis. The bevel blank
+// (root cone + back web) is solid across the axis, so a bore whose west end
+// stops east of the blank's toe CAPS the rotor: the axle's Ø15 tube wall then
+// runs inside solid material and the rotor can never slide fully home.
+// Both ends are stated against the blank/hub source geometry, not literals.
+assert(tw_bore_x0 <= tw_blank_x0_west,
+       "v142 FAIL: hub bore west end (tw_bore_x0) must be at or west of the bevel blank's solid toe (tw_blank_x0_west) or the blank caps the axle");
+assert(tw_bore_x1 >= tw_blank_x1_east_on_axis,
+       "v142 FAIL: hub bore east end (tw_bore_x1) must be at or east of the hub east face or the hub sleeve caps the axle");
+// Strength gate: the open-axis bore must never eat the blank's radial wall.
+assert(tw_bev_blank_r_rootcone_toe - tw_hub_bore/2 >= 5,
+       "v142 FAIL: open-axis bore leaves <5mm radial wall in the bevel root cone toe");
+assert(tw_bev_blank_r_web - tw_hub_bore/2 >= 5,
+       "v142 FAIL: open-axis bore leaves <5mm radial wall in the bevel back web");
+assert(tw_eye_orbit - tw_eye_r > tw_hub_bore/2,
+       "v142: the open-axis bore must stay clear of the eyelet posts");
+// v143: the bore clears the AXLE'S PATH and nothing more. East of the hub east
+// face (tw_hub_x1) there is no on-axis material at all, so running the cutter
+// further only sweeps it across the eyelet-post / cross-hole band. The only
+// overshoot allowed is the epsilon the cutter needs to exit the hub face
+// cleanly (applied inside thread_twister), so the cap is never coincident with
+// it - and the r15.6 wall is cut ONCE, by the single open-axis bore, never also
+// by a private cut inside the hub or the disc.
+assert(tw_bore_x1 - tw_hub_x1 <= epsilon,
+       "v143 FAIL: the open-axis bore must not run past the hub east face by more than epsilon - there is no on-axis material east of it, and the extra sweep only makes degenerate faces");
 
 // v118 Step 3: snap-fit nose lock geometry (fail-loud)
 assert(abs(tw_lock_barb_r - tw_hub_bore/2) >= 1.0 && abs(tw_lock_barb_r - tw_hub_bore/2) <= 1.5,
@@ -1759,29 +2250,61 @@ assert(wall_screw_z < min([spool_axle_z, drum_axle_z, crank_axle_z,
 assert(nut_trap_depth < wall_thick, "Step 2: wall nut traps must leave a wall web");
 assert(south_wall_bore_y > chassis_width - wall_thick && south_wall_bore_y < chassis_width,
        "Step 2: south-wall bearing/gear bores must remain centered in the gear-mount wall");
-// Step 1 plow underside interface: exact station, strap/wall clearance,
-// and support kept west of the twister apex and B bevel western envelope.
-assert(plow_base_screw_x == 132 && plow_base_screw_y == 9,
-       "Step 1: plow underside screw must use world (132,9)");
-assert((plow_base_screw_y - wall_screw_clearance_d/2) > wall_thick
-       && (plow_base_screw_y - wall_screw_nut_r) > wall_thick,
-       "Step 1: plow screw hole and nut trap must clear the fixed wall inner face");
-assert(((chassis_width/2 - 20) + (-10)) == 4
-       && ((chassis_width/2 - 20) + 14) == 28
-       && (4 - wall_thick) >= 1.0,
-       "Step 1: strap A must span world Y4..28 with a 1.0mm wall gap");
-assert(3 - wall_screw_clearance_d/2 >= 1.0
-       && ((-5) - (-10) - wall_screw_clearance_d/2) >= 1.0
-       && (14 - (-5) - wall_screw_clearance_d/2) >= 1.0,
-       "Step 1: strap A must retain 1.0mm X/Y ligaments around the M3 hole");
-assert(bolt_head_across <= 6,
-       "Step 1: pan head must fit strap A (0.25mm/side accepted)");
-assert(tw_apex_x_frame - plow_base_screw_x >= 10,
-       "Step 1: plow support must stay >=10mm west of the twister apex");
-assert((v98_Bx - 23.75) - plow_base_screw_x >= 10,
-       "Step 1: plow support must stay >=10mm west of the B bevel western envelope");
-assert(153 == plow_start + 27 && 62 == 14 + 48,
-       "Step 1: ear B must retain its world station (153,62)");
+// v143 plow fastening: BOTH screws are top-fitted, one per L-arm - world
+// (132,18) on arm A and (148,56) on arm B. The frame datum, both stations, both
+// arm gaps to their wall, both screw lengths, the fixed wall, the twister apex
+// and the B bevel envelope are policed here; the arm/pedestal ligaments, the
+// heads' open sky and the Y footprint are measured in scad/plow.scad, where the
+// arms and the feet live.
+assert(plow_axis_local_y == 20 && plow_frame_y0 == 14,
+       "v143: plow-local y 20 must be world y 34 (the lane centre)");
+assert(plow_arm_end_y == 15 && plow_screw_a_x == 132 && plow_screw_a_y == 18
+       && plow_screw_b_x == 148 && plow_screw_b_y == 56,
+       "v143: plow fastening must use world (132,18) and (148,56), both top-fitted");
+assert(plow_arm_w == 6 && plow_arm_h == 10 && plow_arm2_w == 6 && plow_arm2_h == 10
+       && m3_head_h == 2.0 && bolt_head_across == 5.5,
+       "v143: arm/head dimensions must stay exact");
+// Each arm is the L the user asked for: a VISIBLE gap to its wall, 10..15mm on
+// the north side. South of the scroll the crank/drum gear's shadow band
+// (world y 48.4..55.6) sits between the pedestal and the only usable
+// sky-clear band (y 55.7..64.8), so arm B's gap to the south wall is the 6mm
+// that band allows - still 6x the old 1mm, and asserted here so it cannot
+// quietly shrink back to hugging the wall.
+assert(plow_arm_gap >= 10 && plow_arm_gap <= 15,
+       str("v143: arm A must stop 10..15mm short of the fixed wall, got ", plow_arm_gap));
+assert(plow_arm2_gap >= 5 && plow_arm2_end_y <= 60,
+       str("v143: arm B must keep >=5mm to the south gear wall, got ", plow_arm2_gap));
+assert((plow_screw_a_y - bolt_head_across/2) - wall_thick >= 10
+       && (plow_screw_b_y + bolt_head_across/2) <= chassis_width - wall_thick - 5,
+       "v143: both screw HEADS must stand clear of their wall");
+// Both screws must be long enough to cross the arm, the chassis floor and the
+// whole nut, or they bottom out in the trap. M3x20 gives 3.5mm of spare.
+for (sl = [plow_screw_a_len, plow_screw_b_len])
+    assert(sl >= plow_arm_h + base_thick + nut_trap_depth,
+           str("v143: a top-down screw is too short: need >= ",
+               plow_arm_h + base_thick + nut_trap_depth, " got ", sl));
+// The head bears on the arm's top face and must not overhang its 6mm width.
+assert(bolt_head_across <= plow_arm_w && bolt_head_across <= plow_arm2_w,
+       "v143: the head must fit both 6mm arms (0.25mm/side accepted)");
+// Both stations clear the fixed north wall's inner face (y 0..3) by more than
+// the hole radius and than the nut trap's circumradius.
+assert(min(plow_screw_y) - wall_screw_clearance_d/2 > wall_thick
+       && min(plow_screw_y) - wall_screw_nut_r > wall_thick,
+       "v143: plow screw holes and nut traps must clear the fixed wall inner face");
+// Both stations stay >=10mm west of the twister apex and of the B bevel's
+// western envelope (a cylinder of radius tw_bevel_outer_r about the B axis).
+for (sx = plow_screw_x)
+    assert(tw_apex_x_frame - sx >= 10
+           && (v98_Bx - tw_bevel_outer_r) - sx >= 10,
+           str("v143: plow floor screw at x ", sx, " must stay >=10mm west of the "
+               , "apex / B bevel western envelope: apex gap ", tw_apex_x_frame - sx,
+               ", bevel gap ", (v98_Bx - tw_bevel_outer_r) - sx));
+// The bevel teeth occupy the y band v98_Bbev_y0..y1. Arm B reaches into that
+// band in y, so the relief that matters for it is X: the teeth only exist east
+// of v98_Bx - tw_bevel_outer_r, which is 38.75mm east of screw B.
+assert((v98_Bx - tw_bevel_outer_r) - max(plow_screw_x) >= 10
+       && v98_Bbev_y0 - (plow_screw_a_y + bolt_head_across/2) >= 1.0,
+       "v143: arm B must clear the B teeth band in x, arm A in y");
 assert(crank_throw > 20 && crank_throw < 60, str("crank_throw out of envelope (20,60): ", crank_throw));
 assert(crank_mount_x == crank_axle_x, str("crank_mount_x must equal crank_axle_x (160): ", crank_mount_x));
 assert(crank_mount_y == chassis_width + 8, str("crank_mount_y must sit outside the front wall (68): ", crank_mount_y));

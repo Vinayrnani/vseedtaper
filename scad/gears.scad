@@ -11,13 +11,25 @@ module round_axle_hole(length, dia, clearance=0) {
 // 20° PA Trapezoidal Spur Gear (advanced)
 // Each tooth = hull(tip_cylinder, root_cylinder) for tapered flanks.
 // ============================================================
+// v140 tooth_phase: a sub-pitch rotation of the TEETH ONLY. It is applied
+// INSIDE the union, to the tooth loop alone, so every bore, hub, collar and
+// lightening cutout stays at phase 0 and a phased gear still fits a shaft
+// drawn at phase 0. Rotating the whole spur_gear() call instead (the obvious
+// way) turns the bores too: 15 deg is not a multiple of the 60 deg a $fn=6 hex
+// has, so the hex flats move off the hex shaft and the bore eats into it.
+// Default 0 => every other gear in the machine is bit-identical.
 module spur_gear(teeth, module_mm, thickness, bore_flat=0, bore_dia=0, is_hex=false,
                  hub_dia=0, hub_len=0, lightened=false, collar_dia=0, collar_len=0,
-                 tooth_scale=1.0) {
+                 tooth_scale=1.0, tooth_phase=0) {
     assert(teeth >= 10 && teeth <= 60, "spur_gear: teeth out of range [10,60]");
     assert(module_mm > 0, "spur_gear: module_mm must be >0");
     assert(thickness > 0, "spur_gear: thickness must be >0");
     assert(tooth_scale > 0 && tooth_scale <= 1.0, "spur_gear: tooth_scale must be in (0,1]");
+    // Only a sub-pitch phase is meaningful: a whole pitch is the same gear.
+    // Anything larger is almost certainly someone rotating the module instead.
+    assert(abs(tooth_phase) <= 360/teeth,
+        str("spur_gear: tooth_phase must be within one tooth pitch (", 360/teeth,
+            " deg), got ", tooth_phase));
     pitch_dia = module_mm * teeth;
     outer_dia = pitch_dia + 2*addendum;
     root_dia  = pitch_dia - 2*dedendum;
@@ -45,6 +57,10 @@ module spur_gear(teeth, module_mm, thickness, bore_flat=0, bore_dia=0, is_hex=fa
     difference() {
         union() {
             cylinder(h=thickness, d=root_dia, center=true);
+            // v140: tooth_phase turns the teeth and NOTHING else. The root disc
+            // above is a solid of revolution, so rotating it would be a no-op
+            // anyway; the bores/hub/lightening below are deliberately left out.
+            rotate([0,0,tooth_phase])
             for (i=[0:teeth-1]) {
                 rotate([0,0,i*pitch_ang]) {
                     // Trapezoidal tooth: hull of tip (small) + root (wider) cylinders
@@ -59,11 +75,14 @@ module spur_gear(teeth, module_mm, thickness, bore_flat=0, bore_dia=0, is_hex=fa
                         cylinder(h=1.2, r1=tip_d/2 + 0.15, r2=tip_d/2 - 0.55, $fn=12, center=true);
                     translate([tip_ctr_r, 0, -thickness/2])
                         cylinder(h=1.2, r1=tip_d/2 - 0.55, r2=tip_d/2 + 0.15, $fn=12, center=true);
-                    // Root fillet (small cylinder at root corners, hull)
+                    // Root fillet: NOT a hull - one r root_fillet_r cylinder per
+                    // root corner, centred root_fillet_offset OUTSIDE the root
+                    // circle (params.scad owns both, so the clearance bounds that
+                    // depend on the outer reach cannot drift from the geometry).
                     for (s=[-1,1])
                         rotate([0,0,s*0.28*pitch_ang])
-                            translate([root_r + 0.2, 0, 0])
-                                cylinder(h=thickness + 2*epsilon, r=0.9, $fn=12, center=true);
+                            translate([root_r + root_fillet_offset, 0, 0])
+                                cylinder(h=thickness + 2*epsilon, r=root_fillet_r, $fn=12, center=true);
                 }
             }
             if (has_hub)

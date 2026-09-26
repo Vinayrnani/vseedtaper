@@ -17,14 +17,24 @@ module dt_cluster_A() {
         rotate([-90, 0, 0])
             cylinder(h=33.5, r=4, center=false, $fn=60);
         // A10: band 49..55 (local center 2.5), m2 10T FULL profile, 6 wide (Step 8: matches crank face; v124: pinion thinned 0.8 so crank-A10 has tangential clearance like every other mesh — crank stays full for the approved crank-drum mesh)
+        // v140: tooth_phase carries the A10's share of the crank<->A10 mesh phase
+        // (v140_A_tooth_phase) on the TEETH ONLY. The remaining share is the
+        // cluster rotation v97_A_phase; see params.scad for the split and why.
         translate([0, (v97_A10_y0 + v97_A10_y1)/2 - v97_A_y0, 0])
             rotate([90, 0, 0])
-                spur_gear(teeth=10, module_mm=gear_module, thickness=6,
-                          tooth_scale=0.8);
+                spur_gear(teeth=v140_A_teeth, module_mm=gear_module, thickness=gear_thick,
+                          tooth_scale=v140_A_thin, tooth_phase=v140_A_tooth_phase);
         // A30: band 70..75 (local center 23), m1.25 30T takeoff OUTSIDE wall
+        // v141: the A30 is wired to a tooth_phase dial, but the MEASURED value
+        // is 0 - i.e. the A30 already sits on its own best phase for the
+        // A30<->idler mesh, so this gear stays byte-identical to v140 and the
+        // whole correction rides on the idler's teeth. The dial is kept (not
+        // deleted) because it is the fail-loud record of that measurement: see
+        // v141_A30_tooth_phase in params.scad and the v141 sweep numbers there.
         translate([0, (v97_A30_y0 + v97_A30_y1)/2 - v97_A_y0, 0])
             rotate([90, 0, 0])
-                spur_gear(teeth=30, module_mm=1.25, thickness=5);
+                spur_gear(teeth=30, module_mm=1.25, thickness=5,
+                          tooth_phase=v141_A30_tooth_phase);
     }
 }
 
@@ -73,10 +83,20 @@ module dt_idler() {
             cylinder(h=14, r=4, center=false, $fn=60);
         // idler 15T: band 70..75 (local center 6.5), m1.25 thinned, solid
         // centre fused on the shaft (one printable piece, no hub needed)
+        // v141: the measured mesh starting angle rides on the TEETH
+        // (v141_I15_tooth_phase = 4.8 - see the sign note in params.scad), not
+        // on the cluster rotation. The idler gear is solid, so the two are
+        // interchangeable HERE, but the teeth-only form is the one that can never
+        // move a bore, and it leaves v115_I_phase's documented meaning (the
+        // 12 deg half-pitch) intact and separately auditable. This one gear
+        // carries the A30<->idler phase; the idler<->B10 phase is on the B10 (the
+        // two are 6.7 deg apart, so no single idler value serves both meshes).
+        // Measured sweeps: the v141 block in params.scad.
         translate([0, (v115_I15_y0 + v115_I15_y1)/2 - v115_I_y0, 0])
             rotate([90, 0, 0])
                 spur_gear(teeth=15, module_mm=1.25, thickness=5,
-                          tooth_scale=v115_I_thin);
+                          tooth_scale=v115_I_thin,
+                          tooth_phase=v141_I15_tooth_phase);
     }
 }
 // ---- TRUE straight bevel gear (axis Z print frame, apex +Z) ----
@@ -197,10 +217,13 @@ module dt_cluster_B() {
         rotate([-90, 0, 0])
             cylinder(h=26, r=4, center=false, $fn=60);
         // B10: band 70..75 (local center 18.5), m1.25 10T thinned (idle for the next step)
+        // v141: tooth_phase carries the idler<->B10 mesh starting angle (measured)
+        // on the TEETH ONLY, same mechanism as v140_A_tooth_phase on the A10.
         translate([0, (v98_B10_y0 + v98_B10_y1)/2 - v98_B_y0, 0])
             rotate([90, 0, 0])
                 spur_gear(teeth=10, module_mm=1.25, thickness=5,
-                          tooth_scale=0.8);
+                          tooth_scale=0.8,
+                          tooth_phase=v141_B10_tooth_phase);
         // Bbev36: apex-down mitre teeth (canonical +Z mapped to +Y-up,
         // apex at local y=-20 = assembly 34): heel pitch local y2.5
         // (r22.5), toe local y=-0.3 (r19.7), phase 5 tooth-into-gap, thin 0.8.

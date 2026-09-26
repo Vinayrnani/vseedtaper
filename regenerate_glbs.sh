@@ -111,14 +111,27 @@ mkdir -p "$STL_DIR" "$CACHE_DIR"
 # Gate output the shell reads: the list of parts that failed verification.
 : > "$TMPDIR/verify_fail.txt"
 
-# --- Skip-unchanged cache: sha256 of each part's temp scad ---
+# --- Skip-unchanged cache ---
+# The key must cover the WHOLE program, not just the root file. The temp scad
+# still carries `include <scad/*.scad>` lines, so hashing only the root meant
+# an edit to plow.scad or chassis.scad changed NOTHING in the key: the part was
+# reported "up-to-date", the STL<->GLB agreement check passed (both artifacts
+# were stale in the same way), and a stale part shipped. The key is therefore
+# the root temp scad PLUS every include, in sorted order.
 # Any shared-geometry edit changes every hash (conservative full regen);
 # untouched re-runs skip everything in seconds. Use --force to bypass.
 DIRTY=()
 SKIPPED=()
 for glb in $WANT; do
     base="$(scad_base_for "$glb")"
-    cur="$(sha256sum "$TMPDIR/${base}.scad" | cut -d' ' -f1)"
+    # Only the HASH of each file goes into the key - never its path. The temp
+    # scad lives in a fresh mktemp dir every run, so hashing `sha256sum`'s whole
+    # output line would fold a random path into the key and mark every part
+    # dirty forever.
+    cur="$( { sha256sum "$TMPDIR/${base}.scad" | cut -d' ' -f1; \
+               find "$SCRIPT_DIR/scad" -name '*.scad' -type f | LC_ALL=C sort \
+                 | xargs sha256sum | cut -d' ' -f1; } \
+            | sha256sum | cut -d' ' -f1)"
     echo "$cur" > "$TMPDIR/${base}.hash.new"
     if [ "$FORCE" -eq 0 ] && [ -f "$CACHE_DIR/${glb}.sha256" ] && [ -f "$STL_DIR/${glb}.glb" ] \
         && cmp -s "$CACHE_DIR/${glb}.sha256" "$TMPDIR/${base}.hash.new"; then
@@ -255,12 +268,20 @@ base_for = {"rollers_lower": "rlow_s", "rollers_upper": "rup_s"}
 # everything not listed must be a single solid, so an unexpected split
 # (e.g. 2 -> 3 bodies) is still caught as a defect.
 EXPECT_BODIES = {
-    # plow: the scroll_sheet() earB lug is a separate solid that is never
-    # fused to the sheet, by design - it is a loose ear on the printed plow.
-    "plow": 2,
+    # plow: was 2 (main body + a detached earB boss) until v140 - the strapB
+    # bridge now fuses the boss to the sheet, so the crank-side screw actually
+    # holds the plow. 1 body is now correct; do not "restore" the old 2.
+    "plow": 1,
     "chassis": 4,        # main plate + 3 loose pins/rails shipped in one GLB
     "cartridge": 2,      # upper + lower shell halves
-    "crank": 2,          # crank plate + handle
+    # crank: 2 by design and under EVERY gear phase. The arm, handle and hex
+    # shaft are one solid; the 20T gear and its hub are the second. They are
+    # never fused and cannot be: the shaft passes through the gear's hex bore
+    # with the 0.3mm clearance, so the two share no face and a phase rotation
+    # of the gear can never bridge them. (v140 claimed the 15 deg phase bake
+    # had fused them into 1 body; it had not - measured body_count is 2 both
+    # before and after. Do not "fix" this to 1.)
+    "crank": 2,
     "twister": 2,        # outer scroll body + inward-facing bore shell
     "twister_axle": 2,   # axle body + inward-facing slot shell
 }
