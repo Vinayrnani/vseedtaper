@@ -1,33 +1,415 @@
 // v121 Step 7: single_cone/spool_cones deleted with the cones (no callers remain).
 
-// Step 5: separate 10mm U-bend guide. It is attached to the hopper exit
-// pipe by its two side cheeks and presses downward above the plain tape.
-module u_bend_guide() {
-    guide_length = 10;
-    guide_press_t = 2;
-    guide_rail_w = 2;
-    guide_pipe_r = 5;
-    guide_rail_inner = guide_pipe_r;
-    guide_bore_r = 3.8;
-    guide_tape_top_local = tape_z + tape_thick - (drum_axle_z - hopper_axis_z);
-    guide_press_z = guide_tape_top_local + tolerance;
-    guide_pipe_bottom_local = guide_tape_top_local + 10;
-    guide_rail_top = guide_pipe_bottom_local + 2;
-    assert(guide_length == 10, "u_bend_guide: guide length must be 10mm");
-    assert(guide_press_z - guide_tape_top_local >= tolerance, "u_bend_guide: press face must clear plain tape");
-    assert(guide_press_z + guide_press_t < guide_pipe_bottom_local, "u_bend_guide: guide must stay below the pipe bore");
-    assert(guide_rail_inner == guide_pipe_r, "u_bend_guide: cheeks must meet the pipe OD");
-    assert(guide_bore_r == 3.8 && guide_rail_inner >= guide_bore_r + 1, "u_bend_guide: cheeks must keep the seed bore open");
-    assert(guide_rail_top >= guide_pipe_bottom_local + 1, "u_bend_guide: cheeks must overlap the pipe lower wall");
-    assert(guide_length == 2*guide_pipe_r, "u_bend_guide: guide must span the pipe station");
-    union() {
-        // Downward pressing face: its lower face is 0.3mm above the plain tape.
-        translate([-guide_length/2, -guide_pipe_r, guide_press_z])
-            cube([guide_length, 2*guide_pipe_r, guide_press_t]);
-        // Side cheeks touch the pipe at y=+-5 and rise to its lower wall.
-        for (s=[-1, 1])
-            translate([-guide_length/2, s*guide_rail_inner, guide_press_z])
-                cube([guide_length, guide_rail_w, guide_rail_top - guide_press_z]);
+// Step 5: final hopper-mounted U guide. All dimensions are in hopper-local F;
+// the assembly places this module at guide_assembly_t = [100,34,19].
+module u_guide() {
+    assert(abs((guide_tape_z0_local - guide_floor_z1) - 0.3) < 0.001
+        && abs((guide_pipe_z0_local - guide_floor_z1) - 10.7) < 0.001
+        && abs((guide_bridge_z0 - guide_tape_z1_local) - 0.3) < 0.001
+        && abs((guide_foot_y0 - paper_width/2) - 0.3) < 0.001,
+        "u_guide: final floor/tape/pipe/bridge/foot clearances must remain exact");
+    assert(guide_pipe_od == drop_pipe_od
+        && guide_rail_y0 - guide_pipe_od/2 == guide_pipe_gap
+        && guide_bridge_y0 - guide_pipe_od/2 == guide_pipe_gap,
+        "u_guide: rails and bridges must stay guide_pipe_gap off the (widened) pipe OD");
+    difference() {
+        union() {
+            translate([guide_x0, guide_y0, guide_floor_z0])
+                cube([guide_x1-guide_x0, guide_y1-guide_y0, guide_floor_z1-guide_floor_z0]);
+            for (s=[-1, 1]) {
+                // Keep both sides symmetric by deriving absolute low/high Y
+                // limits before creating each positive-length cube.
+                rail_y0 = min(s*guide_rail_y0, s*guide_rail_y1);
+                rail_y1 = max(s*guide_rail_y0, s*guide_rail_y1);
+                bridge_y0 = min(s*guide_bridge_y0, s*guide_bridge_y1);
+                bridge_y1 = max(s*guide_bridge_y0, s*guide_bridge_y1);
+                foot_y0 = min(s*guide_foot_y0, s*guide_foot_y1);
+                foot_y1 = max(s*guide_foot_y0, s*guide_foot_y1);
+                pad_y0 = min(s*guide_pad_y0, s*guide_pad_y1);
+                pad_y1 = max(s*guide_pad_y0, s*guide_pad_y1);
+                assert(rail_y0 == (s > 0 ? guide_rail_y0 : -guide_rail_y1)
+                    && rail_y1 == (s > 0 ? guide_rail_y1 : -guide_rail_y0)
+                    && bridge_y0 == (s > 0 ? guide_bridge_y0 : -guide_bridge_y1)
+                    && bridge_y1 == (s > 0 ? guide_bridge_y1 : -guide_bridge_y0)
+                    && foot_y0 == (s > 0 ? guide_foot_y0 : -guide_foot_y1)
+                    && foot_y1 == (s > 0 ? guide_foot_y1 : -guide_foot_y0)
+                    && pad_y0 == (s > 0 ? guide_pad_y0 : -guide_pad_y1)
+                    && pad_y1 == (s > 0 ? guide_pad_y1 : -guide_pad_y0),
+                    str("u_guide: rail/bridge/foot/pad spans must be exact Y mirrors: rail ",
+                        rail_y0, "..", rail_y1));
+                translate([guide_x0, rail_y0, guide_rail_z0])
+                    cube([guide_x1-guide_x0, rail_y1-rail_y0, guide_rail_z1-guide_rail_z0]);
+                translate([guide_x0, bridge_y0, guide_bridge_z0])
+                    cube([guide_x1-guide_x0, bridge_y1-bridge_y0, guide_bridge_z1-guide_bridge_z0]);
+                translate([guide_x0, foot_y0, guide_foot_z0])
+                    cube([guide_x1-guide_x0, foot_y1-foot_y0, guide_foot_z1-guide_foot_z0]);
+                translate([-guide_pad_x, pad_y0, guide_pad_z0])
+                    cube([2*guide_pad_x, pad_y1-pad_y0, guide_pad_z1-guide_pad_z0]);
+            }
+            // Step 6 seed cap: the tape is folded U-shaped by the former, so the
+            // seeds are now carried in a pocket BELOW the pipe. This cap is not a
+            // floating part - it is part of the bracket-supported guide: it is
+            // FUSED onto both rails (0.2 overlap, never a coplanar touch) and
+            // stops 0.4 under the pipe OD. It holds the seeds in.
+            translate([guide_cap_x0, -guide_cap_y, guide_cap_z0])
+                cube([guide_cap_x1-guide_cap_x0, 2*guide_cap_y, guide_cap_z1-guide_cap_z0]);
+        }
+        // Seed passage through the cap: it is wider than the pipe bore
+        // (guide_cap_hole_d >= drop_pipe_id, asserted in params) so the seeds
+        // fall from the pipe straight into the forming pocket.
+        translate([guide_cap_hole_x, 0, guide_cap_z0 - 1])
+            cylinder(h = guide_cap_z1-guide_cap_z0+2, d = guide_cap_hole_d);
+        // Each mirrored pad gets its own matching screw clearance and trap.
+        for (s=[-1, 1]) {
+            screw1_y0 = min(s*guide_screw1_y0, s*guide_screw1_y1);
+            screw1_y1 = max(s*guide_screw1_y0, s*guide_screw1_y1);
+            trap_y0 = min(s*guide_trap_y0, s*guide_trap_y1);
+            trap_y1 = max(s*guide_trap_y0, s*guide_trap_y1);
+            assert(screw1_y0 == (s > 0 ? 6.95 : -11.05)
+                && screw1_y1 == (s > 0 ? 11.05 : -6.95)
+                && trap_y0 == (s > 0 ? 9.3 : -11)
+                && trap_y1 == (s > 0 ? 11 : -9.3),
+                "u_guide: screw clearance/trap spans must be exact Y mirrors");
+            translate([guide_screw1_x, screw1_y0, guide_screw1_z])
+                rotate([-90,0,0]) cylinder(h=screw1_y1-screw1_y0,
+                    d=m2_clearance_dia, center=false);
+            translate([guide_screw1_x, trap_y0, guide_screw1_z])
+                rotate([-90,0,0]) cylinder(h=trap_y1-trap_y0,
+                    r=m2_trap_af/sqrt(3), $fn=6, center=false);
+        }
+    }
+}
+
+// Step 5: one right printable bracket. The assembly mirrors this module in Y.
+module u_guide_bracket() {
+    assert(bracket_plate_y1 - bracket_plate_y0 == 4
+        && bracket_screw2_y == 11 && bracket_screw2_z == 15
+        && abs((guide_trap_y1 - guide_trap_y0) - m2_trap_depth) < 0.001
+        && abs((hopper_boss_trap_x1 - hopper_boss_trap_x0) - m2_trap_depth) < 0.001,
+        "u_guide_bracket: right bracket datum must remain exact");
+    // ---- Step 6 (B1/B2): the former's mounting pad is REAL MATERIAL ----
+    // pusher_pad_* used to be a params-only datum: no module built it, so the
+    // u_former die was bolted to nothing. The pad is now part of this bracket,
+    // and it is what the former's M2 actually threads into - the die's load
+    // path is die -> ear -> pad -> arm -> plate -> hopper bosses.
+    // The pad overlaps the arm (x bracket_arm_x0..x1, y bracket_plate_y0..y1,
+    // z bracket_arm_z0..z1 = 10.5..12) over z 10.9..12 and its whole X span,
+    // so the union is volumetric, never a coplanar touch.
+    assert(pusher_pad_y0 == bracket_plate_y0
+        && pusher_pad_x0 > bracket_arm_x0 && pusher_pad_x1 < bracket_arm_x1
+        && pusher_pad_z0 > bracket_arm_z0 && pusher_pad_z0 < bracket_arm_z1
+        && pusher_pad_z1 > bracket_arm_z1
+        && pusher_pad_y1 <= bracket_plate_y1,
+        "u_guide_bracket: the former pad must fuse INTO the arm and stay inside the plate's Y band");
+    // The 4.4 AF nut trap (B2) is centred in the pad and must keep the same
+    // m2_min_surrounding (1.0) of material the Step 5 traps keep, in X and Z,
+    // measured ACROSS THE FLATS - the way a nut trap is quoted (m2_trap_af).
+    // The pad is 6.6 X by 7.2 Z (its Z span is pinned to the die ear by
+    // pusher_pad_z0/z1 == former_ear_z0/z1), so the hex's across-CORNERS
+    // measure (2*r = 5.08) leaves 0.76 at the X corners and 1.06 at the Z
+    // corners. X is the governing direction and is the one still short of the
+    // 1.0 rule: the pad would have to grow from 6.6 to 7.08 wide to carry 1.0
+    // there too. That is a geometry change, so it is stated here instead of
+    // hidden, and the floor below stays at what X actually meets.
+    trap_flat_half_x = (pusher_pad_x1 - pusher_pad_x0)/2 - m2_trap_af/2;
+    trap_flat_half_z = (pusher_pad_z1 - pusher_pad_z0)/2 - m2_trap_af/2;
+    trap_corner_half_x = (pusher_pad_x1 - pusher_pad_x0)/2 - 2*(m2_trap_af/sqrt(3))/2;
+    trap_corner_half_z = (pusher_pad_z1 - pusher_pad_z0)/2 - 2*(m2_trap_af/sqrt(3))/2;
+    trap_corner_floor = 0.75;   // ~2 perimeters at a 0.4 nozzle, local to the
+                                 // trap; X (0.76) governs it, Z has 1.06
+    assert(abs(former_screw_x - (pusher_pad_x0 + pusher_pad_x1)/2) < 0.001
+        && abs(former_screw_z - (pusher_pad_z0 + pusher_pad_z1)/2) < 0.001,
+        str("u_guide_bracket: the former nut trap must stay centred in the pad: x ",
+            former_screw_x, " z ", former_screw_z));
+    assert(trap_flat_half_x >= m2_min_surrounding && trap_flat_half_z >= m2_min_surrounding,
+        str("u_guide_bracket: the 4.4 AF former nut trap needs >=1mm of pad across its flats, got ",
+            trap_flat_half_x, " in X and ", trap_flat_half_z, " in Z"));
+    assert(trap_corner_half_x >= trap_corner_floor && trap_corner_half_z >= trap_corner_floor,
+        str("u_guide_bracket: the trap's corner walls are down to ", trap_corner_half_x, "/",
+            trap_corner_half_z, " (floor ", trap_corner_floor, ")"));
+    // Along Y the trap follows the Step 5 pattern: m2_trap_depth deep and OPEN
+    // at the pad's outer face (former_screw_y_trap1 == pusher_pad_y1), with a
+    // closed floor below it. A trap that stopped short of the face would be an
+    // enclosed void - a second shell and a nut with no way in.
+    assert(abs((former_screw_y_trap1 - former_screw_y_trap0) - m2_trap_depth) < 0.001
+        && former_screw_y_trap1 == pusher_pad_y1
+        && former_screw_y_trap0 - pusher_pad_y0 >= m2_min_surrounding,
+        str("u_guide_bracket: the former nut trap must be m2_trap_depth deep, open at the pad face: ",
+            former_screw_y_trap1, " vs face ", pusher_pad_y1, ", floor ",
+            former_screw_y_trap0 - pusher_pad_y0));
+    difference() {
+        union() {
+            translate([bracket_plate_x0, bracket_plate_y0, bracket_plate_z0])
+                cube([bracket_plate_x1-bracket_plate_x0, bracket_plate_y1-bracket_plate_y0,
+                      bracket_plate_z1-bracket_plate_z0]);
+            translate([bracket_arm_x0, bracket_plate_y0, bracket_arm_z0])
+                cube([bracket_arm_x1-bracket_arm_x0, bracket_plate_y1-bracket_plate_y0,
+                      bracket_arm_z1-bracket_arm_z0]);
+            translate([bracket_flange_x0, bracket_flange_y0, bracket_flange_z0])
+                cube([bracket_flange_x1-bracket_flange_x0, bracket_flange_y1-bracket_flange_y0,
+                      bracket_flange_z1-bracket_flange_z0]);
+            // Step 6 (B1): the former's M2 pad. pusher_pad_y0 == former_ear_y1,
+            // so the die ear seats flat on this face; the trap below is cut into
+            // this block, so the screw has something to bite into.
+            translate([pusher_pad_x0, pusher_pad_y0, pusher_pad_z0])
+                cube([pusher_pad_x1-pusher_pad_x0, pusher_pad_y1-pusher_pad_y0,
+                      pusher_pad_z1-pusher_pad_z0]);
+        }
+        // Screw 1 is along Y; screw 2 is perpendicular, along X.
+        translate([guide_screw1_x, bracket_screw1_y0, guide_screw1_z])
+            rotate([-90,0,0]) cylinder(h=bracket_screw1_y1-bracket_screw1_y0,
+                d=m2_clearance_dia, center=false);
+        translate([bracket_screw2_x0, bracket_screw2_y, bracket_screw2_z])
+            rotate([0,90,0]) cylinder(h=bracket_screw2_x1-bracket_screw2_x0,
+                d=m2_clearance_dia, center=false);
+        // Step 6 (B2): the former M2 nut trap - the SAME hex pattern the Step 5
+        // guide trap uses (r = m2_trap_af/sqrt(3) across a $fn=6 cylinder, so
+        // 4.4 across the flats), axis Y, cut from the pad's outer face
+        // (former_screw_y_trap1 == pusher_pad_y1) inward over
+        // former_screw_y_trap1 - m2_trap_depth. Exactly the Step 5 geometry: one
+        // m2_trap_depth deep, open at the face, closed floor under it. The screw
+        // arrives from -Y (head seat at former_screw_y_head 9.4), the nut drops
+        // into this trap from +Y and lands on the floor at
+        // former_screw_y_trap0 12.3, and the shank threads through it.
+        translate([former_screw_x, former_screw_y_trap0, former_screw_z])
+            rotate([-90,0,0]) cylinder(h=former_screw_y_trap1-former_screw_y_trap0,
+                r=m2_trap_af/sqrt(3), $fn=6, center=false);
+    }
+}
+
+// ============================================================
+// Step 6: the U-FORMER (u_former) - the bolted die that folds the flat
+// 25.4 ribbon into the U, in the shadow of the dropper pipe.
+// FRAME: hopper-local, which is the SAME frame as u_guide() (the hopper and
+// the guide are both placed at drum_axle_x = 100, chassis_width/2, and
+// drum_axle_z - hopper_axis_z). former_x0/former_x1 are WORLD X (81/91),
+// so hopper-local X is former_x0/former_x1 - drum_axle_x = -19..-9.
+// ONE printed part, symmetric in Y (the viewer mirrors the single GLB).
+// PRINT ORIENTATION: rotate 90 degrees about X before printing, so the die
+// arms stand as vertical walls instead of thin horizontal shelves. As built,
+// this part is a ~18.8 x 10 tunnel: a ~10mm unsupported roof over a 10 x 10 x
+// 8 void, so it CANNOT be printed in its hopper-frame pose without support.
+// The rotation is applied to the PRINT/STL artifact only - see the
+// part_to_render == "u_former" branch in seed_tape_machine_v2.scad and the
+// print_rot entry in regenerate_glbs.sh. The viewer GLB stays in this frame,
+// because the viewer places the die in the hopper without any rotation.
+// ============================================================
+
+// The BOTTOM BAR of the forming section at fold progress u (0 = flat 25.4
+// ribbon, 1 = full-depth U), dilated by gap, swept `len` along +X.
+// The clearance is applied ANALYTICALLY - every face moved out by `gap` - and
+// NOT with offset(r=gap): offset() rounds the corners into arcs, and those arc
+// facets meeting at a station boundary came out of the hull() as zero-volume
+// sliver shells, which left the exported STL non-watertight. Same clearance,
+// sharp corners (and a sharp pocket corner is what a paper fold wants anyway).
+// Mapping to the part: 2D x -> world Y, 2D y -> world Z, extrusion -> world X.
+// rotate([0,0,90]) rotate([90,0,0]) is exactly that (x,y,z)_2D -> (z, x, y).
+module u_former_bar(u, gap, len) {
+    w = paper_width/2 - u_side_h*u;              // 12.7 -> 5.2 outer half width
+    d = gap;
+    rotate([0,0,90]) rotate([90,0,0])
+        linear_extrude(height = len)
+            translate([-(w + d), u_flat_z - tape_thick/2 - d])
+                square([2*(w + d), tape_thick + 2*d]);
+}
+
+// One SIDE WALL of the forming section, as the EXACT ruled surface from fold
+// progress u0 to u1 - an 8-point polyhedron, not a hull().
+// A hull() cannot be used here: a wall is a rigid band that TRANSLATES inward
+// as the fold closes, and the convex hull of two overlapping bands is FATTER
+// than the band (it filled the space between them, taking the measured web
+// from 1.49 down to 1.27 and the working clearance from 0.15 up to ~0.35
+// mid-segment). The polyhedron gives the real ruled surface, so the 0.15
+// clearance is 0.15 everywhere. Faces use the canonical OpenSCAD box winding
+// (the axis map canon(x,y,z) -> (sweep, width, height) is a cyclic
+// permutation, so the winding carries over unchanged). which = 2 is the mirror
+// in Y, which flips the handedness, so it gets the opposite winding.
+//   which: 1 = +Y wall, 2 = -Y wall.
+module u_former_wall(u0, u1, gap, which, xa, len) {
+    // Fail loud on a bad index: `which` is a 1 or 2 WALL INDEX, not a sign.
+    // Testing it with `> 0` silently put BOTH walls on the +Y side (2 > 0),
+    // which made the die channel single-sided in Y - a mirror bug, not a
+    // shape bug, so nothing downstream complained.
+    assert(which == 1 || which == 2,
+        str("u_former_wall: which must name a wall: 1 = +Y wall, 2 = -Y wall; got ",
+            which));
+    w0 = paper_width/2 - u_side_h*u0;
+    w1 = paper_width/2 - u_side_h*u1;
+    // A wall shorter than the paper thickness would be a degenerate face set;
+    // the bar already carries the floor there, so clamping to tape_thick keeps
+    // the cut >= 0.15 clear of the paper everywhere.
+    h0 = max(u_side_h*u0 + tape_thick/2, tape_thick) + 2*gap;
+    h1 = max(u_side_h*u1 + tape_thick/2, tape_thick) + 2*gap;
+    d = gap;
+    z0 = u_flat_z - d;
+    s = which == 1 ? 1 : -1;                       // +Y wall / -Y wall
+    yin0 = s*(w0 - tape_thick - d);
+    yout0 = s*(w0 + d);
+    yin1 = s*(w1 - tape_thick - d);
+    yout1 = s*(w1 + d);
+    assert(w0 > tape_thick && w1 > tape_thick && h0 > 0 && h1 > 0 && len > 0,
+        str("u_former: degenerate forming wall at x=", xa, ": w ", w0, "->", w1,
+            " h ", h0, "->", h1));
+    polyhedron(
+        points = [[xa,   yin0, z0],    [xa,   yout0, z0],
+                  [xa,   yout0, z0+h0],[xa,   yin0,  z0+h0],
+                  [xa+len, yin1, z0],  [xa+len, yout1, z0],
+                  [xa+len, yout1, z0+h1],[xa+len, yin1, z0+h1]],
+        // Consistently wound: every edge is traversed in opposite directions by
+        // its two faces (a polyhedron that is not will still be re-oriented by
+        // the CGAL backend, but OpenSCAD's Manifold fast path rejects it with
+        // "PolySet -> Manifold conversion failed: NotManifold").
+        faces  = which == 1
+            ? [[1,2,3,0], [7,6,5,4], [4,5,1,0], [5,6,2,1], [6,7,3,2], [7,4,0,3]]
+            : [[0,3,2,1], [4,5,6,7], [0,1,5,4], [1,2,6,5], [2,3,7,6], [3,0,4,7]]);
+}
+
+// The swept U channel: the cut that forms the paper, plus the 2mm capture.
+// Working zone: former_work_gap (0.15) all the way across the fold, 24 exact
+// ruled segments (bar by hull - it is concentric, so its hull IS exact - and
+// walls by polyhedron). The +0.02 on each length is a deliberate volumetric
+// OVERLAP with the next segment, so neighbouring segments never meet on a
+// coplanar face (a coplanar abutment here produced an INVERTED shell instead).
+// Capture: over the last 2mm (former_capture_x0..former_x1) the cut relaxes to
+// former_capture_gap (2mm) so the finished U is held open and the tape is not
+// pinched as it leaves the die.
+module u_former_channel() {
+    lx0 = former_x0 - drum_axle_x;   // -19 (world 81)
+    lx1 = former_x1 - drum_axle_x;   //  -9 (world 91)
+    n = 24;
+    seg = (lx1 - lx0)/n;
+    len = seg + 0.02;
+    for (i = [0 : n-1]) {
+        xa = lx0 + seg*i;
+        u_a = u_shape(xa + drum_axle_x);
+        u_b = u_shape(xa + seg + drum_axle_x);
+        assert(u_b >= u_a, str("u_former: the fold must be monotonic at x=", xa));
+        hull() {
+            translate([xa, 0, 0]) u_former_bar(u_a, former_work_gap, len);
+            translate([xa, 0, 0]) u_former_bar(u_b, former_work_gap, len);
+        }
+        u_former_wall(u_a, u_b, former_work_gap, 1, xa, len);
+        u_former_wall(u_a, u_b, former_work_gap, 2, xa, len);
+    }
+    // 2mm capture over the last 2mm of the fold (straight prism, no taper).
+    cx = former_capture_x0 - drum_axle_x;
+    assert(cx > lx0 && cx < lx1,
+        str("u_former: the capture must sit inside the fold: ", cx));
+    translate([cx, 0, 0]) {
+        u_former_bar(1, former_capture_gap, lx1 - cx);
+        u_former_wall(1, 1, former_capture_gap, 1, 0, lx1 - cx);
+        u_former_wall(1, 1, former_capture_gap, 2, 0, lx1 - cx);
+    }
+}
+
+// The whole U-former: ONE solid die body with the swept U channel cut through
+// it, so the load path runs channel -> die wall -> ear -> M2 -> pad ->
+// bracket. Nothing can float and nothing can hinge.
+// Section 5: this is a SEPARATE printed part, NOT part of u_guide() - the
+// guide is exported/exported-printed on its own and the former on its own. The
+// root scad owns the part_to_render branch for it; the placement below is the
+// only place the two are related (both at hopper-local Y 0, the die straddling
+// the guide rails in Y at former_ear_y0..former_ear_y1).
+module u_former() {
+    lx0 = former_x0 - drum_axle_x;   // -19: die body west face
+    lx1 = former_x1 - drum_axle_x;   //  -9: die body east face
+    // DIE-BODY Z LIMITS (chosen from the constants, commented):
+    //  fz0 = u_flat_z - tape_thick/2 - former_work_gap - 1
+    //      = 7.85 - 1mm of floor UNDER the working channel (channel bottom is
+    //      8.85), so the swept cut never breaks out of the bottom face except
+    //      in the capture lead-out, and the tape bed stays supported.
+    //  fz1 = u_flat_z + u_side_h + tape_thick/2 + former_capture_gap + 1.2
+    //      = 20.1, i.e. 1.2 of roof ABOVE the capture ceiling (18.9) rather
+    //      than above the working ceiling (17.05). Deliberate: the spec
+    //      formula u_flat_z + u_side_h + tape_thick/2 + 1.2 = 18.1 would let
+    //      the 2mm capture cut breach the roof, leaving an open-topped
+    //      channel. 1.2 above the capture keeps the die closed and watertight
+    //      over its whole length (3.05 roof over the working zone).
+    fz0 = u_flat_z - tape_thick/2 - former_work_gap - 1;
+    fz1 = u_flat_z + u_side_h + tape_thick/2 + former_capture_gap + 1.2;
+    // params.scad has no Step-6 rebase yet, so derive it: min_z of the part is
+    // fz0, and the export branch translates by -former_export_rebase.
+    former_export_rebase = -fz0;
+    assert(former_capture_x0 > former_x0 && former_capture_x0 < former_x1,
+        str("u_former: the capture must start inside the fold: ", former_capture_x0));
+    assert(fz0 < u_flat_z - tape_thick/2 - former_work_gap,
+        str("u_former: the die floor must stay under the working channel: ", fz0));
+    assert(fz1 > u_flat_z + u_side_h + tape_thick/2 + former_capture_gap,
+        str("u_former: the roof must stay over the 2mm capture: ", fz1));
+    // Connectivity: at the entry the flat ribbon is wider than the die, so the
+    // swept cut severs the body into a floor and a roof THERE ONLY. It is still
+    // ONE solid because the channel narrows below the body half-width before
+    // the fold ends - assert that, or the part falls into loose slabs.
+    assert(paper_width/2 + former_work_gap > former_ear_y0,
+        "u_former: the flat entry ribbon is wider than the die; the walls must rise as the fold closes");
+    assert((paper_width/2 - u_side_h) + former_capture_gap < former_ear_y0,
+        str("u_former: the exit channel must be narrower than the die half-width: ",
+            (paper_width/2 - u_side_h) + former_capture_gap, " vs ", former_ear_y0));
+    assert(former_ear_x0 >= lx0 && former_ear_z0 >= fz0 && former_ear_z1 <= fz1,
+        "u_former: the ear must sit inside the die-body envelope");
+    assert(pusher_pad_y0 == former_ear_y1 && pusher_pad_z0 == former_ear_z0,
+        "u_former: the ear must still meet the bracket pad face and Z span");
+    // The head bears on the COUNTERBORE FLOOR at |Y| = former_ear_y0 -
+    // m2_head_h = 7.4 and sits inside that pocket - the pocket is what makes
+    // the joint assemble at all (the die body's outer face is a flat 9.4 seat
+    // 1.6mm outboard of the pocket, reachable from outside through the 2.4
+    // clearance hole). Between the pocket floor and the forming channel wall
+    // there must stay >= 1.2mm of web: 1.2 is the print minimum (the project
+    // convention, and it is also pipe_wall).
+    assert((former_ear_y0 - m2_head_h)
+            - (paper_width/2 - u_side_h*u_shape(drum_axle_x + former_screw_x)) >= 1.2,
+        str("u_former: the head counterbore must leave >=1.2mm of web to the channel wall: ",
+            (former_ear_y0 - m2_head_h)
+            - (paper_width/2 - u_side_h*u_shape(drum_axle_x + former_screw_x))));
+    assert(former_head_relief_d > m2_clearance_dia
+        && former_head_relief_d > m2_head_dia,
+        str("u_former: the head relief must be wider than the M2 head and its clearance hole: ",
+            former_head_relief_d));
+    assert(former_screw_x - m2_clearance_dia/2 > former_ear_x0
+        && former_screw_x + m2_clearance_dia/2 < former_ear_x1
+        && former_screw_z - m2_clearance_dia/2 > former_ear_z0
+        && former_screw_z + m2_clearance_dia/2 < former_ear_z1,
+        "u_former: the M2 clearance hole must stay inside the ear");
+    translate([0, 0, former_export_rebase])
+    difference() {
+        union() {
+            // Die body: spans the fold, half-width == former_ear_y0 so the ears
+            // stand proud on both sides and the M2 load path is real.
+            translate([lx0, -former_ear_y0, fz0])
+                cube([lx1-lx0, 2*former_ear_y0, fz1-fz0]);
+            // M2 ears, both sides, 0.2 volumetric overlap onto the body so the
+            // union is never a coplanar touch. Outer face stays at former_ear_y1
+            // == pusher_pad_y0 (the pad it is bolted against).
+            for (s = [-1, 1])
+                translate([former_ear_x0, s > 0 ? former_ear_y0 - 0.2 : -former_ear_y1, former_ear_z0])
+                    cube([former_ear_x1-former_ear_x0, former_ear_y1-former_ear_y0+0.2,
+                          former_ear_z1-former_ear_z0]);
+        }
+        // The swept U channel (paper + working clearance + 2mm capture).
+        u_former_channel();
+        // M2 clearance through both ears, axis Y, mirrored exactly.
+        // Head counterbore: INBOARD of each ear, exactly m2_head_h deep, so the
+        // M2 head is not buried in solid plastic - it sits in the pocket and
+        // bears on the pocket floor at |Y| = former_ear_y0 - m2_head_h. The
+        // pocket is coaxial with the clearance hole below, so the shank runs
+        // straight out: ear 9.4..11.0 -> pad 11.0..16.0 -> trap 12.3..14.0 ->
+        // tip 15.4 (= former_screw_y_head + former_screw_len, unchanged).
+        for (s = [-1, 1]) {
+            head_y0 = min(s*(former_ear_y0 - m2_head_h), s*former_ear_y0);
+            head_y1 = max(s*(former_ear_y0 - m2_head_h), s*former_ear_y0);
+            assert(head_y0 == (s > 0 ? former_ear_y0 - m2_head_h : -former_ear_y0)
+                && head_y1 == (s > 0 ? former_ear_y0 : -(former_ear_y0 - m2_head_h)),
+                str("u_former: the head counterbore must be an exact Y mirror: ",
+                    head_y0, "..", head_y1));
+            translate([former_screw_x, head_y0, former_screw_z])
+                rotate([-90,0,0])
+                    cylinder(h = head_y1 - head_y0, d = former_head_relief_d);
+        }
+        for (s = [-1, 1])
+            translate([former_screw_x, s > 0 ? former_ear_y0-1 : -(former_ear_y1+1),
+                       former_screw_z])
+                rotate([-90,0,0])
+                    cylinder(h = former_ear_y1-former_ear_y0+2, d = m2_clearance_dia);
     }
 }
 
@@ -150,26 +532,32 @@ module hopper_body() {
     // world x=100, Y centred (offset 0.0 < 0.5); funnel half-angle ~8.6deg
     // from vertical (steep, no hang); sharp 90deg circular inner rims at
     // the bore ends are broken by 45deg lead-in flares (legs 0.6/0.8>=0.6).
-    drop_pipe_id = 7.6; drop_pipe_od = 10; drop_pipe_len = 10; drop_gap = 10;
+    // Step 6: drop_pipe_id (9.0), drop_pipe_od (11.4), pipe_bore_r (4.5),
+    // pipe_wall (1.2), pipe_od_bottom_z (19.4) and mouth_flare_leg (0) now
+    // live in params.scad - the locals that used to shadow them are GONE, so
+    // the hopper and the guide/former read the same single source of truth.
+    drop_pipe_len = 10; drop_gap = 10;
     throat_cx = 0;                       // v35: funnel throat centre (local X)
     entry_flare_leg = 0.6;               // v35: bore exit 45deg break leg (>=0.6)
-    mouth_flare_leg = 0.8;               // v35: throat entry 45deg break leg (>=0.6)
     pipe_bot_local = tape_z + tape_thick + drop_gap - (drum_axle_z - hopper_axis_z); // 19.4 (v87: frozen hopper_axis_z=56 → drum offset 19)
     pipe_top_local = pipe_bot_local + drop_pipe_len; // 29.4
-    tube_x0 = -5; tube_x1 = 5;
-    bore_x0 = -3.8; bore_x1 = 3.8;
+    tube_x0 = -drop_pipe_od/2; tube_x1 = drop_pipe_od/2;   // -5.7 / 5.7
+    bore_x0 = -pipe_bore_r; bore_x1 = pipe_bore_r;        // -4.5 / 4.5
     tube_z0 = pipe_bot_local; tube_z1 = 52;
     assert(abs(pipe_bot_local - 19.4) < 0.001, "hopper_body: pipe_bot_local must stay 19.4 (export min_z offset)");
-    assert(abs(drop_pipe_id - 7.6) < 0.001, "hopper_body: hover pipe ID must be 7.6 (thinnest wall)");
-    assert(drop_pipe_od == 10, "hopper_body: hover pipe OD must be 10");
+    assert(abs(drop_pipe_id - 9.0) < 0.001,
+        str("hopper_body: hover pipe ID must be 9.0 so 8mm seeds pass: ", drop_pipe_id));
+    assert(drop_pipe_od == 11.4, str("hopper_body: hover pipe OD must be 11.4: ", drop_pipe_od));
     assert(drop_pipe_len == 10, "hopper_body: hover pipe length must be 10");
     assert(abs((drop_pipe_od - drop_pipe_id)/2 - 1.2) < 0.001, "hopper_body: hover pipe wall must be 1.2 (thinnest printable)");
-    assert(abs((bore_x1 - bore_x0) - 7.6) < 0.001, "hopper_body: drop bore must be 7.6");
-    assert(tube_x1 - tube_x0 == 10, "hopper_body: drop tube outer must be 10");
-    assert(abs((bore_x0 - tube_x0) - 1.2) < 0.001, "hopper_body: drop tube X wall must be 1.2");
+    assert(abs((bore_x1 - bore_x0) - 9.0) < 0.001, "hopper_body: drop bore must be 9.0");
+    assert(tube_x1 - tube_x0 == drop_pipe_od, "hopper_body: drop tube outer must equal the pipe OD");
+    assert(abs((bore_x0 - tube_x0) - pipe_wall) < 0.001, "hopper_body: drop tube X wall must be pipe_wall");
+    assert(abs((tube_x1 - bore_x1) - pipe_wall) < 0.001, "hopper_body: pipe wall must match pipe_wall");
     assert(throat_cx == drum_c[0], "hopper_body: funnel throat centre must equal drum drop point x (local 0 = world 100)");
     assert(entry_flare_leg >= 0.6, "hopper_body: bore exit lead-in leg must be >=0.6");
-    assert(mouth_flare_leg >= 0.6, "hopper_body: funnel-mouth lead-in leg must be >=0.6");
+    assert(mouth_flare_leg == 0,
+        "hopper_body: funnel-mouth leg is 0 so the joint ring keeps the full 1.2 wall");
     assert(tube_z0 + (drum_axle_z - hopper_axis_z) == tape_z + tape_thick + drop_gap,
            "hopper_body: hover pipe bottom must sit tape_top+10 (no seal)");
     assert(drop_gap >= 10, "hopper_body: hover gap must be >=10");
@@ -296,6 +684,18 @@ module hopper_body() {
                 cylinder(h=drop_pipe_len, r=drop_pipe_od/2, center=false);
             translate([0, 0, pipe_top_local - epsilon])
                 cylinder(h=tube_z1 - pipe_top_local + epsilon, r1=drop_pipe_od/2, r2=10, center=false);
+            // Step 5: positive-X hopper bosses, mirrored with the existing hopper.
+            // They are structural material only; no pipe-wall hole is added.
+            for (boss_y0=[hopper_boss_y0, -hopper_boss_y1])
+                translate([hopper_boss_x0, boss_y0, hopper_boss_z0])
+                    cube([hopper_boss_x1-hopper_boss_x0,
+                          hopper_boss_y1-hopper_boss_y0,
+                          hopper_boss_z1-hopper_boss_z0]);
+            for (web_y0=[hopper_web_y0, -hopper_web_y1])
+                translate([hopper_web_x0, web_y0, hopper_web_z0])
+                    cube([hopper_web_x1-hopper_web_x0,
+                          hopper_web_y1-hopper_web_y0,
+                          hopper_web_z1-hopper_web_z0]);
         }
         // Drum clearance: wide open mouth tangent to drum, mouth_gap radial gap.
         // Lower chin auto-formed by carve retains the seed pool (gap 1.0 < 3mm).
@@ -341,22 +741,30 @@ module hopper_body() {
         translate([79.5, lug_neg_y0 - epsilon, 65.5])
             rotate([-90, 0, 0])
                 cylinder(h=(lug_neg_y1 - lug_neg_y0) + 2*epsilon, d=bolt_dia + 2*tolerance, center=false);
-        // v35 drop bore + tapered groove + 45deg lead-ins (no window box, no tape slots):
-        // cylindrical ID7.6 bore through the hover pipe + tapered inner
-        // cone (r4.6 -> r8, wide 16 -> 7.6 throat, ~8.6deg from vertical)
-        // up through the funnel to the drum mouth (fed by the 6 cavities
-        // over the top, not by the trough void). Drum carve trims the
-        // funnel stub into a smooth drum-conforming mouth (only ~1 survives
-        // above the pipe top; the rest is open mouth air by design).
-        // Profile is monotonic (no radial step >0.3 anywhere, no overhang
-        // in the seed travel direction). Two 45deg breaks: bore-exit flare
-        // (r3.8->r4.4 over h0.6, 0.6 flat land left) kills the bottom sharp
-        // inner rim; throat entry flare (r3.8->r4.6 over h0.8, leg 0.8>=0.6)
-        // breaks the bore-to-cone edge into a self-clearing 45deg lead-in.
+        // Step 5 boss screw 2 clearance along X, in positive-X source coordinates.
+        for (boss_y=[hopper_boss_screw_y, -hopper_boss_screw_y])
+            translate([hopper_boss_screw_x0, boss_y, hopper_boss_screw_z])
+                rotate([0,90,0]) cylinder(h=hopper_boss_screw_x1-hopper_boss_screw_x0,
+                    d=m2_clearance_dia, center=false);
+        // Step 5 boss nut traps, also positive-X source coordinates.
+        for (boss_y=[hopper_boss_screw_y, -hopper_boss_screw_y])
+            translate([hopper_boss_trap_x0, boss_y, hopper_boss_screw_z])
+                rotate([0,90,0]) cylinder(h=hopper_boss_trap_x1-hopper_boss_trap_x0,
+                    r=m2_trap_af/sqrt(3), $fn=6, center=false);
+        // v35 drop bore + tapered groove + 45deg lead-in (no window box, no tape slots):
+        // Step 6: cylindrical ID9.0 bore through the hover pipe (was ID7.6) +
+        // tapered inner cone (r4.5 -> r8, wide 16 -> 9.0 throat) up through the
+        // funnel to the drum mouth (fed by the 6 cavities over the top, not by
+        // the trough void). Drum carve trims the funnel stub into a smooth
+        // drum-conforming mouth. Profile is monotonic (no radial step >0.3
+        // anywhere, no overhang in the seed travel direction). ONE 45deg break
+        // is left: the bore-exit flare (r4.5->r5.1 over h0.6, 0.6 flat land)
+        // kills the bottom sharp inner rim. The throat entry flare is gone -
+        // mouth_flare_leg is 0, so the joint ring is a plain 1.2 wall.
         // Pipe hovers 10 above the tape: no notches, no seal overlap.
-        // Trough (HW 2.0, outer 7.8 < OD10) stays centred under the bore
-        // (bore +-3.8, mouth 7 < ID7.6: seed lands INSIDE the
-        // already-folded transit pocket below).
+        // Trough (HW 2.0, outer 7.8 < OD11.4) stays centred under the bore
+        // (bore +-4.5, i.e. the full ID9.0: the seed drops straight through
+        // into the still-open U below, which only starts rolling at X=100).
         translate([0, 0, pipe_bot_local - epsilon])
             cylinder(h=drop_pipe_len + 2*epsilon, r=drop_pipe_id/2, center=false);
         translate([0, 0, pipe_top_local - epsilon])
@@ -368,8 +776,13 @@ module hopper_body() {
         // v35 throat entry lead-in: 45deg flare straddling the pipe top
         // (base r == bore r sits inside the bore wall, top r == cone base
         // r; continuous profile, slope-only kinks, no radial step).
-        translate([throat_cx, 0, pipe_top_local - mouth_flare_leg])
-            cylinder(h=mouth_flare_leg + epsilon, r1=drop_pipe_id/2, r2=drop_pipe_id/2 + mouth_flare_leg, center=false);
+        // Step 6: mouth_flare_leg is 0, so the joint ring is a plain 1.2 wall
+        // and there is nothing to flare - skip it instead of cutting a
+        // degenerate 0-height sliver. entry_flare_leg (0.6) at the bore exit
+        // stays and is the only lead-in left.
+        if (mouth_flare_leg > 0)
+            translate([throat_cx, 0, pipe_top_local - mouth_flare_leg])
+                cylinder(h=mouth_flare_leg + epsilon, r1=drop_pipe_id/2, r2=drop_pipe_id/2 + mouth_flare_leg, center=false);
         // Cover inner-face groove (v14 YELLOW: w7 x d0.8 along 120..270 arc,
         // matches drum 6-cavity track for wheel-to-frame positioning ONLY
         // (NOT seed drive); shallow guide, channel stays smooth).

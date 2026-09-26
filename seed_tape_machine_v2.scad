@@ -75,9 +75,17 @@ module animated_assembly() {
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
         hopper_body();
 
-    // Step 5: separate pipe-mounted guide; it never touches the plain tape.
+    // Step 6: the U-FORMER (u_former) is a SEPARATE printed part bolted to the
+    // hopper brackets at world X 81..91 (hopper-local X -19..-9). It sits in the
+    // hopper frame because it bolts to the hopper, not to the guide rails; the
+    // rails only pass through its working channel.
     translate([drum_axle_x, chassis_width/2, drum_axle_z - hopper_axis_z])
-        u_bend_guide();
+        u_former();
+
+    // Step 5: approved guide plus one right bracket and its Y mirror.
+    translate(guide_assembly_t) u_guide();
+    translate(guide_assembly_t) u_guide_bracket();
+    translate(guide_assembly_t) mirror([0,1,0]) u_guide_bracket();
 
     // Seed cradle
     translate([plow_start, chassis_width/2 - 12.7, base_thick + 15])
@@ -173,7 +181,29 @@ if (part_to_render == "all") {
     // v33 printable: standalone export drops to print base min_z=0
     // (local hover-pipe bottom 19.4 -> 0; was 19.9/25.9/26.5);
     // assembly branch above unaffected.
-    translate([0, 0, -19.4]) hopper_body();
+    translate([0, 0, -hopper_export_rebase]) hopper_body();
+} else if (part_to_render == "u_guide") {
+    translate([0, 0, -guide_export_rebase]) u_guide();
+} else if (part_to_render == "u_guide_bracket") {
+    translate([0, 0, -bracket_export_rebase]) u_guide_bracket();
+} else if (part_to_render == "u_former") {
+    // u_former() self-rebases (min Z = 0) inside the module - no extra shift.
+    //
+    // STEP 6 (B4) PRINT ORIENTATION - WHICH ARTIFACT IS ROTATED, AND WHY:
+    //   * This branch feeds BOTH artifacts: web/stl/u_former.glb (the viewer)
+    //     and print/u_former.stl (the slicer), from one export. Only the
+    //     PRINT one may be rotated: the die is a tunnel (a ~10mm unsupported
+    //     roof over a 10x10x8 void) and must lie on its side to print without
+    //     support, but the viewer places this GLB in the hopper frame with NO
+    //     rotation, so rotating it here would put the die in the wrong place.
+    //   * So the rotation lives in regenerate_glbs.sh, in the print_rot table
+    //     that only the print/*.stl writer reads: "u_former": RX90 (rotate 90
+    //     about X). That makes the print orientation REAL for the artifact the
+    //     user slices, and leaves the viewer GLB byte-identical in pose.
+    //   * feed.scad's PRINT ORIENTATION note points here. It is a comment plus
+    //     a pipeline entry - neither is allowed to be the only thing standing
+    //     between the die and a support-free print.
+    u_former();
 } else if (part_to_render == "cartridge") {
     seed_cartridge(seed_dia, seed_depth);
 } else if (part_to_render == "plow" || part_to_render == "turner") {
